@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-
+    //DispatcherServlet에서 에러 인터셉트
     @ExceptionHandler(GlobalException.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(GlobalException e) {
         ErrorCode errorCode = e.getErrorCode();
