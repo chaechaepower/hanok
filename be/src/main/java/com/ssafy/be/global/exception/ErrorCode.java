@@ -1,6 +1,6 @@
-package com.ssafy.be.global.except;
+package com.ssafy.be.global.exception;
 
-import org.apache.http.HttpStatus;
+import org.springframework.http.HttpStatus;
 
 public interface ErrorCode {
     HttpStatus getHttpStatus();

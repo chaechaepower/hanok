@@ -1,4 +1,4 @@
-package com.ssafy.be.global.except;
+package com.ssafy.be.global.exception;
 
 import lombok.Getter;
 
