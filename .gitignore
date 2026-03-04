@@ -293,3 +293,11 @@ buck-out/
 .fakebuckversion
 
 # End of https://www.toptal.com/developers/gitignore/api/react,java,reactnative
+
+
+# 환경변수 파일
+.env
+.env.dev
+.env.prod
+infra/.env.dev
+infra/.env.prod
