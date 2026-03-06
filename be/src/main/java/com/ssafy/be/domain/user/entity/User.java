@@ -39,13 +39,13 @@ public class User {
     private String phone;
 
     @Column(name = "is_active", nullable = false)
-    private boolean isActive; // 활성화 여부 (기본값 true)
+    private Boolean isActive; // 활성화 여부 (기본값 true)
 
     @Column(nullable = false)
-    private long balance; // 가상머니 잔액 (기본값 0)
+    private Long balance; // 가상머니 잔액 (기본값 0)
 
     @Column(name = "deposited_balance", nullable = false)
-    private long depositedBalance; // 예치된 잔액 (기본값 0)
+    private Long depositedBalance; // 예치된 잔액 (기본값 0)
 
     @Column(name = "bank_code", length = 50)
     private String bankCode; // 은행명 (회원가입 시 입력 X)
@@ -62,7 +62,7 @@ public class User {
     private LocalDateTime updatedAt;
 
     @Column(name = "notification_setting", nullable = false)
-    private boolean notificationSetting; // 알림 설정 (기본값 true)
+    private Boolean notificationSetting; // 알림 설정 (기본값 true)
 
     // 회원가입 시 User 생성을 위한 정적 팩토리 메서드
     // Service에서 new User() 대신 User.createUser()로 생성
@@ -75,8 +75,8 @@ public class User {
                 .phone(phone)
                 .profileImage(null)   // GCS 연동 후 default 이미지 URL로 교체 예정
                 .isActive(true)
-                .balance(0)
-                .depositedBalance(0)
+                .balance(0L)
+                .depositedBalance(0L)
                 .notificationSetting(true)
                 .build();
     }

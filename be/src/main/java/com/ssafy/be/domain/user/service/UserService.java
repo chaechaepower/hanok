@@ -1,15 +1,20 @@
 package com.ssafy.be.domain.user.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.ssafy.be.domain.user.dto.request.IdentityVerificationRequestDto;
 import com.ssafy.be.domain.user.dto.request.SignupRequestDto;
+import com.ssafy.be.domain.user.dto.response.IdentityVerificationResponseDto;
 import com.ssafy.be.domain.user.dto.response.SignupResponseDto;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.exception.UserErrorCode;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
+import com.ssafy.be.global.portone.PortOneClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientException;
 
 // [Service Layer]
 // 비즈니스 로직을 담당
@@ -20,7 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder; // SecurityConfig에 등록한 BCrypt 빈 주입
+    private final PasswordEncoder passwordEncoder;
+    private final PortOneClient portOneClient;  // ← 추가
 
     // -----------------------------------------------
     // 이메일 중복 확인
@@ -63,5 +69,39 @@ public class UserService {
         // 5. 응답 DTO 변환 후 반환
         // DTO 내부의 fromEntity()로 변환 (Entity를 직접 반환하지 않음)
         return SignupResponseDto.fromEntity(savedUser);
+    }
+
+    // -----------------------------------------------
+// 본인인증 검증
+// POST /api/v1/auth/identity-verification
+// -----------------------------------------------
+    public IdentityVerificationResponseDto verifyIdentity(
+            IdentityVerificationRequestDto requestDto) {
+
+        // 1. PortOne API로 인증 결과 조회
+        JsonNode result;
+        try {
+            result = portOneClient.getIdentityVerification(requestDto.identityVerificationId());
+        } catch (RestClientException e) {
+            throw new GlobalException(UserErrorCode.IDENTITY_VERIFICATION_NOT_FOUND);
+        }
+
+        // 2. 인증 상태 확인
+        String status = result.path("status").asText();
+        if (!"VERIFIED".equals(status)) {
+            throw new GlobalException(UserErrorCode.IDENTITY_VERIFICATION_FAILED);
+        }
+
+        // 3. 인증 정보 추출
+        JsonNode verifiedCustomer = result.path("verifiedCustomer");
+        if (verifiedCustomer.isMissingNode()) {
+            throw new GlobalException(UserErrorCode.IDENTITY_VERIFICATION_NOT_FOUND);
+        }
+
+        String name = verifiedCustomer.path("name").asText();
+        String phoneNumber = verifiedCustomer.path("phoneNumber").asText();
+        String birthDate = verifiedCustomer.path("birthDate").asText();
+
+        return new IdentityVerificationResponseDto(name, phoneNumber, birthDate);
     }
 }
