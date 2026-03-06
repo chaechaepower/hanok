@@ -414,7 +414,7 @@ export default function SignUpPage() {
           <button
             type="button"
             onClick={() => navigate('/login')}
-            className="text-yel font-semibold hover:underline ml-1"
+            className="text-gold font-semibold hover:underline ml-1"
           >
             로그인
           </button>
