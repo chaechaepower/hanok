@@ -13,5 +13,8 @@ export const handlers = [
       grade: "A"
     }, { status: 200 });
   }),
-
+  http.post(`${BASE_URL}/v1/sellers/account`, async () => {
+    // API 명세서에 맞는 응답값 반환 (200 OK without body content)
+    return new HttpResponse(null, { status: 200 });
+  }),
 ];

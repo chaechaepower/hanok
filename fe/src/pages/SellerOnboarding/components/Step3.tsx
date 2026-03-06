@@ -8,7 +8,7 @@ export default function Step3({
   onNext,
 }: {
   onPrev: () => void;
-  onNext: (accountId: number) => void;
+  onNext: () => void;
 }) {
   const { mutateAsync: registerAccount, isPending: isRegistering } = useRegisterAccount();
   const [accountName, setaccountName] = useState('');
@@ -36,13 +36,12 @@ export default function Step3({
     setError('');
 
     try {
-      const response = await registerAccount({
+      await registerAccount({
         bankName: bank,
         accountNum: accountNumber,
         accountName,
       });
-      // API may or may not return accountId. If not, we pass 1 as default.
-      onNext(response?.accountId || 1);
+      onNext();
     } catch {
       setError('계좌 등록에 실패했습니다. 다시 시도해주세요.');
     }
@@ -50,7 +49,6 @@ export default function Step3({
 
   return (
     <>
-      {/* Header */}
       <div style={{ marginBottom: '28px' }}>
         <h2 style={{ fontSize: '17px', fontWeight: '700', color: 'white', marginBottom: '6px' }}>
           정산받을 은행 계좌 인증을 진행해주세요.

@@ -8,10 +8,8 @@ import Step4 from './components/Step4';
 
 export default function SellerOnboardingPage() {
   const [currentStep, setCurrentStep] = useState(1);
-  // Step 1에서 수집한 데이터를 Step 4 API에 전달하기 위해 상위에서 관리
   const [businessType, setBusinessType] = useState<BusinessType>('individual');
   const [businessNumber, setBusinessNumber] = useState<string | null>(null);
-  const accountId = 1; // TODO: Step 3에서 인증된 계좌 ID로 대체
 
   return (
     <div
@@ -62,7 +60,6 @@ export default function SellerOnboardingPage() {
             onPrev={() => setCurrentStep(3)}
             businessType={businessType}
             businessNumber={businessNumber}
-            accountId={accountId}
           />
         )}
       </div>

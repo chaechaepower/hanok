@@ -22,15 +22,11 @@ export type RegisterAccountPayload = {
   accountName: string;
 };
 
-export type RegisterAccountResponse = {
-  // Assuming the API returns the accountId to be passed to Step 4
-  accountId: number;
-};
+export type RegisterAccountResponse = unknown;
 
 export type RegisterSellerPayload = {
   type: BusinessType;
   businessNumber: string | null;
-  accountId: number;
   nickname: string;
   intro: string;
   youtube_link: string;

@@ -7,12 +7,10 @@ export default function Step4({
   onPrev,
   businessType,
   businessNumber,
-  accountId,
 }: {
   onPrev: () => void;
   businessType: 'individual' | 'corporate';
   businessNumber: string | null;
-  accountId: number;
 }) {
   const navigate = useNavigate();
   const { mutateAsync: registerSeller, isPending } = useRegisterSeller();
@@ -55,7 +53,6 @@ export default function Step4({
       await registerSeller({
         type: businessType,
         businessNumber: businessNumber,
-        accountId: accountId,
         nickname: nickname.trim(),
         intro: intro.trim(),
         youtube_link: youtubeLink.trim(),
