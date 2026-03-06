@@ -12,8 +12,7 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "test:watch": "vitest watch",
-    "prepare": "cd .. && husky fe/.husky"
+    "test:watch": "vitest watch"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.21",
@@ -46,7 +45,6 @@
     "eslint-plugin-unused-imports": "^4.4.1",
     "eslint-plugin-vitest-globals": "^1.5.0",
     "globals": "^16.5.0",
-    "husky": "^9.1.7",
     "jsdom": "^28.1.0",
     "msw": "^2.12.10",
     "prettier": "^3.8.1",
