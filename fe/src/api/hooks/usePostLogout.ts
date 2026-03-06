@@ -1,14 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
-
-export type LogoutPayload = {
-  refreshToken: string;
-};
-
-export type LogoutResponse = {
-  success: boolean;
-};
+import type { LogoutPayload, LogoutResponse } from '@/types';
 
 export const getLogoutPath = () => `/v1/auth/logout`;
 

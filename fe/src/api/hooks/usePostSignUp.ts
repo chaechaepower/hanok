@@ -1,14 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
-
-export type SignUpPayload = {
-  email: string;
-  nickname: string;
-  password: string;
-  phone: string;
-  smsToken: string;
-};
+import type { SignUpPayload } from '@/types';
 
 export const getSignUpPath = () => `/v1/auth/signup`;
 

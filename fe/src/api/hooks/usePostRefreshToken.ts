@@ -1,15 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
-
-export type RefreshTokenPayload = {
-  refreshToken: string;
-};
-
-export type RefreshTokenResponse = {
-  accessToken: string;
-  refreshToken: string;
-};
+import type { RefreshTokenPayload, RefreshTokenResponse } from '@/types';
 
 export const getRefreshTokenPath = () => `/v1/auth/refresh`;
 

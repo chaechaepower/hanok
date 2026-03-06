@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { login } from '@/api/hooks/usePostLogin';
+import Button from '@/components/common/Button';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -190,23 +191,24 @@ export default function LoginPage() {
 
         {/* Submit */}
         <div>
-          <button
+          <Button
             id="login-submit"
             type="submit"
+            variant="white"
+            size="large"
             disabled={isLoading}
-            className="w-full bg-[#F5F2EB] text-black font-bold h-14 rounded-full text-[16px] transition-transform hover:bg-[#EDE8DF] active:scale-[0.98] disabled:opacity-60"
           >
             {isLoading ? '로그인 중...' : '로그인'}
-          </button>
+          </Button>
         </div>
 
         {/* Sign Up Link */}
-        <div className="text-center text-[13px] text-[#A0A0A0] mt-1">
-          아직 계정이 없으신가요?{' '}
+        <div className="text-center text-[13px] text-[#A0A0A0] mt-1 flex items-center justify-center gap-1">
+          아직 계정이 없으신가요?
           <button
             type="button"
             onClick={() => navigate('/signup')}
-            className="text-[#F5F2EB] font-semibold hover:underline ml-1"
+            className="text-[#C7B282] font-semibold hover:underline"
           >
             회원가입
           </button>

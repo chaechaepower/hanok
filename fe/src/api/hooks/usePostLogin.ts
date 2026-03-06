@@ -1,21 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
-
-export type LoginPayload = {
-  email: string;
-  password: string;
-};
-
-export type LoginResponse = {
-  accessToken: string;
-  refreshToken: string;
-  user: {
-    userId: number;
-    email: string;
-    phone: string;
-  };
-};
+import type { LoginPayload, LoginResponse } from '@/types';
 
 export const getLoginPath = () => `/v1/auth/login`;
 
