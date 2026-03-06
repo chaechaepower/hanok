@@ -9,11 +9,17 @@ import {
   FaPuzzlePiece,
   FaShoePrints,
   FaSuitcase,
+  FaThLarge,
   FaTshirt,
   FaRegCreditCard,
 } from 'react-icons/fa';
 
 export const MAIN_CATEGORY_ITEMS: SideBarItem[] = [
+  {
+    id: 'ALL',
+    label: '전체',
+    icon: <FaThLarge />,
+  },
   {
     id: '스니커즈/신발',
     label: '스니커즈/신발',

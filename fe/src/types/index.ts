@@ -68,3 +68,29 @@ export type SideBarItem = {
   label: string;
   icon?: React.ReactNode;
 };
+
+export type LiveSeller = {
+  sellerId: number;
+  nickname: string;
+  profileImageUri: string | null;
+};
+
+export type LiveCardData = {
+  streamId: number;
+  title: string;
+  category: string;
+  thumbnailUri: string | null;
+  isLive: boolean;
+  viewerCount: number;
+  scheduledAt: string | null;
+  startedAt: string | null;
+  seller: LiveSeller;
+};
+
+export type MainLiveResponse = {
+  content: LiveCardData[];
+  page: number;
+  size: number;
+  totalElements: number;
+  hasNext: boolean;
+};
