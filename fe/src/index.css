@@ -1,5 +1,26 @@
 @import 'tailwindcss';
 
+@font-face {
+    font-family: 'MuseumCulturalFoundationClassic';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/국립박물관문화재단클래식L.woff') format('woff');
+    font-weight: 300;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MuseumCulturalFoundationClassic';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/국립박물관문화재단클래식M.woff') format('woff');
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'MuseumCulturalFoundationClassic';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/국립박물관문화재단클래식B.woff') format('woff');
+    font-weight: 700;
+    font-display: swap;
+}
+
 html {
   background-color: #0B0C10;
 }
@@ -106,7 +127,7 @@ section {
 }
 body {
   line-height: 1;
-  font-family: 'Pretendard', sans-serif;
+  font-family: 'MuseumCulturalFoundationClassic', sans-serif;
   color: black;
 }
 ol,
