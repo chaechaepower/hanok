@@ -5,6 +5,7 @@ import { QueryClient } from "@tanstack/react-query";
 let accessToken: string | null = null;
 let instance: AxiosInstance | null = null;
 
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export const setAuthToken = (token: string | null) => {
   accessToken = token;
 };

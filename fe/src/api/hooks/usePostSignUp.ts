@@ -13,5 +13,6 @@ export const signUp = async (payload: SignUpPayload) => {
 export const useSignUp = () => {
   return useMutation({
     mutationFn: (payload: SignUpPayload) => signUp(payload),
+    throwOnError: false,
   });
 };

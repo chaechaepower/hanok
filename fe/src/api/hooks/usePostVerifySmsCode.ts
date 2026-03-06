@@ -16,5 +16,6 @@ export const useVerifySmsCode = () => {
   return useMutation({
     mutationFn: ({ phone, code }: { phone: string; code: string }) =>
       verifySmsCode(phone, code),
+    throwOnError: false,
   });
 };
