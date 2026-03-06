@@ -34,7 +34,7 @@ public class SecurityConfig {
 
                 // URL별 인증 규칙
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**",
+                        .requestMatchers("/api/v1/auth/**",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**")
                         .permitAll()
