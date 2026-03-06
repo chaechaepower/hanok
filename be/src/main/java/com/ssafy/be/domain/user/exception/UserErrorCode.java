@@ -1,0 +1,24 @@
+package com.ssafy.be.domain.user.exception;
+
+import com.ssafy.be.global.exception.ErrorCode;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import org.springframework.http.HttpStatus;
+
+// 인증/회원 관련 에러코드
+// global의 ErrorCode 인터페이스를 구현
+// GlobalExceptionHandler가 GlobalException을 잡아서 처리하므로
+// throw new GlobalException(AuthErrorCode.XXX) 형태로 사용
+@Getter
+@AllArgsConstructor
+public enum UserErrorCode implements ErrorCode {
+
+    // 회원가입 관련
+    EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "USER-001", "이미 사용 중인 이메일입니다."),
+    INVALID_PASSWORD_FORMAT(HttpStatus.BAD_REQUEST, "USER-002", "비밀번호 형식이 올바르지 않습니다."),
+    INVALID_PHONE_FORMAT(HttpStatus.BAD_REQUEST, "USER-003", "전화번호 형식이 올바르지 않습니다.");
+
+    private final HttpStatus httpStatus;
+    private final String code;
+    private final String message;
+}
