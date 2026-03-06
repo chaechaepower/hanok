@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
 
-export const getCheckEmailDuplicatePath = () => `/members/check-email`;
+export const getCheckEmailDuplicatePath = () => `/v1/auth/check-email`;
 
 export const checkEmailDuplicate = async (email: string) => {
   const response = await getFetchInstance().get<{ isDuplicated: boolean }>(

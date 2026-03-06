@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
 
-export const getVerifySmsCodePath = () => `/auth/sms/verify`;
+export const getVerifySmsCodePath = () => `/v1/auth/sms/verify`;
 
 export const verifySmsCode = async (phone: string, code: string) => {
   const response = await getFetchInstance().post<{ verified: boolean; sessionToken: string }>(
