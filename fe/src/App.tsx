@@ -16,12 +16,12 @@ import MainLayout from "@/components/common/layouts/MainLayout";
 function App() {
   return (
     <Routes>
+      <Route path="seller/register" element={<SellerOnboardingPage />} />
       <Route path="/" element={<MainLayout />}>
         <Route index element={<MainPage />} />
         <Route path="tracking" element={<TrakingInputPage />} />
         <Route path="my" element={<MyPage />} />
         <Route path="seller/:id" element={<SellerProfilePage />} />
-        <Route path="seller/register" element={<SellerOnboardingPage />} />
         <Route path="live/:id" element={<LivePage />} />
         <Route path="live/new" element={<LiveCreatePage />} />
         <Route path="products" element={<ProductListPage />} />

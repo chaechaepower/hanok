@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { checkEmailDuplicate, requestSmsCode, verifySmsCode, signUp } from './api';
+import { checkEmailDuplicate } from '@/api/hooks/useGetCheckEmailDuplicate';
+import { requestSmsCode } from '@/api/hooks/usePostRequestSmsCode';
+import { verifySmsCode } from '@/api/hooks/usePostVerifySmsCode';
+import { signUp } from '@/api/hooks/usePostSignUp';
+import Button from '@/components/common/Button';
 
 export default function SignUpPage() {
   const navigate = useNavigate();
@@ -142,14 +146,15 @@ export default function SignUpPage() {
               onChange={(e) => { setEmail(e.target.value); setIsEmailVerified(false); }}
               className={inputClass}
             />
-            <button
-              type="button"
-              className="bg-[#F5F2EB] text-black text-[13px] font-semibold rounded-full px-6 py-2 disabled:opacity-60"
+            <Button
+              variant="white"
+              size="small"
               onClick={handleEmailCheck}
               disabled={isEmailVerified}
+              className="!w-auto px-5"
             >
               중복 확인
-            </button>
+            </Button>
           </div>
           {emailError && <p className="text-[#FF453A] text-xs px-1">{emailError}</p>}
           {isEmailVerified && <p className="text-[#32D74B] text-xs px-1">사용 가능한 이메일입니다.</p>}
@@ -212,14 +217,15 @@ export default function SignUpPage() {
               onChange={(e) => setPhone(e.target.value)}
               className={inputClass}
             />
-            <button
-              type="button"
-              className="bg-[#F5F2EB] text-black text-[13px] font-semibold rounded-full px-6 py-2 disabled:opacity-60"
+            <Button
+              variant="white"
+              size="small"
               onClick={handleSmsRequest}
               disabled={isSmsVerified}
+              className="!w-auto px-5"
             >
               인증 번호
-            </button>
+            </Button>
           </div>
           {phoneError && <p className="text-[#FF453A] text-xs px-1">{phoneError}</p>}
 
@@ -233,13 +239,14 @@ export default function SignUpPage() {
                 onChange={(e) => setSmsCode(e.target.value)}
                 className={`${inputClass} ml-8`}
               />
-              <button
-                type="button"
-                className="bg-[#3A3A3D] text-[#E5E5EA] text-[13px] font-semibold rounded-full px-8 py-2 hover:bg-[#4C4C4F]"
+              <Button
+                variant="outline"
+                size="small"
                 onClick={handleSmsVerify}
+                className="!w-auto px-6"
               >
                 확인
-              </button>
+              </Button>
             </div>
           )}
           {smsCodeError && <p className="text-[#FF453A] text-xs px-1">{smsCodeError}</p>}
@@ -292,21 +299,18 @@ export default function SignUpPage() {
 
         {/* Submit */}
         <div className="mt-4">
-          <button
-            type="submit"
-            className="w-full bg-[#F5F2EB] text-black font-bold h-14 rounded-full text-[16px] transition-transform hover:bg-[#F5F2EB] active:scale-[0.98]"
-          >
+          <Button type="submit" variant="white" size="large">
             가입 하기
-          </button>
+          </Button>
         </div>
 
         {/* Login Link */}
-        <div className="text-center text-[13px] text-[#A0A0A0] mt-1">
-          이미 계정이 있으신가요?{' '}
+        <div className="text-center text-[13px] text-[#A0A0A0] mt-1 flex items-center justify-center gap-1">
+          이미 계정이 있으신가요?
           <button
             type="button"
             onClick={() => navigate('/login')}
-            className="text-[#F5F2EB] font-semibold hover:underline ml-1"
+            className="text-[#C7B282] font-semibold hover:underline"
           >
             로그인
           </button>
