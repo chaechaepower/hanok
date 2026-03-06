@@ -21,6 +21,12 @@ export const usePostItem = () => {
         });
       }
 
+      if (payload.tags && payload.tags.length > 0) {
+        payload.tags.forEach((tag) => {
+          formData.append('tags', tag);
+        });
+      }
+
       const response = await getFetchInstance().post(postItemPath(), formData, {
         headers: {
           'Content-Type': 'multipart/form-data',

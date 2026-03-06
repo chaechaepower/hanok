@@ -22,8 +22,10 @@ export const handlers = [
     const title = formData.get('title') as string || 'Mock Uploaded Item';
     const description = formData.get('description') as string || 'Mock Description';
     const startPrice = Number(formData.get('startPrice')) || 0;
-    const bidUnit = Number(formData.get('bidUnit')) || 1000;
-    const auctionTime = Number(formData.get('auctionDuration')) || 30;
+    const bidUnit = Number(formData.get('bidUnit'));
+    const auctionTime = Number(formData.get('auctionDuration'));
+    const category = Number(formData.get('categoryId'));
+    const categoryName = category === 1 ? '패션/잡화' : category === 3 ? '수집품' : '전자기기';
     
     // Check if there are newImages
     const newImages = formData.getAll('newImages');
@@ -34,18 +36,20 @@ export const handlers = [
       imageUrls = ['https://via.placeholder.com/160x160?text=Mock+Image'];
     }
 
+    const tags = formData.getAll('tags') as string[];
+
     const newItem = {
       id: Date.now() + Math.floor(Math.random() * 1000),
-      status: 'WAITING',
+      status: 'WAITING', // default status
       title,
       description,
-      tags: ['신규등록', '테스트'],
+      tags: tags.length > 0 ? tags : ['신규등록', '테스트'], // default if empty
       imageUrls,
       startPrice,
       bidUnit,
       auctionTime,
       condition: '새상품',
-      category: '카테고리명',
+      category: categoryName,
       auctionMethod: '영국식',
     };
     
@@ -58,18 +62,67 @@ export const handlers = [
     });
   }),
   
-  http.put(`${BASE_URL}/v1/items/:itemId`, async ({ params }) => {
+  http.put(`${BASE_URL}/v1/items/:itemId`, async ({ request, params }) => {
     await delay(500);
     const id = Number(params.itemId);
+    const formData = await request.formData();
+    
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
+    const tags = formData.getAll('tags') as string[];
+    
+    // Additional editable fields
+    const startPrice = formData.get('startPrice') ? Number(formData.get('startPrice')) : undefined;
+    const bidUnit = formData.get('bidUnit') ? Number(formData.get('bidUnit')) : undefined;
+    const auctionTime = formData.get('auctionDuration') ? Number(formData.get('auctionDuration')) : undefined;
+    const category = formData.get('categoryId') ? Number(formData.get('categoryId')) : undefined;
+    const conditionRaw = formData.get('condition') as string;
+    const auctionMethodRaw = formData.get('auctionMethod') as string;
+
+    const condition = conditionRaw === 'new' ? '새상품' : conditionRaw === 'like-new' ? '거의 새것' : conditionRaw === 'used' ? '사용감 있음' : undefined;
+    const auctionMethod = auctionMethodRaw === 'english' ? '영국식' : auctionMethodRaw === 'dutch' ? '내림차순' : undefined;
+    const categoryName = category ? (category === 1 ? '패션/잡화' : category === 3 ? '수집품' : '전자기기') : undefined;
+
     const itemIndex = mockItems.findIndex(i => i.id === id);
     if (itemIndex > -1) {
-      mockItems[itemIndex] = { ...mockItems[itemIndex], title: "Mock Edited Item" };
+      const itemToUpdate = mockItems[itemIndex];
+      // Keep existing logic for images but add it here if need be...
+      
+      const newImages = formData.getAll('newImages');
+      const existingImageUrls = formData.getAll('existingImageUrls') as string[];
+      let imageUrls: string[] = existingImageUrls.length > 0 ? [...existingImageUrls] : [];
+      
+      if (newImages && newImages.length > 0) {
+        newImages.forEach(file => {
+           imageUrls.push(URL.createObjectURL(file as Blob));
+        });
+      }
+      if (imageUrls.length === 0 && itemToUpdate.imageUrls && itemToUpdate.imageUrls.length > 0) {
+          imageUrls = itemToUpdate.imageUrls;
+      }
+
+      mockItems[itemIndex] = { 
+        ...itemToUpdate, 
+        title: title || itemToUpdate.title,
+        description: description || itemToUpdate.description,
+        tags: tags.length > 0 ? tags : itemToUpdate.tags, // override tags or keep old
+        imageUrls: imageUrls,
+        startPrice: startPrice !== undefined ? startPrice : itemToUpdate.startPrice,
+        bidUnit: bidUnit !== undefined ? bidUnit : itemToUpdate.bidUnit,
+        auctionTime: auctionTime !== undefined ? auctionTime : itemToUpdate.auctionTime,
+        condition: condition !== undefined ? condition : itemToUpdate.condition,
+        category: categoryName !== undefined ? categoryName : itemToUpdate.category,
+        auctionMethod: auctionMethod !== undefined ? auctionMethod : itemToUpdate.auctionMethod,
+      };
+      
+      return HttpResponse.json({
+        itemId: id,
+        title: mockItems[itemIndex].title,
+        status: "ready"
+      });
     }
-    return HttpResponse.json({
-      itemId: id,
-      title: "Mock Edited Item",
-      status: "ready"
-    });
+
+    return HttpResponse.json({ error: "Item not found" }, { status: 404 });
   }),
 
   http.delete(`${BASE_URL}/v1/items/:itemId`, async ({ params }) => {

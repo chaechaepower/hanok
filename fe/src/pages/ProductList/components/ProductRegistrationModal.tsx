@@ -3,6 +3,7 @@ import { FaTimes, FaCloudUploadAlt } from 'react-icons/fa';
 import Button from '@/components/common/Button';
 import { usePostItem } from '@/api/hooks/usePostItem';
 import { usePutItem } from '@/api/hooks/usePutItem';
+import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
 import type { Product } from '@/types';
 
 interface ProductRegistrationModalProps {
@@ -39,8 +40,10 @@ export default function ProductRegistrationModal({ isOpen, onClose, onSuccess, i
       if (initialData) {
         setTitle(initialData.title);
         setDescription(initialData.description);
-        // Map category strings to IDs logically or hardcode for now
-        setCategory(initialData.category === '패션/잡화' ? '1' : initialData.category === '수집품' ? '3' : '2');
+        
+        // Match category from list
+        const matchedCategory = MAIN_CATEGORY_ITEMS.find(c => c.label === initialData.category || c.id === initialData.category);
+        setCategory(matchedCategory ? matchedCategory.id : '');
         
         // Map condition
         setCondition(initialData.condition === '미개봉' ? 'new' : initialData.condition === '거의 새것' ? 'like-new' : 'used');
@@ -93,6 +96,12 @@ export default function ProductRegistrationModal({ isOpen, onClose, onSuccess, i
     if (!category) { setError('카테고리를 선택해주세요'); return; }
     // Add more basic validation as needed...
 
+    // Parse hashtags
+    const parsedTags = hashtags
+      .split(/\s+/) // split by space
+      .map(tag => tag.replace(/^#/, '').trim()) // remove # and trim
+      .filter(tag => tag.length > 0); // remove empty
+
     try {
       if (initialData) {
         await updateItem({
@@ -102,6 +111,13 @@ export default function ProductRegistrationModal({ isOpen, onClose, onSuccess, i
             description,
             existingImageUrls: existingImages,
             newImages: images,
+            startPrice: Number(startPrice.replace(/\D/g, '')) || 0,
+            auctionDuration: Number(auctionTime) || 30,
+            bidUnit: Number(bidUnit.replace(/\D/g, '')) || 1000,
+            categoryId: MAIN_CATEGORY_ITEMS.findIndex(c => c.id === category) + 1 || 1,
+            condition,
+            auctionMethod,
+            tags: parsedTags,
           }
         });
         console.log('상품 수정 완료');
@@ -113,7 +129,8 @@ export default function ProductRegistrationModal({ isOpen, onClose, onSuccess, i
           startPrice: Number(startPrice.replace(/\D/g, '')) || 0,
           auctionDuration: Number(auctionTime) || 30,
           bidUnit: Number(bidUnit.replace(/\D/g, '')) || 1000,
-          categoryId: Number(category) || 1,
+          categoryId: MAIN_CATEGORY_ITEMS.findIndex(c => c.id === category) + 1 || 1,
+          tags: parsedTags,
         });
         console.log('상품 등록 완료');
       }
@@ -163,7 +180,7 @@ export default function ProductRegistrationModal({ isOpen, onClose, onSuccess, i
       justifyContent: 'center',
       zIndex: 1000,
     }}>
-      <div style={{
+      <div className="custom-scrollbar" style={{
         backgroundColor: '#151517',
         width: '480px',
         maxHeight: '90vh',
@@ -273,9 +290,9 @@ export default function ProductRegistrationModal({ isOpen, onClose, onSuccess, i
             <label style={labelStyle}>카테고리</label>
             <select style={selectStyle} value={category} onChange={(e) => { setCategory(e.target.value); setError(''); }}>
               <option value="" disabled hidden>선택</option>
-              <option value="1">패션/잡화</option>
-              <option value="2">전자기기</option>
-              <option value="3">수집품</option>
+              {MAIN_CATEGORY_ITEMS.map(item => (
+                <option key={item.id} value={item.id}>{item.label}</option>
+              ))}
             </select>
           </div>
           <div style={{ flex: 1 }}>

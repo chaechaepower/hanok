@@ -11,6 +11,13 @@ export const usePutItem = () => {
       formData.append('title', payload.title);
       formData.append('description', payload.description);
 
+      if (payload.startPrice !== undefined) formData.append('startPrice', payload.startPrice.toString());
+      if (payload.bidUnit !== undefined) formData.append('bidUnit', payload.bidUnit.toString());
+      if (payload.auctionDuration !== undefined) formData.append('auctionDuration', payload.auctionDuration.toString());
+      if (payload.categoryId !== undefined) formData.append('categoryId', payload.categoryId.toString());
+      if (payload.condition !== undefined) formData.append('condition', payload.condition);
+      if (payload.auctionMethod !== undefined) formData.append('auctionMethod', payload.auctionMethod);
+
       if (payload.existingImageUrls && payload.existingImageUrls.length > 0) {
         payload.existingImageUrls.forEach((url) => {
           formData.append('existingImageUrls', url);
@@ -20,6 +27,12 @@ export const usePutItem = () => {
       if (payload.newImages && payload.newImages.length > 0) {
         payload.newImages.forEach((file) => {
           formData.append('newImages', file);
+        });
+      }
+
+      if (payload.tags && payload.tags.length > 0) {
+        payload.tags.forEach((tag) => {
+          formData.append('tags', tag);
         });
       }
 
