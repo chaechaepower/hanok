@@ -1,26 +1,30 @@
 package com.ssafy.be.domain.user.controller;
 
 import com.ssafy.be.domain.user.dto.request.IdentityVerificationRequestDto;
+import com.ssafy.be.domain.user.dto.request.LoginRequestDto;
 import com.ssafy.be.domain.user.dto.request.SignupRequestDto;
 import com.ssafy.be.domain.user.dto.response.IdentityVerificationResponseDto;
+import com.ssafy.be.domain.user.dto.response.LoginResponseDto;
 import com.ssafy.be.domain.user.dto.response.SignupResponseDto;
 import com.ssafy.be.domain.user.service.UserService;
 import com.ssafy.be.global.common.response.ApiResponse;
+import com.ssafy.be.global.security.util.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Duration;
 
-// [Controller Layer]
-// HTTP 요청을 받아서 Service에 전달하고 응답을 반환
-// 비즈니스 로직은 Service에서 처리, Controller는 요청/응답만 담당
-// @Valid로 DTO 검증 → 실패 시 GlobalExceptionHandler가 처리
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -28,6 +32,10 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final JwtUtil jwtUtil;
+
+    // "refreshToken" 문자열 상수로 관리
+    private static final String REFRESH_TOKEN_COOKIE = "refreshToken";
 
     // -----------------------------------------------
     // 이메일 중복 확인
@@ -37,15 +45,11 @@ public class UserController {
     @GetMapping("/check-email")
     public ResponseEntity<ApiResponse<Void>> checkEmail(
             @RequestParam
-            @NotBlank(message = "이메일은 필수입니다.")
-            @Email(message = "이메일 형식이 올바르지 않습니다.")
+            @NotBlank
+            @Email
             String email) {
 
-        // Service에서 중복 시 GlobalException(UserErrorCode.EMAIL_ALREADY_EXISTS) 던짐
-        // → GlobalExceptionHandler가 409 CONFLICT 응답 반환
         userService.checkEmailDuplicate(email);
-
-        // 중복 없으면 200 OK 반환
         return ResponseEntity.ok(ApiResponse.success());
     }
 
@@ -58,11 +62,7 @@ public class UserController {
     public ResponseEntity<ApiResponse<SignupResponseDto>> signup(
             @RequestBody @Valid SignupRequestDto requestDto) {
 
-        // @Valid → SignupRequestDto의 @NotBlank, @Email, @Pattern 검증
-        // 실패 시 GlobalExceptionHandler가 400 BAD_REQUEST 응답 반환
         SignupResponseDto responseDto = userService.signup(requestDto);
-
-        // 201 CREATED + 응답 DTO 반환
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.success(responseDto));
@@ -79,5 +79,82 @@ public class UserController {
 
         IdentityVerificationResponseDto response = userService.verifyIdentity(requestDto);
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    // -----------------------------------------------
+    // 로그인
+    // POST /api/v1/auth/login
+    // -----------------------------------------------
+    @Operation(summary = "로그인", description = "로그인 후 Access Token(헤더), Refresh Token(쿠키) 발급")
+    @PostMapping("/login")
+    public ResponseEntity<ApiResponse<Void>> login(
+            @RequestBody @Valid LoginRequestDto requestDto,
+            HttpServletResponse response) {
+
+        LoginResponseDto tokens = userService.login(requestDto);
+
+        // Access Token → Authorization 헤더
+        response.setHeader("Authorization", "Bearer " + tokens.accessToken());
+
+        // Refresh Token → HttpOnly Cookie
+        response.addHeader(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokens.refreshToken()).toString());
+
+        return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    // -----------------------------------------------
+    // 로그아웃
+    // POST /api/v1/auth/logout
+    // -----------------------------------------------
+    @Operation(summary = "로그아웃", description = "Refresh Token 삭제 및 Access Token 블랙리스트 등록")
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+        String token = jwtUtil.resolveToken(request);
+        userService.logout(token);
+
+        // Cookie 삭제
+        ResponseCookie deleteCookie = ResponseCookie.from(REFRESH_TOKEN_COOKIE, "")
+                .httpOnly(true)
+                .path("/")
+                .maxAge(0)
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+
+        return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    // -----------------------------------------------
+    // 토큰 재발급
+    // POST /api/v1/auth/refresh
+    // -----------------------------------------------
+    @Operation(summary = "토큰 재발급", description = "Refresh Token으로 새 Access Token, Refresh Token 발급")
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<Void>> refresh(
+            @CookieValue(name = REFRESH_TOKEN_COOKIE) String refreshToken,
+            HttpServletResponse response) {
+
+        LoginResponseDto tokens = userService.refresh(refreshToken);
+
+        // 새 Access Token → Authorization 헤더
+        response.setHeader("Authorization", "Bearer " + tokens.accessToken());
+
+        // 새 Refresh Token → HttpOnly Cookie 갱신
+        response.addHeader(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokens.refreshToken()).toString());
+
+        return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    // Refresh Token 쿠키 생성 헬퍼 메서드 (중복 제거)
+    private ResponseCookie buildRefreshCookie(String refreshToken) {
+        return ResponseCookie.from(REFRESH_TOKEN_COOKIE, refreshToken)
+                .httpOnly(true)
+                .secure(false)      // prod에서는 true로 변경
+                .path("/")
+                .maxAge(Duration.ofDays(7))
+                .sameSite("Strict")
+                .build();
     }
 }

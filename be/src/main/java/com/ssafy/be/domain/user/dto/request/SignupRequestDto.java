@@ -12,21 +12,21 @@ import jakarta.validation.constraints.Pattern;
 // toEntity()로 직접 User Entity로 변환
 public record SignupRequestDto(
 
-        @NotBlank(message = "이메일은 필수입니다.")
-        @Email(message = "이메일 형식이 올바르지 않습니다.")
+        @NotBlank()
+        @Email()
         String email,
 
-        @NotBlank(message = "비밀번호는 필수입니다.")
+        @NotBlank()
         @Pattern(
                 regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,20}$",
                 message = "비밀번호는 8~20자, 영문/숫자/특수문자를 포함해야 합니다."
         )
         String password,
 
-        @NotBlank(message = "닉네임은 필수입니다.")
+        @NotBlank()
         String nickname,
 
-        @NotBlank(message = "전화번호는 필수입니다.")
+        @NotBlank()
         @Pattern(
                 regexp = "^01\\d{8,9}$",
                 message = "전화번호 형식이 올바르지 않습니다. (예: 01012345678)"

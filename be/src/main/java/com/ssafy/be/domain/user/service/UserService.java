@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.ssafy.be.domain.user.dto.request.IdentityVerificationRequestDto;
 import com.ssafy.be.domain.user.dto.request.SignupRequestDto;
 import com.ssafy.be.domain.user.dto.response.IdentityVerificationResponseDto;
+import com.ssafy.be.domain.user.dto.response.LoginResponseDto;
 import com.ssafy.be.domain.user.dto.response.SignupResponseDto;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.exception.UserErrorCode;
@@ -16,6 +17,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 
+import com.ssafy.be.domain.user.dto.request.LoginRequestDto;
+import com.ssafy.be.global.infra.redis.RedisService;
+import com.ssafy.be.global.security.util.JwtUtil;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import java.util.concurrent.TimeUnit;
+
 // [Service Layer]
 // 비즈니스 로직을 담당
 // Controller에서 호출 → Repository로 DB 접근
@@ -26,8 +34,12 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final PortOneClient portOneClient;  // ← 추가
+    private final PortOneClient portOneClient;
+    private final RedisService redisService;
+    private final JwtUtil jwtUtil;
 
+    private static final String REFRESH_TOKEN_PREFIX = "refresh:";
+    private static final String BLACKLIST_PREFIX = "blacklist:";
     // -----------------------------------------------
     // 이메일 중복 확인
     // GET /api/v1/auth/check-email?email=xxx
@@ -72,9 +84,9 @@ public class UserService {
     }
 
     // -----------------------------------------------
-// 본인인증 검증
-// POST /api/v1/auth/identity-verification
-// -----------------------------------------------
+    // 본인인증 검증
+    // POST /api/v1/auth/identity-verification
+    // -----------------------------------------------
     public IdentityVerificationResponseDto verifyIdentity(
             IdentityVerificationRequestDto requestDto) {
 
@@ -103,5 +115,84 @@ public class UserService {
         String birthDate = verifiedCustomer.path("birthDate").asText();
 
         return new IdentityVerificationResponseDto(name, phoneNumber, birthDate);
+    }
+    // -----------------------------------------------
+    // 로그인
+    // POST /api/v1/auth/login
+    // -----------------------------------------------
+    @Transactional(readOnly = true)
+    public LoginResponseDto login(LoginRequestDto requestDto) {
+
+        // 1. 이메일로 유저 조회
+        User user = userRepository.findByEmail(requestDto.email())
+                .orElseThrow(() -> new GlobalException(UserErrorCode.USER_NOT_FOUND));
+
+        // 2. 비밀번호 검증
+        if (!passwordEncoder.matches(requestDto.password(), user.getPassword())) {
+            throw new GlobalException(UserErrorCode.INVALID_PASSWORD);
+        }
+
+        // 3. 토큰 발급
+        String accessToken = jwtUtil.generateToken(user.getId(), "USER");
+        String refreshToken = jwtUtil.generateRefreshToken(user.getId());
+
+        // 4. Refresh Token Redis 저장 (7일)
+        redisService.save(REFRESH_TOKEN_PREFIX + user.getId(), refreshToken,
+                jwtUtil.getRefreshExpiration(), TimeUnit.MILLISECONDS);
+
+        return new LoginResponseDto(accessToken, refreshToken);
+    }
+
+    // -----------------------------------------------
+    // 로그아웃
+    // POST /api/v1/auth/logout
+    // -----------------------------------------------
+    public void logout(String accessToken) {
+
+        // Access Token 검증 제거 (필터에서 이미 검증됨)
+        Claims claims = jwtUtil.validateToken(accessToken);
+        Long userId = Long.parseLong(claims.getSubject());
+
+        // Refresh Token 삭제
+        redisService.delete(REFRESH_TOKEN_PREFIX + userId);
+
+        // Access Token 블랙리스트 등록
+        long expiration = jwtUtil.getExpiration(accessToken);
+        if (expiration > 0) {
+            redisService.save(BLACKLIST_PREFIX + accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    // -----------------------------------------------
+    // 토큰 재발급
+    // POST /api/v1/auth/refresh
+    // -----------------------------------------------
+    public LoginResponseDto refresh(String refreshToken) {
+
+        // 1. Refresh Token 검증
+        Claims claims;
+        try {
+            claims = jwtUtil.validateToken(refreshToken);
+        } catch (JwtException e) {
+            throw new GlobalException(UserErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        Long userId = Long.parseLong(claims.getSubject());
+
+        // 2. Redis에서 Refresh Token 존재 여부 확인
+        String savedToken = redisService.get(REFRESH_TOKEN_PREFIX + userId);
+        if (savedToken == null || !savedToken.equals(refreshToken)) {
+            throw new GlobalException(UserErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        // 3. 새 토큰 발급 (Refresh Token Rotation)
+        String newAccessToken = jwtUtil.generateToken(userId, "USER");
+        String newRefreshToken = jwtUtil.generateRefreshToken(userId);
+
+        // 4. Redis 업데이트
+        redisService.save(REFRESH_TOKEN_PREFIX + userId, refreshToken,
+                jwtUtil.getRefreshExpiration(), TimeUnit.MILLISECONDS);
+
+        return new LoginResponseDto(newAccessToken, newRefreshToken);
     }
 }
