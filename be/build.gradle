@@ -33,44 +33,60 @@ ext {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-integration'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    // web
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-web-services'
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
-    implementation 'com.google.cloud:spring-cloud-gcp-starter-storage'
-    implementation 'org.springframework.integration:spring-integration-http'
-    implementation 'org.springframework.integration:spring-integration-jpa'
-    implementation 'org.springframework.integration:spring-integration-stomp'
-    implementation 'org.springframework.integration:spring-integration-websocket'
-    implementation 'org.springframework.integration:spring-integration-ws'
-    implementation 'org.springframework.security:spring-security-messaging'
-    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
-    compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
-    runtimeOnly 'com.mysql:mysql-connector-j'
-    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.integration:spring-integration-test'
-    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    //JWT
+    // lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // mysql
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // spring data jpa
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // spring data redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // jwt
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-    //Swagger
+    // validation
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // websocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // monitoring
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+    // swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
 
-    //Redis
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis:3.4.3'
+    // dotenv (.env 파일 로딩)
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // devtools (로컬 개발용 hot reload)
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // gcp storage
+    implementation 'com.google.cloud:spring-cloud-gcp-starter-storage'
+
+    // portone
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.3.5"))
+    implementation("io.portone:server-sdk:0.9.1")
+
+    // test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
 }
 
 dependencyManagement {
