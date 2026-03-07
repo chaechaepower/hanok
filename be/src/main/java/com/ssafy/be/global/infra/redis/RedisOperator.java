@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Component
@@ -19,8 +20,23 @@ public class RedisOperator {
 
     private final StringRedisTemplate redisTemplate;
 
+    /* ================================
+     *           COMMON
+     * ================================ */
 
-    //Hash
+    // TTL 설정
+    public void setExpire(String key, long timeout, TimeUnit unit) {
+        redisTemplate.expire(key, timeout, unit);
+    }
+
+    public void delete(String key) {
+        redisTemplate.delete(key);
+    }
+
+    /* ================================
+     *           HASH
+     * ================================ */
+
     public Map<Object, Object> getHashEntries(String key) {
         return redisTemplate.opsForHash().entries(key);
     }
@@ -65,7 +81,10 @@ public class RedisOperator {
         });
     }
 
-    //ZSet
+    /* ================================
+     *           ZSet
+     * ================================ */
+
     public void addZSet(String key, String value, double score) {
         redisTemplate.opsForZSet().add(key, value, score);
     }
@@ -78,14 +97,14 @@ public class RedisOperator {
         return redisTemplate.opsForZSet().reverseRange(key, start, end);
     }
 
-
-
     //유저당 알림 개수 제한 TODO: 회의 필요
     public void keepZSetMaxSize(String key, long maxSize) {
         redisTemplate.opsForZSet().removeRange(key, 0, -(maxSize + 1));
     }
 
-    //String
+    /* ================================
+     *           String
+     * ================================ */
 
     //안읽음 cnt
     public void incrementValue(String key) {
@@ -103,12 +122,7 @@ public class RedisOperator {
     }
 
     //안읽음 초기화
-    public void setValue(String key, String value) { redisTemplate.opsForValue().set(key, value); }
-
-
-    //이후 TTL 설정
-    public void setExpire(String key, long timeout, java.util.concurrent.TimeUnit unit) {
-        redisTemplate.expire(key, timeout, unit);
+    public void setValue(String key, String value) {
+        redisTemplate.opsForValue().set(key, value);
     }
-
 }
