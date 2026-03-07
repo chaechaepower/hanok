@@ -1,5 +1,6 @@
 package com.ssafy.be.domain.notification.controller;
 
+import com.ssafy.be.domain.notification.controller.api.NotificationApi;
 import com.ssafy.be.domain.notification.dto.response.NotificationPageResponse;
 import com.ssafy.be.domain.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;

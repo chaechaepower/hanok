@@ -1,5 +1,7 @@
 package com.ssafy.be.domain.user.entity;
 
+import com.ssafy.be.domain.wallet.exception.WalletErrorCode;
+import com.ssafy.be.global.exception.GlobalException;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -18,7 +20,6 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -79,5 +80,13 @@ public class User {
                 .depositedBalance(0L)
                 .notificationSetting(true)
                 .build();
+    }
+
+    public void increaseBalance(Long amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("금액은 0보다 커야 합니다.");
+        }
+
+        this.balance += amount;
     }
 }

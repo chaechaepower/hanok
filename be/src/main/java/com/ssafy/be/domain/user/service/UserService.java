@@ -10,7 +10,7 @@ import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.exception.UserErrorCode;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
-import com.ssafy.be.global.portone.PortOneClient;
+import com.ssafy.be.global.infra.portone.PortoneClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,7 +34,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final PortOneClient portOneClient;
+    private final PortoneClient portOneClient;
     private final RedisService redisService;
     private final JwtUtil jwtUtil;
 
