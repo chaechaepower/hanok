@@ -1,5 +1,6 @@
 package com.ssafy.be.global.security.filter;
 
+import com.ssafy.be.global.infra.redis.RedisService;
 import com.ssafy.be.global.security.util.JwtUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -21,6 +22,9 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final RedisService redisService;
+
+    private static final String BLACKLIST_PREFIX = "blacklist:";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -31,6 +35,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null) {
             try {
+                // 블랙리스트 체크 (로그아웃된 토큰 차단)
+                if (redisService.exists(BLACKLIST_PREFIX + token)) {
+                    SecurityContextHolder.clearContext();
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 Claims claims = jwtUtil.validateToken(token);
 
                 // SecurityContext에 등록
@@ -42,7 +53,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         );
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                // TODO : 이거 예외 세세하게 할 필요가 있나?
             } catch (JwtException | IllegalArgumentException e) {
                 SecurityContextHolder.clearContext();
             }

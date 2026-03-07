@@ -37,8 +37,12 @@ springdoc:
     path: /swagger-ui.html
     tags-sorter: alpha
     operations-sorter: alpha
+    disable-swagger-default-url: true
   api-docs:
     path: /v3/api-docs
+  packages-to-scan: com.ssafy.be
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
 
 #logging:
 #  level:
