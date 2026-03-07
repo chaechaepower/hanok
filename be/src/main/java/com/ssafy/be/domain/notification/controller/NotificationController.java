@@ -1,7 +1,6 @@
 package com.ssafy.be.domain.notification.controller;
 
 import com.ssafy.be.domain.notification.dto.response.NotificationPageResponse;
-import com.ssafy.be.domain.notification.dto.response.NotificationResponse;
 import com.ssafy.be.domain.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
-public class NotificationController {
+public class NotificationController implements NotificationApi {
 
     private final NotificationService notificationService;
 
