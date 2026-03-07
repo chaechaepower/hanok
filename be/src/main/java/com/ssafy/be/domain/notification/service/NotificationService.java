@@ -93,7 +93,7 @@ public class NotificationService {
 
     private List<NotificationResponse> convertToDtoList(List<Notification> notifications) {
         return notifications.stream()
-                .map(NotificationResponse::from)
+                .map(this::from)
                 .collect(Collectors.toList());
     }
 
@@ -109,6 +109,18 @@ public class NotificationService {
                 .isRead(false)
                 .createdAt(LocalDateTime.now())
                 .actionUrl(actionUrl)
+                .build();
+    }
+
+    private NotificationResponse from(Notification noti) {
+        return NotificationResponse.builder()
+                .id(noti.id())
+                .type(noti.type())
+                .title(noti.title())
+                .body(noti.body())
+                .isRead(noti.isRead())
+                .createdAt(noti.createdAt())
+                .actionUrl(noti.actionUrl())
                 .build();
     }
 

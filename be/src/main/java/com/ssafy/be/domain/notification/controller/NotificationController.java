@@ -5,9 +5,9 @@ import com.ssafy.be.domain.notification.dto.response.NotificationResponse;
 import com.ssafy.be.domain.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
@@ -19,10 +19,11 @@ public class NotificationController {
     // 1. 알림 목록 조회
     @GetMapping
     public ResponseEntity<NotificationPageResponse> getNotifications(
-            @RequestHeader("X-User-Id") Long userId,
+            @AuthenticationPrincipal String principal,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int limit
     ) {
+        Long userId = getUserId(principal);
         NotificationPageResponse response = notificationService.getNotifications(userId, page, limit);
         return ResponseEntity.ok(response);
     }
@@ -30,9 +31,10 @@ public class NotificationController {
     // 2. 알림 읽음 처리
     @PatchMapping("/{notifId}/read")
     public ResponseEntity<Void> markAsRead(
-            @RequestHeader("X-User-Id") Long userId,
+            @AuthenticationPrincipal String principal,
             @PathVariable Long notifId
     ) {
+        Long userId = getUserId(principal);
         notificationService.readNotification(userId, notifId);
         return ResponseEntity.ok().build();
     }
@@ -40,8 +42,9 @@ public class NotificationController {
     // 3. 안읽은 알림 조회
     @GetMapping("/unread-count")
     public ResponseEntity<Integer> getUnreadCount(
-            @RequestHeader("X-User-Id") Long userId
+            @AuthenticationPrincipal String principal
     ) {
+        Long userId = getUserId(principal);
         int count = notificationService.getUnreadNotificationCount(userId);
         return ResponseEntity.ok(count);
     }
@@ -49,10 +52,15 @@ public class NotificationController {
     // 4. 모드 읽음 처리
     @PatchMapping("/read-all")
     public ResponseEntity<java.util.Map<String, Integer>> markAllAsRead(
-            @RequestHeader("X-User-Id") Long userId
+            @AuthenticationPrincipal String principal
     ) {
+        Long userId = getUserId(principal);
         int updatedCount = notificationService.readAllNotifications(userId);
 
         return ResponseEntity.ok(java.util.Map.of("updatedCount", updatedCount));
+    }
+
+    private Long getUserId(String principal) {
+        return Long.parseLong(principal);
     }
 }
