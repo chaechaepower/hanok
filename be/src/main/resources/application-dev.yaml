@@ -3,6 +3,10 @@ spring:
     activate:
       on-profile: dev
 
+  jpa:
+    hibernate:
+      ddl-auto: update
+
   # GCS 자동설정 비활성화 (로컬 개발 시)
   autoconfigure:
     exclude:
@@ -10,45 +14,9 @@ spring:
       - com.google.cloud.spring.autoconfigure.storage.GcpStorageAutoConfiguration
       - com.google.cloud.spring.autoconfigure.secretmanager.GcpSecretManagerAutoConfiguration
 
-  datasource:
-    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
-      ssl:
-        enabled: ${REDIS_SSL_ENABLED:false}
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
-
-# 서버 포트 (dev)
-server:
-  port: 8081
-
-jwt:
-  secret: ${JWT_SECRET}
-  expiration: ${JWT_EXPIRATION}
-  refresh-expiration: ${JWT_REFRESH_EXPIRATION}
-
-# 로깅 설정 (dev)
 logging:
   level:
     com.ssafy.be: DEBUG
     org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql: TRACE
-
-portone:
-  api-secret: ${PORTONE_API_SECRET}

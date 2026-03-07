@@ -2,25 +2,19 @@ spring:
   application:
     name: be
 
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:}:${DB_PORT:}/${DB_NAME:}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${DB_USERNAME:}
+    password: ${DB_PASSWORD:}
+
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-
-  #  datasource:
-  #    url:
-  #    username: need_setting
-  #    password: need_setting
-  #    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  #  jpa:
-  #    hibernate:
-  #      ddl-auto: update
-  #    show-sql: true
-  #    properties:
-  #      hibernate:
-  #        format_sql: true
-  #        dialect: org.hibernate.dialect.MySQLDialect
+  #      password: ${REDIS_PASSWORD:}
+  #      ssl:
+  #        enabled: ${REDIS_SSL_ENABLED:false}
 
   jackson:
     time-zone: Asia/Seoul
@@ -28,9 +22,9 @@ spring:
       write-dates-as-timestamps: false
 
 jwt:
-  secret: ${JWT_SECRET:my-super-secret-key-for-local-development-must-be-long-enough-12345}
-  expiration: 3600000
-  refresh-expiration: 1209600000
+  secret: ${JWT_SECRET:}
+  expiration: ${JWT_EXPIRATION:}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:}
 
 springdoc:
   swagger-ui:
@@ -44,12 +38,8 @@ springdoc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
-#logging:
-#  level:
-#    com.ssafy.be: DEBUG
-#    org.springframework.security: DEBUG
-#    org.hibernate.SQL: DEBUG
-#    org.hibernate.type.descriptor.sql: TRACE
-
-server:
-  port: 8080
+portone:
+  base-url: ${PORTONE_BASE_URL:}
+  secret:
+    api: ${PORTONE_SECRET_API:}
+    webhook: ${PORTONE_SECRET_WEBHOOK:}
