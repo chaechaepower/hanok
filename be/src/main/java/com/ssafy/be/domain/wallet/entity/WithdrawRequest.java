@@ -12,6 +12,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+import static com.ssafy.be.domain.wallet.entity.WithdrawStatus.PENDING;
+
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
@@ -30,7 +32,6 @@ public class WithdrawRequest {
     @Column(updatable = false)
     private LocalDateTime requestedAt;
 
-    @LastModifiedDate
     private LocalDateTime processedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -39,10 +40,19 @@ public class WithdrawRequest {
 
     @Builder
     private WithdrawRequest(Long amount,
-                           WithdrawStatus withdrawStatus,
-                           User user) {
+                            WithdrawStatus withdrawStatus,
+                            User user) {
         this.amount = amount;
         this.withdrawStatus = withdrawStatus;
         this.user = user;
+    }
+
+    public void completeWithDraw() {
+        this.withdrawStatus = WithdrawStatus.COMPLETED;
+        this.processedAt = LocalDateTime.now();
+    }
+
+    public boolean isPending() {
+        return this.withdrawStatus == PENDING;
     }
 }
