@@ -28,7 +28,7 @@ import static com.ssafy.be.domain.wallet.model.PaymentStatus.*;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class WalletService {
+public class WalletChargeService {
     private static final int MIN_CHARGE_AMOUNT = 10000;
     private final WalletChargeRepository walletChargeRepository;
     private final TradeReportRepository tradeReportRepository;

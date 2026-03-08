@@ -1,8 +1,10 @@
 package com.ssafy.be.domain.wallet.controller;
 
 import com.ssafy.be.domain.wallet.controller.api.WalletApi;
+import com.ssafy.be.domain.wallet.dto.response.WalletSummaryResponse;
+import com.ssafy.be.domain.wallet.service.WalletQueryService;
 import com.ssafy.be.global.common.response.ApiResponse;
-import com.ssafy.be.domain.wallet.service.WalletService;
+import com.ssafy.be.domain.wallet.service.WalletChargeService;
 import com.ssafy.be.domain.wallet.dto.request.WalletChargeCompleteRequest;
 import com.ssafy.be.domain.wallet.dto.request.WalletChargeCreateRequest;
 import com.ssafy.be.domain.wallet.dto.response.WalletChargeCreateResponse;
@@ -15,15 +17,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/wallet")
 @RestController
 public class WalletController implements WalletApi {
-    private final WalletService walletService;
+    private final WalletChargeService walletChargeService;
+    private final WalletQueryService walletQueryService;
 
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "사전등록 성공")
     @PostMapping("/charges")
     public ResponseEntity<?> createWalletCharge(
             @RequestBody WalletChargeCreateRequest request,
             @AuthenticationPrincipal String principal
     ) {
-        WalletChargeCreateResponse response = walletService.createWalletCharge(request, getUserId(principal));
+        WalletChargeCreateResponse response = walletChargeService.createWalletCharge(request, getUserId(principal));
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -32,8 +34,16 @@ public class WalletController implements WalletApi {
             @RequestBody WalletChargeCompleteRequest request,
             @AuthenticationPrincipal String principal
     ) {
-        walletService.completeWalletCharge(request, getUserId(principal));
+        walletChargeService.completeWalletCharge(request, getUserId(principal));
         return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    @GetMapping("")
+    public ResponseEntity<?> getWalletSummary(
+            @AuthenticationPrincipal String principal
+    ) {
+        WalletSummaryResponse response = walletQueryService.getWalletSummary(getUserId(principal));
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @PostMapping("/charges/webhook")
@@ -43,7 +53,7 @@ public class WalletController implements WalletApi {
             @RequestHeader("webhook-timestamp") String webhookTimestamp,
             @RequestHeader("webhook-signature") String webhookSignature
     ) {
-        walletService.handleWebhook(body, webhookId, webhookTimestamp, webhookSignature);
+        walletChargeService.handleWebhook(body, webhookId, webhookTimestamp, webhookSignature);
         return ResponseEntity.ok(ApiResponse.success());
     }
 

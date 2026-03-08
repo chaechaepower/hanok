@@ -10,7 +10,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
-@Tag(name = "Wallet", description = "가상머니 지갑 APIs")
+@Tag(name = "Wallet", description = "가상머니 API")
 public interface WalletApi {
 
     @Operation(summary = "가상머니 충전 사전등록", description = "PortOne 결제창 호출 전 서버에 결제 정보를 사전등록합니다.")
@@ -31,7 +31,13 @@ public interface WalletApi {
             @AuthenticationPrincipal String principal
     );
 
-    @Operation(summary = "PortOne 웹훅 수신", description = "PortOne 결제 웹훅을 수신하여 결제 상태를 동기화합니다.(직접 호출 X)")
+    @Operation(summary = "가상머니 조회", description = "가상머니 잔액 및 예치금 정보를 조회합니다.")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    ResponseEntity<?> getWalletSummary(
+            @AuthenticationPrincipal String principal
+    );
+
+    @Operation(summary = "PortOne 웹훅 수신(직접 호출 X)", description = "PortOne 결제 웹훅을 수신하여 결제 상태를 동기화합니다.")
     @ApiResponse(responseCode = "200", description = "웹훅 처리 완료")
     ResponseEntity<?> handleWebhook(
             @RequestBody String body,
