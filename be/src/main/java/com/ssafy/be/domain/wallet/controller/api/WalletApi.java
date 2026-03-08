@@ -2,6 +2,7 @@ package com.ssafy.be.domain.wallet.controller.api;
 
 import com.ssafy.be.domain.wallet.dto.request.WalletChargeCompleteRequest;
 import com.ssafy.be.domain.wallet.dto.request.WalletChargeCreateRequest;
+import com.ssafy.be.domain.wallet.dto.request.WithdrawRequestCreateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,6 +35,14 @@ public interface WalletApi {
     @Operation(summary = "가상머니 조회", description = "가상머니 잔액 및 예치금 정보를 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     ResponseEntity<?> getWalletSummary(
+            @AuthenticationPrincipal String principal
+    );
+
+    @Operation(summary = "출금 요청", description = "가상머니 출금을 요청합니다.")
+    @ApiResponse(responseCode = "200", description = "출금 요청 완료")
+    @ApiResponse(responseCode = "400", description = "최소 출금 금액 미만 또는 잔액 부족")
+    ResponseEntity<?> createWithdrawRequest(
+            @RequestBody WithdrawRequestCreateRequest request,
             @AuthenticationPrincipal String principal
     );
 
