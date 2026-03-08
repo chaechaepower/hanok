@@ -65,7 +65,7 @@ public class WalletChargeService {
         WalletCharge walletCharge = walletChargeRepository.findByPaymentId(request.paymentId())
                 .orElseThrow(() -> new GlobalException(WalletErrorCode.WALLET_CHARGE_NOT_FOUND));
 
-        if (walletCharge.userId().equals(userId)) {
+        if (!walletCharge.userId().equals(userId)) {
             throw new GlobalException(WalletErrorCode.WALLET_CHARGE_UNAUTHORIZED);
         }
 
