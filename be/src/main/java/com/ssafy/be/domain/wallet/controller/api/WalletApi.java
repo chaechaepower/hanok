@@ -46,7 +46,7 @@ public interface WalletApi {
             @AuthenticationPrincipal String principal
     );
 
-    @Operation(summary = "PortOne 웹훅 수신(직접 호출 X)", description = "PortOne 결제 웹훅을 수신하여 결제 상태를 동기화합니다.")
+    @Operation(summary = "[PortOne] 웹훅 수신(직접 호출 X)", description = "PortOne 결제 웹훅을 수신하여 결제 상태를 동기화합니다.")
     @ApiResponse(responseCode = "200", description = "웹훅 처리 완료")
     ResponseEntity<?> handleWebhook(
             @RequestBody String body,

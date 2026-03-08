@@ -40,7 +40,7 @@ public class WalletWithdrawService {
 
         user.requestWithdraw(request.amount());
 
-        // 3. withdraw_request 생성
+        // 3. withdrawRequest 생성
         WithdrawRequest withdrawRequest = WithdrawRequest.builder()
                 .amount(request.amount())
                 .withdrawStatus(PENDING)

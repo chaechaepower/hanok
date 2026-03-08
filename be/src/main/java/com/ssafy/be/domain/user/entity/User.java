@@ -52,6 +52,9 @@ public class User {
     @Column(name = "bank_code", length = 50)
     private String bankCode; // 은행명 (회원가입 시 입력 X)
 
+    @Column(name = "account_name", length = 50)
+    private String accountName; // 예금주 (회원가입 시 입력 X)
+
     @Column(name = "account_num", length = 100)
     private String accountNum; // 계좌번호 (회원가입 시 입력 X)
 
