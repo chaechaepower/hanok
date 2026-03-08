@@ -41,8 +41,6 @@ public class SellerService {
                 .instaUrl(request.instaUrl())
                 .youtubeUrl(request.youtubeUrl())
                 .tiktokUrl(request.tiktokUrl())
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .userId(userId)
                 .build();
 

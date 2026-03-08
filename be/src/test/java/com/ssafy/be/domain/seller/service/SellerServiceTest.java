@@ -81,9 +81,13 @@ class SellerServiceTest {
     void register_ValidRequest_Success() {
         // given
         User mockUser = User.createUser("test@test.com", "encodedPw", "경매왕", "01012345678");
-        Seller mockSeller = Seller.createSeller(
-                "안녕하세요!", SellerType.INDIVIDUAL, null, "", "", "", 1L
-        );
+        Seller mockSeller = Seller.builder()
+                .intro("안녕하세요!")
+                .type(SellerType.INDIVIDUAL)
+                .grade(SellerGrade.GENERAL)
+                .rating(0.0)
+                .userId(1L)
+                .build();
 
         given(sellerRepository.existsByUserId(1L)).willReturn(false);
         given(userRepository.findById(1L)).willReturn(Optional.of(mockUser));
