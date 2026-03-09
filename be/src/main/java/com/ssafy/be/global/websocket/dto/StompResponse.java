@@ -1,0 +1,21 @@
+package com.ssafy.be.global.websocket.dto;
+
+import com.ssafy.be.global.websocket.enums.StompType;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class StompResponse<T> {
+
+    private StompType eventType;
+    private T payload;
+    private LocalDateTime timestamp;
+
+}
