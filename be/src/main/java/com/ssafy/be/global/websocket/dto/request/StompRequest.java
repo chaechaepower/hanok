@@ -1,4 +1,4 @@
-package com.ssafy.be.global.websocket.dto;
+package com.ssafy.be.global.websocket.dto.request;
 
 import com.ssafy.be.global.websocket.enums.StompType;
 import lombok.AllArgsConstructor;
@@ -12,10 +12,9 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StompResponse<T> {
+public class StompRequest<T> {
 
     private StompType eventType;
     private T payload;
-    private LocalDateTime timestamp;
 
 }
