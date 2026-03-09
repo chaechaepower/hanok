@@ -7,11 +7,13 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./api/instance";
 
 async function enableMocking() {
-  if (!import.meta.env.DEV) {
-    return;
-  }
-  const { worker } = await import('./mocks/browser');
-  return worker.start({ onUnhandledRequest: 'bypass' });
+
+  if (!import.meta.env.DEV) return;
+
+  const { worker } = await import("./mocks/browser");
+  return worker.start({
+    onUnhandledRequest: 'bypass',
+  });
 }
 
 enableMocking().then(() => {
@@ -22,6 +24,6 @@ enableMocking().then(() => {
           <App />
         </BrowserRouter>
       </QueryClientProvider>
-    </StrictMode>
+    </StrictMode>,
   );
-});
+};

@@ -1,0 +1,112 @@
+services:
+  # =============================================
+  # MySQL
+  # =============================================
+  mysql:
+    image: mysql:8.0.45
+    container_name: hanok-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      TZ: Asia/Seoul
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - hanok-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =============================================
+  # Redis
+  # =============================================
+  redis:
+    image: redis:7-alpine
+    container_name: hanok-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - hanok-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # =============================================
+  # Backend (dev)
+  # =============================================
+  backend-dev:
+    image: jupddang-backend:dev
+    container_name: hanok-backend-dev
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hanok-network
+
+  # =============================================
+  # Backend (prod)
+  # =============================================
+  backend-prod:
+    image: jupddang-backend:prod
+    container_name: hanok-backend-prod
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hanok-network
+
+# =============================================
+# Volume (데이터 영속성)
+# =============================================
+volumes:
+  mysql-data:
+  redis-data:
+
+# =============================================
+# Network
+# =============================================
+networks:
+  hanok-network:
+    driver: bridge

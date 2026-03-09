@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: be
+
+#  datasource:
+#    url:
+#    username: need_setting
+#    password: need_setting
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+
+#  # JPA 설정
+#  jpa:
+#    hibernate:
+#      # TODO : 이거도 어떻게 해야할까요
+#      ddl-auto: update
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
+#        dialect: org.hibernate.dialect.MySQLDialect
+
+  # Jackson 설정
+  jackson:
+    time-zone: Asia/Seoul
+    serialization:
+      write-dates-as-timestamps: false
+
+## JWT 설정
+#jwt:
+#  secret: need_setting
+#  expiration: need_setting
+#  refresh-expiration: need_setting
+
+# Swagger 설정
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+
+## 로깅 설정
+#logging:
+#  level:
+#    # TODO : 이거도
+#    com.ssafy.be: DEBUG
+#    org.springframework.security: DEBUG
+#    org.hibernate.SQL: DEBUG
+#    org.hibernate.type.descriptor.sql: TRACE
+
+# 서버 포트
+server:
+  port: 8080

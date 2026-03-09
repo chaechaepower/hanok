@@ -1,97 +1,149 @@
-import { http, HttpResponse } from "msw";
+import { mainHandlers } from './MainHandler';
 
-const envBaseUrl = import.meta.env.VITE_API_BASE_URL || "";
+import { http, HttpResponse } from "msw";
+import { BASE_URL } from "@/api/instance";
+
+let mockItems: any[] = [];
 
 export const handlers = [
-  http.get(`${envBaseUrl}/api/health`, () => {
+  ...mainHandlers,
+  http.get('/api/health', () => {
     return HttpResponse.json({ ok: true });
   }),
 
-  http.get(`${envBaseUrl}/api/v1/escrows`, () => {
-    return HttpResponse.json({
-      status: "SUCCESS",
-      message: "요청이 성공적으로 처리되었습니다.",
-      data: [
-        {
-          escrowId: '1',
-          imageUrl: 'https://picsum.photos/seed/camera/400/300',
-          itemName: "빈티지 카메라",
-          amount: 250000,
-          escrowState: "DEPOSITED",
-          createdAt: "2026-03-05 08:15:30"
-        },
-        {
-          escrowId: '2',
-          imageUrl: 'https://picsum.photos/seed/game/400/300',
-          itemName: "레트로 게임기",
-          amount: 180000,
-          escrowState: "INVOICE_SUBMITTED",
-          createdAt: "2026-03-05 09:20:15"
-        },
-        {
-          escrowId: '3',
-          imageUrl: 'https://picsum.photos/seed/shoes/400/300',
-          itemName: "한정판 스니커즈",
-          amount: 320000,
-          escrowState: "COMPLETED",
-          createdAt: "2026-03-05 10:45:50"
-        },
-        {
-          escrowId: '4',
-          imageUrl: 'https://picsum.photos/seed/card/400/300',
-          itemName: "희귀 트레이딩 카드",
-          amount: 150000,
-          escrowState: "CANCELLED",
-          createdAt: "2026-03-04 15:30:00"
-        }
-      ]
-    });
+  // -- Item CRUD Mocks --
+  http.get(`${BASE_URL}/v1/items`, async () => {
+    return HttpResponse.json(mockItems);
   }),
 
-  http.get(`${envBaseUrl}/api/v1/escrows/:escrowId`, ({ params }) => {
-    const { escrowId } = params;
+  http.post(`${BASE_URL}/v1/items`, async ({ request }) => {
+    const formData = await request.formData();
+    const title = formData.get('title') as string || 'Mock Uploaded Item';
+    const description = formData.get('description') as string || 'Mock Description';
+    const startPrice = Number(formData.get('startPrice')) || 0;
+    const bidUnit = Number(formData.get('bidUnit'));
+    const auctionTime = Number(formData.get('auctionDuration'));
+    const category = Number(formData.get('categoryId'));
+    const categoryName = category === 1 ? '패션/잡화' : category === 3 ? '수집품' : '전자기기';
+    
+    const newImages = formData.getAll('newImages');
+    let imageUrls: string[] = [];
+    if (newImages.length > 0) {
+      imageUrls = newImages.map(file => URL.createObjectURL(file as Blob));
+    } else {
+      imageUrls = ['https://via.placeholder.com/160x160?text=Mock+Image'];
+    }
+
+    const tags = formData.getAll('tags') as string[];
+
+    const newItem = {
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      status: 'WAITING',
+      title,
+      description,
+      tags: tags.length > 0 ? tags : ['신규등록', '테스트'],
+      imageUrls,
+      startPrice,
+      bidUnit,
+      auctionTime,
+      condition: '새상품',
+      category: categoryName,
+      auctionMethod: '영국식',
+    };
+    
+    mockItems.push(newItem);
+
     return HttpResponse.json({
-      status: "SUCCESS",
-      message: "요청이 성공적으로 처리되었습니다.",
-      data: {
-        winningInfo: {
-          imageUrl: escrowId === '1' ? 'https://picsum.photos/seed/camera/400/300' : escrowId === '2' ? 'https://picsum.photos/seed/game/400/300' : 'https://picsum.photos/seed/shoes/400/300',
-          itemName: escrowId === '1' ? "빈티지 카메라" : escrowId === '2' ? "레트로 게임기" : "한정판 스니커즈",
-          finalPrice: escrowId === '1' ? 250000 : escrowId === '2' ? 180000 : 320000,
-          sellerName: "신재혁상점",
-          sellerId: "asad_1",
-          wonAt: "2026-03-01 10:24"
-        },
-        shippingAddress: {
-          name: "이효은",
-          phone: "010-3134-6396",
-          postalCode: "03154",
-          address: "서울시 종로구 세종대로 1",
-          addressDetail: "재혁 빌라 405동 107호"
-        },
-        delivery: escrowId === '1' ? null : {
-          courierName: escrowId === '2' ? "한진택배" : "CJ대한통운",
-          trackingNumber: escrowId === '2' ? "123456789012" : "987654321098"
-        }
+      itemId: newItem.id,
+      title: newItem.title,
+      status: newItem.status
+    });
+  }),
+  
+  http.put(`${BASE_URL}/v1/items/:itemId`, async ({ request, params }) => {
+    const id = Number(params.itemId);
+    const formData = await request.formData();
+    
+    const title = formData.get('title') as string;
+    const description = formData.get('description') as string;
+    const tags = formData.getAll('tags') as string[];
+    
+    const startPrice = formData.get('startPrice') ? Number(formData.get('startPrice')) : undefined;
+    const bidUnit = formData.get('bidUnit') ? Number(formData.get('bidUnit')) : undefined;
+    const auctionTime = formData.get('auctionDuration') ? Number(formData.get('auctionDuration')) : undefined;
+    const category = formData.get('categoryId') ? Number(formData.get('categoryId')) : undefined;
+    const conditionRaw = formData.get('condition') as string;
+    const auctionMethodRaw = formData.get('auctionMethod') as string;
+
+    const condition = conditionRaw === 'new' ? '새상품' : conditionRaw === 'like-new' ? '거의 새것' : conditionRaw === 'used' ? '사용감 있음' : undefined;
+    const auctionMethod = auctionMethodRaw === 'english' ? '영국식' : auctionMethodRaw === 'dutch' ? '내림차순' : undefined;
+    const categoryName = category ? (category === 1 ? '패션/잡화' : category === 3 ? '수집품' : '전자기기') : undefined;
+
+    const itemIndex = mockItems.findIndex(i => i.id === id);
+    if (itemIndex > -1) {
+      const itemToUpdate = mockItems[itemIndex];
+      
+      const newImages = formData.getAll('newImages');
+      const existingImageUrls = formData.getAll('existingImageUrls') as string[];
+      let imageUrls: string[] = existingImageUrls.length > 0 ? [...existingImageUrls] : [];
+      
+      if (newImages && newImages.length > 0) {
+        newImages.forEach(file => {
+           imageUrls.push(URL.createObjectURL(file as Blob));
+        });
       }
+      if (imageUrls.length === 0 && itemToUpdate.imageUrls && itemToUpdate.imageUrls.length > 0) {
+          imageUrls = itemToUpdate.imageUrls;
+      }
+
+      mockItems[itemIndex] = { 
+        ...itemToUpdate, 
+        title: title || itemToUpdate.title,
+        description: description || itemToUpdate.description,
+        tags: tags.length > 0 ? tags : itemToUpdate.tags, // override tags or keep old
+        imageUrls: imageUrls,
+        startPrice: startPrice !== undefined ? startPrice : itemToUpdate.startPrice,
+        bidUnit: bidUnit !== undefined ? bidUnit : itemToUpdate.bidUnit,
+        auctionTime: auctionTime !== undefined ? auctionTime : itemToUpdate.auctionTime,
+        condition: condition !== undefined ? condition : itemToUpdate.condition,
+        category: categoryName !== undefined ? categoryName : itemToUpdate.category,
+        auctionMethod: auctionMethod !== undefined ? auctionMethod : itemToUpdate.auctionMethod,
+      };
+      
+      return HttpResponse.json({
+        itemId: id,
+        title: mockItems[itemIndex].title,
+        status: "ready"
+      });
+    }
+
+    return HttpResponse.json({ error: "Item not found" }, { status: 404 });
+  }),
+
+  http.delete(`${BASE_URL}/v1/items/:itemId`, async ({ params }) => {
+    const id = Number(params.itemId);
+    mockItems = mockItems.filter(i => i.id !== id);
+    return HttpResponse.json({
+      itemId: id,
+      status: "cancelled"
     });
   }),
 
-  // Tracking Info POST (운송장 등록) - POST /api/v1/escrows/{escrowId}/invoice
-  http.post(`${envBaseUrl}/v1/escrows/:escrowId/invoice`, async () => {
+  http.post(`${BASE_URL}/v1/sellers/register`, async () => {
+    // API 명세서에 맞는 응답값 반환
     return HttpResponse.json({
-      status: "SUCCESS",
-      message: "운송장 배송 등록이 완료되었습니다.",
-      data: null
-    });
+      sellerId: 101,
+      nickname: "Mock 판매자",
+      grade: "A"
+    }, { status: 200 });
   }),
-
-  // Escrow Cancel POST (거래 취소)
-  http.post(`${envBaseUrl}/v1/escrows/:escrowId/cancel`, () => {
+  http.post(`${BASE_URL}/v1/sellers/account`, async () => {
+    // API 명세서에 맞는 응답값 반환 (200 OK without body content)
+    return new HttpResponse(null, { status: 200 });
+  }),
+  http.get(`${BASE_URL}/v1/users/me/seller-status`, async () => {
     return HttpResponse.json({
-      status: "SUCCESS",
-      message: "요청이 성공적으로 처리되었습니다.",
-      data: null
+      isSeller: false
     });
   }),
 ];
