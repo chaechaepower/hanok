@@ -1,8 +1,8 @@
-import SellerStats from "./Seller/SellerStats";
-import PriceInfo from "./Seller/PriceInfo";
-import BidFeed from "./Seller/BidFeed";
+import SellerStats from "./SellerStats";
+import SellerPriceInfo from "./SellerPriceInfo";
+import BidFeed from "./BidFeed";
 
-export default function AuctionPanel() {
+export default function SellerAuctionPanel() {
     return (
         <div className="bid-feed-scroll flex h-full flex-col gap-4 overflow-y-auto p-4">
             <SellerStats />
@@ -25,7 +25,7 @@ export default function AuctionPanel() {
                 </span>
             </div>
 
-            <PriceInfo />
+            <SellerPriceInfo />
             <BidFeed />
         </div>
     );
