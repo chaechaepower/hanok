@@ -1,14 +1,29 @@
 @import 'tailwindcss';
-@theme {
-  --color-background: #0a0c13;
-  --color-point: #f5f2eb;
-  --color-gold: #c7b282;
-}
 
 @theme {
   --color-background: #0A0C13;
   --color-point: #F5F2EB;
   --color-gold: #C7B282;
+
+  --animate-shimmer: shimmer 2.5s ease-in-out infinite;
+  --animate-urgent-pulse: urgentPulse 1s ease-in-out infinite;
+  --animate-pop: pop 0.25s ease-out;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@keyframes urgentPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes pop {
+  0% { transform: scale(0.85); }
+  60% { transform: scale(1.04); }
+  100% { transform: scale(1); }
 }
 
 @font-face {

@@ -1,6 +1,6 @@
 import {useState} from "react";
-import ChatPanel from "./Chat/ChatPanel";
-import AuctionPanel from "./Auction/AuctionPanel";
+import ChatPanel from "@/components/Live/Chat/ChatPanel";
+import SellerAuctionPanel from "@/components/Live/Auction/Seller/SellerAuctionPanel";
 
 export default function RightPanel() {
     const [activeTab, setActiveTab] = useState<"chat" | "auction">("chat");
@@ -36,7 +36,7 @@ export default function RightPanel() {
 
             {/* 탭에 따라 컴포넌트 표시 */}
             <div className="flex-1 overflow-y-auto">
-                {activeTab === "chat" ? <ChatPanel /> : <AuctionPanel />}
+                {activeTab === "chat" ? <ChatPanel /> : <SellerAuctionPanel />}
             </div>
         </div>
     );
