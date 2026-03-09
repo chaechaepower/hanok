@@ -26,4 +26,4 @@ enableMocking().then(() => {
       </QueryClientProvider>
     </StrictMode>,
   );
-};
+});

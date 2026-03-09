@@ -250,6 +250,87 @@ export interface BiznoResponse {
 }
 
 
+// ─── Seller Profile ───────────────────────────────────────────────────────────
+export type SellerProfileStats = {
+  rating: number;
+  avgShipDays: number;
+  followerCount: number;
+};
+
+export type SellerRecentSale = {
+  itemId: number;
+  title: string;
+  finalPrice: number;
+  soldAt: string;
+};
+
+export type SellerPost = {
+  postId: number;
+  title: string;
+  context: string;
+  createdAt: string;
+};
+
+export type SellerProfileResponse = {
+  sellerId: number;
+  nickname: string;
+  intro: string;
+  profile_image: string | null;
+  instagramUrl: string | null;
+  youtubeUrl: string | null;
+  tiktokUrl: string | null;
+  stats: SellerProfileStats;
+  recentSales: SellerRecentSale[];
+  posts: SellerPost[];
+};
+
+// ─── Seller Notice ───────────────────────────────────────────────────────────
+export type GetSellerNoticeParams = {
+  page: number;
+  limit: number;
+};
+
+export type NoticeItem = {
+  postId: number;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt?: string;
+};
+
+export type GetSellerNoticeResponse = {
+  items: NoticeItem[];
+  total: number;
+};
+
+export type PostSellerNoticePayload = {
+  title: string;
+  content: string;
+};
+
+export type PostSellerNoticeResponse = {
+  postId: number;
+  title: string;
+  content: string;
+  createdAt: string;
+};
+
+export type PatchSellerNoticePayload = {
+  title?: string;
+  content?: string;
+};
+
+export type PatchSellerNoticeResponse = {
+  postId: number;
+  title: string;
+  content: string;
+  updatedAt: string;
+};
+
+export type DeleteSellerNoticeResponse = {
+  success: boolean;
+};
+
 // ─── Chat ─────────────────────────────────────────────────────────────────────
 export type ChatMessageType =
     | { id: number; type: "chat"; nickname: string; message: string }

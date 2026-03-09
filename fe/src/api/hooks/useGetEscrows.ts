@@ -1,9 +1,9 @@
-import { useSuspenseQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
 import type { EscrowListResponse } from '@/types';
 
-export const getEscrowsPath = () => `/api/v1/escrows`;
+export const getEscrowsPath = () => `/v1/escrows`;
 
 export const getEscrows = async () => {
   const response = await getFetchInstance().get<EscrowListResponse>(getEscrowsPath());
@@ -11,7 +11,7 @@ export const getEscrows = async () => {
 };
 
 export const useGetEscrows = () => {
-  return useSuspenseQuery({
+  return useQuery({
     queryKey: ['escrows'],
     queryFn: getEscrows,
     staleTime: 1000 * 60 * 5,

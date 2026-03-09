@@ -146,4 +146,170 @@ export const handlers = [
       isSeller: false
     });
   }),
+
+  // -- Seller Profile Mock --
+  http.get(`${BASE_URL}/v1/sellers/:sellerId/profile`, ({ params }) => {
+    const sellerId = Number(params.sellerId);
+    return HttpResponse.json({
+      sellerId,
+      nickname: '판매왕',
+      intro: '좋은 물건만 팔아요. 소중한 인연을 기다립니다.',
+      profile_image: `https://picsum.photos/seed/seller-${sellerId}/120/120`,
+      instagramUrl: 'https://instagram.com/seller123',
+      youtubeUrl: 'https://youtube.com/@seller_channel',
+      tiktokUrl: 'https://tiktok.com/@seller_tok',
+      stats: {
+        rating: 4.7,
+        avgShipDays: 1.8,
+        followerCount: 342,
+      },
+      recentSales: [
+        {
+          itemId: 10,
+          title: '나이키 에어맥스',
+          finalPrice: 75000,
+          soldAt: '2026-03-01T14:00:00Z',
+        },
+        {
+          itemId: 11,
+          title: '빈티지 가죽 자켓',
+          finalPrice: 120000,
+          soldAt: '2026-02-20T10:30:00Z',
+        },
+      ],
+      posts: [
+        {
+          postId: 5,
+          title: '이번 주 방송 예고',
+          context: '이번 주 토요일 오후 3시에 라이브 방송을 진행합니다. 많은 참여 바랍니다!',
+          createdAt: '2026-03-03T12:00:00Z',
+        },
+        {
+          postId: 6,
+          title: '상점 휴무 및 상담 지연 공지',
+          context: '개인 사정으로 인해 해당 기간 동안 상점 운영을 잠시 중단합니다. 경매 진행 건은 휴무 종료 후 순차적으로 발송될 예정입니다. 양해 부탁드립니다.',
+          createdAt: '2026-03-02T09:00:00Z',
+        },
+      ],
+    }, { status: 200 });
+  }),
+
+  // -- Seller Notice Mock --
+  http.get(`${BASE_URL}/v1/sellers/:sellerId/notice`, ({ request }) => {
+    const url = new URL(request.url);
+    const page = Number(url.searchParams.get('page')) || 1;
+    const limit = Number(url.searchParams.get('limit')) || 10;
+    
+    // 더미 공지사항 데이터 반환
+    return HttpResponse.json({
+      items: [
+        {
+          postId: 5,
+          title: "이번 주 방송 예고",
+          content: "수요일 저녁 8시에 만나요!",
+          createdAt: "2026-03-03T12:00:00Z",
+          updatedAt: "2026-03-03T12:00:00Z"
+        },
+        {
+          postId: 6,
+          title: "상점 휴무 및 상담 지연 공지",
+          content: "개인 사정으로 인해 해당 기간 동안 상점 운영을 잠시 중단합니다.",
+          createdAt: "2026-03-02T09:00:00Z",
+          updatedAt: "2026-03-02T09:00:00Z"
+        }
+      ].slice((page - 1) * limit, page * limit),
+      total: 2
+    }, { status: 200 });
+  }),
+
+  http.post(`${BASE_URL}/v1/sellers/:sellerId/posts`, async ({ request }) => {
+    const body = (await request.json()) as { title: string; content: string };
+    return HttpResponse.json({
+      postId: Date.now(),
+      title: body.title,
+      content: body.content,
+      createdAt: new Date().toISOString()
+    }, { status: 200 });
+  }),
+
+  http.patch(`${BASE_URL}/v1/sellers/:sellerId/posts/:postId`, async ({ request, params }) => {
+    const postId = Number(params.postId);
+    const body = (await request.json()) as { title: string; content: string };
+    return HttpResponse.json({
+      postId,
+      title: body.title,
+      content: body.content,
+      updatedAt: new Date().toISOString()
+    }, { status: 200 });
+  }),
+
+  http.delete(`${BASE_URL}/v1/sellers/:sellerId/posts/:postId`, () => {
+    return HttpResponse.json({ success: true }, { status: 200 });
+  }),
+
+  // -- Escrow Mocks --
+  http.get(`${BASE_URL}/v1/escrows`, () => {
+    return HttpResponse.json(
+      {
+        status: 'SUCCESS',
+        message: '낙찰 이력 조회 성공',
+        data: [
+          {
+            escrowId: 101,
+            imageUrl: 'https://picsum.photos/seed/shoes/140/140',
+            itemName: '나이키 에어맥스',
+            amount: 75000,
+            escrowState: 'INVOICE_SUBMITTED',
+            createdAt: '2026-03-01T23:00:00Z',
+          },
+          {
+            escrowId: 102,
+            imageUrl: 'https://picsum.photos/seed/jacket/140/140',
+            itemName: '빈티지 가죽 자켓',
+            amount: 120000,
+            escrowState: 'COMPLETED',
+            createdAt: '2026-02-20T19:30:00Z',
+          },
+        ],
+      },
+      { status: 200 }
+    );
+  }),
+
+  http.get(`${BASE_URL}/v1/escrows/:escrowId`, ({ params }) => {
+    const { escrowId } = params;
+
+    // 모의 상세 데이터 (escrowId에 따라 약간 다르게 응답 가능하도록 구성)
+    const isCompleted = escrowId === '102';
+    
+    return HttpResponse.json(
+      {
+        status: 'SUCCESS',
+        message: '낙찰 상세 조회 성공',
+        data: {
+          winningInfo: {
+            imageUrl: isCompleted ? 'https://picsum.photos/seed/jacket/140/140' : 'https://picsum.photos/seed/candle/140/140',
+            itemName: isCompleted ? '빈티지 가죽 자켓' : '트레이딩 카드',
+            finalPrice: isCompleted ? 120000 : 2300,
+            sellerName: '신재혁상점',
+            sellerId: 'asad_1',
+            wonAt: isCompleted ? '2026-02-20T19:30:00Z' : '2026-03-01T10:24:00Z',
+          },
+          shippingAddress: {
+            name: '이효은',
+            phone: '010-3134-6396',
+            postalCode: '03154',
+            address: '서울시 종로구 세종대로 1',
+            addressDetail: '405동 107호',
+          },
+          delivery: isCompleted ? {
+            courierName: 'CJ대한통운',
+            trackingNumber: '120312319124',
+          } : null,
+        },
+      },
+      { status: 200 }
+    );
+  }),
 ];
+
