@@ -2,10 +2,11 @@ spring:
   application:
     name: be
 
-  cloud:
-    gcp:
-      secretmanager:
-        enabled: false
+  autoconfigure:
+    exclude:
+      - com.google.cloud.spring.autoconfigure.core.GcpContextAutoConfiguration
+      - com.google.cloud.spring.autoconfigure.storage.GcpStorageAutoConfiguration
+      - com.google.cloud.spring.autoconfigure.secretmanager.GcpSecretManagerAutoConfiguration
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
