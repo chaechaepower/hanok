@@ -11,6 +11,18 @@ import LoginPage from './pages/Login';
 import WalletPage from './pages/Wallet';
 import SettingsPage from './pages/Settings';
 import MainLayout from '@/components/common/layouts/MainLayout';
+import StreamViewer from '@/components/Live/Stream/StreamViewer';
+import SellerControlBar from '@/components/Live/Stream/SellerControlBar';
+import BuyerControlBar from '@/components/Live/Stream/BuyerControlBar';
+
+// TODO: 테스트용 — 확인 후 삭제
+function DevPreview({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative h-screen w-full bg-black">
+      {children}
+    </div>
+  );
+}
 
 function App() {
   return (
@@ -27,6 +39,10 @@ function App() {
         <Route path="login" element={<LoginPage />} />
         <Route path="wallet" element={<WalletPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        {/* TODO: 테스트용 — 확인 후 삭제 */}
+        <Route path="dev/stream" element={<StreamViewer />} />
+        <Route path="test/seller" element={<DevPreview><SellerControlBar /></DevPreview>} />
+        <Route path="test/buyer" element={<DevPreview><BuyerControlBar /></DevPreview>} />
       </Route>
     </Routes>
   );
