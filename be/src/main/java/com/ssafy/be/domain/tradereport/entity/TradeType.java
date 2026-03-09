@@ -1,0 +1,14 @@
+package com.ssafy.be.domain.tradereport.entity;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
+public enum TradeType {
+    CHARGE("충전"),
+    WITHDRAW("출금"),
+    SETTLEMENT("정산");
+
+    private final String value;
+}

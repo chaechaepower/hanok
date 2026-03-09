@@ -18,9 +18,11 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    //TODO : 토큰 만료 언제로 하나
     @Value("${jwt.expiration}")
     private long expiration;
+
+    @Value("${jwt.refresh-expiration}")
+    private long refreshExpiration;
 
     // Key 객체 생성
     private Key getSigningKey() {
@@ -34,6 +36,16 @@ public class JwtUtil {
                 .claim("role", role)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
+    // Refresh Token 생성
+    public String generateRefreshToken(Long userId) {
+        return Jwts.builder()
+                .setSubject(String.valueOf(userId))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + refreshExpiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -54,5 +66,15 @@ public class JwtUtil {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+    // 토큰 만료 시간 반환 (블랙리스트용)
+    public long getExpiration(String token) {
+        Claims claims = validateToken(token);
+        return claims.getExpiration().getTime() - System.currentTimeMillis();
+    }
+
+    public long getRefreshExpiration() {
+        return refreshExpiration;
     }
 }
