@@ -12,7 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
-public class GcsService {
+public class GcsClient {
 
     @Value("${spring.cloud.gcp.storage.bucket}")
     private String bucketName;
@@ -21,7 +21,8 @@ public class GcsService {
 
     // 프로필 이미지 업로드
     public String uploadProfileImage(MultipartFile file, Long userId) throws IOException {
-        String fileName = "profiles/" + userId + "/" + UUID.randomUUID() + getExtension(file.getOriginalFilename());
+        String fileName =
+                "profiles/" + userId + "/" + UUID.randomUUID() + getExtension(file.getOriginalFilename());
 
         BlobInfo blobInfo =
                 BlobInfo.newBuilder(bucketName, fileName)
@@ -30,16 +31,20 @@ public class GcsService {
 
         storage.create(blobInfo, file.getBytes());
 
-        return "https://storage.googleapis.com/" + bucketName + "/" + fileName;
+        return buildPublicUrl(fileName);
     }
 
     // 프로필 이미지 삭제
     public void deleteProfileImage(String imageUrl) {
         if (imageUrl == null || imageUrl.isBlank()) return;
 
-        String fileName =
-                imageUrl.replace("https://storage.googleapis.com/" + bucketName + "/", "");
+        String fileName = imageUrl.replace(buildPublicUrl(""), "");
         storage.delete(BlobId.of(bucketName, fileName));
+    }
+
+    // GCS 공개 URL 생성
+    private String buildPublicUrl(String fileName) {
+        return "https://storage.googleapis.com/" + bucketName + "/" + fileName;
     }
 
     // 파일 확장자 추출

@@ -30,10 +30,11 @@ public class JwtUtil {
     }
 
     // 토큰 생성
-    public String generateToken(Long userId, String role) {
+    public String generateToken(Long userId, String role, String nickname) {
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .claim("role", role)
+                .claim("nickname", nickname)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -57,13 +58,6 @@ public class JwtUtil {
             return bearer.substring(7);
         }
         return null;
-    }
-
-    // 헤더에서 userId 추출
-    public Long resolveUserId(HttpServletRequest request) {
-        String token = resolveToken(request);
-        Claims claims = validateToken(token);
-        return Long.parseLong(claims.getSubject());
     }
 
     // 토큰 검증 및 Claims 반환
