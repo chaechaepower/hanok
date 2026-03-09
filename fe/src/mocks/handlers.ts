@@ -1,6 +1,6 @@
 import { mainHandlers } from './MainHandler';
 
-import { http, HttpResponse, delay } from "msw";
+import { http, HttpResponse } from "msw";
 import { BASE_URL } from "@/api/instance";
 
 let mockItems: any[] = [];
@@ -13,13 +13,10 @@ export const handlers = [
 
   // -- Item CRUD Mocks --
   http.get(`${BASE_URL}/v1/items`, async () => {
-    await delay(300);
     return HttpResponse.json(mockItems);
   }),
 
   http.post(`${BASE_URL}/v1/items`, async ({ request }) => {
-    await delay(500);
-    // Simulate getting form data
     const formData = await request.formData();
     const title = formData.get('title') as string || 'Mock Uploaded Item';
     const description = formData.get('description') as string || 'Mock Description';
@@ -29,7 +26,6 @@ export const handlers = [
     const category = Number(formData.get('categoryId'));
     const categoryName = category === 1 ? '패션/잡화' : category === 3 ? '수집품' : '전자기기';
     
-    // Check if there are newImages
     const newImages = formData.getAll('newImages');
     let imageUrls: string[] = [];
     if (newImages.length > 0) {
@@ -42,10 +38,10 @@ export const handlers = [
 
     const newItem = {
       id: Date.now() + Math.floor(Math.random() * 1000),
-      status: 'WAITING', // default status
+      status: 'WAITING',
       title,
       description,
-      tags: tags.length > 0 ? tags : ['신규등록', '테스트'], // default if empty
+      tags: tags.length > 0 ? tags : ['신규등록', '테스트'],
       imageUrls,
       startPrice,
       bidUnit,
@@ -65,7 +61,6 @@ export const handlers = [
   }),
   
   http.put(`${BASE_URL}/v1/items/:itemId`, async ({ request, params }) => {
-    await delay(500);
     const id = Number(params.itemId);
     const formData = await request.formData();
     
@@ -73,7 +68,6 @@ export const handlers = [
     const description = formData.get('description') as string;
     const tags = formData.getAll('tags') as string[];
     
-    // Additional editable fields
     const startPrice = formData.get('startPrice') ? Number(formData.get('startPrice')) : undefined;
     const bidUnit = formData.get('bidUnit') ? Number(formData.get('bidUnit')) : undefined;
     const auctionTime = formData.get('auctionDuration') ? Number(formData.get('auctionDuration')) : undefined;
@@ -88,7 +82,6 @@ export const handlers = [
     const itemIndex = mockItems.findIndex(i => i.id === id);
     if (itemIndex > -1) {
       const itemToUpdate = mockItems[itemIndex];
-      // Keep existing logic for images but add it here if need be...
       
       const newImages = formData.getAll('newImages');
       const existingImageUrls = formData.getAll('existingImageUrls') as string[];
@@ -128,7 +121,6 @@ export const handlers = [
   }),
 
   http.delete(`${BASE_URL}/v1/items/:itemId`, async ({ params }) => {
-    await delay(500);
     const id = Number(params.itemId);
     mockItems = mockItems.filter(i => i.id !== id);
     return HttpResponse.json({
