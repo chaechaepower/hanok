@@ -43,6 +43,7 @@ springdoc:
 
 portone:
   base-url: ${PORTONE_BASE_URL:}
+  store-id: ${PORTONE_STORE_ID:}
   secret:
       key: ${PORTONE_SECRET_KEY:}
       webhook: ${PORTONE_SECRET_WEBHOOK:} # 추후 운영 서버 도메인으로 웹훅 재등록 필요
