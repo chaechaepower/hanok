@@ -24,24 +24,6 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
-            steps {
-                dir('be') {
-                    sh "docker build -t ${IMAGE_NAME}:prod ."
-                }
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                sh '''
-                    cp /var/jenkins_home/env/.env.prod infra/.env.prod
-                    docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis
-                                docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate backend-prod
-                '''
-            }
-        }
-
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('sonarqube') {
@@ -52,6 +34,30 @@ pipeline {
                             -Dsonar.host.url=http://j14d105.p.ssafy.io:9000'
                     }
                 }
+            }
+        }
+
+        stage('Docker Build') {
+            when {
+                branch 'master'
+            }
+            steps {
+                dir('be') {
+                    sh "docker build -t ${IMAGE_NAME}:prod ."
+                }
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                branch 'master'
+            }
+            steps {
+                sh '''
+                    cp /var/jenkins_home/env/.env.prod infra/.env.prod
+                    docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis
+                    docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate backend-prod
+                '''
             }
         }
     }
