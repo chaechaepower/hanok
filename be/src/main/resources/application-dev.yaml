@@ -3,38 +3,20 @@ spring:
     activate:
       on-profile: dev
 
-  # TODO: DB 연결 시 주석 해제
-  #  datasource:
-  #    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-  #    username: ${DB_USERNAME}
-  #    password: ${DB_PASSWORD}
-  #    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
 
-  # TODO: DB 연결 시 주석 해제
-#  jpa:
-#    hibernate:
-#      ddl-auto: update
-#    show-sql: true
-#    properties:
-#      hibernate:
-#        format_sql: true
-#        dialect: org.hibernate.dialect.MySQLDialect
+  autoconfigure:
+    exclude:
+      - com.google.cloud.spring.autoconfigure.secretmanager.GcpSecretManagerAutoConfiguration
 
-# 서버 포트 (dev)
-server:
-  port: 8081
-
-# TODO: JWT 개발 시 주석 해제
-#jwt:
-#  secret: ${JWT_SECRET}
-#  expiration: ${JWT_EXPIRATION}
-#  refresh-expiration: ${JWT_REFRESH_EXPIRATION}
-
-# 로깅 설정 (dev)
 logging:
   level:
     com.ssafy.be: DEBUG
     org.springframework.security: DEBUG
-    # TODO: DB 연결 시 주석 해제
-#    org.hibernate.SQL: DEBUG
-#    org.hibernate.type.descriptor.sql: TRACE
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+
+server:
+  port: 8081

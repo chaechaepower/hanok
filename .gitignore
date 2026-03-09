@@ -301,3 +301,5 @@ buck-out/
 .env.prod
 infra/.env.dev
 infra/.env.prod
+
+src/main/resources/gcs-key.json

@@ -4,6 +4,7 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.7'
     id 'org.asciidoctor.jvm.convert' version '4.0.5'
     id 'com.diffplug.spotless' version '6.25.0'
+    id 'org.sonarqube' version '4.4.1.3373'
 }
 
 group = 'com.ssafy'
@@ -33,40 +34,71 @@ ext {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-integration'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    // web
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-web-services'
-    implementation 'org.springframework.boot:spring-boot-starter-websocket'
-    implementation 'com.google.cloud:spring-cloud-gcp-starter-storage'
-    implementation 'org.springframework.integration:spring-integration-http'
-    implementation 'org.springframework.integration:spring-integration-jpa'
-    implementation 'org.springframework.integration:spring-integration-stomp'
-    implementation 'org.springframework.integration:spring-integration-websocket'
-    implementation 'org.springframework.integration:spring-integration-ws'
-    implementation 'org.springframework.security:spring-security-messaging'
-    compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
-    runtimeOnly 'com.mysql:mysql-connector-j'
-    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.integration:spring-integration-test'
-    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-    //JWT
+    // lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // mysql
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // spring data jpa
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // spring data redis
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    // security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // jwt
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-    //Swagger
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+    // validation
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // websocket
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    // monitoring
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+    // swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
+
+    // dotenv (.env 파일 로딩)
+    implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
+    // devtools (로컬 개발용 hot reload)
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // gcp storage
+    implementation 'com.google.cloud:spring-cloud-gcp-starter-storage'
+
+    // portone
+    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.3.5"))
+    implementation("io.portone:server-sdk:0.9.1")
+
+    // test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+
+    // testcontainers
+    testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+    testImplementation "org.testcontainers:testcontainers:2.0.3"
+    testImplementation "org.testcontainers:testcontainers-junit-jupiter:2.0.2"
+    testImplementation "org.testcontainers:testcontainers-mysql:2.0.3"
+    testImplementation("com.redis:testcontainers-redis:2.2.4")
+
+    // lombok(test)
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
 dependencyManagement {
@@ -88,33 +120,22 @@ tasks.named('asciidoctor') {
 
 spotless {
     java {
-        // 1. Import 순서 정렬 (자바 표준 -> 외부 라이브러리 -> 프로젝트 패키지 순)
         importOrder(
                 "java",
                 "javax",
                 "lombok",
                 "org.springframework",
-                "",                  // 그 외 모든 외부 라이브러리
-                "\\#",               // static import 전체
+                "",
+                "\\#",
                 "org.junit",
                 "\\#org.junit",
-                "com.guide",         // 현재 프로젝트 패키지 (프로젝트에 맞게 수정 필요)
+                "com.guide",
                 "\\#com.guide"
         )
-
-        // 2. 사용하지 않는 import 제거
         removeUnusedImports()
-
-        // 3. 구글 자바 포맷 적용
         googleJavaFormat().aosp()
-
-        // 4. 스페이스 4칸 설정
         indentWithSpaces(4)
-
-        // 5. 불필요한 공백 제거
         trimTrailingWhitespace()
-
-        // 6. 파일 끝부분 New Line 처리 (Git 등에서 파일 끝 EOF 경고 방지)
         endWithNewline()
     }
 }
