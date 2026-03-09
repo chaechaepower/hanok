@@ -50,6 +50,10 @@ services:
     image: hanok-backend:dev
     container_name: hanok-backend-dev
     restart: unless-stopped
+    ports:
+      - "8081:8080"
+    networks:
+      - hanok-network
     environment:
       SPRING_PROFILES_ACTIVE: dev
       DB_HOST: hanok-mysql
@@ -74,6 +78,10 @@ services:
     image: hanok-backend:prod
     container_name: hanok-backend-prod
     restart: unless-stopped
+    ports:
+      - "8080:8080"
+    networks:
+      - hanok-network
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST: hanok-mysql
