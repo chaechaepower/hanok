@@ -25,7 +25,6 @@ export const handlers = [
     const auctionTime = Number(formData.get('auctionDuration'));
     const category = Number(formData.get('categoryId'));
     const categoryName = category === 1 ? '패션/잡화' : category === 3 ? '수집품' : '전자기기';
-
     const newImages = formData.getAll('newImages');
     let imageUrls: string[] = [];
 
@@ -68,7 +67,6 @@ export const handlers = [
     const title = formData.get('title') as string;
     const description = formData.get('description') as string;
     const tags = formData.getAll('tags') as string[];
-
     const startPrice = formData.get('startPrice') ? Number(formData.get('startPrice')) : undefined;
     const bidUnit = formData.get('bidUnit') ? Number(formData.get('bidUnit')) : undefined;
     const auctionTime = formData.get('auctionDuration') ? Number(formData.get('auctionDuration')) : undefined;
@@ -84,10 +82,7 @@ export const handlers = [
           : conditionRaw === 'used'
             ? '사용감 있음'
             : undefined;
-
-    const auctionMethod =
-      auctionMethodRaw === 'english' ? '경매' : auctionMethodRaw === 'dutch' ? '네덜란드식' : undefined;
-
+    
     const categoryName = category
       ? category === 1
         ? '패션/잡화'
@@ -96,41 +91,40 @@ export const handlers = [
           : '전자기기'
       : undefined;
 
-    const itemIndex = mockItems.findIndex((item) => item.id === id);
+    const auctionMethod =
+      auctionMethodRaw === 'english' ? '경매' : auctionMethodRaw === 'dutch' ? '네덜란드식' : undefined;
 
-    if (itemIndex === -1) {
-      return HttpResponse.json({ error: 'Item not found' }, { status: 404 });
-    }
+    const itemIndex = mockItems.findIndex(i => i.id === id);
+    if (itemIndex > -1) {
+      const itemToUpdate = mockItems[itemIndex];
+      
+      const newImages = formData.getAll('newImages');
+      const existingImageUrls = formData.getAll('existingImageUrls') as string[];
+      let imageUrls: string[] = existingImageUrls.length > 0 ? [...existingImageUrls] : [];
+      
+      if (newImages && newImages.length > 0) {
+        newImages.forEach(file => {
+           imageUrls.push(URL.createObjectURL(file as Blob));
+        });
+      }
+      if (imageUrls.length === 0 && itemToUpdate.imageUrls && itemToUpdate.imageUrls.length > 0) {
+          imageUrls = itemToUpdate.imageUrls;
+      }
 
-    const itemToUpdate = mockItems[itemIndex];
-    const newImages = formData.getAll('newImages');
-    const existingImageUrls = formData.getAll('existingImageUrls') as string[];
-    let imageUrls: string[] = existingImageUrls.length > 0 ? [...existingImageUrls] : [];
-
-    if (newImages.length > 0) {
-      newImages.forEach((file) => {
-        imageUrls.push(URL.createObjectURL(file as Blob));
-      });
-    }
-
-    if (imageUrls.length === 0 && itemToUpdate.imageUrls?.length > 0) {
-      imageUrls = itemToUpdate.imageUrls;
-    }
-
-    mockItems[itemIndex] = {
-      ...itemToUpdate,
-      title: title || itemToUpdate.title,
-      description: description || itemToUpdate.description,
-      tags: tags.length > 0 ? tags : itemToUpdate.tags,
-      imageUrls,
-      startPrice: startPrice !== undefined ? startPrice : itemToUpdate.startPrice,
-      bidUnit: bidUnit !== undefined ? bidUnit : itemToUpdate.bidUnit,
-      auctionTime: auctionTime !== undefined ? auctionTime : itemToUpdate.auctionTime,
-      condition: condition !== undefined ? condition : itemToUpdate.condition,
-      category: categoryName !== undefined ? categoryName : itemToUpdate.category,
-      auctionMethod: auctionMethod !== undefined ? auctionMethod : itemToUpdate.auctionMethod,
+      mockItems[itemIndex] = {
+        ...itemToUpdate,
+        title: title || itemToUpdate.title,
+        description: description || itemToUpdate.description,
+        tags: tags.length > 0 ? tags : itemToUpdate.tags,
+        imageUrls,
+        startPrice: startPrice !== undefined ? startPrice : itemToUpdate.startPrice,
+        bidUnit: bidUnit !== undefined ? bidUnit : itemToUpdate.bidUnit,
+        auctionTime: auctionTime !== undefined ? auctionTime : itemToUpdate.auctionTime,
+        condition: condition !== undefined ? condition : itemToUpdate.condition,
+        category: categoryName !== undefined ? categoryName : itemToUpdate.category,
+        auctionMethod: auctionMethod !== undefined ? auctionMethod : itemToUpdate.auctionMethod,
+      };
     };
-
     return HttpResponse.json({
       itemId: id,
       title: mockItems[itemIndex].title,

@@ -1,4 +1,4 @@
-import TopBidderList from "../Auction/Seller/TopBidderList";
+import TopBidderList from "../Auction/shared/TopBidderList";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
 
