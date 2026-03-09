@@ -1,19 +1,19 @@
-import { Outlet, useLocation } from "react-router-dom";
-import { Suspense } from "react";
-import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { ErrorBoundary } from "react-error-boundary";
+import { Outlet, useLocation } from 'react-router-dom';
+import { Suspense } from 'react';
+import { QueryErrorResetBoundary } from '@tanstack/react-query';
+import { ErrorBoundary } from 'react-error-boundary';
 
-import Footer from "@/components/common/layouts/Footer";
-import Loading from "@/components/common/layouts/Loading";
-import Header from "@/components/common/layouts/Header";
-import MainSkeleton from "@/components/Main/MainSkeleton";
-import useScrollToTop from "@/hooks/useScrollToTop";
-import ErrorComponent from "@/components/common/layouts/Error";
+import Footer from '@/components/common/layouts/Footer';
+import Loading from '@/components/common/layouts/Loading';
+import Header from '@/components/common/layouts/Header';
+import MainSkeleton from '@/components/Main/MainSkeleton';
+import useScrollToTop from '@/hooks/useScrollToTop';
+import ErrorComponent from '@/components/common/layouts/Error';
 
 export default function MainLayout() {
   const location = useLocation();
   const renderSkeleton = () => {
-    if (location.pathname === "/") return <MainSkeleton />;
+    if (location.pathname === '/') return <MainSkeleton />;
     return <Loading size={50} />;
   };
 
@@ -22,7 +22,7 @@ export default function MainLayout() {
   return (
     <>
       <Header />
-      <div className="relative mx-auto flex min-h-screen w-full max-w-[960px] flex-col">
+      <div className="relative mx-auto flex min-h-screen w-full flex-col">
         <div className="flex w-full flex-1 flex-col items-center pb-10 md:pt-0 pt-16">
           <QueryErrorResetBoundary>
             {({ reset }) => (
