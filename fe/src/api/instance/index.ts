@@ -1,6 +1,6 @@
-import type { AxiosInstance } from "axios";
-import axios from "axios";
-import { QueryClient } from "@tanstack/react-query";
+import type { AxiosInstance } from 'axios';
+import axios from 'axios';
+import { QueryClient } from '@tanstack/react-query';
 
 let accessToken: string | null = null;
 let instance: AxiosInstance | null = null;
@@ -15,7 +15,7 @@ const initInstance = (): AxiosInstance => {
     baseURL: import.meta.env.VITE_API_BASE_URL,
     timeout: 20_000,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
   });
 
@@ -26,14 +26,14 @@ const initInstance = (): AxiosInstance => {
       }
       return config;
     },
-    (error) => Promise.reject(error)
+    (error) => Promise.reject(error),
   );
 
   ax.interceptors.response.use(
     (response) => response,
     (error) => {
       return Promise.reject(error);
-    }
+    },
   );
 
   return ax;

@@ -15,8 +15,7 @@ export default function LoginPage() {
 
   const inputContainerClass =
     'flex items-center border border-[#3A3A3C] rounded-[10px] h-[52px] px-3 bg-transparent focus-within:border-[#CEAF82] transition-colors';
-  const inputClass =
-    'flex-1 bg-transparent text-[15px] text-white px-2 focus:outline-none placeholder-[#636366]';
+  const inputClass = 'flex-1 bg-transparent text-[15px] text-white px-2 focus:outline-none placeholder-[#636366]';
   const iconClass = 'w-5 h-5 text-[#8E8E93]';
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,19 +57,12 @@ export default function LoginPage() {
   return (
     <div
       style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: '#0B0C10',
-        overflowY: 'auto',
+        width: '100%',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         padding: '40px 16px',
         color: 'white',
-        fontFamily: 'sans-serif',
       }}
     >
       {/* Header */}
@@ -145,9 +137,7 @@ export default function LoginPage() {
         </div>
 
         {/* Remember Email */}
-        <label
-          style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', marginTop: '-8px' }}
-        >
+        <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', marginTop: '-8px' }}>
           <div
             style={{
               width: '20px',
@@ -190,14 +180,8 @@ export default function LoginPage() {
         {error && <p className="text-[#FF453A] text-sm px-1 -mt-2">{error}</p>}
 
         {/* Submit */}
-        <div>
-          <Button
-            id="login-submit"
-            type="submit"
-            variant="white"
-            size="large"
-            disabled={isLoading}
-          >
+        <div className="w-full">
+          <Button type="submit" variant="white" size="large" disabled={isLoading}>
             {isLoading ? '로그인 중...' : '로그인'}
           </Button>
         </div>

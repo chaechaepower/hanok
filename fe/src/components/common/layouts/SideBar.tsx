@@ -25,7 +25,7 @@ export default function SideBar({
       : (items[0]?.id ?? '');
 
   const selectedItemId = activeItemId ?? uncontrolledActiveItemId;
-  const containerClassName = `w-full max-w-[320px] px-5 py-6 ${className}`.trim();
+  const containerClassName = `w-full max-w-[280px] px-4 py-6 ${className}`.trim();
 
   const handleItemClick = (item: SideBarItem) => {
     if (activeItemId === undefined) {

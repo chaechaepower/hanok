@@ -1,4 +1,9 @@
 @import 'tailwindcss';
+@theme {
+  --color-background: #0a0c13;
+  --color-point: #f5f2eb;
+  --color-gold: #c7b282;
+}
 
 @theme {
   --color-background: #0A0C13;
@@ -121,20 +126,6 @@ html {
     vertical-align: baseline;
     text-decoration: none;
   }
-}
-
-article,
-aside,
-details,
-figcaption,
-figure,
-footer,
-header,
-hgroup,
-menu,
-nav,
-section {
-  display: block;
 }
 
 body {

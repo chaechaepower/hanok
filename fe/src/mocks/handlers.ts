@@ -1,10 +1,13 @@
+import { mainHandlers } from './MainHandler';
+
 import { http, HttpResponse, delay } from "msw";
 import { BASE_URL } from "@/api/instance";
 
 let mockItems: any[] = [];
 
 export const handlers = [
-  http.get("/api/health", () => {
+  ...mainHandlers,
+  http.get('/api/health', () => {
     return HttpResponse.json({ ok: true });
   }),
 

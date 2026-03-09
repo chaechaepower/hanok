@@ -1,17 +1,17 @@
-import { Route, Routes } from "react-router-dom";
-import MainPage from "./pages/Main";
-import TrakingInputPage from "./pages/TrackingInput";
-import MyPage from "./pages/My";
-import SellerProfilePage from "./pages/SellerProfile";
-import SellerOnboardingPage from "./pages/SellerOnboarding";
-import LivePage from "./pages/Live";
-import LiveCreatePage from "./pages/LiveCreate";
-import ProductListPage from "./pages/ProductList";
-import SignUpPage from "./pages/SignUp";
-import LoginPage from "./pages/Login";
-import WalletPage from "./pages/Wallet";
-import SettingsPage from "./pages/Settings";
-import MainLayout from "@/components/common/layouts/MainLayout";
+import { Route, Routes } from 'react-router-dom';
+import MainPage from './pages/Main';
+import TrakingInputPage from './pages/TrackingInput';
+import MyPage from './pages/My';
+import SellerProfilePage from './pages/SellerProfile';
+import SellerOnboardingPage from './pages/SellerOnboarding';
+import LivePage from './pages/Live';
+import LiveCreatePage from './pages/LiveCreate';
+import ProductListPage from './pages/ProductList';
+import SignUpPage from './pages/SignUp';
+import LoginPage from './pages/Login';
+import WalletPage from './pages/Wallet';
+import SettingsPage from './pages/Settings';
+import MainLayout from '@/components/common/layouts/MainLayout';
 
 function App() {
   return (
