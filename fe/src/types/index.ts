@@ -191,6 +191,11 @@ export type WalletResponse = {
   depositedAuctionBalance: number;
 };
 
+export type UserAccountResponse = {
+  bankName: string;
+  accountNumber: string;
+};
+
 export type TradeReportType = 'CHARGE' | 'WITHDRAW' | 'SETTLEMENT';
 
 export type TradeReportItem = {

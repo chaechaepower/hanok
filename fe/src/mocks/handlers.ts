@@ -9,6 +9,10 @@ const mockWallet = {
   balance: 1250000,
   depositedAuctionBalance: 250000,
 };
+const mockAccount = {
+  bankName: '신한은행',
+  accountNumber: '123-123-412890',
+};
 const mockTradeReports = {
   CHARGE: [
     {
@@ -65,6 +69,10 @@ export const handlers = [
       message: '요청이 성공적으로 처리되었습니다.',
       data: mockWallet,
     });
+  }),
+
+  http.get(`${BASE_URL}/v1/users/me/account`, async () => {
+    return HttpResponse.json(mockAccount);
   }),
 
   http.get(`${BASE_URL}/v1/trade/reports`, async ({ request }) => {
