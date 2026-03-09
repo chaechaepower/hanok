@@ -41,6 +41,19 @@ pipeline {
                 '''
             }
         }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    dir('be') {
+                        sh './gradlew sonar --no-daemon \
+                            -Dsonar.projectKey=hanok \
+                            -Dsonar.projectName=hanok \
+                            -Dsonar.host.url=http://j14d105.p.ssafy.io:9000'
+                    }
+                }
+            }
+        }
     }
 
     post {
