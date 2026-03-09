@@ -1,8 +1,10 @@
 package com.ssafy.be.domain.wallet.controller;
 
 import com.ssafy.be.domain.wallet.controller.api.WalletApi;
+import com.ssafy.be.domain.wallet.dto.request.WithdrawRequestCreateRequest;
 import com.ssafy.be.domain.wallet.dto.response.WalletSummaryResponse;
 import com.ssafy.be.domain.wallet.service.WalletQueryService;
+import com.ssafy.be.domain.wallet.service.WalletWithdrawService;
 import com.ssafy.be.global.common.response.ApiResponse;
 import com.ssafy.be.domain.wallet.service.WalletChargeService;
 import com.ssafy.be.domain.wallet.dto.request.WalletChargeCompleteRequest;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class WalletController implements WalletApi {
     private final WalletChargeService walletChargeService;
+    private final WalletWithdrawService walletWithdrawService;
     private final WalletQueryService walletQueryService;
 
     @PostMapping("/charges")
@@ -44,6 +47,15 @@ public class WalletController implements WalletApi {
     ) {
         WalletSummaryResponse response = walletQueryService.getWalletSummary(getUserId(principal));
         return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @PostMapping("/withdrawals")
+    public ResponseEntity<?> createWithdrawRequest(
+            @RequestBody WithdrawRequestCreateRequest request,
+            @AuthenticationPrincipal String principal
+    ) {
+        walletWithdrawService.requestWithdraw(request, getUserId(principal));
+        return ResponseEntity.ok(ApiResponse.success());
     }
 
     @PostMapping("/charges/webhook")

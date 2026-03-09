@@ -1,7 +1,5 @@
 package com.ssafy.be.domain.user.entity;
 
-import com.ssafy.be.domain.wallet.exception.WalletErrorCode;
-import com.ssafy.be.global.exception.GlobalException;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -40,16 +38,22 @@ public class User {
     private String phone;
 
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive; // 활성화 여부 (기본값 true)
+    private Boolean isActive; // 활성화 여부
 
     @Column(nullable = false)
-    private Long balance; // 가상머니 잔액 (기본값 0)
+    private Long balance; // 가상머니 잔액
 
-    @Column(name = "deposited_balance", nullable = false)
-    private Long depositedBalance; // 예치된 잔액 (기본값 0)
+    @Column(name = "deposited_auction_balance", nullable = false)
+    private Long depositedAuctionBalance; // 예치된 낙찰 잔액
+
+    @Column(name = "deposited_withdraw_balance", nullable = false)
+    private Long depositedWithdrawBalance; // 예치된 출금 잔액
 
     @Column(name = "bank_code", length = 50)
     private String bankCode; // 은행명 (회원가입 시 입력 X)
+
+    @Column(name = "account_name", length = 50)
+    private String accountName; // 예금주 (회원가입 시 입력 X)
 
     @Column(name = "account_num", length = 100)
     private String accountNum; // 계좌번호 (회원가입 시 입력 X)
@@ -77,16 +81,54 @@ public class User {
                 .profileImage(null)   // GCS 연동 후 default 이미지 URL로 교체 예정
                 .isActive(true)
                 .balance(0L)
-                .depositedBalance(0L)
+                .depositedAuctionBalance(0L)
+                .depositedWithdrawBalance(0L)
                 .notificationSetting(true)
                 .build();
     }
 
     public void increaseBalance(Long amount) {
         if (amount <= 0) {
-            throw new IllegalArgumentException("금액은 0보다 커야 합니다.");
+            throw new IllegalArgumentException("금액이 0보다 작습니다.");
         }
 
         this.balance += amount;
+    }
+
+    public void requestWithdraw(Long amount) {
+        decreaseBalance(amount);
+        increaseDepositedWithdrawBalance(amount);
+    }
+
+    private void decreaseBalance(Long amount) {
+        if (!hasSufficientBalance(amount)) {
+            throw new IllegalArgumentException("잔액이 부족합니다.");
+        }
+
+        this.balance -= amount;
+    }
+
+    public void decreaseDepositedWithdrawBalance(Long amount) {
+        if (!hasSufficientDepositedWithdrawBalance(amount)) {
+            throw new IllegalArgumentException("잔액이 부족합니다.");
+        }
+
+        this.depositedWithdrawBalance -= amount;
+    }
+
+    private void increaseDepositedWithdrawBalance(Long amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("금액이 0보다 작습니다.");
+        }
+
+        this.depositedWithdrawBalance += amount;
+    }
+
+    public boolean hasSufficientBalance(Long amount) {
+        return this.balance >= amount;
+    }
+
+    private boolean hasSufficientDepositedWithdrawBalance(Long amount) {
+        return this.depositedWithdrawBalance >= amount;
     }
 }

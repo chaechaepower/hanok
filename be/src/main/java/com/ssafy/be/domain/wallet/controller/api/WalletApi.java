@@ -2,6 +2,7 @@ package com.ssafy.be.domain.wallet.controller.api;
 
 import com.ssafy.be.domain.wallet.dto.request.WalletChargeCompleteRequest;
 import com.ssafy.be.domain.wallet.dto.request.WalletChargeCreateRequest;
+import com.ssafy.be.domain.wallet.dto.request.WithdrawRequestCreateRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,7 +38,15 @@ public interface WalletApi {
             @AuthenticationPrincipal String principal
     );
 
-    @Operation(summary = "PortOne 웹훅 수신(직접 호출 X)", description = "PortOne 결제 웹훅을 수신하여 결제 상태를 동기화합니다.")
+    @Operation(summary = "출금 요청", description = "가상머니 출금을 요청합니다.")
+    @ApiResponse(responseCode = "200", description = "출금 요청 완료")
+    @ApiResponse(responseCode = "400", description = "최소 출금 금액 미만 또는 잔액 부족")
+    ResponseEntity<?> createWithdrawRequest(
+            @RequestBody WithdrawRequestCreateRequest request,
+            @AuthenticationPrincipal String principal
+    );
+
+    @Operation(summary = "[PortOne] 웹훅 수신(직접 호출 X)", description = "PortOne 결제 웹훅을 수신하여 결제 상태를 동기화합니다.")
     @ApiResponse(responseCode = "200", description = "웹훅 처리 완료")
     ResponseEntity<?> handleWebhook(
             @RequestBody String body,
