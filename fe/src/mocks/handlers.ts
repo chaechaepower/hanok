@@ -9,6 +9,7 @@ const mockWallet = {
   balance: 1250000,
   depositedAuctionBalance: 250000,
 };
+const mockPendingWalletCharges = new Map<string, number>();
 const mockAccount = {
   bankName: '신한은행',
   accountNumber: '123-123-412890',
@@ -54,9 +55,6 @@ const mockTradeReports = {
 
 export const handlers = [
   ...mainHandlers,
-  http.get('/api/health', () => {
-    return HttpResponse.json({ ok: true });
-  }),
 
   // -- Item CRUD Mocks --
   http.get(`${BASE_URL}/v1/items`, async () => {
@@ -68,6 +66,62 @@ export const handlers = [
       status: 'SUCCESS',
       message: '요청이 성공적으로 처리되었습니다.',
       data: mockWallet,
+    });
+  }),
+
+  http.post(`${BASE_URL}/v1/wallet/charges`, async ({ request }) => {
+    const body = (await request.json()) as { amount?: number };
+    const amount = Number(body.amount ?? 0);
+    const paymentId = Date.now().toString();
+
+    mockPendingWalletCharges.set(paymentId, amount);
+
+    return HttpResponse.json({
+      status: 'SUCCESS',
+      message: '요청이 성공적으로 처리되었습니다.',
+      data: { paymentId },
+    });
+  }),
+
+  http.post(`${BASE_URL}/v1/wallet/charges/complete`, async ({ request }) => {
+    const body = (await request.json()) as { paymentId?: string | number };
+    const paymentId = String(body.paymentId ?? '');
+    const amount = mockPendingWalletCharges.get(paymentId) ?? 0;
+
+    if (amount > 0) {
+      mockWallet.balance += amount;
+      mockTradeReports.CHARGE.unshift({
+        itemName: null,
+        amount,
+        createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+      });
+      mockPendingWalletCharges.delete(paymentId);
+    }
+
+    return HttpResponse.json({
+      status: 'SUCCESS',
+      message: '요청이 성공적으로 처리되었습니다.',
+      data: null,
+    });
+  }),
+
+  http.post(`${BASE_URL}/v1/wallet/withdrawals`, async ({ request }) => {
+    const body = (await request.json()) as { amount?: number };
+    const amount = Number(body.amount ?? 0);
+
+    if (amount > 0) {
+      mockWallet.balance = Math.max(mockWallet.balance - amount, 0);
+      mockTradeReports.WITHDRAW.unshift({
+        itemName: null,
+        amount,
+        createdAt: new Date().toISOString().slice(0, 19).replace('T', ' '),
+      });
+    }
+
+    return HttpResponse.json({
+      status: 'SUCCESS',
+      message: '요청이 성공적으로 처리되었습니다.',
+      data: null,
     });
   }),
 
