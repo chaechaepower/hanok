@@ -16,4 +16,13 @@ export default defineConfig({
     setupFiles: "./src/test/setup.ts",
     css: true,
   },
+  server: {
+    proxy: {
+      '/bizno-api': {
+        target: 'https://bizno.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/bizno-api/, '/api/fapi'),
+      },
+    },
+  },
 });

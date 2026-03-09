@@ -16,5 +16,6 @@ export const requestSmsCode = async (phone: string) => {
 export const useRequestSmsCode = () => {
   return useMutation({
     mutationFn: (phone: string) => requestSmsCode(phone),
+    throwOnError: false,
   });
 };

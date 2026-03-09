@@ -183,16 +183,15 @@ export default function SignUpPage() {
               }}
               className={inputClass}
             />
-            <div className="w-30">
-              <Button
-                size="small"
-                className="text-[13px] font-normal px-6 py-2 disabled:opacity-60"
-                onClick={handleEmailCheck}
-                disabled={isEmailVerified}
-              >
-                중복 확인
-              </Button>
-            </div>
+            <Button
+              variant="white"
+              size="small"
+              onClick={handleEmailCheck}
+              disabled={isEmailVerified}
+              className="!w-auto px-5"
+            >
+              중복 확인
+            </Button>
           </div>
           {emailError && <p className="text-[#FF453A] text-xs px-1">{emailError}</p>}
           {isEmailVerified && <p className="text-[#32D74B] text-xs px-1">사용 가능한 이메일입니다.</p>}
@@ -283,16 +282,15 @@ export default function SignUpPage() {
               onChange={(e) => setPhone(e.target.value)}
               className={inputClass}
             />
-            <div className="w-30">
-              <Button
-                size="small"
-                className="text-[13px] font-normal px-6 py-2 disabled:opacity-60"
-                onClick={handleSmsRequest}
-                disabled={isSmsVerified}
-              >
-                인증 번호
-              </Button>
-            </div>
+            <Button
+              variant="white"
+              size="small"
+              onClick={handleSmsRequest}
+              disabled={isSmsVerified}
+              className="!w-auto px-5"
+            >
+              인증 번호
+            </Button>
           </div>
           {phoneError && <p className="text-[#FF453A] text-xs px-1">{phoneError}</p>}
 
@@ -306,15 +304,14 @@ export default function SignUpPage() {
                 onChange={(e) => setSmsCode(e.target.value)}
                 className={`${inputClass} ml-8`}
               />
-              <div className="w-30">
-                <Button
-                  size="small"
-                  className="text-[13px] rounded-full px-8 py-2 hover:bg-[#4C4C4F]"
-                  onClick={handleSmsVerify}
-                >
-                  확인
-                </Button>
-              </div>
+              <Button
+                variant="outline"
+                size="small"
+                onClick={handleSmsVerify}
+                className="!w-auto px-6"
+              >
+                확인
+              </Button>
             </div>
           )}
           {smsCodeError && <p className="text-[#FF453A] text-xs px-1">{smsCodeError}</p>}
@@ -403,14 +400,14 @@ export default function SignUpPage() {
 
         {/* Submit */}
         <div className="mt-4">
-          <Button type="submit" className="font-bold h-42 text-[16px] transition-transform active:scale-[0.98]">
+          <Button type="submit" variant="white" size="large">
             가입 하기
           </Button>
         </div>
 
         {/* Login Link */}
-        <div className="text-center text-[13px] text-[#A0A0A0] mt-1">
-          이미 계정이 있으신가요?{' '}
+        <div className="text-center text-[13px] text-[#A0A0A0] mt-1 flex items-center justify-center gap-1">
+          이미 계정이 있으신가요?
           <button
             type="button"
             onClick={() => navigate('/login')}
