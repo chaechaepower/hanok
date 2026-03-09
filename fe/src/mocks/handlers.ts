@@ -5,6 +5,9 @@ import { BASE_URL } from "@/api/instance";
 
 let mockItems: any[] = [];
 
+// Follower count mock state
+let mockFollowerCount = 342;
+
 export const handlers = [
   ...mainHandlers,
   http.get('/api/health', () => {
@@ -145,6 +148,53 @@ export const handlers = [
     return HttpResponse.json({
       isSeller: false
     });
+  }),
+
+  // -- Follow / Unfollow Mock --
+  http.patch(`${BASE_URL}/v1/users/:userId/follow`, async () => {
+    mockFollowerCount += 1;
+    return HttpResponse.json({
+      following: true,
+      followerCount: mockFollowerCount,
+      followingCount: 12
+    });
+  }),
+  http.delete(`${BASE_URL}/v1/users/:userId/unfollow`, async () => {
+    mockFollowerCount = Math.max(0, mockFollowerCount - 1);
+    return HttpResponse.json({
+      following: false,
+      followerCount: mockFollowerCount,
+      followingCount: 11
+    });
+  }),
+
+  // -- Seller Reputation Mock --
+  http.get(`${BASE_URL}/v1/sellers/:sellerId/reputation`, () => {
+    // 임시로, Authorization 헤더나 특정 조건에 따라 본인인지 확인한다고 가정.
+    // 여기서는 모든 정보를 반환하도록 하거나 랜덤하게 응답합니다.
+    const isOwner = true; // 테스트를 위해 항상 본인 데이터로 내려줍니다 (또는 필요에 따라 수정 가능)
+    
+    if (isOwner) {
+      return HttpResponse.json({
+        status: "SUCCESS",
+        message: "요청이 성공적으로 처리되었습니다.",
+        data: {
+          followerCount: mockFollowerCount,
+          totalTrades: 50,
+          completionRate: 98.5,
+          cancelCount: 1,
+          avgShipDays: 2.3
+        }
+      });
+    } else {
+      return HttpResponse.json({
+        status: "SUCCESS",
+        message: "요청이 성공적으로 처리되었습니다.",
+        data: {
+          followerCount: mockFollowerCount
+        }
+      });
+    }
   }),
 
   // -- Seller Profile Mock --

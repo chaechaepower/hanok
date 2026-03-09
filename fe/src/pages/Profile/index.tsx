@@ -6,6 +6,9 @@ import { usePostSellerNotice } from '@/api/hooks/usePostSellerNotice';
 import { usePatchSellerNotice } from '@/api/hooks/usePatchSellerNotice';
 import { useDeleteSellerNotice } from '@/api/hooks/useDeleteSellerNotice';
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
+import { useGetSellerReputation } from '@/api/hooks/useGetSellerReputation';
+import { usePatchFollow } from '@/api/hooks/usePatchFollow';
+import { useDeleteFollow } from '@/api/hooks/useDeleteFollow';
 import { styles } from './styles';
 import { 
   InstagramIcon, 
@@ -68,13 +71,31 @@ export default function ProfilePage() {
 
   const { data, isLoading, isError } = useGetSellerProfile(sellerId);
   const { data: mySellerStatus } = useGetSellerStatus();
+  const { data: reputationData } = useGetSellerReputation(sellerId);
   
   const { data: noticeData } = useGetSellerNotice(sellerId, { page: noticePage, limit: 10 });
   const { mutate: postNotice } = usePostSellerNotice(sellerId);
   const { mutate: patchNotice } = usePatchSellerNotice(sellerId);
   const { mutate: deleteNotice } = useDeleteSellerNotice(sellerId);
 
+  const { mutate: patchFollow, isPending: isFollowPending } = usePatchFollow();
+  const { mutate: deleteFollow, isPending: isUnfollowPending } = useDeleteFollow();
+
+  const [isFollowing, setIsFollowing] = useState(false);
+
   const isOwner = mySellerStatus?.isSeller || true; 
+
+  const handleFollowToggle = () => {
+    if (isFollowing) {
+      deleteFollow({ userId: sellerId }, {
+        onSuccess: (res) => setIsFollowing(res.following)
+      });
+    } else {
+      patchFollow({ userId: sellerId }, {
+        onSuccess: (res) => setIsFollowing(res.following)
+      });
+    }
+  };
 
   const handleOpenCreateModal = () => {
     setModalMode('create');
@@ -132,7 +153,8 @@ export default function ProfilePage() {
     );
   }
 
-  const { nickname, intro, profile_image, instagramUrl, youtubeUrl, tiktokUrl, stats } = data;
+  const { nickname, intro, profile_image, instagramUrl, youtubeUrl, tiktokUrl } = data;
+  const reputation = reputationData?.data;
   const notices = noticeData?.items || [];
 
   return (
@@ -150,7 +172,16 @@ export default function ProfilePage() {
           <div style={styles.profileInfo}>
             <div style={styles.nameRow}>
               <h1 style={styles.nickname}>{nickname}상점</h1>
-              <button style={styles.followBtn}>팔로우</button>
+              <button 
+                style={{ ...styles.followBtn, opacity: (isFollowPending || isUnfollowPending) ? 0.7 : 1 }} 
+                onClick={handleFollowToggle}
+                disabled={isFollowPending || isUnfollowPending}
+              >
+                {isFollowing ? '언팔로우' : '팔로우'}
+              </button>
+              <div style={{ fontSize: 15, color: '#bbb', marginLeft: 8 }}>
+                팔로워 <strong style={{ color: '#fff' }}>{reputation?.followerCount ?? 0}</strong>
+              </div>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 16 }}>
                 <button style={styles.textBtn}>수정</button>
                 <button style={styles.textBtn}>신고</button>
@@ -180,22 +211,29 @@ export default function ProfilePage() {
               )}
             </div>
 
-            <div style={styles.statsBox}>
-              <div style={styles.statItem}>
-                <span style={styles.statValue}>{stats.followerCount}</span>
-                <span style={styles.statLabel}>팔로워</span>
+            {isOwner && reputation?.totalTrades !== undefined && (
+              <div style={styles.statsBox}>
+                <div style={styles.statItem}>
+                  <span style={styles.statValue}>{reputation.totalTrades}</span>
+                  <span style={styles.statLabel}>총 거래</span>
+                </div>
+                <div style={styles.statDivider} />
+                <div style={styles.statItem}>
+                  <span style={styles.statValue}>{reputation.cancelCount}</span>
+                  <span style={styles.statLabel}>취소</span>
+                </div>
+                <div style={styles.statDivider} />
+                <div style={styles.statItem}>
+                  <span style={styles.statValue}>{reputation.completionRate}%</span>
+                  <span style={styles.statLabel}>성사율</span>
+                </div>
+                <div style={styles.statDivider} />
+                <div style={styles.statItem}>
+                  <span style={styles.statValue}>{reputation.avgShipDays}일</span>
+                  <span style={styles.statLabel}>평균 배송일</span>
+                </div>
               </div>
-              <div style={styles.statDivider} />
-              <div style={styles.statItem}>
-                <span style={styles.statValue}>{stats.rating.toFixed(1)}</span>
-                <span style={styles.statLabel}>평점</span>
-              </div>
-              <div style={styles.statDivider} />
-              <div style={styles.statItem}>
-                <span style={styles.statValue}>{stats.avgShipDays.toFixed(1)}일</span>
-                <span style={styles.statLabel}>평균 배송일</span>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

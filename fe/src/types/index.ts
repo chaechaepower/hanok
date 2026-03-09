@@ -143,6 +143,33 @@ export type MainLiveResponse = {
   totalElements: number;
   hasNext: boolean;
 };
+
+// ─── Follow / Unfollow ────────────────────────────────────────────────────────
+export type FollowPayload = {
+  userId: number;
+};
+
+export type FollowResponse = {
+  following: boolean;
+  followerCount: number;
+  followingCount: number;
+};
+
+// ─── Seller Reputation ────────────────────────────────────────────────────────
+export type SellerReputationData = {
+  followerCount: number;
+  totalTrades?: number;
+  completionRate?: number;
+  cancelCount?: number;
+  avgShipDays?: number;
+};
+
+export type SellerReputationResponse = {
+  status: string;
+  message: string;
+  data: SellerReputationData;
+};
+
 // ─── Item (Product) CRUD ──────────────────────────────────────────────────────
 export type CreateItemPayload = {
   title: string;
