@@ -47,7 +47,7 @@ services:
   # Backend (dev)
   # =============================================
   backend-dev:
-    image: jupddang-backend:dev
+    image: hanok-backend:dev
     container_name: hanok-backend-dev
     restart: unless-stopped
     environment:
@@ -74,7 +74,7 @@ services:
   # Backend (prod)
   # =============================================
   backend-prod:
-    image: jupddang-backend:prod
+    image: hanok-backend:prod
     container_name: hanok-backend-prod
     restart: unless-stopped
     environment:
