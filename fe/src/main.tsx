@@ -11,10 +11,8 @@ async function enableMocking() {
     return;
   }
   const { worker } = await import("./mocks/browser");
-  // return worker.start();
-  // Service Worker를 등록하여 네트워크 요청을 가로챔
   return worker.start({
-    onUnhandledRequest: 'bypass', // mock되지 않은 요청은 그대로 통과시킴
+    onUnhandledRequest: 'bypass',
   });
 }
 
