@@ -37,7 +37,7 @@ public class Item {
     private ItemStatus status;
 
     @Enumerated(EnumType.STRING)
-    private Condition condition;
+    private Condition itemCondition;
 
     private String image1;
 
@@ -83,7 +83,7 @@ public class Item {
         this.bidUnit = bidUnit;
         this.auctionDuration = auctionDuration;
         this.status = status;
-        this.condition = condition;
+        this.itemCondition = condition;
         this.image1 = image1;
         this.image2 = image2;
         this.image3 = image3;
