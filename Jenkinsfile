@@ -34,7 +34,10 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh "docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps backend-prod"
+                sh '''
+                    cp /var/jenkins_home/env/.env.prod infra/.env.prod
+                    docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps backend-prod
+                '''
             }
         }
     }
