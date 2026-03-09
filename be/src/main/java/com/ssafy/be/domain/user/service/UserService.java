@@ -10,7 +10,9 @@ import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.exception.UserErrorCode;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
-import com.ssafy.be.global.infra.portone.PortoneClient;
+import com.ssafy.be.global.infra.gcs.GcsClient;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;import com.ssafy.be.global.infra.portone.PortoneClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -37,6 +39,7 @@ public class UserService {
     private final PortoneClient portOneClient;
     private final RedisService redisService;
     private final JwtUtil jwtUtil;
+    private final GcsClient gcsClient;
 
     private static final String REFRESH_TOKEN_PREFIX = "refresh:";
     private static final String BLACKLIST_PREFIX = "blacklist:";
@@ -72,7 +75,18 @@ public class UserService {
 
         // 3. Entity 생성
         // DTO 내부의 toEntity()로 변환 (Service에서 직접 new User() 하지 않음)
-        User user = requestDto.toEntity(encodedPassword);
+        User user = User.builder()
+                .email(requestDto.email())
+                .password(encodedPassword)
+                .nickname(requestDto.nickname())
+                .phone(requestDto.phone())
+                .profileImage("https://storage.googleapis.com/hanok-storage/profiles/default/default-profile.png")
+                .isActive(true)
+                .balance(0L)
+                .depositedAuctionBalance(0L)
+                .depositedWithdrawBalance(0L)
+                .notificationSetting(true)
+                .build();
 
         // 4. DB 저장
         // JpaRepository의 save() → INSERT INTO user ...
@@ -133,7 +147,7 @@ public class UserService {
         }
 
         // 3. 토큰 발급
-        String accessToken = jwtUtil.generateToken(user.getId(), "USER");
+        String accessToken = jwtUtil.generateToken(user.getId(), "USER", user.getNickname());
         String refreshToken = jwtUtil.generateRefreshToken(user.getId());
 
         // 4. Refresh Token Redis 저장 (7일)
@@ -186,7 +200,7 @@ public class UserService {
         }
 
         // 3. 새 토큰 발급 (Refresh Token Rotation)
-        String newAccessToken = jwtUtil.generateToken(userId, "USER");
+        String newAccessToken = jwtUtil.generateToken(userId, "USER", claims.get("nickname",String.class));
         String newRefreshToken = jwtUtil.generateRefreshToken(userId);
 
         // 4. Redis 업데이트
@@ -194,5 +208,30 @@ public class UserService {
                 jwtUtil.getRefreshExpiration(), TimeUnit.MILLISECONDS);
 
         return new LoginResponseDto(newAccessToken, newRefreshToken);
+    }
+
+    // -----------------------------------------------
+// 프로필 이미지 업로드
+// PATCH /api/v1/users/me/profile-image
+// -----------------------------------------------
+    @Transactional
+    public String uploadProfileImage(Long userId, MultipartFile file) throws IOException {
+
+        // 1. 유저 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GlobalException(UserErrorCode.USER_NOT_FOUND));
+
+        // 2. 기존 이미지 삭제 (있을 경우)
+        if (user.getProfileImage() != null) {
+            gcsClient.deleteProfileImage(user.getProfileImage());
+        }
+
+        // 3. 새 이미지 업로드
+        String imageUrl = gcsClient.uploadProfileImage(file, userId);
+
+        // 4. DB 업데이트
+        user.updateProfileImage(imageUrl);
+
+        return imageUrl;
     }
 }

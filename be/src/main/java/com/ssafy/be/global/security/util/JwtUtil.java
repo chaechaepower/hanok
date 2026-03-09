@@ -30,10 +30,11 @@ public class JwtUtil {
     }
 
     // 토큰 생성
-    public String generateToken(Long userId, String role) {
+    public String generateToken(Long userId, String role, String nickname) {
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
                 .claim("role", role)
+                .claim("nickname", nickname)
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)

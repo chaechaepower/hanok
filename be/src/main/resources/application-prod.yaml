@@ -3,6 +3,12 @@ spring:
     activate:
       on-profile: prod
 
+  cloud:
+    gcp:
+      storage:
+        credentials:
+          location: file:${GCS_CREDENTIALS_PATH}
+
   jpa:
     hibernate:
       ddl-auto: validate
