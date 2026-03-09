@@ -200,15 +200,13 @@ export interface BiznoResponse {
 }
 
 // ─── Auction ──────────────────────────────────────────────────────────────────
-export type AuctionDuration = 10 | 30 | 60 | 600;
-
-export type SellerGrade = "General" | "MVP";
+export type AuctionDuration = 10 | 30 | 60;
 
 export type TimerPhase = "normal" | "urgent" | "ended";
 
 // ─── Chat ─────────────────────────────────────────────────────────────────────
 export type ChatMessageType =
-    | { id: number; type: "chat"; nickname: string; message: string }
-    | { id: number; type: "macro_request"; nickname: string; command: string }
-    | { id: number; type: "macro_response"; label: string; message: string }
-    | { id: number; type: "system"; message: string };
+  | { id: number; type: "chat"; nickname: string; message: string }
+  | { id: number; type: "macro_request"; nickname: string; command: string }
+  | { id: number; type: "macro_response"; label: string; message: string }
+  | { id: number; type: "system"; message: string };
