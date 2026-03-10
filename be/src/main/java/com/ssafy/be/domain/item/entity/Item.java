@@ -1,5 +1,7 @@
 package com.ssafy.be.domain.item.entity;
 
+import com.ssafy.be.domain.item.dto.request.ItemUpdateRequest;
+import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -57,7 +59,7 @@ public class Item {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id")
-    private User seller;
+    private Seller seller;
 
     @Builder
     private Item(String name,
@@ -75,7 +77,7 @@ public class Item {
                 String trackingNumber,
                 LocalDateTime submittedAt,
                 LocalDateTime createdAt,
-                User seller) {
+                 Seller seller) {
         this.name = name;
         this.description = description;
         this.category = category;
@@ -92,5 +94,21 @@ public class Item {
         this.submittedAt = submittedAt;
         this.createdAt = createdAt;
         this.seller = seller;
+    }
+
+    public void updateImages(String image1, String image2, String image3) {
+        if (image1 != null) this.image1 = image1;
+        if (image2 != null) this.image2 = image2;
+        if (image3 != null) this.image3 = image3;
+    }
+
+    public void update(ItemUpdateRequest request) {
+        if (request.name() != null) this.name = request.name();
+        if (request.description() != null) this.description = request.description();
+        if (request.category() != null) this.category = request.category();
+        if (request.startPrice() != null) this.startPrice = request.startPrice();
+        if (request.bidUnit() != null) this.bidUnit = request.bidUnit();
+        if (request.auctionDuration() != null) this.auctionDuration = request.auctionDuration();
+        if (request.itemCondition() != null) this.itemCondition = request.itemCondition();
     }
 }
