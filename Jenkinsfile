@@ -29,7 +29,7 @@ pipeline {
                     steps {
                         dir('fe') {
                             sh 'cp /var/jenkins_home/env/.env.fe .env'
-                            sh 'npm ci'
+                            sh 'npm install'
                             sh 'npm run build'
                         }
                     }
