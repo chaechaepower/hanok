@@ -9,3 +9,4 @@ export * from './live';
 export * from './seller';
 export * from './wallet';
 export * from './settings';
+export * from './stomp';
