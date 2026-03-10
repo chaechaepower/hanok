@@ -1,5 +1,6 @@
 package com.ssafy.be.domain.item.entity;
 
+import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -57,7 +58,7 @@ public class Item {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id")
-    private User seller;
+    private Seller seller;
 
     @Builder
     private Item(String name,
@@ -75,7 +76,7 @@ public class Item {
                  String trackingNumber,
                  LocalDateTime submittedAt,
                  LocalDateTime createdAt,
-                 User seller) {
+                 Seller seller) {
         this.name = name;
         this.description = description;
         this.category = category;
