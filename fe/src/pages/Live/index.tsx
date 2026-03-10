@@ -12,8 +12,10 @@ export default function LivePage() {
 
   return (
     <div className="flex h-screen w-full gap-2 p-2">
-      <LeftPanel />
-      <div className="relative flex-1 bg-background">
+      <div className="min-w-0 flex-1">
+        <LeftPanel isSeller={isSeller} />
+      </div>
+      <div className="relative min-w-0 flex-[1.5] bg-background">
         <StreamOverlay />
         <SellerGuideOverlay />
         <StreamPlaceholder />
@@ -35,7 +37,9 @@ export default function LivePage() {
           </button>
         </div>
       </div>
-      <RightPanel isSeller={isSeller} />
+      <div className="min-w-0 flex-1">
+        <RightPanel isSeller={isSeller} />
+      </div>
     </div>
   );
 }
