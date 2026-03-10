@@ -2,6 +2,7 @@ package com.ssafy.be.global.websocket.enums;
 
 public enum StompType {
 
+
     // 채팅
     CHAT_MESSAGE,           // 일반 채팅 메시지
     CHAT_FILTERED,          // 금칙어 감지 (개인)
@@ -16,6 +17,9 @@ public enum StompType {
     BID_WINNER,             // 낙찰 확정
 
     // 매크로
-    MACRO_TEMPLATE
+    MACRO_TEMPLATE,
+
+    // 에러
+    ERROR
 }
 
