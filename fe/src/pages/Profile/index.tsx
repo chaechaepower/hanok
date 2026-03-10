@@ -6,11 +6,10 @@ import { usePostSellerNotice } from '@/api/hooks/usePostSellerNotice';
 import { usePatchSellerNotice } from '@/api/hooks/usePatchSellerNotice';
 import { useDeleteSellerNotice } from '@/api/hooks/useDeleteSellerNotice';
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
-import { useGetSellerReputation } from '@/api/hooks/useGetSellerReputation';
 import { usePatchFollow } from '@/api/hooks/usePatchFollow';
 import { useDeleteFollow } from '@/api/hooks/useDeleteFollow';
 import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
-import { FiBell, FiCalendar, FiClock, FiGift, FiTruck } from 'react-icons/fi';
+import { FiBell, FiCalendar, FiClock, FiGift, FiTruck, FiEdit2 } from 'react-icons/fi';
 
 const InstagramIcon = () => (
   <>
@@ -98,7 +97,6 @@ export default function ProfilePage() {
 
   const { data, isLoading, isError } = useGetSellerProfile(sellerId);
   const { data: mySellerStatus } = useGetSellerStatus();
-  const { data: reputationData } = useGetSellerReputation(sellerId);
 
   const { data: noticeData } = useGetSellerNotice(sellerId, { page: noticePage, limit: 10 });
   const { mutate: postNotice } = usePostSellerNotice(sellerId);
@@ -184,7 +182,6 @@ export default function ProfilePage() {
   }
 
   const { nickname, intro, profile_image, instagramUrl, youtubeUrl, tiktokUrl } = data;
-  const reputation = reputationData?.data;
   const notices = noticeData?.items || [];
 
   return (
@@ -193,9 +190,23 @@ export default function ProfilePage() {
         <div className="flex items-start gap-10">
           <div>
             {profile_image ? (
-              <img src={profile_image} alt={nickname} className="w-[140px] h-[140px] rounded-full object-cover" />
+              <>
+                <img 
+                  src={profile_image} 
+                  alt={nickname} 
+                  className="w-[140px] h-[140px] min-w-[140px] min-h-[140px] flex-shrink-0 rounded-full object-contain object-center bg-[#1e1e2d]" 
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                    (e.target as HTMLImageElement).nextElementSibling?.classList.add('flex');
+                  }}
+                />
+                <div className="hidden w-[140px] h-[140px] min-w-[140px] min-h-[140px] flex-shrink-0 rounded-full bg-[#1e1e2d] text-[#d9b36d] text-[48px] items-center justify-center font-bold">
+                  {nickname.charAt(0)}
+                </div>
+              </>
             ) : (
-              <div className="w-[140px] h-[140px] rounded-full bg-[#1e1e2d] text-[#d9b36d] text-[48px] flex items-center justify-center font-bold">
+              <div className="w-[140px] h-[140px] min-w-[140px] min-h-[140px] flex-shrink-0 rounded-full bg-[#1e1e2d] text-[#d9b36d] text-[48px] flex items-center justify-center font-bold">
                 {nickname.charAt(0)}
               </div>
             )}
@@ -211,13 +222,10 @@ export default function ProfilePage() {
               >
                 {isFollowing ? '언팔로우' : '팔로우'}
               </button>
-              <div className="text-[15px] text-[#bbb] ml-2">
-                팔로워 <strong className="text-white">{reputation?.followerCount ?? 0}</strong>
-              </div>
               <div className="ml-auto flex gap-4">
                 {/* TODO: 수정api연결 필요 */}
-                <button className="border-none bg-transparent text-[#888] text-sm cursor-pointer">수정</button>
-                <button className="border-none bg-transparent text-[#888] text-sm cursor-pointer">신고</button>
+                <button className="border-none bg-transparent text-[#888] text-sm cursor-pointer hover:text-[var(--color-point)] transition-colors">수정</button>
+                <button className="border-none bg-transparent text-[#888] text-sm cursor-pointer hover:text-[var(--color-point)] transition-colors">신고</button>
               </div>
             </div>
 
@@ -243,7 +251,7 @@ export default function ProfilePage() {
                   className="flex items-center gap-[6px] text-white no-underline text-base font-semibold"
                 >
                   <YoutubeIcon />
-                  <span>YouTube</span>
+                  <span>{youtubeUrl.replace('https://youtube.com/', '')}</span>
                 </a>
               )}
               {tiktokUrl && (
@@ -254,30 +262,25 @@ export default function ProfilePage() {
                   className="flex items-center gap-[6px] text-white no-underline text-base font-semibold"
                 >
                   <TiktokIcon />
-                  <span>TikTok</span>
+                  <span>{tiktokUrl.replace('https://tiktok.com/', '')}</span>
                 </a>
               )}
             </div>
 
-            {isOwner && reputation?.totalTrades !== undefined && (
+            {isOwner && data?.stats !== undefined && (
               <div className="mt-3 border border-[#2e2e40] rounded-xl py-6 flex items-center w-[420px]">
                 <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{reputation.totalTrades}</span>
-                  <span className="text-[13px] text-[#888]">총 거래</span>
+                  <span className="text-[22px] font-bold text-white">{data.stats.followerCount}</span>
+                  <span className="text-[13px] text-[#888]">팔로워수</span>
                 </div>
                 <div className="w-[1px] h-10 bg-[#2e2e40]" />
                 <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{reputation.cancelCount}</span>
-                  <span className="text-[13px] text-[#888]">취소</span>
+                  <span className="text-[22px] font-bold text-white">{data.stats.rating}</span>
+                  <span className="text-[13px] text-[#888]">평점</span>
                 </div>
                 <div className="w-[1px] h-10 bg-[#2e2e40]" />
                 <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{reputation.completionRate}%</span>
-                  <span className="text-[13px] text-[#888]">성사율</span>
-                </div>
-                <div className="w-[1px] h-10 bg-[#2e2e40]" />
-                <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{reputation.avgShipDays}일</span>
+                  <span className="text-[22px] font-bold text-white">{data.stats.avgShipDays}일</span>
                   <span className="text-[13px] text-[#888]">평균 배송일</span>
                 </div>
               </div>
@@ -289,7 +292,7 @@ export default function ProfilePage() {
       <div className="w-full box-border border border-[#2e2e40] rounded-2xl py-11 px-14 bg-[#0c0c14]">
         <div className="flex gap-6 border-b border-[#2e2e40] mb-8">
           <button
-            className={`flex items-center gap-[6px] bg-transparent border-none border-b-2 px-2 pb-4 text-base font-bold cursor-pointer transition-colors duration-200 -mb-[1px] ${
+            className={`flex items-center gap-[6px] bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-base font-bold cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${
               activeTab === 'posts' ? 'text-[#d9b36d] border-[#d9b36d]' : 'text-[#888] border-transparent'
             }`}
             onClick={() => setActiveTab('posts')}
@@ -298,7 +301,7 @@ export default function ProfilePage() {
           </button>
 
           <button
-            className={`flex items-center gap-[6px] bg-transparent border-none border-b-2 px-2 pb-4 text-base font-bold cursor-pointer transition-colors duration-200 -mb-[1px] ${
+            className={`flex items-center gap-[6px] bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-base font-bold cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${
               activeTab === 'sales' ? 'text-[#d9b36d] border-[#d9b36d]' : 'text-[#888] border-transparent'
             }`}
             onClick={() => setActiveTab('sales')}
@@ -310,14 +313,17 @@ export default function ProfilePage() {
 
         {activeTab === 'posts' && (
           <div className="flex flex-col gap-5">
-            <div className="flex justify-end mb-2">
-              <button
-                className="py-2 px-4 bg-[#d9b36d] text-[#111] border-none rounded-lg font-bold text-sm cursor-pointer"
-                onClick={handleOpenCreateModal}
-              >
-                공지사항 등록
-              </button>
-            </div>
+            {isOwner && (
+              <div className="flex justify-end mt-[-15px] mb-[-5px]">
+                <button
+                  className="flex items-center justify-center bg-transparent text-[#d9b36d] border-none cursor-pointer hover:text-[#c4a162] transition-colors p-0"
+                  onClick={handleOpenCreateModal}
+                  aria-label="공지사항 등록"
+                >
+                  <FiEdit2 size={20} />
+                </button>
+              </div>
+            )}
             {notices.length === 0 ? (
               <p className="text-center text-[#888] py-[60px] text-[15px]">등록된 공지사항이 없습니다.</p>
             ) : (
@@ -340,13 +346,13 @@ export default function ProfilePage() {
                     </div>
                     <div className="flex gap-3">
                       <button
-                        className="bg-transparent border-none text-[#888] text-[13px] cursor-pointer underline"
+                        className="bg-transparent border-none text-[#888] text-[13px] cursor-pointer hover:underline"
                         onClick={() => handleOpenEditModal(post.postId, post.title, post.content)}
                       >
                         수정
                       </button>
                       <button
-                        className="bg-transparent border-none text-red-400 text-[13px] cursor-pointer underline"
+                        className="bg-transparent border-none text-red-400 text-[13px] cursor-pointer hover:underline"
                         onClick={() => handleDeleteNotice(post.postId)}
                       >
                         삭제

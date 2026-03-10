@@ -14,9 +14,11 @@ export const usePatchFollow = () => {
 
   return useMutation({
     mutationFn: patchFollow,
-    onSuccess: (_, variables) => {
-      // 팔로우 처리 성공 시 판매자 평판 정보 갱신
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['sellerReputation', variables.userId] });
+      if (data.following) {
+        queryClient.invalidateQueries({ queryKey: ['followedStores'] });
+      }
     },
   });
 };

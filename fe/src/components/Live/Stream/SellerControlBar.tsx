@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { LuMic, LuRadio, LuKeyboard } from "react-icons/lu";
-import { IoChevronUp, IoChevronDown, IoChevronBack, IoChevronForward } from "react-icons/io5";
+import { LuMic, LuRadio } from "react-icons/lu";
 import KeyboardGuide from "@/components/Live/Auction/Seller/KeyboardGuide";
 
 // 판매자 전용 컨트롤바
