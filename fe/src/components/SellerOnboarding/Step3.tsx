@@ -41,6 +41,7 @@ export default function Step3({ onPrev, onNext }: { onPrev: () => void; onNext: 
     try {
       await registerAccount({
         bankName: bank,
+        bankCode: bank,
         accountNum: accountNumber,
         accountName,
       });
