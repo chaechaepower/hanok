@@ -9,7 +9,7 @@ interface Props {
 export default function KeyboardGuide({ open, onToggle }: Props) {
     if (!open) {
         return (
-            <div className="flex h-[180px] flex-col justify-center gap-3 rounded-2xl bg-[rgba(0,0,0,.6)] px-2.5">
+            <div className="flex h-[130px] flex-col justify-center gap-3 rounded-2xl bg-[rgba(0,0,0,.6)] px-2.5">
                 <button
                     className="flex h-10 w-10 items-center justify-center rounded-xl text-white transition hover:bg-[rgba(255,255,255,.1)]"
                     onClick={() => onToggle(true)}
