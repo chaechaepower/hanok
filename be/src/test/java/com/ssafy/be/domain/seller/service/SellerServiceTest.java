@@ -3,7 +3,6 @@ package com.ssafy.be.domain.seller.service;
 import com.ssafy.be.domain.seller.dto.request.SellerRegisterRequest;
 import com.ssafy.be.domain.seller.dto.response.SellerRegisterResponse;
 import com.ssafy.be.domain.seller.entity.Seller;
-import com.ssafy.be.domain.seller.entity.SellerGrade;
 import com.ssafy.be.domain.seller.entity.SellerType;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
@@ -84,9 +83,8 @@ class SellerServiceTest {
         Seller mockSeller = Seller.builder()
                 .intro("안녕하세요!")
                 .type(SellerType.INDIVIDUAL)
-                .grade(SellerGrade.GENERAL)
                 .rating(0.0)
-                .userId(1L)
+                .user(mockUser)
                 .build();
 
         given(sellerRepository.existsByUserId(1L)).willReturn(false);
@@ -102,6 +100,5 @@ class SellerServiceTest {
 
         // then
         assertThat(response.nickname()).isEqualTo("경매왕");
-        assertThat(response.grade()).isEqualTo(SellerGrade.GENERAL);
     }
 }
