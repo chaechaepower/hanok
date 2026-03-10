@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
+import LogoImage from '@/assets/Logo.png';
 
 import { decrementMockFollowerCount, getMockFollowerCount, incrementMockFollowerCount } from './mockState';
 
@@ -63,46 +64,70 @@ export const profileHandlers = [
   http.get(`${BASE_URL}/v1/sellers/:sellerId/profile`, ({ params }) => {
     const sellerId = Number(params.sellerId);
 
+    if (sellerId === 200) {
+      return HttpResponse.json(
+        {
+          sellerId: 200,
+          nickname: '명품셀러',
+          intro: '정품만 취급합니다. 문의 환영합니다.',
+          profile_image: LogoImage,
+          instagramUrl: 'https://instagram.com/luxury_seller',
+          youtubeUrl: 'https://youtube.com/@luxury_seller_tv',
+          tiktokUrl: 'https://tiktok.com/@luxury_seller_official',
+          stats: {
+            rating: 4.9,
+            avgShipDays: 1.2,
+            followerCount: 1542,
+          },
+          recentSales: [
+            {
+              itemId: 101,
+              title: '샤넬 클래식 플랩백',
+              finalPrice: 8500000,
+              soldAt: '2026-03-09T14:00:00Z',
+            },
+          ],
+          posts: [
+            {
+              postId: 10,
+              title: '이번 주 신상 입고 안내',
+              context: '이번 주말에 에르메스 물량 풀립니다.',
+              createdAt: '2026-03-08T12:00:00Z',
+            },
+          ],
+        },
+        { status: 200 },
+      );
+    }
+
     return HttpResponse.json(
       {
         sellerId,
-        nickname: 'Mock Seller',
-        intro: 'Curated vintage goods and limited collectibles shipped with care.',
-        profile_image: `https://picsum.photos/seed/seller-${sellerId}/120/120`,
-        instagramUrl: 'https://instagram.com/mock_seller',
-        youtubeUrl: 'https://youtube.com/@mock_seller',
-        tiktokUrl: 'https://tiktok.com/@mock_seller',
+        nickname: '판매왕',
+        intro: '좋은 물건만 팔아요',
+        profile_image: LogoImage,
+        instagramUrl: 'https://instagram.com/im_rerak',
+        youtubeUrl: 'https://youtube.com/@im_rerak',
+        tiktokUrl: 'https://tiktok.com/@seller123',
         stats: {
           rating: 4.7,
           avgShipDays: 1.8,
-          followerCount: getMockFollowerCount(),
+          followerCount: 342,
         },
         recentSales: [
           {
             itemId: 10,
-            title: 'Vintage sneakers',
+            title: '나이키 에어맥스',
             finalPrice: 75000,
             soldAt: '2026-03-01T14:00:00Z',
-          },
-          {
-            itemId: 11,
-            title: 'Collector jacket',
-            finalPrice: 120000,
-            soldAt: '2026-02-20T10:30:00Z',
           },
         ],
         posts: [
           {
             postId: 5,
-            title: 'This week shipping notice',
-            context: 'Orders placed this week will start shipping in three days.',
+            title: '이번 주 방송 예고',
+            context: '방송 이번주에 해요',
             createdAt: '2026-03-03T12:00:00Z',
-          },
-          {
-            postId: 6,
-            title: 'Weekend live schedule',
-            context: 'The weekend live auction starts at 8 PM and featured lots open first.',
-            createdAt: '2026-03-02T09:00:00Z',
           },
         ],
       },

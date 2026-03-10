@@ -1,12 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
-import type { PostUserAccountPayload, PostUserAccountResponse } from '@/types';
+import type { RegisterAccountPayload, UserAccountResponse } from '@/types';
 
 export const postUserAccountPath = () => `/v1/users/me/accounts`;
 
-export const postUserAccount = async (payload: PostUserAccountPayload) => {
-  const response = await getFetchInstance().post<PostUserAccountResponse>(
+export const postUserAccount = async (payload: RegisterAccountPayload) => {
+  const response = await getFetchInstance().post<UserAccountResponse>(
     postUserAccountPath(),
     payload,
   );
@@ -15,7 +15,7 @@ export const postUserAccount = async (payload: PostUserAccountPayload) => {
 
 export const usePostUserAccount = () => {
   return useMutation({
-    mutationFn: (payload: PostUserAccountPayload) => postUserAccount(payload),
+    mutationFn: (payload: RegisterAccountPayload) => postUserAccount(payload),
     throwOnError: false,
   });
 };
