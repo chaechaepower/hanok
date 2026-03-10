@@ -10,7 +10,7 @@ export default function RightPanel({ isSeller }: Props) {
     const [activeTab, setActiveTab] = useState<"chat" | "auction">("chat");
 
     return (
-        <div className="flex h-full w-full flex-col rounded-xl bg-[#050505] text-point">
+        <div className="flex h-full w-full flex-col rounded-2xl bg-[#050505] text-point">
             {/* 판매자 프로필 헤더 */}
             <div className="flex items-center gap-2.5 px-3 py-2">
                 <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#27272a] text-[10px] font-bold text-[#C5A059]">

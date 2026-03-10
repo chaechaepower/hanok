@@ -75,7 +75,7 @@ export default function LeftPanel({ isSeller }: Props) {
 
     return (
         <>
-            <div className="left-panel-scroll flex h-full w-full flex-col rounded-xl bg-[#0D0F17] px-4 py-6" style={{ borderRight: "1px solid rgba(255,255,255,0.05)" }}>
+            <div className="flex h-full w-full flex-col rounded-2xl bg-[#050505] px-4 py-6" style={{ borderRight: "1px solid rgba(255,255,255,0.05)" }}>
                 {/* ── Header ── */}
                 <div className="mb-4 flex items-center justify-between">
                     <span className="text-xs font-bold text-[#A1A1AA]">오늘의 출품 목록</span>
@@ -83,7 +83,7 @@ export default function LeftPanel({ isSeller }: Props) {
                 </div>
 
                 {/* ── Active Items ── */}
-                <div className="flex flex-1 flex-col gap-2 overflow-y-auto">
+                <div className="left-panel-scroll flex flex-1 flex-col gap-2 overflow-y-auto pr-2">
                     {activeItems.map((item) => {
                         const isSelected = isSeller && selectedId === item.id;
                         const sb = STATUS_BADGE[item.status];
