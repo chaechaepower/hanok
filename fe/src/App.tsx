@@ -15,12 +15,14 @@ import MainLayout from '@/components/common/layouts/MainLayout';
 function App() {
   return (
     <Routes>
+      {/* 풀스크린 (Header/Footer 없음) */}
+      <Route path="live/:id" element={<LivePage />} />
+
       <Route path="/" element={<MainLayout />}>
         <Route index element={<MainPage />} />
         <Route path="tracking" element={<TrakingInputPage />} />
         <Route path="profile/:id" element={<ProfilePage />} />
         <Route path="seller/register" element={<SellerOnboardingPage />} />
-        <Route path="live/:id" element={<LivePage />} />
         <Route path="live/new" element={<LiveCreatePage />} />
         <Route path="products" element={<ProductListPage />} />
         <Route path="signup" element={<SignUpPage />} />
