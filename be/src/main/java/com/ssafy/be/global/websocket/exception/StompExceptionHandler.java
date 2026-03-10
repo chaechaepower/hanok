@@ -1,9 +1,10 @@
-package com.ssafy.be.global.websocket.config;
+package com.ssafy.be.global.websocket.exception;
 
+import com.ssafy.be.global.exception.ErrorCode;
+import com.ssafy.be.global.exception.GlobalErrorCode;
 import com.ssafy.be.global.websocket.dto.response.StompErrorPayload;
 import com.ssafy.be.global.websocket.dto.response.StompResponse;
 import com.ssafy.be.global.websocket.enums.StompType;
-import com.ssafy.be.global.websocket.exception.StompErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.simp.annotation.SendToUser;
@@ -16,31 +17,36 @@ import java.nio.file.AccessDeniedException;
 @RequiredArgsConstructor
 public class StompExceptionHandler {
 
-
     // @Valid 검증 실패
     @MessageExceptionHandler(MethodArgumentNotValidException.class)
     @SendToUser("/private/errors")
     public StompResponse<?> handleValidation(MethodArgumentNotValidException ex) {
-        return buildErrorResponse(StompErrorCode.INVALID_PAYLOAD);
+        return buildErrorResponse(GlobalErrorCode.INVALID_PARAMETER);
     }
-
 
     // 인증 실패
     @MessageExceptionHandler(AccessDeniedException.class)
     @SendToUser("/private/errors")
     public StompResponse<?> handleAccessDenied(AccessDeniedException ex) {
-        return buildErrorResponse(StompErrorCode.UNAUTHORIZED);
+        return buildErrorResponse(GlobalErrorCode.UNAUTHORIZED);
+    }
+
+    // 비즈니스 예외 (StompException)
+    @MessageExceptionHandler(StompException.class)
+    @SendToUser("/private/errors")
+    public StompResponse<?> handleWebSocketException(StompException ex) {
+        return buildErrorResponse(ex.getErrorType());
     }
 
     // 나머지
     @MessageExceptionHandler(Exception.class)
     @SendToUser("/private/errors")
     public StompResponse<?> handleException(Exception ex) {
-        return buildErrorResponse(StompErrorCode.INTERNAL_ERROR);
+        return buildErrorResponse(GlobalErrorCode.INTERNAL_SERVER_ERROR);
     }
 
     // response 빌드
-    private StompResponse<StompErrorPayload> buildErrorResponse(StompErrorCode errorCode) {
+    private StompResponse<StompErrorPayload> buildErrorResponse(ErrorCode errorCode) {
         return StompResponse.<StompErrorPayload>builder()
                 .eventType(StompType.ERROR)
                 .payload(buildErrorPayload(errorCode))
@@ -48,7 +54,7 @@ public class StompExceptionHandler {
     }
 
     // payload 빌드
-    private StompErrorPayload buildErrorPayload(StompErrorCode errorCode) {
+    private StompErrorPayload buildErrorPayload(ErrorCode errorCode) {
         return StompErrorPayload.builder()
                 .code(errorCode.getCode())
                 .message(errorCode.getMessage())
