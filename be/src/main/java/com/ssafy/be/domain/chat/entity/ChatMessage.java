@@ -6,8 +6,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.awt.*;
-
 @Entity
 @Table(name = "chat_message")
 @Getter
