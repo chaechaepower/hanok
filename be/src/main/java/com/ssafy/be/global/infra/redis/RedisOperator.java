@@ -37,6 +37,11 @@ public class RedisOperator {
         redisTemplate.delete(key);
     }
 
+    public boolean containsKey(String key) {
+        return redisTemplate.hasKey(key);
+    }
+
+
     /* ================================
      *           HASH
      * ================================ */

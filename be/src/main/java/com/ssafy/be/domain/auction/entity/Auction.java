@@ -7,7 +7,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import static com.ssafy.be.domain.auction.entity.AuctionStatus.LIVE;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -17,13 +18,15 @@ public class Auction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int currentPrice;
+    private Long finalPrice;
 
     @Enumerated(EnumType.STRING)
     private AuctionStatus auctionStatus;
 
     @Enumerated(EnumType.STRING)
     private AuctionType auctionType;
+
+    private String startedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stream_id")
@@ -35,14 +38,21 @@ public class Auction {
 
     @Builder
     private Auction(AuctionStatus auctionStatus,
-                   int currentPrice,
-                   AuctionType auctionType,
-                   Stream stream,
-                   Item item) {
+                    Long finalPrice,
+                    AuctionType auctionType,
+                    String startedAt,
+                    Stream stream,
+                    Item item) {
         this.auctionStatus = auctionStatus;
-        this.currentPrice = currentPrice;
+        this.finalPrice = finalPrice;
         this.auctionType = auctionType;
+        this.startedAt = startedAt;
         this.stream = stream;
         this.item = item;
+    }
+
+    public void startAuction(String startedAt) {
+        this.auctionStatus = LIVE;
+        this.startedAt = startedAt;
     }
 }

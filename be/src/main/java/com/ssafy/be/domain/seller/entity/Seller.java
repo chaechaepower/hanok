@@ -1,5 +1,6 @@
 package com.ssafy.be.domain.seller.entity;
 
+import com.ssafy.be.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
@@ -34,10 +35,6 @@ public class Seller {
     @Column(name = "business_number", length = 50)
     private String businessNumber;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private SellerGrade grade;
-
     @Column(name = "insta_url", length = 100)
     private String instaUrl;
 
@@ -55,7 +52,30 @@ public class Seller {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id",  nullable = false)
+    private User user;
 
+    @Builder
+    private Seller(String intro,
+                   Double rating,
+                   SellerType type,
+                   String businessNumber,
+                   String instaUrl,
+                   String youtubeUrl,
+                   String tiktokUrl,
+                   LocalDateTime createdAt,
+                   LocalDateTime updatedAt,
+                   User user) {
+        this.intro = intro;
+        this.rating = rating;
+        this.type = type;
+        this.businessNumber = businessNumber;
+        this.instaUrl = instaUrl;
+        this.youtubeUrl = youtubeUrl;
+        this.tiktokUrl = tiktokUrl;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.user = user;
+    }
 }

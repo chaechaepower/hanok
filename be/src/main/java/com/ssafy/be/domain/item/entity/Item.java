@@ -1,5 +1,6 @@
 package com.ssafy.be.domain.item.entity;
 
+import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -29,7 +30,7 @@ public class Item {
 
     private Long startPrice;
 
-    private Integer bidUnit;
+    private Long bidUnit;
 
     private Integer auctionDuration;
 
@@ -37,7 +38,7 @@ public class Item {
     private ItemStatus status;
 
     @Enumerated(EnumType.STRING)
-    private Condition itemCondition;
+    private ItemCondition itemCondition;
 
     private String image1;
 
@@ -57,25 +58,25 @@ public class Item {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seller_id")
-    private User seller;
+    private Seller seller;
 
     @Builder
     private Item(String name,
-                String description,
-                Category category,
-                Long startPrice,
-                Integer bidUnit,
-                Integer auctionDuration,
-                ItemStatus status,
-                Condition condition,
-                String image1,
-                String image2,
-                String image3,
-                String courierName,
-                String trackingNumber,
-                LocalDateTime submittedAt,
-                LocalDateTime createdAt,
-                User seller) {
+                 String description,
+                 Category category,
+                 Long startPrice,
+                 Long bidUnit,
+                 Integer auctionDuration,
+                 ItemStatus status,
+                 ItemCondition itemCondition,
+                 String image1,
+                 String image2,
+                 String image3,
+                 String courierName,
+                 String trackingNumber,
+                 LocalDateTime submittedAt,
+                 LocalDateTime createdAt,
+                 Seller seller) {
         this.name = name;
         this.description = description;
         this.category = category;
@@ -83,7 +84,7 @@ public class Item {
         this.bidUnit = bidUnit;
         this.auctionDuration = auctionDuration;
         this.status = status;
-        this.itemCondition = condition;
+        this.itemCondition = itemCondition;
         this.image1 = image1;
         this.image2 = image2;
         this.image3 = image3;

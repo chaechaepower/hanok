@@ -12,6 +12,9 @@ public enum StompType {
     SYSTEM_STREAM_START,    // 방송 시작
     SYSTEM_STREAM_END,      // 방송 종료
 
+    // 겸매
+    AUCITON_START,          // 경매 시작
+
     // 입찰
     BID_PLACED,             // 입찰 발생
     BID_WINNER,             // 낙찰 확정
