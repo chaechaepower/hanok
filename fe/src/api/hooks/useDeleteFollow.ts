@@ -16,6 +16,8 @@ export const useDeleteFollow = () => {
     mutationFn: deleteFollow,
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['sellerReputation', variables.userId] });
+      // 언팔로우 후 팔로우한 스토어 목록 갱신
+      queryClient.invalidateQueries({ queryKey: ['followedStores'] });
     },
   });
 };

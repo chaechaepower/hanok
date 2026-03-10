@@ -5,6 +5,7 @@ import { mainHandlers } from './MainHandler';
 import { profileHandlers } from './ProfileHandler';
 import { sellerHandlers } from './SellerHandler';
 import { walletHandlers } from './WalletHandler';
+import { settingsHandlers } from './SettingsHandler';
 
 export const handlers = [
   ...authHandlers,
@@ -14,4 +15,5 @@ export const handlers = [
   ...sellerHandlers,
   ...profileHandlers,
   ...escrowHandlers,
+  ...settingsHandlers,
 ];
