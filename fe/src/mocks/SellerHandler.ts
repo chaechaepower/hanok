@@ -1,0 +1,37 @@
+import { http, HttpResponse } from 'msw';
+
+import { BASE_URL } from '@/api/instance';
+
+import { getCurrentMockUser, setCurrentMockUser } from './mockState';
+
+export const sellerHandlers = [
+  http.post(`${BASE_URL}/v1/sellers/register`, async () => {
+    const currentUser = getCurrentMockUser();
+
+    if (currentUser) {
+      setCurrentMockUser({
+        ...currentUser,
+        isSeller: true,
+      });
+    }
+
+    return HttpResponse.json(
+      {
+        sellerId: 101,
+        nickname: 'Mock Seller',
+        grade: 'A',
+      },
+      { status: 200 },
+    );
+  }),
+
+  http.post(`${BASE_URL}/v1/sellers/account`, async () => {
+    return new HttpResponse(null, { status: 200 });
+  }),
+
+  http.get(`${BASE_URL}/v1/users/me/seller-status`, async () => {
+    return HttpResponse.json({
+      isSeller: getCurrentMockUser()?.isSeller ?? false,
+    });
+  }),
+];
