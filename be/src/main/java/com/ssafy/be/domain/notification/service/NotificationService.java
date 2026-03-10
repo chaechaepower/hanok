@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,23 +21,24 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
 
     // 알림 목록 페이징
-    public NotificationPageResponse getNotifications(Long userId, int page, int limit) {
+    public NotificationPageResponse getNotifications(Long userId, String cursor, int limit) {
 
-        // 1. 페이지 계산
-        long offset = (long) page * limit;
-
-        // 2. 다음페이지 확인
-        List<Notification> notifications = notificationRepository.findInboxByUserId(userId, offset, limit + 1);
-
+        // 1. curser = null 처음부터, 아니면 cursor 다음부터
+        List<Notification> notifications = notificationRepository.findInboxByUserIdWithCurSor(userId, cursor, limit + 1);
         boolean hasNext = notifications.size() > limit;
+        String nextCursor = null;
+
+        // 2. hasNext = limit+1로 next확인해서 -1 -> 확인된 다음 메모는 삭제하고 해당 갯수 반환
         if (hasNext) {
+            Notification lastNotification = notifications.get(limit-1);
+            nextCursor = String.valueOf(lastNotification.id());
             notifications.remove(limit);
         }
 
         List<NotificationResponse> items = convertToDtoList(notifications);
         int unreadCount = notificationRepository.getUnreadCount(userId);
 
-        return new NotificationPageResponse(items, unreadCount, hasNext);
+        return new NotificationPageResponse(items, unreadCount, hasNext, nextCursor);
     }
 
     //단일 알림 조회

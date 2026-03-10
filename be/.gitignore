@@ -40,3 +40,4 @@ out/
 .env
 .env.dev
 .env.prod
+src/main/resources/gcs-key.json

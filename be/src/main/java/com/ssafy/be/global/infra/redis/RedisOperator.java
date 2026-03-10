@@ -130,6 +130,7 @@ public class RedisOperator {
         redisTemplate.opsForValue().set(key, value);
     }
 
+<<<<<<< be/src/main/java/com/ssafy/be/global/infra/redis/RedisOperator.java
     /* ================================
      *           LIST
      * ================================ */
@@ -166,5 +167,9 @@ public class RedisOperator {
         } catch (Exception e) {
             throw new GlobalException(GlobalErrorCode.INTERNAL_SERVER_ERROR);
         }
+
+    public Set<String> getZSetReverseRangeByScore(String key, double min, double max, long offset, long cnt) {
+        return redisTemplate.opsForZSet().reverseRangeByScore(key, min, max, offset, cnt);
+
     }
 }
