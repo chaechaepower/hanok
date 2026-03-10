@@ -15,7 +15,6 @@ export const useDeleteFollow = () => {
   return useMutation({
     mutationFn: deleteFollow,
     onSuccess: (_, variables) => {
-      // 언팔로우 처리 성공 시 판매자 평판 정보 갱신
       queryClient.invalidateQueries({ queryKey: ['sellerReputation', variables.userId] });
     },
   });

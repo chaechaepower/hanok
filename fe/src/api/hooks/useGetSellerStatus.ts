@@ -11,9 +11,10 @@ export const getSellerStatus = async () => {
   return response.data;
 };
 
-export const useGetSellerStatus = () => {
+export const useGetSellerStatus = (enabled = true) => {
   return useQuery({
     queryKey: ['seller-status'],
     queryFn: getSellerStatus,
+    enabled,
   });
 };
