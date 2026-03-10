@@ -1,7 +1,7 @@
 package com.ssafy.be.domain.item.dto.request;
 
 import com.ssafy.be.domain.item.entity.Category;
-import com.ssafy.be.domain.item.entity.Condition;
+import com.ssafy.be.domain.item.entity.ItemCondition;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -13,5 +13,5 @@ public record ItemRegisterRequest(
         @NotNull @Min(0) Long startPrice,
         @NotNull @Min(1) Integer bidUnit,
         @NotNull @Min(1) Integer auctionDuration,
-        @NotNull Condition itemCondition
+        @NotNull ItemCondition itemCondition
 ) {}
