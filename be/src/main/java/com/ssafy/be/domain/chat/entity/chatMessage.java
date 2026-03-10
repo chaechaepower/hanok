@@ -1,6 +1,6 @@
-//package com.ssafy.be.domain.chat.entity;
-//
-//public record chatMessage(
-//        Long
-//) {
-//}
+package com.ssafy.be.domain.chat.entity;
+
+public record chatMessage(
+        Long
+) {
+}

@@ -1,14 +1,11 @@
 package com.ssafy.be.domain.user.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.ssafy.be.domain.user.dto.request.AccountRegisterRequest;
 import com.ssafy.be.domain.user.dto.request.IdentityVerificationRequestDto;
 import com.ssafy.be.domain.user.dto.request.SignupRequestDto;
-import com.ssafy.be.domain.user.dto.response.AccountRegisterResponse;
 import com.ssafy.be.domain.user.dto.response.IdentityVerificationResponseDto;
 import com.ssafy.be.domain.user.dto.response.LoginResponseDto;
 import com.ssafy.be.domain.user.dto.response.SignupResponseDto;
-import com.ssafy.be.domain.user.entity.BankCode;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.exception.UserErrorCode;
 import com.ssafy.be.domain.user.repository.UserRepository;
@@ -236,17 +233,5 @@ public class UserService {
         user.updateProfileImage(imageUrl);
 
         return imageUrl;
-    }
-
-    @Transactional
-    public AccountRegisterResponse registerAccount(Long userId, AccountRegisterRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new GlobalException(UserErrorCode.USER_NOT_FOUND));
-
-        BankCode bank = BankCode.fromCode(request.bankCode());
-
-        user.updateAccount(request.bankCode(), request.accountName(), request.accountNum());
-
-        return new AccountRegisterResponse(bank.getName(), request.accountName(), request.accountNum());
     }
 }

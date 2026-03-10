@@ -20,7 +20,6 @@ public enum UserErrorCode implements ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER-004", "존재하지 않는 유저입니다."),
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "USER-005", "비밀번호가 올바르지 않습니다."),
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "USER-006", "유효하지 않은 Refresh Token입니다."),
-    INVALID_BANK_CODE(HttpStatus.BAD_REQUEST, "USER-007", "유효하지 않은 은행 코드입니다.");
     ;
 
     private final HttpStatus httpStatus;

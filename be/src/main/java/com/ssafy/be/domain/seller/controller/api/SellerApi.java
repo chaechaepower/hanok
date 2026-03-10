@@ -18,5 +18,5 @@ public interface SellerApi {
             responseCode = "409",
             description = "이미 판매자로 등록된 사용자",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    ResponseEntity<SellerRegisterResponse> register(Long userId, SellerRegisterRequest request);
+    ResponseEntity<SellerRegisterResponse> register(String userId, SellerRegisterRequest request);
 }

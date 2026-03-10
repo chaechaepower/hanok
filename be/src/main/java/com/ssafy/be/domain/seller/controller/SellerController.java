@@ -20,10 +20,10 @@ public class SellerController implements SellerApi {
 
     @PostMapping("/register")
     public ResponseEntity<SellerRegisterResponse> register(
-            @AuthenticationPrincipal Long userId,
+            @AuthenticationPrincipal String userId,
             @RequestBody @Valid SellerRegisterRequest request) {
 
-        SellerRegisterResponse response = sellerService.register(userId, request);
+        SellerRegisterResponse response = sellerService.register(Long.parseLong(userId), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }

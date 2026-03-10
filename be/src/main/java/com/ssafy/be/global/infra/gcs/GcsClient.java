@@ -52,25 +52,4 @@ public class GcsClient {
         if (originalFilename == null || !originalFilename.contains(".")) return ".jpg";
         return originalFilename.substring(originalFilename.lastIndexOf("."));
     }
-
-    // 아이템 이미지 업로드
-    public String uploadItemImage(MultipartFile file, Long sellerId, Long itemId) throws IOException {
-        String fileName = "items/" + sellerId + "/" + itemId + "/"
-                + UUID.randomUUID() + getExtension(file.getOriginalFilename());
-
-        BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, fileName)
-                .setContentType(file.getContentType())
-                .build();
-
-        storage.create(blobInfo, file.getBytes());
-
-        return buildPublicUrl(fileName);
-    }
-
-    // 아이템 이미지 삭제
-    public void deleteItemImage(String imageUrl) {
-        if (imageUrl == null || imageUrl.isBlank()) return;
-        String fileName = imageUrl.replace(buildPublicUrl(""), "");
-        storage.delete(BlobId.of(bucketName, fileName));
-    }
 }
