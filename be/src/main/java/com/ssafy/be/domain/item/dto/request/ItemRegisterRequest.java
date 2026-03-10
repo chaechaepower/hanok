@@ -11,7 +11,7 @@ public record ItemRegisterRequest(
         @NotBlank String description,
         @NotNull Category category,
         @NotNull @Min(0) Long startPrice,
-        @NotNull @Min(1) Integer bidUnit,
+        @NotNull @Min(1) Long bidUnit,
         @NotNull @Min(1) Integer auctionDuration,
         @NotNull ItemCondition itemCondition
 ) {}
