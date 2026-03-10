@@ -2,6 +2,14 @@ spring:
   application:
     name: be
 
+  cloud:
+    gcp:
+      storage:
+        bucket: ${GCS_BUCKET_NAME:hanok-storage}
+        credentials:
+          location: ${GCS_CREDENTIALS_PATH:classpath:gcs-key.json}
+
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${DB_HOST:}:${DB_PORT:}/${DB_NAME:}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
@@ -43,6 +51,7 @@ springdoc:
 
 portone:
   base-url: ${PORTONE_BASE_URL:}
+  store-id: ${PORTONE_STORE_ID:}
   secret:
       key: ${PORTONE_SECRET_KEY:}
       webhook: ${PORTONE_SECRET_WEBHOOK:} # 추후 운영 서버 도메인으로 웹훅 재등록 필요

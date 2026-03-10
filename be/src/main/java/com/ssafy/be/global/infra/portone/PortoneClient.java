@@ -24,10 +24,11 @@ public class PortoneClient {
 
     public PortoneClient(
             @Value("${portone.base-url}") String portoneBaseUrl,
+            @Value("${portone.store-id}") String storeId,
             @Value("${portone.secret.key}") String paymentSecretKey,
             @Value("${portone.secret.webhook}") String paymentSecretWebhook
     ) {
-        this.paymentClient = new PaymentClient(paymentSecretKey, portoneBaseUrl, null);
+        this.paymentClient = new PaymentClient(paymentSecretKey, portoneBaseUrl, storeId);
         this.portoneWebhook = new WebhookVerifier(paymentSecretWebhook);
         this.restClient = RestClient.builder()
                 .baseUrl(portoneBaseUrl)
