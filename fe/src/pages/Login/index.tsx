@@ -38,6 +38,7 @@ export default function LoginPage() {
       // 토큰 저장
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
+      localStorage.setItem('userId', data.user.userId.toString());
 
       // 이메일 기억하기
       if (rememberEmail) {
@@ -189,11 +190,7 @@ export default function LoginPage() {
         {/* Sign Up Link */}
         <div className="text-center text-[13px] text-[#A0A0A0] mt-1 flex items-center justify-center gap-1">
           아직 계정이 없으신가요?
-          <button
-            type="button"
-            onClick={() => navigate('/signup')}
-            className="text-[#C7B282] font-semibold hover:underline"
-          >
+          <button type="button" onClick={() => navigate('/signup')} className="text-gold font-semibold hover:underline">
             회원가입
           </button>
         </div>
