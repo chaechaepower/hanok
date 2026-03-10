@@ -11,6 +11,7 @@ export default function PaymentSection() {
 
   const [form, setForm] = useState({
     bankCode: '',
+    bankName: '',
     accountNum: '',
     accountName: '',
   });
@@ -45,10 +46,10 @@ export default function PaymentSection() {
     e.preventDefault();
     if (!form.bankCode || !form.accountNum || !form.accountName) return;
 
-    registerAccount(form, {
+    registerAccount({ bankCode: form.bankCode, bankName: form.bankName, accountNum: form.accountNum, accountName: form.accountName }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['account'] });
-        setForm({ bankCode: '', accountNum: '', accountName: '' });
+        setForm({ bankCode: '', bankName: '', accountNum: '', accountName: '' });
         alert('계좌가 등록/변경되었습니다.');
       },
       onError: () => {
@@ -133,7 +134,10 @@ export default function PaymentSection() {
           <div className="relative">
             <select
               value={form.bankCode}
-              onChange={(e) => setForm({ ...form, bankCode: e.target.value })}
+              onChange={(e) => {
+                const selected = BANKS.find(b => b.code === e.target.value);
+                setForm({ ...form, bankCode: e.target.value, bankName: selected?.name ?? '' });
+              }}
               className="w-[180px] h-[52px] bg-transparent border border-[#2e2e40] rounded-lg px-4 text-[#aaa] outline-none focus:border-[#d9b36d] transition-colors appearance-none cursor-pointer"
             >
               <option value="" disabled>은행 선택</option>

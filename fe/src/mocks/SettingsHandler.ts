@@ -124,7 +124,7 @@ export const settingsHandlers = [
 
   // POST /v1/users/me/accounts
   http.post(`${BASE_URL}/v1/users/me/accounts`, async ({ request }) => {
-    const body = await request.json() as { bankCode: string; accountNum: string; accountName: string };
+    const body = await request.json() as { bankCode: string; bankName: string; accountNum: string; accountName: string };
     console.log('Mock: Account registered', body);
     return HttpResponse.json({ success: true }, { status: 200 });
   }),

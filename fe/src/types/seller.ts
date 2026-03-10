@@ -15,6 +15,7 @@ export type SellerReputationResponse = {
 export type BusinessType = 'individual' | 'corporate';
 
 export type RegisterAccountPayload = {
+  bankCode: string;
   bankName: string;
   accountNum: string;
   accountName: string;
