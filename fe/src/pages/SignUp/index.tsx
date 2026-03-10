@@ -188,7 +188,7 @@ export default function SignUpPage() {
               size="small"
               onClick={handleEmailCheck}
               disabled={isEmailVerified}
-              className="!w-auto px-5"
+              className="w-auto! px-5"
             >
               중복 확인
             </Button>
@@ -287,7 +287,7 @@ export default function SignUpPage() {
               size="small"
               onClick={handleSmsRequest}
               disabled={isSmsVerified}
-              className="!w-auto px-5"
+              className="w-auto! px-5"
             >
               인증 번호
             </Button>
@@ -304,12 +304,7 @@ export default function SignUpPage() {
                 onChange={(e) => setSmsCode(e.target.value)}
                 className={`${inputClass} ml-8`}
               />
-              <Button
-                variant="outline"
-                size="small"
-                onClick={handleSmsVerify}
-                className="!w-auto px-6"
-              >
+              <Button variant="outline" size="small" onClick={handleSmsVerify} className="w-auto! px-6">
                 확인
               </Button>
             </div>

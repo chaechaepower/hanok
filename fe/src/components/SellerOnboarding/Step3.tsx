@@ -1,15 +1,9 @@
 import { useState } from 'react';
 import Button from '@/components/common/Button';
 import { useRegisterAccount } from '@/api/hooks/usePostRegisterAccount';
-import { BANKS } from '../constants';
+import { BANKS } from '../../pages/SellerOnboarding/constants';
 
-export default function Step3({
-  onPrev,
-  onNext,
-}: {
-  onPrev: () => void;
-  onNext: () => void;
-}) {
+export default function Step3({ onPrev, onNext }: { onPrev: () => void; onNext: () => void }) {
   const { mutateAsync: registerAccount, isPending: isRegistering } = useRegisterAccount();
   const [accountName, setaccountName] = useState('');
   const [bank, setBank] = useState('');
@@ -30,9 +24,18 @@ export default function Step3({
   } as React.CSSProperties;
 
   const handleNext = async () => {
-    if (!accountName) { setError('예금주명을 입력해주세요.'); return; }
-    if (!bank) { setError('은행을 선택해주세요.'); return; }
-    if (!accountNumber) { setError('계좌번호를 입력해주세요.'); return; }
+    if (!accountName) {
+      setError('예금주명을 입력해주세요.');
+      return;
+    }
+    if (!bank) {
+      setError('은행을 선택해주세요.');
+      return;
+    }
+    if (!accountNumber) {
+      setError('계좌번호를 입력해주세요.');
+      return;
+    }
     setError('');
 
     try {
@@ -50,7 +53,7 @@ export default function Step3({
   return (
     <>
       <div style={{ marginBottom: '28px' }}>
-        <h2 style={{ fontSize: '17px', fontWeight: '700', color: 'white', marginBottom: '6px' }}>
+        <h2 style={{ fontSize: '17px', fontWeight: '700', color: 'white', marginBottom: '8px' }}>
           정산받을 은행 계좌 인증을 진행해주세요.
         </h2>
         <p style={{ fontSize: '14px', color: '#C8C8C8' }}>판매 금액이 정산되는 계좌입니다.</p>
@@ -64,7 +67,10 @@ export default function Step3({
         <input
           type="text"
           value={accountName}
-          onChange={(e) => { setaccountName(e.target.value); setError(''); }}
+          onChange={(e) => {
+            setaccountName(e.target.value);
+            setError('');
+          }}
           placeholder="예금주명"
           style={inputStyle}
         />
@@ -74,7 +80,10 @@ export default function Step3({
       <div style={{ marginBottom: '16px', position: 'relative' }}>
         <select
           value={bank}
-          onChange={(e) => { setBank(e.target.value); setError(''); }}
+          onChange={(e) => {
+            setBank(e.target.value);
+            setError('');
+          }}
           style={{
             ...inputStyle,
             appearance: 'none',
@@ -86,9 +95,13 @@ export default function Step3({
             cursor: 'pointer',
           }}
         >
-          <option value="" disabled hidden>은행 선택</option>
+          <option value="" disabled hidden>
+            은행 선택
+          </option>
           {BANKS.map((b) => (
-            <option key={b} value={b} style={{ backgroundColor: '#1C1C1E' }}>{b}</option>
+            <option key={b} value={b} style={{ backgroundColor: '#1C1C1E' }}>
+              {b}
+            </option>
           ))}
         </select>
       </div>
@@ -98,23 +111,24 @@ export default function Step3({
         <input
           type="text"
           value={accountNumber}
-          onChange={(e) => { setAccountNumber(e.target.value.replace(/\D/g, '')); setError(''); }}
+          onChange={(e) => {
+            setAccountNumber(e.target.value.replace(/\D/g, ''));
+            setError('');
+          }}
           placeholder="계좌번호"
           style={inputStyle}
           maxLength={20}
         />
       </div>
 
-      {error && (
-        <p style={{ color: '#FF453A', fontSize: '13px', paddingLeft: '4px', marginBottom: '8px' }}>{error}</p>
-      )}
+      {error && <p style={{ color: '#FF453A', fontSize: '13px', paddingLeft: '4px', marginBottom: '8px' }}>{error}</p>}
 
       {/* Navigation buttons */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '40px' }}>
-        <Button variant="outline" size="small" onClick={onPrev} className="!w-[120px]">
+        <Button variant="outline" onClick={onPrev} className="w-30!">
           이전
         </Button>
-        <Button variant="white" size="small" onClick={handleNext} disabled={isRegistering} className="!w-[120px]">
+        <Button onClick={handleNext} disabled={isRegistering} className="w-30!">
           {isRegistering ? '등록 중...' : '다음'}
         </Button>
       </div>

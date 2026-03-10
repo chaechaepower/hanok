@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
+import type { LoginPayload, LoginResponse } from '@/types';
 
 import { mainHandlers } from './MainHandler';
 import { walletHandlers } from './WalletHandler';
@@ -11,9 +12,74 @@ let mockItems: any[] = [];
 // Follower count mock state
 let mockFollowerCount = 342;
 
+type MockLoginUser = LoginResponse['user'] & {
+  password: string;
+  isSeller: boolean;
+  accessToken: string;
+  refreshToken: string;
+};
+
+const mockLoginUsers: MockLoginUser[] = [
+  {
+    userId: 1,
+    email: 'buyer@example.com',
+    phone: '010-1111-2222',
+    password: 'password123',
+    isSeller: false,
+    accessToken: 'mock-access-token-buyer',
+    refreshToken: 'mock-refresh-token-buyer',
+  },
+  {
+    userId: 2,
+    email: 'seller@example.com',
+    phone: '010-2222-3333',
+    password: 'password123',
+    isSeller: true,
+    accessToken: 'mock-access-token-seller',
+    refreshToken: 'mock-refresh-token-seller',
+  },
+];
+
+let currentMockUser: MockLoginUser | null = null;
+
 export const handlers = [
   ...mainHandlers,
   ...walletHandlers,
+
+  http.post(`${BASE_URL}/v1/auth/login`, async ({ request }) => {
+    const { email, password } = (await request.json()) as LoginPayload;
+
+    const matchedUser = mockLoginUsers.find((user) => user.email === email && user.password === password);
+
+    if (!matchedUser) {
+      return HttpResponse.json(
+        {
+          message: 'Invalid email or password',
+        },
+        { status: 401 },
+      );
+    }
+
+    currentMockUser = matchedUser;
+
+    return HttpResponse.json<LoginResponse>({
+      accessToken: matchedUser.accessToken,
+      refreshToken: matchedUser.refreshToken,
+      user: {
+        userId: matchedUser.userId,
+        email: matchedUser.email,
+        phone: matchedUser.phone,
+      },
+    });
+  }),
+
+  http.post(`${BASE_URL}/v1/auth/logout`, async () => {
+    currentMockUser = null;
+
+    return HttpResponse.json({
+      success: true,
+    });
+  }),
 
   http.get(`${BASE_URL}/v1/items`, async () => {
     return HttpResponse.json(mockItems);
@@ -162,7 +228,7 @@ export const handlers = [
 
   http.get(`${BASE_URL}/v1/users/me/seller-status`, async () => {
     return HttpResponse.json({
-      isSeller: false,
+      isSeller: currentMockUser?.isSeller ?? false,
     });
   }),
 

@@ -1,4 +1,4 @@
-import { STEPS } from '../constants';
+import { STEPS } from '../../pages/SellerOnboarding/constants';
 
 export default function StepIndicator({ current }: { current: number }) {
   return (
@@ -9,10 +9,10 @@ export default function StepIndicator({ current }: { current: number }) {
             <div
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                 step.id === current
-                  ? 'bg-[#CEAF82] text-black'
+                  ? 'bg-gold text-background'
                   : step.id < current
-                  ? 'bg-[#3A3A3C] text-[#CEAF82]'
-                  : 'bg-[#2C2C2E] text-[#636366]'
+                    ? 'bg-[#CEAF8299] text-background'
+                    : 'bg-[#2C2C2E] text-[#636366]'
               }`}
             >
               {step.id < current ? (
@@ -28,8 +28,8 @@ export default function StepIndicator({ current }: { current: number }) {
                 step.id === current
                   ? 'text-white font-semibold'
                   : step.id < current
-                  ? 'text-[#CEAF82]'
-                  : 'text-[#636366]'
+                    ? 'text-point font-semibold'
+                    : 'text-[#636366]'
               }`}
             >
               {step.label}

@@ -6,6 +6,7 @@ import type { MainStreamSort, MainStreamStatus } from '@/api/hooks/useGetMain';
 import LiveCard from '@/components/Main/LiveCard';
 import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
 import SideBar from '@/components/common/layouts/SideBar';
+import { MdKeyboardArrowDown } from 'react-icons/md';
 import type { SideBarItem } from '@/types';
 
 const PAGE_SIZE = 10;
@@ -169,7 +170,7 @@ export default function MainPage() {
             <button
               type="button"
               onClick={() => setIsSortDropdownOpen((prev) => !prev)}
-              className="inline-flex min-w-33 items-center justify-between gap-3 rounded-xl border border-white/15 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-3 py-2 shadow-[0_8px_20px_rgba(0,0,0,0.25)] transition hover:border-white/30 focus:border-gold/70 focus:ring-2 focus:ring-gold/30 focus:outline-none"
+              className="inline-flex min-w-33 items-center justify-between gap-3 rounded-xl border border-white/15 px-3 py-2 shadow-[0_8px_20px_rgba(0,0,0,0.25)] transition hover:border-white/30"
             >
               <div className="flex flex-col items-start leading-none">
                 <span className="mt-1 text-[14px] font-semibold text-point">{selectedSortLabel}</span>
@@ -177,12 +178,12 @@ export default function MainPage() {
               <span
                 className={`text-[11px] text-point/70 transition-transform ${isSortDropdownOpen ? 'rotate-180' : ''}`}
               >
-                {'\u25BE'}
+                <MdKeyboardArrowDown />
               </span>
             </button>
 
             {isSortDropdownOpen && (
-              <div className="absolute right-0 top-[calc(100%+8px)] z-30 w-40 overflow-hidden rounded-xl border border-white/15 bg-[#111827]/95 p-1 shadow-[0_14px_30px_rgba(0,0,0,0.45)] backdrop-blur-md">
+              <div className="absolute right-0 top-[calc(100%+8px)] z-30 w-33 overflow-hidden rounded-xl border border-white/15  p-1 shadow-[0_14px_30px_rgba(0,0,0,0.45)] backdrop-blur-md">
                 {SORT_OPTIONS.map((option) => {
                   const isSelected = sortFilter === option.value;
                   return (
@@ -198,7 +199,6 @@ export default function MainPage() {
                       }`}
                     >
                       <span>{option.label}</span>
-                      {isSelected && <span className="text-[12px]">v</span>}
                     </button>
                   );
                 })}

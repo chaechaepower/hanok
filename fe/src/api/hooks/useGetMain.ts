@@ -1,7 +1,7 @@
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 
-import type { MainLiveResponse } from '@/types';
 import { getFetchInstance } from '../instance';
+import type { LiveCardData, PageResponse } from '@/types';
 
 export type MainStreamType = 'ALL' | 'FOLLOWING';
 export type MainStreamStatus = 'LIVE' | 'SCHEDULED';
@@ -16,7 +16,7 @@ type GetMainParams = {
   size?: number;
 };
 
-export const getMainPath = () => '/v1/main/live-streams';
+export const getMainPath = () => '/v1/streams';
 
 export const getMainLiveStreams = async ({
   type = 'ALL',
@@ -24,9 +24,9 @@ export const getMainLiveStreams = async ({
   status = 'LIVE',
   sort = 'LATEST',
   page = 0,
-  size = 8,
+  size = 10,
 }: GetMainParams = {}) => {
-  const response = await getFetchInstance().get<MainLiveResponse>(getMainPath(), {
+  const response = await getFetchInstance().get<PageResponse<LiveCardData>>(getMainPath(), {
     params: {
       type,
       status,
