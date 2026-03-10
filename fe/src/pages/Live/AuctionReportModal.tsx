@@ -56,7 +56,7 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
             }}
         >
             <div
-                className="left-panel-scroll flex max-h-[80vh] w-[520px] flex-col overflow-y-auto rounded-[28px] bg-[#0E0E10]"
+                className="flex max-h-[80vh] w-[520px] flex-col overflow-hidden rounded-[28px] bg-[#0E0E10]"
                 style={{
                     border: "1px solid rgba(255,255,255,0.07)",
                     boxShadow: "0 32px 80px rgba(0,0,0,0.6)",
@@ -64,8 +64,8 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
                     transition: "transform 0.25s",
                 }}
             >
-                {/* ── Header ── */}
-                <div className="flex items-start justify-between px-7 pt-6 pb-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                {/* ── Header (고정) ── */}
+                <div className="flex shrink-0 items-start justify-between px-7 pt-6 pb-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                     <div>
                         <h2 className="text-base font-black tracking-tight text-white">오늘의 경매 리포트</h2>
                         <p className="mt-1 text-[11px] font-medium text-[#52525B]">{dateStr}</p>
@@ -81,7 +81,8 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
                     </button>
                 </div>
 
-                <div className="flex flex-col gap-5 p-7">
+                {/* ── 스크롤 영역 ── */}
+                <div className="left-panel-scroll flex flex-col gap-5 overflow-y-auto p-7">
                     {/* ── Stats Grid ── */}
                     <div className="grid grid-cols-3 gap-3">
                         {[
