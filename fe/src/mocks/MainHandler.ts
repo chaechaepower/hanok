@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
-import type { LiveCardData, MainLiveResponse } from '@/types';
+import type { LiveCardData, PageResponse } from '@/types';
 
 const CATEGORY_ID_MAP: Record<number, string> = {
   1: 'SNEAKERS',
@@ -63,7 +63,7 @@ const toNumber = (value: string | null, fallback: number) => {
 };
 
 export const mainHandlers = [
-  http.get(`${BASE_URL}/v1/main/live-streams`, ({ request }) => {
+  http.get(`${BASE_URL}/v1/streams`, ({ request }) => {
     const url = new URL(request.url);
 
     const type = (url.searchParams.get('type') ?? 'ALL').toUpperCase();
@@ -72,7 +72,7 @@ export const mainHandlers = [
 
     const categoryId = toNumber(url.searchParams.get('categoryId'), NaN);
     const page = Math.max(0, toNumber(url.searchParams.get('page'), 0));
-    const size = Math.max(1, toNumber(url.searchParams.get('size'), 8));
+    const size = Math.max(1, toNumber(url.searchParams.get('size'), 10));
 
     let streams = [...MAIN_LIVE_STREAMS];
 
@@ -88,9 +88,7 @@ export const mainHandlers = [
     }
 
     streams =
-      status === 'SCHEDULED'
-        ? streams.filter((stream) => !stream.isLive)
-        : streams.filter((stream) => stream.isLive);
+      status === 'SCHEDULED' ? streams.filter((stream) => !stream.isLive) : streams.filter((stream) => stream.isLive);
 
     streams.sort((a, b) => {
       if (sort === 'VIEWER_COUNT') {
@@ -106,7 +104,7 @@ export const mainHandlers = [
     const end = start + size;
     const content = streams.slice(start, end);
 
-    const response: MainLiveResponse = {
+    const response: PageResponse<LiveCardData> = {
       content,
       page,
       size,

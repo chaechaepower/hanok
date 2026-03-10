@@ -19,7 +19,7 @@ const variantClass: Record<NonNullable<Props['variant']>, string> = {
   yellowOutline: 'bg-transparent text-[#C7B282] shadow-[0_0_0_1px_#C7B282_inset] hover:bg-zinc-900',
   white: 'bg-[#F5F2EB] text-[#0A0C13] hover:bg-[#E4DFD6]',
   black: 'bg-[#0A0C13] text-white hover:bg-black',
-  yellow: 'bg-[#C7B282] text-[#0A0C13] hover:bg-[#dcb422]',
+  yellow: 'bg-[#C7B282] text-[#0A0C13] hover:bg-[#C09C57]',
   red: 'bg-[#EF4444] text-white hover:bg-[#da001d]',
 };
 

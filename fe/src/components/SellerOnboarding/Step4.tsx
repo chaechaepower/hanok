@@ -73,7 +73,10 @@ export default function Step4({
         <input
           type="text"
           value={nickname}
-          onChange={(e) => { setNickname(e.target.value); setError(''); }}
+          onChange={(e) => {
+            setNickname(e.target.value);
+            setError('');
+          }}
           placeholder="이름을 입력해주세요"
           style={inputStyle}
           maxLength={20}
@@ -121,16 +124,14 @@ export default function Step4({
         </div>
       </div>
 
-      {error && (
-        <p style={{ color: '#FF453A', fontSize: '13px', marginBottom: '12px' }}>{error}</p>
-      )}
+      {error && <p style={{ color: '#FF453A', fontSize: '13px', marginBottom: '12px' }}>{error}</p>}
 
       {/* Navigation buttons */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '40px' }}>
-        <Button variant="outline" size="small" onClick={onPrev} className="!w-[120px]">
+        <Button variant="outline" onClick={onPrev} className="w-30!">
           이전
         </Button>
-        <Button variant="white" size="small" onClick={handleRegister} disabled={isPending} className="!w-[120px]">
+        <Button onClick={handleRegister} disabled={isPending} className="w-30!">
           {isPending ? '등록 중...' : '등록'}
         </Button>
       </div>

@@ -54,14 +54,26 @@ const formatPrice = (price: number) => price.toLocaleString('ko-KR') + '원';
 const getEscrowStateUI = (state: EscrowState) => {
   switch (state) {
     case 'INVOICE_SUBMITTED':
-      return { label: '배송중', badgeClass: 'self-start bg-[#1b4a3c] text-[#4ade80] px-2 py-1 text-[11px] font-bold rounded-[20px]' };
+      return {
+        label: '배송중',
+        badgeClass: 'self-start bg-[#1b4a3c] text-[#4ade80] px-2 py-1 text-[11px] font-bold rounded-[20px]',
+      };
     case 'COMPLETED':
-      return { label: '배송완료', badgeClass: 'self-start bg-[#183b5f] text-[#60a5fa] px-2 py-1 text-[11px] font-bold rounded-[20px]' };
+      return {
+        label: '배송완료',
+        badgeClass: 'self-start bg-[#183b5f] text-[#60a5fa] px-2 py-1 text-[11px] font-bold rounded-[20px]',
+      };
     case 'CANCELLED':
-      return { label: '취소됨', badgeClass: 'self-start bg-[#333] text-[#999] px-2 py-1 text-[11px] font-bold rounded-[20px]' };
+      return {
+        label: '취소됨',
+        badgeClass: 'self-start bg-[#333] text-[#999] px-2 py-1 text-[11px] font-bold rounded-[20px]',
+      };
     case 'DEPOSITED':
     default:
-      return { label: '결제완료', badgeClass: 'self-start bg-[#3a2b16] text-[#d9b36d] px-2 py-1 text-[11px] font-bold rounded-[20px]' };
+      return {
+        label: '결제완료',
+        badgeClass: 'self-start bg-[#3a2b16] text-[#d9b36d] px-2 py-1 text-[11px] font-bold rounded-[20px]',
+      };
   }
 };
 
@@ -69,25 +81,25 @@ export default function ProfilePage() {
   const { id } = useParams<{ id: string }>();
   const sellerId = Number(id);
   const [activeTab, setActiveTab] = useState<'posts' | 'sales'>('posts');
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [editPostId, setEditPostId] = useState<number | null>(null);
   const [noticeTitle, setNoticeTitle] = useState('');
   const [noticeContent, setNoticeContent] = useState('');
-  const [noticePage] = useState(1); 
-  
+  const [noticePage] = useState(1);
+
   const [selectedEscrowId, setSelectedEscrowId] = useState<string | number | null>(null);
 
   const { data: escrowsData } = useGetEscrows();
   const escrows = escrowsData?.data || [];
-  
+
   const { data: escrowDetail } = useGetEscrowDetail(selectedEscrowId);
 
   const { data, isLoading, isError } = useGetSellerProfile(sellerId);
   const { data: mySellerStatus } = useGetSellerStatus();
   const { data: reputationData } = useGetSellerReputation(sellerId);
-  
+
   const { data: noticeData } = useGetSellerNotice(sellerId, { page: noticePage, limit: 10 });
   const { mutate: postNotice } = usePostSellerNotice(sellerId);
   const { mutate: patchNotice } = usePatchSellerNotice(sellerId);
@@ -98,17 +110,23 @@ export default function ProfilePage() {
 
   const [isFollowing, setIsFollowing] = useState(false);
 
-  const isOwner = mySellerStatus?.isSeller || true; 
+  const isOwner = mySellerStatus?.isSeller || true;
 
   const handleFollowToggle = () => {
     if (isFollowing) {
-      deleteFollow({ userId: sellerId }, {
-        onSuccess: (res) => setIsFollowing(res.following)
-      });
+      deleteFollow(
+        { userId: sellerId },
+        {
+          onSuccess: (res) => setIsFollowing(res.following),
+        },
+      );
     } else {
-      patchFollow({ userId: sellerId }, {
-        onSuccess: (res) => setIsFollowing(res.following)
-      });
+      patchFollow(
+        { userId: sellerId },
+        {
+          onSuccess: (res) => setIsFollowing(res.following),
+        },
+      );
     }
   };
 
@@ -139,14 +157,11 @@ export default function ProfilePage() {
       return;
     }
     if (modalMode === 'create') {
-      postNotice(
-        { title: noticeTitle, content: noticeContent },
-        { onSuccess: () => setIsModalOpen(false) }
-      );
+      postNotice({ title: noticeTitle, content: noticeContent }, { onSuccess: () => setIsModalOpen(false) });
     } else if (modalMode === 'edit' && editPostId) {
       patchNotice(
         { postId: editPostId, payload: { title: noticeTitle, content: noticeContent } },
-        { onSuccess: () => setIsModalOpen(false) }
+        { onSuccess: () => setIsModalOpen(false) },
       );
     }
   };
@@ -189,8 +204,8 @@ export default function ProfilePage() {
           <div className="flex-1 flex flex-col gap-3">
             <div className="flex items-center gap-4">
               <h1 className="m-0 text-[26px] font-bold text-white">{nickname}상점</h1>
-              <button 
-                className={`py-2 px-[22px] rounded-3xl bg-white text-gray-900 text-sm font-bold border-none cursor-pointer ${(isFollowPending || isUnfollowPending) ? 'opacity-70' : 'opacity-100'}`}
+              <button
+                className={`py-2 px-[22px] rounded-3xl bg-white text-gray-900 text-sm font-bold border-none cursor-pointer ${isFollowPending || isUnfollowPending ? 'opacity-70' : 'opacity-100'}`}
                 onClick={handleFollowToggle}
                 disabled={isFollowPending || isUnfollowPending}
               >
@@ -210,19 +225,34 @@ export default function ProfilePage() {
 
             <div className="flex gap-5 mt-1">
               {instagramUrl && (
-                <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-[6px] text-white no-underline text-base font-semibold">
+                <a
+                  href={instagramUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-[6px] text-white no-underline text-base font-semibold"
+                >
                   <InstagramIcon />
                   <span>{instagramUrl.replace('https://instagram.com/', '@')}</span>
                 </a>
               )}
               {youtubeUrl && (
-                <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-[6px] text-white no-underline text-base font-semibold">
+                <a
+                  href={youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-[6px] text-white no-underline text-base font-semibold"
+                >
                   <YoutubeIcon />
                   <span>YouTube</span>
                 </a>
               )}
               {tiktokUrl && (
-                <a href={tiktokUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-[6px] text-white no-underline text-base font-semibold">
+                <a
+                  href={tiktokUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-[6px] text-white no-underline text-base font-semibold"
+                >
                   <TiktokIcon />
                   <span>TikTok</span>
                 </a>
@@ -266,7 +296,7 @@ export default function ProfilePage() {
           >
             # 공지사항
           </button>
-          
+
           <button
             className={`flex items-center gap-[6px] bg-transparent border-none border-b-2 px-2 pb-4 text-base font-bold cursor-pointer transition-colors duration-200 -mb-[1px] ${
               activeTab === 'sales' ? 'text-[#d9b36d] border-[#d9b36d]' : 'text-[#888] border-transparent'
@@ -281,7 +311,10 @@ export default function ProfilePage() {
         {activeTab === 'posts' && (
           <div className="flex flex-col gap-5">
             <div className="flex justify-end mb-2">
-              <button className="py-2 px-4 bg-[#d9b36d] text-[#111] border-none rounded-lg font-bold text-sm cursor-pointer" onClick={handleOpenCreateModal}>
+              <button
+                className="py-2 px-4 bg-[#d9b36d] text-[#111] border-none rounded-lg font-bold text-sm cursor-pointer"
+                onClick={handleOpenCreateModal}
+              >
                 공지사항 등록
               </button>
             </div>
@@ -289,9 +322,11 @@ export default function ProfilePage() {
               <p className="text-center text-[#888] py-[60px] text-[15px]">등록된 공지사항이 없습니다.</p>
             ) : (
               notices.map((post) => (
-                <div key={post.postId} className="border border-[#2e2e40] rounded-xl py-7 px-8 bg-[#0f0f16] flex flex-col gap-3">
+                <div
+                  key={post.postId}
+                  className="border border-[#2e2e40] rounded-xl py-7 px-8 bg-[#0f0f16] flex flex-col gap-3"
+                >
                   <div className="flex justify-between items-start">
-                    
                     <div className="flex-1">
                       <div className="flex items-center gap-[10px]">
                         <BellIcon />
@@ -304,20 +339,19 @@ export default function ProfilePage() {
                       </div>
                     </div>
                     <div className="flex gap-3">
-                      <button 
-                        className="bg-transparent border-none text-[#888] text-[13px] cursor-pointer underline" 
+                      <button
+                        className="bg-transparent border-none text-[#888] text-[13px] cursor-pointer underline"
                         onClick={() => handleOpenEditModal(post.postId, post.title, post.content)}
                       >
                         수정
                       </button>
-                      <button 
-                        className="bg-transparent border-none text-red-400 text-[13px] cursor-pointer underline" 
+                      <button
+                        className="bg-transparent border-none text-red-400 text-[13px] cursor-pointer underline"
                         onClick={() => handleDeleteNotice(post.postId)}
                       >
                         삭제
                       </button>
                     </div>
-
                   </div>
                 </div>
               ))
@@ -327,15 +361,17 @@ export default function ProfilePage() {
 
         {activeTab === 'sales' && (
           <div className="flex flex-col gap-5">
-
-
             {escrows.length === 0 ? (
               <p className="text-center text-[#888] py-[60px] text-[15px]">낙찰 이력이 없습니다.</p>
             ) : (
               escrows.map((sale, index) => {
                 const ui = getEscrowStateUI(sale.escrowState);
                 return (
-                  <div key={sale.escrowId} className={`flex py-4 items-center justify-between ${index > 0 ? 'border-t border-[#1a1a26] mt-4 pt-8' : ''} ${isOwner ? 'cursor-pointer' : 'cursor-default'}`} onClick={() => isOwner && setSelectedEscrowId(sale.escrowId!)}>
+                  <div
+                    key={sale.escrowId}
+                    className={`flex py-4 items-center justify-between ${index > 0 ? 'border-t border-[#1a1a26] mt-4 pt-8' : ''} ${isOwner ? 'cursor-pointer' : 'cursor-default'}`}
+                    onClick={() => isOwner && setSelectedEscrowId(sale.escrowId!)}
+                  >
                     <div className="flex items-center gap-6 flex-1">
                       <div className="w-16 h-16 rounded-full bg-[#1c1c28] border-[1.5px] border-[#d9b36d] flex items-center justify-center">
                         <GiftIcon />
@@ -366,21 +402,29 @@ export default function ProfilePage() {
             <h2 className="m-0 text-white text-xl font-bold">
               {modalMode === 'create' ? '공지사항 등록' : '공지사항 수정'}
             </h2>
-            <input 
+            <input
               className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg p-[14px] text-[15px]"
               placeholder="제목을 입력하세요"
               value={noticeTitle}
               onChange={(e) => setNoticeTitle(e.target.value)}
             />
-            <textarea 
+            <textarea
               className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg p-[14px] text-[15px] min-h-[140px] resize-none"
               placeholder="내용을 입력하세요"
               value={noticeContent}
               onChange={(e) => setNoticeContent(e.target.value)}
             />
             <div className="flex justify-end gap-3 mt-[10px]">
-              <button className="py-[10px] px-6 bg-[#333] text-[#ddd] border-none rounded-lg cursor-pointer text-sm font-semibold" onClick={() => setIsModalOpen(false)}>취소</button>
-              <button className="py-[10px] px-6 bg-[#d9b36d] text-[#111] font-bold border-none rounded-lg cursor-pointer text-sm" onClick={handleSubmitNotice}>
+              <button
+                className="py-[10px] px-6 bg-[#333] text-[#ddd] border-none rounded-lg cursor-pointer text-sm font-semibold"
+                onClick={() => setIsModalOpen(false)}
+              >
+                취소
+              </button>
+              <button
+                className="py-[10px] px-6 bg-[#d9b36d] text-[#111] font-bold border-none rounded-lg cursor-pointer text-sm"
+                onClick={handleSubmitNotice}
+              >
                 {modalMode === 'create' ? '등록' : '저장'}
               </button>
             </div>
@@ -389,15 +433,21 @@ export default function ProfilePage() {
       )}
 
       {selectedEscrowId !== null && escrowDetail && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black/70 z-[999] flex items-center justify-center" onClick={() => setSelectedEscrowId(null)}>
-          <div className="bg-[#0c0c14] border border-[#2e2e40] rounded-2xl w-[480px] py-9 px-10 flex flex-col gap-8 shadow-[0_8px_30px_rgba(0,0,0,0.5)]" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed top-0 left-0 w-full h-full bg-black/70 z-[999] flex items-center justify-center"
+          onClick={() => setSelectedEscrowId(null)}
+        >
+          <div
+            className="bg-[#0c0c14] border border-[#2e2e40] rounded-2xl w-[480px] py-9 px-10 flex flex-col gap-8 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 className="m-0 text-white text-[22px] font-bold">낙찰 상세</h2>
-            
+
             <div className="flex gap-6 items-stretch">
-              <img 
-                src={escrowDetail.data.winningInfo.imageUrl || 'https://via.placeholder.com/150'} 
-                alt="Product" 
-                className="w-[140px] h-[140px] rounded-xl object-cover bg-white" 
+              <img
+                src={escrowDetail.data.winningInfo.imageUrl || 'https://via.placeholder.com/150'}
+                alt="Product"
+                className="w-[140px] h-[140px] rounded-xl object-cover bg-white"
               />
               <div className="flex-1 flex flex-col justify-center gap-4">
                 <div className="flex justify-between items-center">
@@ -406,48 +456,78 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[15px] text-[#ccc] font-medium">낙찰가</span>
-                  <span className="text-base text-[#d9b36d] font-bold">{formatPrice(escrowDetail.data.winningInfo.finalPrice)}</span>
+                  <span className="text-base text-[#d9b36d] font-bold">
+                    {formatPrice(escrowDetail.data.winningInfo.finalPrice)}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-[15px] text-[#ccc] font-medium">판매자</span>
-                  <span className="text-base text-white font-bold">{escrowDetail.data.winningInfo.sellerName}({escrowDetail.data.winningInfo.sellerId})</span>
+                  <span className="text-base text-white font-bold">
+                    {escrowDetail.data.winningInfo.sellerName}({escrowDetail.data.winningInfo.sellerId})
+                  </span>
                 </div>
-                <span className="mt-auto self-start text-sm text-[#888]">{formatDate(escrowDetail.data.winningInfo.wonAt)}</span>
+                <span className="mt-auto self-start text-sm text-[#888]">
+                  {formatDate(escrowDetail.data.winningInfo.wonAt)}
+                </span>
               </div>
             </div>
 
             <div className="border border-[#2e2e40] rounded-xl py-5 px-6 flex flex-col gap-3">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="flex items-center gap-2 text-lg font-bold text-white m-0"><TruckIcon /> 배송 조회</h3>
+                <h3 className="flex items-center gap-2 text-lg font-bold text-white m-0">
+                  <TruckIcon /> 배송 조회
+                </h3>
                 {escrowDetail.data.delivery && (
                   <span className="text-sm text-[#d9b36d] underline">
                     {escrowDetail.data.delivery.courierName} {escrowDetail.data.delivery.trackingNumber}
                   </span>
                 )}
               </div>
-              <div className="flex justify-between text-[15px]"><span className="text-[#ccc]">남양주 물류 센터</span><span className="text-white">집하</span></div>
-              <div className="flex justify-between text-[15px]"><span className="text-[#ccc]">곤지암 센터</span><span className="text-white">집하</span></div>
-              <div className="flex justify-between text-[15px]"><span className="text-[#ccc]">대전 허브</span><span className="text-white">집하</span></div>
-              <div className="flex justify-between text-[15px]"><span className="text-[#ccc]">구미 물류센터</span><span className="text-white">이동중</span></div>
+              <div className="flex justify-between text-[15px]">
+                <span className="text-[#ccc]">남양주 물류 센터</span>
+                <span className="text-white">집하</span>
+              </div>
+              <div className="flex justify-between text-[15px]">
+                <span className="text-[#ccc]">곤지암 센터</span>
+                <span className="text-white">집하</span>
+              </div>
+              <div className="flex justify-between text-[15px]">
+                <span className="text-[#ccc]">대전 허브</span>
+                <span className="text-white">집하</span>
+              </div>
+              <div className="flex justify-between text-[15px]">
+                <span className="text-[#ccc]">구미 물류센터</span>
+                <span className="text-white">이동중</span>
+              </div>
             </div>
 
             <div className="border border-[#2e2e40] rounded-xl py-5 px-6 flex flex-col gap-3">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="flex items-center gap-2 text-lg font-bold text-white m-0"><TruckIcon /> 배송지 정보</h3>
+                <h3 className="flex items-center gap-2 text-lg font-bold text-white m-0">
+                  <TruckIcon /> 배송지 정보
+                </h3>
               </div>
               <p className="m-0 text-[15px] text-[#ccc] leading-relaxed">{escrowDetail.data.shippingAddress.name}</p>
               <p className="m-0 text-[15px] text-[#ccc] leading-relaxed">{escrowDetail.data.shippingAddress.phone}</p>
-              <p className="m-0 text-[15px] text-[#ccc] leading-relaxed">{escrowDetail.data.shippingAddress.postalCode}</p>
-              <p className="m-0 text-[15px] text-[#ccc] leading-relaxed">{escrowDetail.data.shippingAddress.address} {escrowDetail.data.shippingAddress.addressDetail}</p>
+              <p className="m-0 text-[15px] text-[#ccc] leading-relaxed">
+                {escrowDetail.data.shippingAddress.postalCode}
+              </p>
+              <p className="m-0 text-[15px] text-[#ccc] leading-relaxed">
+                {escrowDetail.data.shippingAddress.address} {escrowDetail.data.shippingAddress.addressDetail}
+              </p>
             </div>
 
             <div className="flex justify-center mt-2">
-              <button className="py-3 px-12 bg-[#f5f5f5] text-[#111] border-none rounded-[24px] text-base font-bold cursor-pointer" onClick={() => setSelectedEscrowId(null)}>닫기</button>
+              <button
+                className="py-3 px-12 bg-[#f5f5f5] text-[#111] border-none rounded-[24px] text-base font-bold cursor-pointer"
+                onClick={() => setSelectedEscrowId(null)}
+              >
+                닫기
+              </button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }

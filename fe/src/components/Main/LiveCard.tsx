@@ -72,7 +72,7 @@ export default function LiveCard({ stream, className = '' }: LiveCardProps) {
 
         {stream.isLive && !isScheduledCard && (
           <span className="absolute left-3 top-3 rounded-md bg-[#EF4444] px-2.5 py-1.5 text-[12px] font-semibold text-point">
-            Live {stream.viewerCount.toLocaleString()}
+            Live ∙ {stream.viewerCount.toLocaleString()}
           </span>
         )}
       </div>

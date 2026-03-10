@@ -1,14 +1,8 @@
 import { useState } from 'react';
 import Button from '@/components/common/Button';
-import { TERMS_CONTENT } from '../constants';
+import { TERMS_CONTENT } from '../../pages/SellerOnboarding/constants';
 
-export default function Step2({
-  onPrev,
-  onNext,
-}: {
-  onPrev: () => void;
-  onNext: () => void;
-}) {
+export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: () => void }) {
   const [agreed, setAgreed] = useState(false);
 
   return (
@@ -18,24 +12,31 @@ export default function Step2({
         <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'white', marginBottom: '10px' }}>
           경매 판매자 이용약관 동의
         </h2>
-        <p style={{ fontSize: '14px', color: '#C8C8C8', lineHeight: '1.7', marginBottom: '4px' }}>
+        <p style={{ fontSize: '14px', color: '#C7B282', lineHeight: '1.7', marginBottom: '4px' }}>
           한옥(한반도 옥션)에서 판매자로 활동하기 위해서는 아래 약관에 동의해야 합니다.
         </p>
-        <p style={{ fontSize: '14px', color: '#C8C8C8', lineHeight: '1.7' }}>
+        <p style={{ fontSize: '14px', color: '#C7B282', lineHeight: '1.7' }}>
           판매자는 플랫폼 내 경매 진행 및 상품 판매에 대한 책임을 지며, 본 약관을 준수해야 합니다.
         </p>
       </div>
 
       {/* Terms list */}
-      <ol style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '32px', paddingLeft: '0', listStyle: 'none' }}>
+      <ol
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '24px',
+          marginBottom: '32px',
+          paddingLeft: '0',
+          listStyle: 'none',
+        }}
+      >
         {TERMS_CONTENT.map((term, idx) => (
           <li key={idx}>
             <p style={{ fontSize: '15px', fontWeight: '700', color: 'white', marginBottom: '8px' }}>
               {idx + 1}. {term.title}
             </p>
-            <p style={{ fontSize: '14px', color: '#C8C8C8', lineHeight: '1.8' }}>
-              {term.body}
-            </p>
+            <p style={{ fontSize: '14px', color: '#C8C8C8', lineHeight: '1.8', marginLeft: '14px' }}>{term.body}</p>
           </li>
         ))}
       </ol>
@@ -98,10 +99,10 @@ export default function Step2({
 
       {/* Navigation buttons */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '40px' }}>
-        <Button variant="outline" size="small" onClick={onPrev} className="!w-[120px]">
+        <Button variant="outline" onClick={onPrev} className="w-30!">
           이전
         </Button>
-        <Button variant="white" size="small" onClick={agreed ? onNext : undefined} disabled={!agreed} className="!w-[120px]">
+        <Button onClick={agreed ? onNext : undefined} disabled={!agreed} className="w-30!">
           다음
         </Button>
       </div>

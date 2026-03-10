@@ -45,7 +45,7 @@ export default function SideBar({
                 type="button"
                 onClick={() => handleItemClick(item)}
                 className={`flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left transition ${
-                  isActive ? 'bg-white/5 text-[#F5F2EB]' : 'text-white/80 hover:bg-white/5 hover:text-white'
+                  isActive ? 'bg-white/5 text-point' : 'text-white/80 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <span className="flex h-6 w-6 items-center justify-center text-[24px] leading-none">
@@ -55,9 +55,7 @@ export default function SideBar({
                   {item.label}
                 </span>
               </button>
-              {isActive && (
-                <span className="absolute right-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-full bg-[#F5F2EB]" />
-              )}
+              {isActive && <span className="absolute right-0 top-1/2 h-8 w-1 -translate-y-1/2 rounded-full bg-point" />}
             </li>
           );
         })}

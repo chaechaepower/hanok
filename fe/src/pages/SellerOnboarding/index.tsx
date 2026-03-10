@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { BusinessType } from '@/types';
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
-import StepIndicator from './components/StepIndicator';
-import Step1 from './components/Step1';
-import Step2 from './components/Step2';
-import Step3 from './components/Step3';
-import Step4 from './components/Step4';
+import Step1 from '@/components/SellerOnboarding/Step1';
+import StepIndicator from '@/components/SellerOnboarding/StepIndicator';
+import Step2 from '@/components/SellerOnboarding/Step2';
+import Step3 from '@/components/SellerOnboarding/Step3';
+import Step4 from '@/components/SellerOnboarding/Step4';
 
 export default function SellerOnboardingPage() {
   const navigate = useNavigate();
@@ -24,7 +24,16 @@ export default function SellerOnboardingPage() {
 
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#0B0C10', color: 'white' }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#0B0C10',
+          color: 'white',
+        }}
+      >
         로딩 중...
       </div>
     );
@@ -40,7 +49,6 @@ export default function SellerOnboardingPage() {
         minHeight: '100vh',
         backgroundColor: '#0B0C10',
         color: 'white',
-        fontFamily: "'MuseumCulturalFoundationClassic', sans-serif",
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -64,26 +72,12 @@ export default function SellerOnboardingPage() {
           />
         )}
 
-        {currentStep === 2 && (
-          <Step2
-            onPrev={() => setCurrentStep(1)}
-            onNext={() => setCurrentStep(3)}
-          />
-        )}
+        {currentStep === 2 && <Step2 onPrev={() => setCurrentStep(1)} onNext={() => setCurrentStep(3)} />}
 
-        {currentStep === 3 && (
-          <Step3
-            onPrev={() => setCurrentStep(2)}
-            onNext={() => setCurrentStep(4)}
-          />
-        )}
+        {currentStep === 3 && <Step3 onPrev={() => setCurrentStep(2)} onNext={() => setCurrentStep(4)} />}
 
         {currentStep === 4 && (
-          <Step4
-            onPrev={() => setCurrentStep(3)}
-            businessType={businessType}
-            businessNumber={businessNumber}
-          />
+          <Step4 onPrev={() => setCurrentStep(3)} businessType={businessType} businessNumber={businessNumber} />
         )}
       </div>
     </div>
