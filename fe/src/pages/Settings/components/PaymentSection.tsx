@@ -1,44 +1,60 @@
 import { useState } from 'react';
 import { FaCreditCard } from 'react-icons/fa';
+import { useQueryClient } from '@tanstack/react-query';
 import { useGetAccount } from '@/api/hooks/useGetAccount';
-// import { useRegisterAccount } from '@/api/hooks/usePostRegisterAccount';
-// import { useQueryClient } from '@tanstack/react-query';
+import { usePostUserAccount } from '@/api/hooks/usePostUserAccount';
 
 export default function PaymentSection() {
-  // const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
   const { data: accountData, isLoading } = useGetAccount();
-  // const { mutate: registerAccount, isPending } = useRegisterAccount();
+  const { mutate: registerAccount, isPending } = usePostUserAccount();
 
   const [form, setForm] = useState({
-    bankName: '',
+    bankCode: '',
     accountNum: '',
     accountName: '',
   });
 
   const BANKS = [
-    '국민은행', '신한은행', '우리은행', '하나은행', '기업은행', 
-    '농협은행', '카카오뱅크', '토스뱅크', '케이뱅크'
+    { code: '088', name: '신한' },
+    { code: '035', name: '제주' },
+    { code: '004', name: '국민' },
+    { code: '003', name: '기업' },
+    { code: '011', name: '농협' },
+    { code: '002', name: '산업' },
+    { code: '007', name: '수협' },
+    { code: '048', name: '신협' },
+    { code: '020', name: '우리' },
+    { code: '081', name: '하나' },
+    { code: '027', name: '한국씨티' },
+    { code: '090', name: '카카오뱅크' },
+    { code: '089', name: '케이뱅크' },
+    { code: '092', name: '토스뱅크' },
+    { code: '039', name: '경남' },
+    { code: '034', name: '광주' },
+    { code: '031', name: '대구' },
+    { code: '032', name: '부산' },
+    { code: '037', name: '전북' },
+    { code: '045', name: '새마을' },
+    { code: '071', name: '우체국' },
+    { code: '050', name: '저축은행' },
+    { code: '012', name: '지역농.축협' },
   ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.bankName || !form.accountNum || !form.accountName) return;
+    if (!form.bankCode || !form.accountNum || !form.accountName) return;
 
-    // TODO: 계좌 등록 API가 아직 나오지 않음. API 연동 시 아래 주석 해제 및 적용 예정
-    console.log('등록할 계좌 정보:', form);
-    alert('계좌 등록 API 연동이 필요합니다.');
-    /*
     registerAccount(form, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['account'] });
-        setForm({ bankName: '', accountNum: '', accountName: '' });
-        alert('계좌가 등록되었습니다.');
+        setForm({ bankCode: '', accountNum: '', accountName: '' });
+        alert('계좌가 등록/변경되었습니다.');
       },
       onError: () => {
-        alert('계좌 등록에 실패했습니다.');
+        alert('계좌 등록/변경에 실패했습니다.');
       }
     });
-    */
   };
 
   if (isLoading) {
@@ -116,13 +132,13 @@ export default function PaymentSection() {
         <form onSubmit={handleSubmit} className="flex gap-4 items-center">
           <div className="relative">
             <select
-              value={form.bankName}
-              onChange={(e) => setForm({ ...form, bankName: e.target.value })}
+              value={form.bankCode}
+              onChange={(e) => setForm({ ...form, bankCode: e.target.value })}
               className="w-[180px] h-[52px] bg-transparent border border-[#2e2e40] rounded-lg px-4 text-[#aaa] outline-none focus:border-[#d9b36d] transition-colors appearance-none cursor-pointer"
             >
               <option value="" disabled>은행 선택</option>
               {BANKS.map(bank => (
-                <option key={bank} value={bank}>{bank}</option>
+                <option key={bank.code} value={bank.code}>{bank.name}</option>
               ))}
             </select>
             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#555] text-xs">
@@ -148,10 +164,10 @@ export default function PaymentSection() {
 
           <button
             type="submit"
-            disabled={!form.bankName || !form.accountNum || !form.accountName}
+            disabled={!form.bankCode || !form.accountNum || !form.accountName || isPending}
             className="h-[52px] px-8 bg-white text-black font-semibold rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition-colors whitespace-nowrap ml-1"
           >
-            등록 하기
+            {isPending ? '처리 중...' : '등록 하기'}
           </button>
         </form>
       </div>

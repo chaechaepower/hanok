@@ -289,6 +289,14 @@ export type UserAccountResponse = {
   accountNumber: string;
 };
 
+export type PostUserAccountPayload = {
+  bankCode: string;
+  accountNum: string;
+  accountName: string;
+};
+
+export type PostUserAccountResponse = unknown;
+
 export type TradeReportType = 'CHARGE' | 'WITHDRAW' | 'SETTLEMENT';
 
 export type TradeReportItem = {
