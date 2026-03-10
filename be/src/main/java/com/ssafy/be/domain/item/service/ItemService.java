@@ -59,7 +59,7 @@ public class ItemService {
                 .bidUnit(request.bidUnit())
                 .auctionDuration(request.auctionDuration())
                 .status(ItemStatus.READY)
-                .condition(request.itemCondition())
+                .itemCondition(request.itemCondition())
                 .seller(seller)
                 .build();
     }
