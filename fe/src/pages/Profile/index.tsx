@@ -194,19 +194,19 @@ export default function ProfilePage() {
                 <img 
                   src={profile_image} 
                   alt={nickname} 
-                  className="w-[140px] h-[140px] rounded-full object-cover" 
+                  className="w-[140px] h-[140px] min-w-[140px] min-h-[140px] flex-shrink-0 rounded-full object-contain object-center bg-[#1e1e2d]" 
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
                     (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
                     (e.target as HTMLImageElement).nextElementSibling?.classList.add('flex');
                   }}
                 />
-                <div className="hidden w-[140px] h-[140px] rounded-full bg-[#1e1e2d] text-[#d9b36d] text-[48px] items-center justify-center font-bold">
+                <div className="hidden w-[140px] h-[140px] min-w-[140px] min-h-[140px] flex-shrink-0 rounded-full bg-[#1e1e2d] text-[#d9b36d] text-[48px] items-center justify-center font-bold">
                   {nickname.charAt(0)}
                 </div>
               </>
             ) : (
-              <div className="w-[140px] h-[140px] rounded-full bg-[#1e1e2d] text-[#d9b36d] text-[48px] flex items-center justify-center font-bold">
+              <div className="w-[140px] h-[140px] min-w-[140px] min-h-[140px] flex-shrink-0 rounded-full bg-[#1e1e2d] text-[#d9b36d] text-[48px] flex items-center justify-center font-bold">
                 {nickname.charAt(0)}
               </div>
             )}

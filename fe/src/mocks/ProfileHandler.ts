@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
+import LogoImage from '@/assets/Logo.png';
 
 import { decrementMockFollowerCount, getMockFollowerCount, incrementMockFollowerCount } from './mockState';
 
@@ -46,22 +47,6 @@ export const profileHandlers = [
     });
   }),
 
-  // Add a handler for the mock image URL to prevent "net::ERR_FAILED" console errors
-  http.get('https://find.find.com/*', () => {
-    // Return a 1x1 transparent PNG to satisfy the browser's image request
-    const transparentPng = new Uint8Array([
-      137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82, 
-      0, 0, 0, 1, 0, 0, 0, 1, 8, 6, 0, 0, 0, 31, 21, 196, 137, 0, 0, 
-      0, 11, 73, 68, 65, 84, 8, 215, 99, 96, 0, 2, 0, 0, 5, 0, 1, 
-      226, 38, 5, 155, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130
-    ]).buffer;
-    return new HttpResponse(transparentPng, {
-      headers: {
-        'Content-Type': 'image/png',
-      },
-    });
-  }),
-
   http.get(`${BASE_URL}/v1/sellers/:sellerId/reputation`, () => {
     return HttpResponse.json({
       status: 'SUCCESS',
@@ -85,7 +70,7 @@ export const profileHandlers = [
           sellerId: 200,
           nickname: '명품셀러',
           intro: '정품만 취급합니다. 문의 환영합니다.',
-          profile_image: 'https://picsum.photos/id/1011/200/200',
+          profile_image: LogoImage,
           instagramUrl: 'https://instagram.com/luxury_seller',
           youtubeUrl: 'https://youtube.com/@luxury_seller_tv',
           tiktokUrl: 'https://tiktok.com/@luxury_seller_official',
@@ -120,7 +105,7 @@ export const profileHandlers = [
         sellerId,
         nickname: '판매왕',
         intro: '좋은 물건만 팔아요',
-        profile_image: 'https://picsum.photos/id/1005/200/200',
+        profile_image: LogoImage,
         instagramUrl: 'https://instagram.com/im_rerak',
         youtubeUrl: 'https://youtube.com/@im_rerak',
         tiktokUrl: 'https://tiktok.com/@seller123',
