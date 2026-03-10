@@ -17,6 +17,9 @@ public enum StompType {
     BID_WINNER,             // 낙찰 확정
 
     // 매크로
-    MACRO_TEMPLATE
+    MACRO_TEMPLATE,
+
+    // 에러
+    ERROR
 }
 

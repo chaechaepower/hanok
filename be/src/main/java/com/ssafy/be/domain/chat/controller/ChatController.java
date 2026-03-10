@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Controller;
 
@@ -17,12 +18,13 @@ import java.security.Principal;
 public class ChatController {
 
     private final ChatService chatService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/stream/{streamId}")
     public void handleChatMessage(
             @DestinationVariable Long streamId,
             @Payload @Valid ChatMessageRequest request,
-            Principal principal                          // ✅ STOMP Principal
+            Principal principal
     ) {
         UsernamePasswordAuthenticationToken authentication =
                 (UsernamePasswordAuthenticationToken) principal;
@@ -30,6 +32,11 @@ public class ChatController {
         Long userId  = Long.parseLong(principal.getName());
         String nickname = (String) authentication.getDetails();
 
-        chatService.handleMessage(userId, nickname, request);
+        //controller에서 전송
+        chatService.handleMessage(userId, nickname, request).ifPresent(
+                response -> messagingTemplate.convertAndSend(
+                        "/broadcast/stream"+userId , response
+                )
+        );
     }
 }

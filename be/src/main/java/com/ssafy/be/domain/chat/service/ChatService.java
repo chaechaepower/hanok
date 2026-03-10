@@ -6,12 +6,14 @@ import com.ssafy.be.domain.chat.dto.request.ChatMessageRequest;
 import com.ssafy.be.domain.chat.filter.ChatFilter;
 import com.ssafy.be.domain.chat.publisher.ChatPublisher;
 import com.ssafy.be.global.infra.redis.RedisOperator;
+import com.ssafy.be.global.websocket.dto.response.StompResponse;
 import com.ssafy.be.global.websocket.enums.StompType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -26,17 +28,17 @@ public class ChatService {
     private static final long CHAT_MAX = 100L;
     private static final long CHAT_TTL_SECOND = 7200L;
 
-    public void handleMessage(Long userId, String nickname, ChatMessageRequest request) {
+    public Optional<StompResponse<?>> handleMessage(Long userId, String nickname, ChatMessageRequest request) {
 
         if(chatFilter.isFiltered(request.content())) {
             chatPublisher.sendToUser(userId, StompType.CHAT_FILTERED,
                     buildFilteredPayload());
-            return;
+            return Optional.empty();
         }
 
         ChatMessagePayload payload = buildChatPayload(userId, nickname, request);
         saveToRedis(request.streamId(), payload);
-        chatPublisher.broadcastToStream(request.streamId(),StompType.CHAT_MESSAGE,payload);
+        return Optional.of(toStompResponse(StompType.CHAT_MESSAGE, payload));
     }
 
     public List<ChatMessagePayload> getRecentMessage(Long streamId) {
@@ -78,5 +80,11 @@ public class ChatService {
     private String chatKey(Long streamId) { return "chat:stream:" + streamId; }
 
 
+    private <T> StompResponse<T> toStompResponse(StompType stompType, T payload) {
+        return StompResponse.<T>builder()
+                .eventType(stompType)
+                .payload(payload)
+                .build();
+    }
 
 }
