@@ -99,6 +99,9 @@ dependencies {
     // lombok(test)
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
+
+    // badword filter
+    implementation 'io.github.vaneproject:badwordfiltering:1.0.0'
 }
 
 dependencyManagement {

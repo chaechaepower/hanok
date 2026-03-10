@@ -10,3 +10,15 @@ spring:
       hibernate:
         format_sql: true
   show-sql: true
+
+jwt:
+  secret: "테스트용시크릿키는아무거나길게작성해주시면됩니다"
+  expiration: 3600000
+  refreshExpiration: 1209600000
+
+portone:
+  base-url: ${PORTONE_BASE_URL:https://api.portone.io}
+  store-id: ${PORTONE_STORE_ID:store-test-id}
+  secret:
+    key: ${PORTONE_SECRET_KEY:portone_test_secret_key}
+    webhook: ${PORTONE_SECRET_WEBHOOK:portone_test_secret_webhook} # 추후 운영 서버 도메인으로 웹훅 재등록 필요

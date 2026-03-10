@@ -5,6 +5,7 @@ import com.ssafy.be.domain.notification.model.NotificationRedisKeys;
 import com.ssafy.be.global.common.response.JsonConverter;
 import com.ssafy.be.global.infra.redis.RedisOperator;
 import lombok.RequiredArgsConstructor;
+import org.apache.catalina.users.SparseUserDatabase;
 import org.springframework.stereotype.Repository;
 
 import java.time.ZoneOffset;
@@ -33,7 +34,9 @@ public class NotificationRepository {
         redisOperator.putHashEntries(notiKey, hashdata);
 
         // 2. 유저 Inbox에 최신순으로 추가
-        double score = noti.createdAt().toEpochSecond(ZoneOffset.UTC);
+        // 초단위변환에서 밀리초로 id만들어 순서 보장 강화
+        // 변환에서 double -> String과 기존 밀리초 -> String 문제가 발생하여 score는 정렬용으로만
+        double score = noti.id();
         redisOperator.addZSet(inboxKey, String.valueOf(noti.id()), score);
 
         // 3. 안읽은 알람 +1
@@ -122,4 +125,42 @@ public class NotificationRepository {
         }
         return converter.fromHash(hash, Notification.class);
     }
+
+    public List<Notification> findInboxByUserIdWithCurSor(Long userId, String cursor, int limit) {
+        String inboxKey = NotificationRedisKeys.getUserInboxKey(userId);
+        Set<String> notiIds;
+
+        if(cursor == null || cursor.isBlank()) {
+
+            // 커서 없으면 첫 페이지 요청 = 최신
+            notiIds = redisOperator.getZSetReverseRange(inboxKey, 0, limit-1);
+        } else {
+
+            // 있으면 커서 이전의 값 = max에서 최신순으로 limit 개수 조회
+            double maxScore = Double.parseDouble(cursor) -1 ;
+
+            // offset만큼 점프하고 limit 조회
+            notiIds = redisOperator.getZSetReverseRangeByScore(inboxKey, 0.0, maxScore,0, limit);
+        }
+
+        if (notiIds == null || notiIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // String id -> redisID
+        List<String> notiKeys = notiIds.stream()
+                .map(id -> NotificationRedisKeys.getNotiKey(Long.parseLong(id)))
+                .collect(Collectors.toList());
+
+        // redisKey -> Hash
+        List<Map<Object, Object>> pipeLineResults = redisOperator.getHashEntriesPipelined(notiKeys);
+
+
+        // Hash -> POJO
+        return pipeLineResults.stream()
+                .filter(hash -> hash != null && !hash.isEmpty())
+                .map(hash -> converter.fromHash(hash, Notification.class))
+                .collect(Collectors.toList());
+    }
+
 }

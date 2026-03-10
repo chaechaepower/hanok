@@ -5,6 +5,7 @@ import java.util.List;
 public record NotificationPageResponse(
         List<NotificationResponse> items,
         Integer unreadCount,
-        Boolean hasNext
+        Boolean hasNext,
+        String nextCursor
 ) {
 }

@@ -1,5 +1,8 @@
 package com.ssafy.be.global.infra.redis;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ssafy.be.global.exception.GlobalErrorCode;
+import com.ssafy.be.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.dao.DataAccessException;
@@ -19,6 +22,7 @@ import java.util.stream.Collectors;
 public class RedisOperator {
 
     private final StringRedisTemplate redisTemplate;
+    private final ObjectMapper objectMapper;
 
     /* ================================
      *           COMMON
@@ -124,5 +128,48 @@ public class RedisOperator {
     //안읽음 초기화
     public void setValue(String key, String value) {
         redisTemplate.opsForValue().set(key, value);
+    }
+
+<<<<<<< be/src/main/java/com/ssafy/be/global/infra/redis/RedisOperator.java
+    /* ================================
+     *           LIST
+     * ================================ */
+
+    public <T> void listRightPush(String key, T value) {
+        redisTemplate.opsForList().rightPush(key, serialize(value));
+    }
+
+    public void listTrim(String key, long start, long end) {
+        redisTemplate.opsForList().trim(key, start, end);
+    }
+
+    public <T> List<T> listRange(String key, long start, long end, Class<T> clazz) {
+        List<String> cached = redisTemplate.opsForList().range(key, start, end);
+
+        if (cached == null || cached.isEmpty()) return List.of();
+
+        return cached.stream()
+                .map(json -> deserialize(json, clazz))
+                .collect(Collectors.toList());
+    }
+
+    private String serialize(Object obj) {
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (Exception e) {
+            throw new GlobalException(GlobalErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private <T> T deserialize(String json, Class<T> clazz) {
+        try {
+            return objectMapper.readValue(json, clazz);
+        } catch (Exception e) {
+            throw new GlobalException(GlobalErrorCode.INTERNAL_SERVER_ERROR);
+        }
+
+    public Set<String> getZSetReverseRangeByScore(String key, double min, double max, long offset, long cnt) {
+        return redisTemplate.opsForZSet().reverseRangeByScore(key, min, max, offset, cnt);
+
     }
 }

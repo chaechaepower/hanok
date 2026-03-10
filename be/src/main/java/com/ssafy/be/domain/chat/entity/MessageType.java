@@ -1,6 +1,6 @@
 package com.ssafy.be.domain.chat.entity;
 
-public enum messageType {
+public enum MessageType {
     CHAT,
     SYSTEM,
     FILTERED,
