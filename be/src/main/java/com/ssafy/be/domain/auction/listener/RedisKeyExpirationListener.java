@@ -1,5 +1,6 @@
-package com.ssafy.be.auction;
+package com.ssafy.be.domain.auction.listener;
 
+import com.ssafy.be.domain.auction.service.AuctionService;
 import com.ssafy.be.domain.auction.util.AuctionRedisKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;

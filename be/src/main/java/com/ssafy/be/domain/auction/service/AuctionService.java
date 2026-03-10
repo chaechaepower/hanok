@@ -1,5 +1,7 @@
-package com.ssafy.be.auction;
+package com.ssafy.be.domain.auction.service;
 
+import com.ssafy.be.domain.auction.dto.request.AuctionStartRequest;
+import com.ssafy.be.domain.auction.dto.response.AuctionStartResponse;
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.exception.AuctionErrorCode;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;

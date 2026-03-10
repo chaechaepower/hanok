@@ -1,5 +1,8 @@
-package com.ssafy.be.auction;
+package com.ssafy.be.domain.auction.controller;
 
+import com.ssafy.be.domain.auction.service.AuctionService;
+import com.ssafy.be.domain.auction.dto.request.AuctionStartRequest;
+import com.ssafy.be.domain.auction.dto.response.AuctionStartResponse;
 import com.ssafy.be.global.common.response.JsonConverter;
 import com.ssafy.be.global.websocket.dto.request.StompRequest;
 import com.ssafy.be.global.websocket.dto.response.StompResponse;
@@ -9,7 +12,6 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;

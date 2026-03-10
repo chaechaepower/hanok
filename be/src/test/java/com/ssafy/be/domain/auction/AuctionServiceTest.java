@@ -1,8 +1,11 @@
-package com.ssafy.be.auction;
+package com.ssafy.be.domain.auction;
 
+import com.ssafy.be.domain.auction.dto.request.AuctionStartRequest;
+import com.ssafy.be.domain.auction.dto.response.AuctionStartResponse;
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.auction.repository.AuctionTimerRepository;
+import com.ssafy.be.domain.auction.service.AuctionService;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.repository.ItemRepository;
 import com.ssafy.be.domain.seller.entity.Seller;
@@ -20,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import static com.ssafy.be.domain.auction.entity.AuctionStatus.LIVE;
 import static com.ssafy.be.domain.auction.entity.AuctionStatus.READY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 @IntegrationTest
 class AuctionServiceTest {
