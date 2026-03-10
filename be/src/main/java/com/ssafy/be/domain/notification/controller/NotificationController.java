@@ -20,11 +20,11 @@ public class NotificationController implements NotificationApi {
     @GetMapping
     public ResponseEntity<NotificationPageResponse> getNotifications(
             @AuthenticationPrincipal String principal,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "20") int limit
     ) {
         Long userId = getUserId(principal);
-        NotificationPageResponse response = notificationService.getNotifications(userId, page, limit);
+        NotificationPageResponse response = notificationService.getNotifications(userId, cursor, limit);
         return ResponseEntity.ok(response);
     }
 

@@ -125,4 +125,8 @@ public class RedisOperator {
     public void setValue(String key, String value) {
         redisTemplate.opsForValue().set(key, value);
     }
+
+    public Set<String> getZSetReverseRangeByScore(String key, double min, double max, long offset, long cnt) {
+        return redisTemplate.opsForZSet().reverseRangeByScore(key, min, max, offset, cnt);
+    }
 }
