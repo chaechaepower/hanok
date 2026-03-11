@@ -4,6 +4,7 @@ import com.ssafy.be.domain.stream.controller.api.StreamApi;
 import com.ssafy.be.domain.stream.dto.request.StreamRegisterRequest;
 import com.ssafy.be.domain.stream.dto.request.StreamUpdateRequest;
 import com.ssafy.be.domain.stream.dto.response.StreamRegisterResponse;
+import com.ssafy.be.domain.stream.dto.response.StreamTokenResponse;
 import com.ssafy.be.domain.stream.service.StreamService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -43,5 +44,12 @@ public class StreamController implements StreamApi {
             @PathVariable Long streamId) {
         streamService.deleteStream(userId, streamId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{streamId}/token")
+    public ResponseEntity<StreamTokenResponse> generateToken(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long streamId) {
+        return ResponseEntity.ok(streamService.generateToken(userId, streamId));
     }
 }

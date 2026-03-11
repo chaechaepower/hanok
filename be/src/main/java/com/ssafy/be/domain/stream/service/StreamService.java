@@ -6,6 +6,7 @@ import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.stream.dto.request.StreamRegisterRequest;
 import com.ssafy.be.domain.stream.dto.request.StreamUpdateRequest;
 import com.ssafy.be.domain.stream.dto.response.StreamRegisterResponse;
+import com.ssafy.be.domain.stream.dto.response.StreamTokenResponse;
 import com.ssafy.be.domain.stream.entity.Stream;
 import com.ssafy.be.domain.stream.exception.StreamErrorCode;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
@@ -15,6 +16,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.ssafy.be.global.infra.livekit.LiveKitProperties;
+import io.livekit.server.AccessToken;
+import io.livekit.server.RoomJoin;
+import io.livekit.server.RoomName;
+import io.livekit.server.CanPublish;
+import io.livekit.server.CanSubscribe;
 
 import java.io.IOException;
 
@@ -25,6 +32,7 @@ public class StreamService {
     private final StreamRepository streamRepository;
     private final SellerRepository sellerRepository;
     private final GcsClient gcsClient;
+    private final LiveKitProperties liveKitProperties;
 
     @Transactional
     public StreamRegisterResponse register(Long userId, StreamRegisterRequest request, MultipartFile thumbnail) {
@@ -96,5 +104,30 @@ public class StreamService {
         }
 
         streamRepository.delete(stream);
+    }
+
+    @Transactional(readOnly = true)
+    public StreamTokenResponse generateToken(Long userId, Long streamId) {
+        Stream stream = streamRepository.findById(streamId)
+                .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
+
+        boolean isHost = stream.getSeller().getUser().getId().equals(userId);
+        String participantIdentity = String.valueOf(userId);
+        String roomName = String.valueOf(streamId);
+
+        AccessToken token = new AccessToken(
+                liveKitProperties.apiKey(),
+                liveKitProperties.apiSecret()
+        );
+        token.setName(participantIdentity);
+        token.setIdentity(participantIdentity);
+        token.addGrants(
+                new RoomJoin(true),
+                new RoomName(roomName),
+                new CanPublish(isHost),
+                new CanSubscribe(true)
+        );
+
+        return new StreamTokenResponse(token.toJwt());
     }
 }
