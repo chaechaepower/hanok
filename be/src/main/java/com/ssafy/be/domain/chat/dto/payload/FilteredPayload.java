@@ -7,5 +7,6 @@ import java.time.LocalDateTime;
 @Builder
 public record FilteredPayload(
         String reason,
+        String maskedText,
         LocalDateTime detectedAt
 ) {}

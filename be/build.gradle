@@ -82,7 +82,6 @@ dependencies {
     implementation 'com.google.cloud:spring-cloud-gcp-starter-storage'
 
     // portone
-    implementation(platform("org.springframework.boot:spring-boot-dependencies:3.3.5"))
     implementation("io.portone:server-sdk:0.9.1")
 
     // test
@@ -101,7 +100,7 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok'
 
     // ahocorasick
-    implementation "org.ahocorasick:ahocorasick:0.6.4"
+    implementation "org.ahocorasick:ahocorasick:0.6.3"
 }
 
 dependencyManagement {

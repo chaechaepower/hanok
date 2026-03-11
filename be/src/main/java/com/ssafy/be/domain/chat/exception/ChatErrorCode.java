@@ -9,7 +9,9 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum ChatErrorCode implements ErrorCode {
     CHAT_SERIALIZATION_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "CHAT-001", "채팅 데이터를 변환하는 중 오류가 발생했습니다."),
-    CHAT_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT-002", "채팅 내역이 존재하지 않습니다.");
+    CHAT_NOT_FOUND(HttpStatus.NOT_FOUND, "CHAT-002", "채팅 내역이 존재하지 않습니다."),
+    BAD_WORD_DETECTED(HttpStatus.BAD_REQUEST, "CHAT-003", "메시지에 금칙어가 포함되어 있습니다.");
+
 
     private final HttpStatus httpStatus;
     private final String code;

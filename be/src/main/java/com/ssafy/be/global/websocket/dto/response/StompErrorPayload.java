@@ -8,5 +8,4 @@ import lombok.Getter;
 public class StompErrorPayload {
     private final String code;
     private final String message;
-
 }

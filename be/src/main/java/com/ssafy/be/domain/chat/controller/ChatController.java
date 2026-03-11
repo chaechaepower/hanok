@@ -1,7 +1,9 @@
 package com.ssafy.be.domain.chat.controller;
 
+import com.ssafy.be.domain.chat.dto.payload.ChatMessagePayload;
 import com.ssafy.be.domain.chat.dto.request.ChatMessageRequest;
 import com.ssafy.be.domain.chat.service.ChatService;
+import com.ssafy.be.global.websocket.dto.response.StompResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -29,14 +31,13 @@ public class ChatController {
         UsernamePasswordAuthenticationToken authentication =
                 (UsernamePasswordAuthenticationToken) principal;
 
-        Long userId  = Long.parseLong(principal.getName());
+        Long userId = Long.parseLong(principal.getName());
         String nickname = (String) authentication.getDetails();
 
-        //controller에서 전송
-        chatService.handleMessage(userId, nickname, request).ifPresent(
-                response -> messagingTemplate.convertAndSend(
-                        "/broadcast/stream"+userId , response
-                )
-        );
+        // 1. Service로부터 마스킹 처리가 완료된 통합 응답 객체를 받음
+        StompResponse<ChatMessagePayload> response = chatService.handleMessage(userId, nickname, request);
+
+        // 2. 해당 방의 모든 구독자에게 일괄 브로드캐스트
+        messagingTemplate.convertAndSend("/broadcast/stream/" + streamId, response);
     }
 }
