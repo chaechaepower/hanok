@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { GoHomeFill } from 'react-icons/go';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -10,6 +11,7 @@ import StreamOverlay from '@/components/Live/Stream/StreamOverlay';
 import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
 import type { BidWinnerPayload, StreamTimerPayload, SyncedAuctionTimer } from '@/types';
 import type { AuctionStatisticsPayload } from '@/types';
+import type { BidSyncPayload } from '@/types';
 import { disconnectStompClient, subscribeStream } from '@/websocket/stompClient';
 
 import LeftPanel from './LeftPanel';
@@ -22,6 +24,8 @@ type BroadcastStreamEvent =
         item?: {
           name?: string;
           condition?: string;
+          bidUnit?: number;
+          startPrice?: number;
         };
         timer?: StreamTimerPayload;
       };
@@ -29,8 +33,15 @@ type BroadcastStreamEvent =
   | {
       eventType: 'BID_PLACED';
       payload?: {
+        bidInfo?: {
+          amount?: number;
+        };
         snipingTimer?: StreamTimerPayload | null;
       };
+    }
+  | {
+      eventType: 'BID_SYNC';
+      payload?: BidSyncPayload | null;
     }
   | {
       eventType: 'AUCTION_STATISTICS';
@@ -64,6 +75,10 @@ const isAuctionStatisticsEvent = (
 ): event is Extract<BroadcastStreamEvent, { eventType: 'AUCTION_STATISTICS' }> =>
   event.eventType === 'AUCTION_STATISTICS';
 
+const isBidSyncEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'BID_SYNC' }> => event.eventType === 'BID_SYNC';
+
 const isBidWinnerEvent = (
   event: PrivateStreamEvent,
 ): event is Extract<PrivateStreamEvent, { eventType: 'BID_WINNER' }> => event.eventType === 'BID_WINNER';
@@ -74,6 +89,7 @@ const createSyncedTimer = (timer: StreamTimerPayload): SyncedAuctionTimer => ({
 });
 
 export default function LivePage() {
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { id: streamId } = useParams<{ id: string }>();
   const [isSeller, setIsSeller] = useState(true);
@@ -81,6 +97,7 @@ export default function LivePage() {
   const [winnerInfo, setWinnerInfo] = useState<BidWinnerPayload | null>(null);
   const [currentItemCond, setCurrentItemCond] = useState('');
   const [auctionStatistics, setAuctionStatistics] = useState<AuctionStatisticsPayload | null>(null);
+  const [bidSync, setBidSync] = useState<BidSyncPayload | null>(null);
 
   useEffect(() => {
     if (!streamId) {
@@ -91,12 +108,42 @@ export default function LivePage() {
       if (isAuctionStartEvent(event) && event.payload?.timer) {
         setTimer(createSyncedTimer(event.payload.timer));
         setCurrentItemCond(event.payload.item?.condition ?? '');
+        if (typeof event.payload.item?.startPrice === 'number' && typeof event.payload.item?.bidUnit === 'number') {
+          setBidSync({
+            item: {
+              bidUnit: event.payload.item.bidUnit,
+              currentPrice: event.payload.item.startPrice,
+            },
+            timer: event.payload.timer,
+          });
+        }
         setWinnerInfo(null);
         return;
       }
 
-      if (isBidPlacedEvent(event) && event.payload?.snipingTimer) {
-        setTimer(createSyncedTimer(event.payload.snipingTimer));
+      if (isBidPlacedEvent(event)) {
+        if (event.payload?.snipingTimer) {
+          setTimer(createSyncedTimer(event.payload.snipingTimer));
+        }
+
+        if (typeof event.payload?.bidInfo?.amount === 'number') {
+          setBidSync((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  item: {
+                    ...prev.item,
+                    currentPrice: event.payload?.bidInfo?.amount ?? prev.item.currentPrice,
+                  },
+                }
+              : prev,
+          );
+        }
+        return;
+      }
+
+      if (isBidSyncEvent(event)) {
+        setBidSync(event.payload ?? null);
         return;
       }
 
@@ -133,6 +180,7 @@ export default function LivePage() {
 
   const handleWinConfirm = async () => {
     await Promise.resolve();
+    await queryClient.invalidateQueries({ queryKey: ['wallet'] });
     setWinnerInfo(null);
   };
 
@@ -167,7 +215,7 @@ export default function LivePage() {
           <StreamOverlay />
           <SellerGuideOverlay />
           <StreamPlaceholder />
-          <ControlBar isSeller={isSeller} />
+          <ControlBar isSeller={isSeller} bidSync={bidSync} />
 
           <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
             <div className="flex gap-1 rounded-lg bg-[rgba(0,0,0,.6)] p-1">

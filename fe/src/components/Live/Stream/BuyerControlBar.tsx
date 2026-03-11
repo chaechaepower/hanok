@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LuEye, LuVolume2, LuVolumeOff } from 'react-icons/lu';
 import { IoChatbubbleOutline, IoCheckmark } from 'react-icons/io5';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import { useParams } from 'react-router-dom';
+import { useGetWallet } from '@/api/hooks/useGetWallet';
 import KeyboardGuide from '@/components/Live/Auction/Buyer/KeyboardGuide';
+import type { BidSyncPayload } from '@/types';
 import { sendStreamMessage } from '@/websocket/stompClient';
 
 const CUSTOM_UNIT_OPTIONS = [
@@ -15,26 +17,44 @@ const CUSTOM_UNIT_OPTIONS = [
 
 type BidTab = 'quick' | 'custom';
 
+interface Props {
+  bidSync: BidSyncPayload | null;
+}
+
 // 구매자 전용 컨트롤바
 // 좌: 키보드 가이드 | 중앙: 입찰 패널 | 우: 사운드 + 채팅 토글
-export default function BuyerControlBar() {
+export default function BuyerControlBar({ bidSync }: Props) {
   const { id: streamId } = useParams<{ id: string }>();
+  const { data: wallet } = useGetWallet();
   const [guideOpen, setGuideOpen] = useState(false);
   const [muted, setMuted] = useState(false);
   const [tab, setTab] = useState<BidTab>('quick');
   const [customUnit, setCustomUnit] = useState(1000);
-  const [bidAmount, setBidAmount] = useState(785000);
+  const [bidAmount, setBidAmount] = useState(1000);
   const [freeInput, setFreeInput] = useState('');
   const [panelOpacity, setPanelOpacity] = useState(60);
 
-  // TODO: 실제 데이터 연동
-  const balance = 1200000;
-  const currentBid = 735000;
-  // TODO: 판매자가 설정한 입찰 단위 (서버에서 받아옴)
-  const sellerUnit = 50000;
-  const increment = bidAmount - currentBid;
-
+  const balance = wallet?.balance ?? 0;
+  const currentBid = bidSync?.item.currentPrice ?? 0;
+  const sellerUnit = bidSync?.item.bidUnit ?? 1000;
   const isFreeMode = tab === 'custom' && customUnit === 0;
+  const quickUnit = tab === 'quick' ? sellerUnit : customUnit;
+  const minimumBidAmount = currentBid + quickUnit;
+  const displayedBidAmount = isFreeMode ? bidAmount : Math.max(bidAmount, minimumBidAmount);
+  const increment = displayedBidAmount - currentBid;
+
+  useEffect(() => {
+    if (!streamId) {
+      return;
+    }
+
+    void sendStreamMessage(streamId, {
+      eventType: 'BID_SYNC',
+      payload: null,
+    }).catch((error) => {
+      console.error('[stream] failed to send BID_SYNC', error);
+    });
+  }, [streamId]);
 
   const handleBidPlace = () => {
     if (!streamId) {
@@ -46,7 +66,7 @@ export default function BuyerControlBar() {
       eventType: 'BID_PLACED',
       payload: {
         auctionId: 1,
-        amount: bidAmount,
+        amount: displayedBidAmount,
       },
     }).catch((error) => {
       console.error('[stream] failed to send BID_PLACE', error);
@@ -55,13 +75,11 @@ export default function BuyerControlBar() {
 
   const handleDecrease = () => {
     if (isFreeMode) return;
-    const unit = tab === 'quick' ? sellerUnit : customUnit;
-    setBidAmount((prev) => Math.max(currentBid + unit, prev - unit));
+    setBidAmount((prev) => Math.max(minimumBidAmount, Math.max(prev, minimumBidAmount) - quickUnit));
   };
   const handleIncrease = () => {
     if (isFreeMode) return;
-    const unit = tab === 'quick' ? sellerUnit : customUnit;
-    setBidAmount((prev) => Math.min(balance, prev + unit));
+    setBidAmount((prev) => Math.min(balance, Math.max(prev, minimumBidAmount) + quickUnit));
   };
   const handleFreeInput = (val: string) => {
     const num = val.replace(/[^0-9]/g, '');
@@ -112,7 +130,7 @@ export default function BuyerControlBar() {
                     <div className="flex flex-1 flex-col items-center gap-1">
                       <div className="flex items-center gap-2 text-sm font-black">
                         <IoCheckmark size={16} strokeWidth={4} />
-                        {bidAmount.toLocaleString()}원 으로 입찰
+                        {displayedBidAmount.toLocaleString()}원 으로 입찰
                       </div>
                       <span className="text-xs font-bold text-indigo-200">(+{increment.toLocaleString()})</span>
                     </div>
@@ -166,7 +184,7 @@ export default function BuyerControlBar() {
                       />
                     ) : (
                       <div className="min-w-0 flex-1 text-center text-sm font-black tabular-nums text-white">
-                        {bidAmount.toLocaleString()} <span className="text-xs font-normal text-[#a1a1aa]">원</span>
+                        {displayedBidAmount.toLocaleString()} <span className="text-xs font-normal text-[#a1a1aa]">원</span>
                       </div>
                     )}
                     <button
@@ -187,7 +205,7 @@ export default function BuyerControlBar() {
                   <div className="flex flex-1 flex-col items-center gap-0.5">
                     <span className="text-lg font-black">입찰</span>
                     <span className="text-[10px] font-bold tabular-nums text-blue-200">
-                      {bidAmount.toLocaleString()}원
+                      {displayedBidAmount.toLocaleString()}원
                     </span>
                     <span className="text-[10px] font-bold text-blue-300">+{increment.toLocaleString()}</span>
                   </div>

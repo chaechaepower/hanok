@@ -55,6 +55,14 @@ export type AuctionStatisticsPayload = {
   recentBids: AuctionStatisticsRecentBid[];
 };
 
+export type BidSyncPayload = {
+  item: {
+    bidUnit: number;
+    currentPrice: number;
+  };
+  timer: StreamTimerPayload;
+};
+
 export type StreamState = 'live' | 'disconnected' | 'ended';
 
 export type ChatMessageType =

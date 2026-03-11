@@ -1,6 +1,6 @@
 import { ws, type WebSocketData } from 'msw';
 
-import type { AuctionStatisticsPayload } from '@/types';
+import type { AuctionStatisticsPayload, BidSyncPayload } from '@/types';
 import { getStreamSocketConnectUrl } from '@/websocket/socket';
 
 type StompFrame = {
@@ -16,6 +16,9 @@ type MockTimerState = {
 };
 
 type MockAuctionStatisticsState = AuctionStatisticsPayload;
+type MockBidSyncState = {
+  bidUnit: number;
+};
 
 const AUCTION_DURATION_SECONDS = 10;
 const SNIPING_THRESHOLD_SECONDS = 5;
@@ -29,6 +32,7 @@ const clientSubscriptions = new Map<string, Map<string, string>>();
 const heartbeatTimers = new Map<string, number>();
 const streamTimerStates = new Map<string, MockTimerState>();
 const streamAuctionStatisticsStates = new Map<string, MockAuctionStatisticsState>();
+const streamBidSyncStates = new Map<string, MockBidSyncState>();
 const winnerAnnouncementTimers = new Map<string, number>();
 
 const createTimestamp = (ms: number) => new Date(ms).toISOString();
@@ -187,6 +191,30 @@ const broadcastAuctionStatistics = (streamId: string) => {
   });
 };
 
+const createBidSyncPayload = (streamId: string, nowMs: number): BidSyncPayload | null => {
+  const timerState = streamTimerStates.get(streamId);
+  const bidSyncState = streamBidSyncStates.get(streamId);
+
+  if (!timerState || !bidSyncState) {
+    return null;
+  }
+
+  return {
+    item: {
+      bidUnit: bidSyncState.bidUnit,
+      currentPrice: timerState.finalPrice,
+    },
+    timer: createTimerPayload(timerState, nowMs),
+  };
+};
+
+const broadcastBidSync = (streamId: string) => {
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'BID_SYNC',
+    payload: createBidSyncPayload(streamId, Date.now()),
+  });
+};
+
 const scheduleWinnerAnnouncement = (streamId: string) => {
   clearWinnerAnnouncement(streamId);
 
@@ -233,6 +261,7 @@ const handleAuctionStart = (destination: string) => {
   const nowMs = Date.now();
   const itemName = '나이키 에어맥스 95';
   const startPrice = 50000;
+  const bidUnit = 1000;
   const state: MockTimerState = {
     durationSeconds: AUCTION_DURATION_SECONDS,
     startedAtMs: nowMs,
@@ -249,6 +278,7 @@ const handleAuctionStart = (destination: string) => {
 
   streamTimerStates.set(streamId, state);
   streamAuctionStatisticsStates.set(streamId, auctionStatisticsState);
+  streamBidSyncStates.set(streamId, { bidUnit });
   scheduleWinnerAnnouncement(streamId);
 
   broadcastToDestination(`/broadcast/streams/${streamId}`, {
@@ -258,7 +288,7 @@ const handleAuctionStart = (destination: string) => {
         name: itemName,
         image: 'https://cdn.example.com/items/shoes.jpg',
         condition: 'GOOD',
-        bidUnit: 1000,
+        bidUnit,
         startPrice,
       },
       timer: createTimerPayload(state, nowMs),
@@ -335,6 +365,11 @@ const handleBidPlace = (destination: string, body: string) => {
   broadcastAuctionStatistics(streamId);
 };
 
+const handleBidSync = (destination: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  broadcastBidSync(streamId);
+};
+
 const handleSendFrame = (frame: StompFrame) => {
   if (frame.headers.destination?.startsWith('/app/streams/')) {
     const body = JSON.parse(frame.body) as { eventType?: string };
@@ -345,6 +380,10 @@ const handleSendFrame = (frame: StompFrame) => {
 
     if (body.eventType === 'BID_PLACED') {
       handleBidPlace(frame.headers.destination, frame.body);
+    }
+
+    if (body.eventType === 'BID_SYNC') {
+      handleBidSync(frame.headers.destination);
     }
   }
 };
