@@ -59,9 +59,8 @@ export default function LiveEditPage() {
     }
   }, [streamData, filteredInventory]);
 
-  const DRAFT_STREAM_ID = streamId;
-  const { data: macroData } = useGetStreamMacros(DRAFT_STREAM_ID, initialCategoryId);
-  const postMacros = usePostStreamMacros(DRAFT_STREAM_ID);
+  const { data: macroData } = useGetStreamMacros(streamId, initialCategoryId);
+  const postMacros = usePostStreamMacros();
   const [macroAnswers, setMacroAnswers] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -115,7 +114,7 @@ export default function LiveEditPage() {
         questionType: m.questionType,
         answer: macroAnswers[m.questionType] ?? '',
       }));
-      await postMacros.mutateAsync({ macros });
+      await postMacros.mutateAsync({ streamId, body: { macros } });
 
       alert('방송 및 매크로가 성공적으로 수정되었습니다.');
       if (startType === 'IMMEDIATE') {
@@ -310,7 +309,7 @@ export default function LiveEditPage() {
                     questionType: m.questionType,
                     answer: macroAnswers[m.questionType] ?? '',
                   }));
-                  postMacros.mutate({ macros }, {
+                  postMacros.mutate({ streamId, body: { macros } }, {
                     onSuccess: () => alert('매크로가 저장되었습니다.'),
                   });
                 }}

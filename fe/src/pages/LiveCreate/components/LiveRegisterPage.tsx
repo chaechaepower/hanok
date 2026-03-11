@@ -2,11 +2,12 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { FaArrowLeft, FaBroadcastTower, FaCalendarAlt, FaCamera, FaSave, FaCircle, FaList, FaTimes } from 'react-icons/fa';
 import { MdLiveTv } from 'react-icons/md';
-import { getFetchInstance } from '@/api/instance';
 import { CATEGORY_MACROS } from '@/constants/macro';
 import { CATEGORIES } from './categories';
 import { useGetItemsByCategory } from '@/api/hooks/useGetItems';
 import { usePostStream } from '@/api/hooks/usePostStream';
+import { usePostStartStream } from '@/api/hooks/usePostStartStream';
+import { usePostStreamMacros } from '@/api/hooks/usePostStreamMacros';
 import type { Product, StartStreamRequest } from '@/types';
 import InventorySelectModal from './InventorySelectModal';
 import ScheduleModal from './ScheduleModal';
@@ -70,6 +71,8 @@ export default function LiveRegisterPage() {
   };
 
   const postStream = usePostStream();
+  const postStartStream = usePostStartStream();
+  const postMacros = usePostStreamMacros();
 
   const submitStream = async (startType: 'SCHEDULED' | 'IMMEDIATE', scheduledAtValue?: string) => {
     setIsSubmitting(true);
@@ -90,11 +93,11 @@ export default function LiveRegisterPage() {
       const newStreamId = res.streamId;
 
       if (startType === 'IMMEDIATE') {
-        const startRes = await getFetchInstance().post(
-          `/v1/streams/${newStreamId}/start`,
-          payload,
-        );
-        const token = (startRes.data as { data?: { openviduToken?: string } })?.data?.openviduToken;
+        const startRes = await postStartStream.mutateAsync({
+          streamId: newStreamId,
+          body: payload,
+        });
+        const token = startRes.data?.openviduToken;
         console.log('[Stream Start] openviduToken:', token);
         alert(`방송이 시작되었습니다! (ID: ${newStreamId})`);
       } else {
@@ -105,7 +108,10 @@ export default function LiveRegisterPage() {
         questionType: m.questionType,
         answer: macroAnswers[m.questionType] ?? '',
       }));
-      await getFetchInstance().post(`/v1/streams/${newStreamId}/macros`, { macros });
+      await postMacros.mutateAsync({
+        streamId: newStreamId,
+        body: { macros },
+      });
 
       if (startType === 'IMMEDIATE') {
         navigate(`/live/${newStreamId}`);

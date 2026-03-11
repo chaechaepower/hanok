@@ -5,9 +5,9 @@ import type {
   PostStreamMacrosResponse,
 } from '@/types';
 
-export const usePostStreamMacros = (streamId: number) => {
-  return useMutation<PostStreamMacrosResponse, Error, PostStreamMacrosRequest>({
-    mutationFn: async (body) => {
+export const usePostStreamMacros = () => {
+  return useMutation<PostStreamMacrosResponse, Error, { streamId: number; body: PostStreamMacrosRequest }>({
+    mutationFn: async ({ streamId, body }) => {
       const res = await getFetchInstance().post<PostStreamMacrosResponse>(
         `/v1/streams/${streamId}/macros`,
         body,
