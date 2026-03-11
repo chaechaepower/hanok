@@ -6,6 +6,7 @@ import com.ssafy.be.global.websocket.dto.response.StompErrorPayload;
 import com.ssafy.be.global.websocket.dto.response.StompResponse;
 import com.ssafy.be.global.websocket.enums.StreamEventType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 
 import java.nio.file.AccessDeniedException;
 
+@Slf4j
 @ControllerAdvice
 @RequiredArgsConstructor
 public class StompExceptionHandler {
@@ -42,6 +44,7 @@ public class StompExceptionHandler {
     @MessageExceptionHandler(Exception.class)
     @SendToUser("/private/errors")
     public StompResponse<?> handleException(Exception ex) {
+        log.error("[STOMP] 처리되지 않은 예외 발생", ex);
         return buildErrorResponse(GlobalErrorCode.INTERNAL_SERVER_ERROR);
     }
 

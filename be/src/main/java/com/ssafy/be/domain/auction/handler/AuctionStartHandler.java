@@ -33,7 +33,7 @@ public class AuctionStartHandler implements StreamEventHandler {
 
         AuctionStartResponse responsePayload = auctionService.startAuction(requestPayload, streamId, Long.parseLong(principal.getName()));
 
-        streamPublisher.broadcastToStream(streamId, AUCTION_START, responsePayload);
+        streamPublisher.broadcast(streamId, AUCTION_START, responsePayload);
     }
 }
 
