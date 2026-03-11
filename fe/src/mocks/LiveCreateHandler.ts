@@ -1,9 +1,38 @@
 import { http, HttpResponse } from 'msw';
 import { BASE_URL } from '@/api/instance';
+import Logo from '@/assets/Logo.png';
 import type { Live, StartStreamRequest, UpdateStreamRequest, UpdateStreamResponse, DeleteStreamResponse } from '@/types';
 
-const registeredLives: Live[] = [];
-let nextLiveId = 1;
+const registeredLives: Live[] = [
+  {
+    id: 1,
+    status: '예약',
+    thumbnail: Logo,
+    scheduledAt: new Date(Date.now() + 86400000).toISOString(),
+    title: '명품 가방 경매 시작합니다!',
+    category: '가방/패션잡화',
+    itemIds: [4, 5],
+  },
+  {
+    id: 2,
+    status: '방송중',
+    thumbnail: Logo,
+    scheduledAt: null,
+    title: '나이키 한정판 스니커즈 라이브',
+    category: '스니커즈/신발',
+    itemIds: [1, 2, 3],
+  },
+  {
+    id: 3,
+    status: '종료',
+    thumbnail: Logo,
+    scheduledAt: new Date(Date.now() - 86400000).toISOString(),
+    title: '롤렉스 서브마리너 단독 1점',
+    category: '시계',
+    itemIds: [4],
+  },
+];
+let nextLiveId = 4;
 
 export const LiveCreateHandlers = [
   http.get(`${BASE_URL}/v1/lives`, () => {

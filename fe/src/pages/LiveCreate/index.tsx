@@ -127,7 +127,12 @@ export default function LiveCreatePage() {
                   <button
                     type="button"
                     onClick={() => navigate(`/live/edit/${live.id}`)}
-                    className="text-white/70 text-sm hover:text-white transition-colors"
+                    className={`text-sm transition-colors ${
+                      live.status === '방송중' || live.status === '종료'
+                        ? 'text-white/30 cursor-not-allowed'
+                        : 'text-white/70 hover:text-white'
+                    }`}
+                    disabled={live.status === '방송중' || live.status === '종료'}
                   >
                     수정
                   </button>
