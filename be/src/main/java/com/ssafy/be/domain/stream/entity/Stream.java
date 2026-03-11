@@ -57,7 +57,6 @@ public class Stream {
             LocalDateTime scheduledAt,
             StartType startType,
             String notice,
-            LocalDateTime createdAt,
             Seller seller) {
         this.title = title;
         this.category = category;
@@ -66,7 +65,6 @@ public class Stream {
         this.scheduledAt = scheduledAt;
         this.startType = startType;
         this.notice = notice;
-        this.createdAt = createdAt;
         this.seller = seller;
     }
 
@@ -93,6 +91,6 @@ public class Stream {
     }
 
     public void end() {
-        this.status = StreamStatus.SCHEDULED;
+        this.status = StreamStatus.ENDED;
     }
 }
