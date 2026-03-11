@@ -40,6 +40,6 @@ public class ChatMessageHandler implements StreamEventHandler {
 
         ChatMessagePayload responsePayload = chatService.handleMessage(userId, nickname, requestPayload);
 
-        streamPublisher.broadcastToStream(streamId, CHAT_MESSAGE, responsePayload);
+        streamPublisher.broadcast(streamId, CHAT_MESSAGE, responsePayload);
     }
 }
