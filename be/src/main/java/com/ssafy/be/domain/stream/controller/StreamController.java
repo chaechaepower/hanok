@@ -1,13 +1,17 @@
 package com.ssafy.be.domain.stream.controller;
 
 import com.ssafy.be.domain.stream.controller.api.StreamApi;
+import com.ssafy.be.domain.stream.dto.request.StreamListRequest;
 import com.ssafy.be.domain.stream.dto.request.StreamRegisterRequest;
 import com.ssafy.be.domain.stream.dto.request.StreamUpdateRequest;
+import com.ssafy.be.domain.stream.dto.response.StreamDetailResponse;
+import com.ssafy.be.domain.stream.dto.response.StreamListItemResponse;
 import com.ssafy.be.domain.stream.dto.response.StreamRegisterResponse;
 import com.ssafy.be.domain.stream.dto.response.StreamTokenResponse;
 import com.ssafy.be.domain.stream.service.StreamService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -40,16 +44,40 @@ public class StreamController implements StreamApi {
 
     @DeleteMapping("/{streamId}")
     public ResponseEntity<Void> delete(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable Long streamId) {
+            @AuthenticationPrincipal Long userId, @PathVariable Long streamId) {
         streamService.deleteStream(userId, streamId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{streamId}/token")
     public ResponseEntity<StreamTokenResponse> generateToken(
-            @AuthenticationPrincipal Long userId,
-            @PathVariable Long streamId) {
+            @AuthenticationPrincipal Long userId, @PathVariable Long streamId) {
         return ResponseEntity.ok(streamService.generateToken(userId, streamId));
+    }
+
+    @GetMapping("/{streamId}")
+    public ResponseEntity<StreamDetailResponse> getStream(
+            @AuthenticationPrincipal Long userId, @PathVariable Long streamId) {
+        return ResponseEntity.ok(streamService.getStream(userId, streamId));
+    }
+
+    @PostMapping("/{streamId}/start")
+    public ResponseEntity<Void> startStream(
+            @AuthenticationPrincipal Long userId, @PathVariable Long streamId) {
+        streamService.startStream(userId, streamId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{streamId}/end")
+    public ResponseEntity<Void> endStream(
+            @AuthenticationPrincipal Long userId, @PathVariable Long streamId) {
+        streamService.endStream(userId, streamId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping
+    public ResponseEntity<Page<StreamListItemResponse>> getStreamList(
+            @ModelAttribute StreamListRequest request) {
+        return ResponseEntity.ok(streamService.getStreamList(request));
     }
 }

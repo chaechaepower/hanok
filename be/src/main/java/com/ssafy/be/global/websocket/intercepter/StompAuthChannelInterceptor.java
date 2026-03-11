@@ -23,7 +23,7 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
     private final JwtUtil jwtUtil;
     private final RedisService redisService;
 
-    private static final String BEARAR_PERFIX = "Bearer ";
+    private static final String BEARER_PREFIX = "Bearer ";
     private static final String BLACKLIST_PREFIX = "blacklist:";
 
     @Override
@@ -36,11 +36,11 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
         if(StompCommand.CONNECT.equals(accessor.getCommand())) {
             String authHeader = accessor.getFirstNativeHeader("Authorization");
 
-            if(authHeader == null || !authHeader.startsWith(BEARAR_PERFIX)) {
+            if(authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {
                 throw new MessageDeliveryException("Authentication 헤더가 없습니다");
             }
 
-            String token = authHeader.substring(BEARAR_PERFIX.length());
+            String token = authHeader.substring(BEARER_PREFIX.length());
 
             if(redisService.exists(BLACKLIST_PREFIX + token)) {
                 throw new MessageDeliveryException("로그아웃된 토큰입니다");

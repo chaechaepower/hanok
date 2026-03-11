@@ -72,9 +72,21 @@ pipeline {
             steps {
                 sh '''
                     cp /var/jenkins_home/env/.env.prod infra/.env.prod
+
+                    # livekit.yaml 동적 생성
+                    LIVEKIT_SECRET=$(grep LIVEKIT_API_SECRET infra/.env.prod | cut -d '=' -f2)
+                    cat > infra/livekit.yaml << EOF
+port: 7880
+keys:
+  devkey: $LIVEKIT_SECRET
+webhook:
+  urls:
+    - http://13.124.238.68/api/v1/streams/webhook
+  api_key: devkey
+EOF
+
                     docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis
-                    docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate backend-prod
-                    docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps livekit
+                    docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate livekit
                     docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate backend-prod
 
                     # 프론트 배포

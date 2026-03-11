@@ -6,7 +6,7 @@ import com.ssafy.be.domain.chat.dto.request.ChatMessageRequest;
 import com.ssafy.be.domain.chat.service.ChatService;
 import com.ssafy.be.global.infra.portone.PortoneClient;
 import com.ssafy.be.global.websocket.dto.response.StompResponse;
-import com.ssafy.be.global.websocket.enums.StompType;
+import com.ssafy.be.global.websocket.enums.StreamEventType;
 import com.ssafy.be.support.annotation.IntegrationTest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
@@ -71,7 +71,7 @@ class ChatIntegrationTest {
                 chatService.handleMessage(USER_ID, NICKNAME, new ChatMessageRequest(STREAM_ID, "안녕하세요!"));
 
         // 봉투(Envelope) 타입과 내부 페이로드 검증
-        assertThat(response.getEventType()).isEqualTo(StompType.CHAT_MESSAGE);
+        assertThat(response.getEventType()).isEqualTo(StreamEventType.CHAT_MESSAGE);
         assertThat(response.getPayload().content()).isEqualTo("안녕하세요!");
 
         List<ChatMessagePayload> messages = chatService.getRecentMessage(STREAM_ID);
@@ -110,7 +110,7 @@ class ChatIntegrationTest {
                 chatService.handleMessage(USER_ID, NICKNAME, new ChatMessageRequest(STREAM_ID, dirtyWord));
 
         // 검증 1: 정상적인 CHAT_MESSAGE 타입으로 반환되며, 내용은 "금칙어"로 덮어씌워짐
-        assertThat(response.getEventType()).isEqualTo(StompType.CHAT_MESSAGE);
+        assertThat(response.getEventType()).isEqualTo(StreamEventType.CHAT_MESSAGE);
         assertThat(response.getPayload().content()).isEqualTo("금칙어");
 
         List<ChatMessagePayload> messages = chatService.getRecentMessage(STREAM_ID);

@@ -1,7 +1,7 @@
 package com.ssafy.be.domain.auction.listener;
 
 import com.ssafy.be.domain.auction.dto.response.AuctionEndResponse;
-import com.ssafy.be.domain.auction.publisher.AuctionPublisher;
+import com.ssafy.be.global.websocket.publisher.StreamPublisher;
 import com.ssafy.be.domain.auction.service.AuctionService;
 import com.ssafy.be.domain.auction.util.AuctionRedisKeys;
 import lombok.extern.slf4j.Slf4j;
@@ -10,22 +10,22 @@ import org.springframework.data.redis.listener.KeyExpirationEventMessageListener
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Component;
 
-import static com.ssafy.be.global.websocket.enums.StompType.BID_WINNER;
+import static com.ssafy.be.global.websocket.enums.StreamEventType.BID_WINNER;
 
 @Slf4j
 @Component
 public class RedisAuctionTimerKeyExpirationListener extends KeyExpirationEventMessageListener {
     private final AuctionService auctionService;
-    private final AuctionPublisher auctionPublisher;
+    private final StreamPublisher streamPublisher;
 
     public RedisAuctionTimerKeyExpirationListener(
             RedisMessageListenerContainer listenerContainer,
             AuctionService auctionService,
-            AuctionPublisher auctionPublisher
+            StreamPublisher streamPublisher
     ) {
         super(listenerContainer);
         this.auctionService = auctionService;
-        this.auctionPublisher = auctionPublisher;
+        this.streamPublisher = streamPublisher;
     }
 
     /**
@@ -55,6 +55,6 @@ public class RedisAuctionTimerKeyExpirationListener extends KeyExpirationEventMe
             return;
         }
 
-        auctionPublisher.sendToUser(response.winnerId(), response.streamId(), BID_WINNER, response.winnerDto());
+        streamPublisher.sendToUser(response.winnerId(), response.streamId(), BID_WINNER, response.winnerDto());
     }
 }

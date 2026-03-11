@@ -1,6 +1,6 @@
 package com.ssafy.be.global.websocket.enums;
 
-public enum StompType {
+public enum StreamEventType {
 
 
     // 채팅

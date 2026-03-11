@@ -22,9 +22,11 @@ public record AuctionEndResponse(
         @Builder
         public record ShippingDto(
                 String recipientName,
-                String phone,
+                String addressName,
+                Integer postalCode,
                 String address,
-                String addressDetail
+                String addressDetail,
+                String phone
         ){}
     }
 }

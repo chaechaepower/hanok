@@ -7,7 +7,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 
 @SpringBootApplication
 @EnableConfigurationProperties(LiveKitProperties.class)
-
 public class BeApplication {
 
     public static void main(String[] args) {

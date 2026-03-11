@@ -100,8 +100,8 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
-    // badword filter
-    implementation 'io.github.vaneproject:badwordfiltering:1.0.0'
+    // ahocorasick
+    implementation "org.ahocorasick:ahocorasick:0.6.3"
 
     // openvidu livekit
     implementation 'io.livekit:livekit-server:0.12.0'

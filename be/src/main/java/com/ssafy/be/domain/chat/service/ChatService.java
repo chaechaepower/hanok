@@ -5,8 +5,6 @@ import com.ssafy.be.domain.chat.dto.request.ChatMessageRequest;
 import com.ssafy.be.domain.chat.filter.BadWordFilter;
 import com.ssafy.be.domain.chat.filter.ChatFilterResult;
 import com.ssafy.be.global.infra.redis.RedisOperator;
-import com.ssafy.be.global.websocket.dto.response.StompResponse;
-import com.ssafy.be.global.websocket.enums.StompType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +22,7 @@ public class ChatService {
     private static final long CHAT_MAX = 100L;
     private static final long CHAT_TTL_SECOND = 7200L;
 
-    public StompResponse<ChatMessagePayload> handleMessage(Long userId, String nickname, ChatMessageRequest request) {
+    public ChatMessagePayload handleMessage(Long userId, String nickname, ChatMessageRequest request) {
 
         // 1. 필터링
         ChatFilterResult filterResult = badWordFilter.filter(request.content());
@@ -36,7 +34,7 @@ public class ChatService {
         saveToRedis(request.streamId(), payload);
 
         // 4. 응답 객체 반환
-        return toStompResponse(StompType.CHAT_MESSAGE, payload);
+        return payload;
     }
 
     public List<ChatMessagePayload> getRecentMessage(Long streamId) {
@@ -70,10 +68,4 @@ public class ChatService {
         return "chat:stream:" + streamId;
     }
 
-    private <T> StompResponse<T> toStompResponse(StompType stompType, T payload) {
-        return StompResponse.<T>builder()
-                .eventType(stompType)
-                .payload(payload)
-                .build();
-    }
 }

@@ -4,7 +4,7 @@ import com.ssafy.be.global.exception.ErrorCode;
 import com.ssafy.be.global.exception.GlobalErrorCode;
 import com.ssafy.be.global.websocket.dto.response.StompErrorPayload;
 import com.ssafy.be.global.websocket.dto.response.StompResponse;
-import com.ssafy.be.global.websocket.enums.StompType;
+import com.ssafy.be.global.websocket.enums.StreamEventType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.simp.annotation.SendToUser;
@@ -48,7 +48,7 @@ public class StompExceptionHandler {
     // response 빌드
     private StompResponse<StompErrorPayload> buildErrorResponse(ErrorCode errorCode) {
         return StompResponse.<StompErrorPayload>builder()
-                .eventType(StompType.ERROR)
+                .eventType(StreamEventType.ERROR)
                 .payload(buildErrorPayload(errorCode))
                 .build();
     }

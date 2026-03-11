@@ -1,8 +1,13 @@
 package com.ssafy.be.global.security.config;
 
+import static com.google.common.net.HttpHeaders.SET_COOKIE;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.web.bind.annotation.RequestMethod.*;
+
 import com.ssafy.be.global.security.filter.JwtAuthenticationFilter;
 import com.ssafy.be.global.security.handler.CustomAccessDeniedHandler;
 import com.ssafy.be.global.security.handler.CustomAuthenticationEntryPoint;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -17,12 +22,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.List;
-
-import static com.google.common.net.HttpHeaders.SET_COOKIE;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 @Configuration
 @EnableWebSecurity
@@ -48,7 +47,14 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(corsOrigins);
-        configuration.setAllowedMethods(List.of(GET.name(), POST.name(), PUT.name(), PATCH.name(), DELETE.name(), OPTIONS.name()));
+        configuration.setAllowedMethods(
+                List.of(
+                        GET.name(),
+                        POST.name(),
+                        PUT.name(),
+                        PATCH.name(),
+                        DELETE.name(),
+                        OPTIONS.name()));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setMaxAge(3600L); // Cache preflight
         configuration.setExposedHeaders(List.of(SET_COOKIE, AUTHORIZATION));
@@ -60,38 +66,39 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable())
-
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(
+                        session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // URL별 인증 규칙
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/v1/auth/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs",
-                                "/v3/api-docs/**",
-                                "/error",
-                                "/api/v1/wallet/charges/webhook"
-                        )
-                        .permitAll()
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(
+                        auth ->
+                                auth.requestMatchers(
+                                                "/api/v1/auth/**",
+                                                "/api/v1/streams/**",
+                                                "/swagger-ui/**",
+                                                "/swagger-ui.html",
+                                                "/v3/api-docs",
+                                                "/v3/api-docs/**",
+                                                "/error",
+                                                "/api/v1/wallet/charges/webhook",
+                                                "/api/v1/streams/webhook")
+                                        .permitAll()
+                                        .anyRequest()
+                                        .authenticated())
 
                 // 401/403 에러 핸들러 등록
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(authenticationEntryPoint)
-                        .accessDeniedHandler(accessDeniedHandler)
-                )
+                .exceptionHandling(
+                        ex ->
+                                ex.authenticationEntryPoint(authenticationEntryPoint)
+                                        .accessDeniedHandler(accessDeniedHandler))
 
                 // 폼 로그인 앞에 처리
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(
+                        jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
