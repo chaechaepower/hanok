@@ -2,18 +2,14 @@ import { http, HttpResponse } from 'msw';
 import { BASE_URL } from '@/api/instance';
 import type { Live, StartStreamRequest, UpdateStreamRequest, UpdateStreamResponse, DeleteStreamResponse } from '@/types';
 
-// 실제 등록된 방송만 표시 – 초기에는 비어있음
 const registeredLives: Live[] = [];
 let nextLiveId = 1;
 
-// 삭제된 formatScheduledAt
-export const liveHandlers = [
-  // GET /v1/lives – 등록된 라이브 방송 목록 조회
+export const LiveCreateHandlers = [
   http.get(`${BASE_URL}/v1/lives`, () => {
     return HttpResponse.json({ lives: registeredLives }, { status: 200 });
   }),
 
-  // GET /api/v1/streams/{streamId} - 방송 단건 조회
   http.get(`${BASE_URL}/api/v1/streams/:streamId`, ({ params }) => {
     const streamId = Number(params.streamId);
     const live = registeredLives.find((l) => l.id === streamId);
@@ -23,7 +19,6 @@ export const liveHandlers = [
     return HttpResponse.json(live, { status: 200 });
   }),
 
-  // POST /api/v1/streams – 라이브 방송 등록 (예약 or 즉시 시작)
   http.post(`${BASE_URL}/api/v1/streams`, async ({ request }) => {
     const body = (await request.json()) as StartStreamRequest;
 
@@ -47,12 +42,10 @@ export const liveHandlers = [
     );
   }),
 
-  // POST /api/v1/streams/{streamId}/start – 방송 즉시 시작 (OpenVidu 세션 생성)
   http.post(`${BASE_URL}/api/v1/streams/:streamId/start`, async ({ params, request }) => {
     const streamId = Number(params.streamId);
     const body = (await request.json()) as StartStreamRequest;
 
-    // 목록에 없으면 새로 등록
     if (!registeredLives.find((l) => l.id === streamId)) {
       const newLive: Live = {
         id: streamId,
@@ -87,7 +80,6 @@ export const liveHandlers = [
     );
   }),
 
-  // PATCH /api/v1/streams/{streamId} – 라이브 방송 수정
   http.patch(`${BASE_URL}/api/v1/streams/:streamId`, async ({ params, request }) => {
     const streamId = Number(params.streamId);
     const body = (await request.json()) as UpdateStreamRequest;
@@ -116,7 +108,6 @@ export const liveHandlers = [
     return HttpResponse.json(response, { status: 200 });
   }),
 
-  // DELETE /api/v1/streams/{streamId} – 라이브 방송 삭제
   http.delete(`${BASE_URL}/api/v1/streams/:streamId`, ({ params }) => {
     const streamId = Number(params.streamId);
 

@@ -4,9 +4,10 @@ import { FaBox, FaBroadcastTower, FaTruck } from 'react-icons/fa';
 import type { Live } from '@/types';
 import CategorySelectModal from './components/CategorySelectModal';
 import { getFetchInstance } from '@/api/instance';
-import type { LiveListResponse } from '@/types';
+import type { LiveListResponse, SideBarItem } from '@/types';
+import SideBar from '@/components/common/layouts/SideBar';
 
-const sidebarItems = [
+const sidebarItems: SideBarItem[] = [
   { id: 'inventory', label: '내 인벤토리', icon: <FaBox size={18} /> },
   { id: 'live', label: '라이브 방송 관리', icon: <FaBroadcastTower size={18} /> },
   { id: 'delivery', label: '배송 관리', icon: <FaTruck size={18} /> },
@@ -53,30 +54,12 @@ export default function LiveCreatePage() {
 
   return (
     <div className="w-full max-w-[1200px] mx-auto flex gap-0 py-10 px-4">
-      {/* Sidebar */}
-      <aside className="w-[200px] shrink-0 flex flex-col gap-1 pr-4">
-        {sidebarItems.map((item) => {
-          const isActive = item.id === activeMenu;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => setActiveMenu(item.id)}
-              className={`relative flex items-center gap-3 w-full px-3 py-3 rounded-xl text-left transition-all ${
-                isActive
-                  ? 'bg-white/5 text-[#d9b36d] font-bold'
-                  : 'text-white/70 hover:bg-white/5 hover:text-white font-light'
-              }`}
-            >
-              <span className="flex items-center justify-center w-6 h-6">{item.icon}</span>
-              <span className="text-[15px] whitespace-nowrap">{item.label}</span>
-              {isActive && (
-                <span className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#d9b36d] rounded-full" />
-              )}
-            </button>
-          );
-        })}
-      </aside>
+      <SideBar
+        items={sidebarItems}
+        activeItemId={activeMenu}
+        onItemClick={(item) => setActiveMenu(item.id)}
+        className="!w-[200px] shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
+      />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col gap-6">

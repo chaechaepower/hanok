@@ -6,11 +6,11 @@ import type {
 } from '@/types';
 
 // POST /api/v1/streams/{streamId}/macros
-export const usePostStreamMacros = (streamId: number, category: string) => {
+export const usePostStreamMacros = (streamId: number) => {
   return useMutation<PostStreamMacrosResponse, Error, PostStreamMacrosRequest>({
     mutationFn: async (body) => {
       const res = await getFetchInstance().post<PostStreamMacrosResponse>(
-        `/api/v1/streams/${streamId}/macros?category=${encodeURIComponent(category)}`,
+        `/api/v1/streams/${streamId}/macros`,
         body,
       );
       return res.data;

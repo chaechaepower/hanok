@@ -103,7 +103,7 @@ export default function LiveRegisterPage() {
         questionType: m.questionType,
         answer: macroAnswers[m.questionType] ?? '',
       }));
-      await getFetchInstance().post(`/api/v1/streams/${newStreamId}/macros?category=${initialCategoryId}`, { macros });
+      await getFetchInstance().post(`/api/v1/streams/${newStreamId}/macros`, { macros });
 
       if (startType === 'immediate') {
         navigate(`/live/${newStreamId}`);
@@ -297,11 +297,11 @@ export default function LiveRegisterPage() {
               <label className="text-[#888] text-xs">카테고리 매크로</label>
               <button
                 type="button"
-                onClick={() => alert('매크로가 임시 저장되었습니다. 방송 시작/예약 시 최종 반영됩니다.')}
+                onClick={() => alert('매크로가 저장되었습니다. 방송 시작/예약 시 반영됩니다.')}
                 className="flex items-center gap-1 text-[#d9b36d] text-xs hover:text-[#f0e6c8] transition-colors"
               >
                 <FaSave size={11} />
-                임시 저장
+                저장
               </button>
             </div>
             <div className="flex flex-col gap-2">

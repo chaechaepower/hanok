@@ -65,7 +65,7 @@ export default function LiveEditPage() {
 
   const DRAFT_STREAM_ID = streamId;
   const { data: macroData } = useGetStreamMacros(DRAFT_STREAM_ID, initialCategoryId);
-  const postMacros = usePostStreamMacros(DRAFT_STREAM_ID, initialCategoryId);
+  const postMacros = usePostStreamMacros(DRAFT_STREAM_ID);
   const [macroAnswers, setMacroAnswers] = useState<Record<string, string>>({});
 
   useEffect(() => {

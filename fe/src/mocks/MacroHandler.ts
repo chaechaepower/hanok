@@ -35,8 +35,6 @@ export const macroHandlers = [
   // POST /api/v1/streams/{streamId}/macros
   http.post(`${BASE_URL}/api/v1/streams/:streamId/macros`, async ({ params, request }) => {
     const streamId = Number(params.streamId);
-    const url = new URL(request.url);
-    const category = url.searchParams.get('category') ?? '';
     const body = (await request.json()) as PostStreamMacrosRequest;
 
     // 기존 질문 텍스트와 병합 필요 없음 (API 명세상 Macro는 questionType과 answer만 저장)
@@ -45,7 +43,8 @@ export const macroHandlers = [
       answer: m.answer,
     }));
 
-    savedMacros[streamId] = { category, macros: merged };
+    const existingCategory = savedMacros[streamId]?.category ?? '';
+    savedMacros[streamId] = { category: existingCategory, macros: merged };
 
     const response: PostStreamMacrosResponse = {
       streamId,
