@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
+import Logo from '@/assets/Logo.png';
 
 type MockItem = {
   id: number;
@@ -24,7 +25,7 @@ let mockItems: MockItem[] = [
     title: '나이키 에어포스 1',
     description: '상태 좋은 265mm',
     tags: ['nike', 'sneakers'],
-    imageUrls: [],
+    imageUrls: [Logo],
     startPrice: 100000,
     bidUnit: 5000,
     auctionTime: 30,
@@ -38,7 +39,7 @@ let mockItems: MockItem[] = [
     title: '나이키 조던 1 하이 시카고',
     description: '박스 풀구성 깔끔해요',
     tags: ['jordan', 'chicago'],
-    imageUrls: [],
+    imageUrls: [Logo],
     startPrice: 500000,
     bidUnit: 10000,
     auctionTime: 60,
@@ -52,7 +53,7 @@ let mockItems: MockItem[] = [
     title: '아디다스 이지 부스트 350',
     description: '실착 5회 미만',
     tags: ['adidas', 'yeezy'],
-    imageUrls: [],
+    imageUrls: [Logo],
     startPrice: 200000,
     bidUnit: 5000,
     auctionTime: 30,
@@ -66,7 +67,7 @@ let mockItems: MockItem[] = [
     title: '롤렉스 서브마리너 데이트',
     description: '2021년식 풀세트 보증서 유',
     tags: ['rolex', 'submariner'],
-    imageUrls: [],
+    imageUrls: [Logo],
     startPrice: 15000000,
     bidUnit: 100000,
     auctionTime: 60,
@@ -80,7 +81,7 @@ let mockItems: MockItem[] = [
     title: '에르메스 버킨 30',
     description: '금장 토고 레더',
     tags: ['hermes', 'birkin'],
-    imageUrls: [],
+    imageUrls: [Logo],
     startPrice: 20000000,
     bidUnit: 200000,
     auctionTime: 60,
