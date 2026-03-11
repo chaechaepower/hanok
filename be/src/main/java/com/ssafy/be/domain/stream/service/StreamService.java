@@ -112,16 +112,18 @@ public class StreamService {
                 .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
         boolean isHost = stream.getSeller().getUser().getId().equals(userId);
+        String participantIdentity = String.valueOf(userId);
+        String roomName = String.valueOf(streamId);
 
         AccessToken token = new AccessToken(
                 liveKitProperties.apiKey(),
                 liveKitProperties.apiSecret()
         );
-        token.setName(String.valueOf(userId));
-        token.setIdentity(String.valueOf(userId));
+        token.setName(participantIdentity);
+        token.setIdentity(participantIdentity);
         token.addGrants(
                 new RoomJoin(true),
-                new RoomName(String.valueOf(streamId)),
+                new RoomName(roomName),
                 new CanPublish(isHost),
                 new CanSubscribe(true)
         );
