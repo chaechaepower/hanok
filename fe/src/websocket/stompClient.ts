@@ -58,20 +58,17 @@ const rejectPendingConnection = (error: Error) => {
   clearPendingConnection();
 };
 
-// 실제 구독
 const subscribeEntry = (entry: ManagedSubscription, activeClient: Client) => {
   entry.active?.unsubscribe();
   entry.active = activeClient.subscribe(entry.destination, entry.callback, entry.headers);
 };
 
-// 전체 재구독
 const resubscribeAll = (activeClient: Client) => {
   managedSubscriptions.forEach((entry) => {
     subscribeEntry(entry, activeClient);
   });
 };
 
-// 클라이언트 생성
 const createClient = () => {
   const nextClient = new Client({
     brokerURL: getStreamSocketConnectUrl(),
@@ -82,14 +79,12 @@ const createClient = () => {
     debug: import.meta.env.DEV ? (message) => console.debug(`[stomp] ${message}`) : undefined,
   });
 
-  // 연결 성공 시
   nextClient.onConnect = () => {
     setConnectionState('connected');
     resubscribeAll(nextClient);
     resolvePendingConnection(nextClient);
   };
 
-  // 정상 disconnect
   nextClient.onDisconnect = () => {
     setConnectionState('disconnected');
   };
@@ -105,13 +100,11 @@ const createClient = () => {
     rejectPendingConnection(new Error('WebSocket error while connecting the STOMP client.'));
   };
 
-  // 웹소켓 닫힘
   nextClient.onWebSocketClose = () => {
     managedSubscriptions.forEach((entry) => {
       entry.active = undefined;
     });
 
-    // 연결 중이었는데 닫혔다면
     if (connectionState === 'connecting') {
       rejectPendingConnection(new Error('STOMP connection closed before it was established.'));
     }
@@ -135,8 +128,11 @@ const getClient = () => {
   return client;
 };
 
-// 구독 등록
-const registerSubscription = (destination: string, callback: (message: IMessage) => void, headers?: StompHeaders) => {
+const registerSubscription = (
+  destination: string,
+  callback: (message: IMessage) => void,
+  headers?: StompHeaders,
+) => {
   const id = `subscription-${subscriptionSequence++}`;
   const entry: ManagedSubscription = {
     id,
@@ -159,7 +155,6 @@ const registerSubscription = (destination: string, callback: (message: IMessage)
 
 export const getStompConnectionState = () => connectionState;
 
-// 상태 변경 구독
 export const subscribeToStompConnectionState = (listener: (state: StompConnectionState) => void) => {
   connectionStateListeners.add(listener);
   listener(connectionState);
@@ -169,7 +164,6 @@ export const subscribeToStompConnectionState = (listener: (state: StompConnectio
   };
 };
 
-// 연결
 export const connectStompClient = async () => {
   const activeClient = getClient();
 
@@ -196,7 +190,6 @@ export const connectStompClient = async () => {
   return connectPromise;
 };
 
-// 연결 해제
 export const disconnectStompClient = async () => {
   if (!client) {
     setConnectionState('idle');
@@ -219,7 +212,6 @@ export const disconnectStompClient = async () => {
   setConnectionState('idle');
 };
 
-// stream 구독
 export const subscribeStream = async <TBroadcast = unknown, TPrivate = unknown>({
   streamId,
   onBroadcast,
