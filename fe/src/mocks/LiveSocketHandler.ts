@@ -1,5 +1,6 @@
 import { ws, type WebSocketData } from 'msw';
 
+import type { AuctionStatisticsPayload } from '@/types';
 import { getStreamSocketConnectUrl } from '@/websocket/socket';
 
 type StompFrame = {
@@ -14,16 +15,20 @@ type MockTimerState = {
   finalPrice: number;
 };
 
+type MockAuctionStatisticsState = AuctionStatisticsPayload;
+
 const AUCTION_DURATION_SECONDS = 10;
 const SNIPING_THRESHOLD_SECONDS = 5;
 const SNIPING_DURATION_SECONDS = 5;
 const HEARTBEAT_INTERVAL_MS = 5_000;
+const RECENT_BIDS_LIMIT = 15;
 const textEncoder = new TextEncoder();
 
 const liveSocket = ws.link(getStreamSocketConnectUrl());
 const clientSubscriptions = new Map<string, Map<string, string>>();
 const heartbeatTimers = new Map<string, number>();
 const streamTimerStates = new Map<string, MockTimerState>();
+const streamAuctionStatisticsStates = new Map<string, MockAuctionStatisticsState>();
 const winnerAnnouncementTimers = new Map<string, number>();
 
 const createTimestamp = (ms: number) => new Date(ms).toISOString();
@@ -169,6 +174,19 @@ const clearWinnerAnnouncement = (streamId: string) => {
   winnerAnnouncementTimers.delete(streamId);
 };
 
+const broadcastAuctionStatistics = (streamId: string) => {
+  const auctionStatistics = streamAuctionStatisticsStates.get(streamId);
+
+  if (!auctionStatistics) {
+    return;
+  }
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'AUCTION_STATISTICS',
+    payload: auctionStatistics,
+  });
+};
+
 const scheduleWinnerAnnouncement = (streamId: string) => {
   clearWinnerAnnouncement(streamId);
 
@@ -213,28 +231,41 @@ const scheduleWinnerAnnouncement = (streamId: string) => {
 const handleAuctionStart = (destination: string) => {
   const streamId = getStreamIdFromDestination(destination);
   const nowMs = Date.now();
+  const itemName = '나이키 에어맥스 95';
+  const startPrice = 50000;
   const state: MockTimerState = {
     durationSeconds: AUCTION_DURATION_SECONDS,
     startedAtMs: nowMs,
-    finalPrice: 50000,
+    finalPrice: startPrice,
+  };
+  const auctionStatisticsState: MockAuctionStatisticsState = {
+    itemName,
+    totalPrice: 0,
+    bidCount: 0,
+    startPrice,
+    currentPrice: 0,
+    recentBids: [],
   };
 
   streamTimerStates.set(streamId, state);
+  streamAuctionStatisticsStates.set(streamId, auctionStatisticsState);
   scheduleWinnerAnnouncement(streamId);
 
   broadcastToDestination(`/broadcast/streams/${streamId}`, {
     eventType: 'AUCTION_START',
     payload: {
       item: {
-        name: '나이키 에어맥스 95',
+        name: itemName,
         image: 'https://cdn.example.com/items/shoes.jpg',
         condition: 'GOOD',
         bidUnit: 1000,
-        startPrice: 50000,
+        startPrice,
       },
       timer: createTimerPayload(state, nowMs),
     },
   });
+
+  broadcastAuctionStatistics(streamId);
 };
 
 const handleBidPlace = (destination: string, body: string) => {
@@ -245,16 +276,36 @@ const handleBidPlace = (destination: string, body: string) => {
     };
   };
   const nowMs = Date.now();
+  const bidAmount = payload.payload?.amount ?? 0;
   let currentState = streamTimerStates.get(streamId);
   let snipingTimer: ReturnType<typeof createTimerPayload> | null = null;
 
   if (currentState) {
     currentState = {
       ...currentState,
-      finalPrice: payload.payload?.amount ?? currentState.finalPrice,
+      finalPrice: bidAmount || currentState.finalPrice,
     };
 
     streamTimerStates.set(streamId, currentState);
+  }
+
+  const currentStatisticsState = streamAuctionStatisticsStates.get(streamId);
+
+  if (currentStatisticsState) {
+    streamAuctionStatisticsStates.set(streamId, {
+      ...currentStatisticsState,
+      totalPrice: currentStatisticsState.totalPrice + bidAmount,
+      bidCount: currentStatisticsState.bidCount + 1,
+      currentPrice: bidAmount || currentStatisticsState.currentPrice,
+      recentBids: [
+        {
+          nickname: '홍길동',
+          amount: bidAmount,
+          placedAt: createTimestamp(nowMs),
+        },
+        ...currentStatisticsState.recentBids,
+      ].slice(0, RECENT_BIDS_LIMIT),
+    });
   }
 
   if (currentState && getRemainingSeconds(currentState, nowMs) <= SNIPING_THRESHOLD_SECONDS) {
@@ -274,12 +325,14 @@ const handleBidPlace = (destination: string, body: string) => {
     payload: {
       bidInfo: {
         nickname: '홍길동',
-        amount: payload.payload?.amount ?? 0,
+        amount: bidAmount,
         placedAt: createTimestamp(nowMs),
       },
       snipingTimer,
     },
   });
+
+  broadcastAuctionStatistics(streamId);
 };
 
 const handleSendFrame = (frame: StompFrame) => {
@@ -290,7 +343,7 @@ const handleSendFrame = (frame: StompFrame) => {
       handleAuctionStart(frame.headers.destination);
     }
 
-    if (body.eventType === 'BID_PLACE') {
+    if (body.eventType === 'BID_PLACED') {
       handleBidPlace(frame.headers.destination, frame.body);
     }
   }

@@ -1,11 +1,21 @@
 import SellerStats from './SellerStats';
 import SellerPriceInfo from './SellerPriceInfo';
 import BidFeed from './BidFeed';
+import type { AuctionStatisticsPayload } from '@/types';
 
-export default function SellerAuctionPanel() {
+interface Props {
+  auctionStatistics: AuctionStatisticsPayload | null;
+}
+
+export default function SellerAuctionPanel({ auctionStatistics }: Props) {
+  const riseRate =
+    auctionStatistics && auctionStatistics.startPrice > 0
+      ? ((auctionStatistics.currentPrice - auctionStatistics.startPrice) / auctionStatistics.startPrice) * 100
+      : 0;
+
   return (
     <div className="bid-feed-scroll flex h-full flex-col gap-4 overflow-y-auto p-4">
-      <SellerStats />
+      <SellerStats auctionStatistics={auctionStatistics} riseRate={riseRate} />
 
       {/* 현재 물품 구분선 */}
       <div className="flex items-center gap-2.5">
@@ -18,11 +28,11 @@ export default function SellerAuctionPanel() {
         <span className="rounded-full bg-[rgba(197,160,89,.15)] px-2.5 py-0.5 text-[10px] font-bold text-[#C5A059]">
           경매중
         </span>
-        <span className="text-xs font-bold text-white">청자 투각 칠보문 향로</span>
+        <span className="text-xs font-bold text-white">{auctionStatistics?.itemName ?? '데이터 수신 대기중'}</span>
       </div>
 
-      <SellerPriceInfo />
-      <BidFeed />
+      <SellerPriceInfo auctionStatistics={auctionStatistics} />
+      <BidFeed auctionStatistics={auctionStatistics} />
     </div>
   );
 }

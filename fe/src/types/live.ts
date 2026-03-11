@@ -40,6 +40,21 @@ export type BidWinnerPayload = {
   shipping: ShippingAddressResponse;
 };
 
+export type AuctionStatisticsRecentBid = {
+  nickname: string;
+  amount: number;
+  placedAt: string;
+};
+
+export type AuctionStatisticsPayload = {
+  itemName: string;
+  totalPrice: number;
+  bidCount: number;
+  startPrice: number;
+  currentPrice: number;
+  recentBids: AuctionStatisticsRecentBid[];
+};
+
 export type StreamState = 'live' | 'disconnected' | 'ended';
 
 export type ChatMessageType =

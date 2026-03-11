@@ -9,6 +9,7 @@ import SellerGuideOverlay from '@/components/Live/Stream/SellerGuideOverlay';
 import StreamOverlay from '@/components/Live/Stream/StreamOverlay';
 import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
 import type { BidWinnerPayload, StreamTimerPayload, SyncedAuctionTimer } from '@/types';
+import type { AuctionStatisticsPayload } from '@/types';
 import { disconnectStompClient, subscribeStream } from '@/websocket/stompClient';
 
 import LeftPanel from './LeftPanel';
@@ -30,6 +31,10 @@ type BroadcastStreamEvent =
       payload?: {
         snipingTimer?: StreamTimerPayload | null;
       };
+    }
+  | {
+      eventType: 'AUCTION_STATISTICS';
+      payload?: AuctionStatisticsPayload;
     }
   | {
       eventType: string;
@@ -54,6 +59,11 @@ const isBidPlacedEvent = (
   event: BroadcastStreamEvent,
 ): event is Extract<BroadcastStreamEvent, { eventType: 'BID_PLACED' }> => event.eventType === 'BID_PLACED';
 
+const isAuctionStatisticsEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'AUCTION_STATISTICS' }> =>
+  event.eventType === 'AUCTION_STATISTICS';
+
 const isBidWinnerEvent = (
   event: PrivateStreamEvent,
 ): event is Extract<PrivateStreamEvent, { eventType: 'BID_WINNER' }> => event.eventType === 'BID_WINNER';
@@ -70,6 +80,7 @@ export default function LivePage() {
   const [timer, setTimer] = useState<SyncedAuctionTimer | null>(null);
   const [winnerInfo, setWinnerInfo] = useState<BidWinnerPayload | null>(null);
   const [currentItemCond, setCurrentItemCond] = useState('');
+  const [auctionStatistics, setAuctionStatistics] = useState<AuctionStatisticsPayload | null>(null);
 
   useEffect(() => {
     if (!streamId) {
@@ -86,6 +97,11 @@ export default function LivePage() {
 
       if (isBidPlacedEvent(event) && event.payload?.snipingTimer) {
         setTimer(createSyncedTimer(event.payload.snipingTimer));
+        return;
+      }
+
+      if (isAuctionStatisticsEvent(event) && event.payload) {
+        setAuctionStatistics(event.payload);
       }
     };
 
@@ -176,7 +192,7 @@ export default function LivePage() {
             <WinModal
               isOpen
               itemName={winnerInfo.item.itemName}
-            itemCond={currentItemCond || '경매 종료 상품'}
+              itemCond={currentItemCond || '경매 종료 상품'}
               finalPrice={winnerInfo.item.finalPrice}
               address={winnerInfo.shipping}
               onConfirm={handleWinConfirm}
@@ -185,7 +201,7 @@ export default function LivePage() {
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <RightPanel isSeller={isSeller} />
+          <RightPanel isSeller={isSeller} auctionStatistics={auctionStatistics} />
         </div>
       </div>
     </div>

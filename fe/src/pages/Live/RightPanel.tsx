@@ -1,12 +1,14 @@
 import { useState } from "react";
 import ChatPanel from "@/components/Live/Chat/ChatPanel";
 import SellerAuctionPanel from "@/components/Live/Auction/Seller/SellerAuctionPanel";
+import type { AuctionStatisticsPayload } from "@/types";
 
 interface Props {
     isSeller: boolean;
+    auctionStatistics: AuctionStatisticsPayload | null;
 }
 
-export default function RightPanel({ isSeller }: Props) {
+export default function RightPanel({ isSeller, auctionStatistics }: Props) {
     const [activeTab, setActiveTab] = useState<"chat" | "auction">("chat");
 
     return (
@@ -48,7 +50,7 @@ export default function RightPanel({ isSeller }: Props) {
 
             {/* 탭에 따라 컴포넌트 표시 */}
             <div className="flex-1 overflow-y-auto">
-                {isSeller && activeTab === "auction" ? <SellerAuctionPanel /> : <ChatPanel />}
+                {isSeller && activeTab === "auction" ? <SellerAuctionPanel auctionStatistics={auctionStatistics} /> : <ChatPanel />}
             </div>
         </div>
     );
