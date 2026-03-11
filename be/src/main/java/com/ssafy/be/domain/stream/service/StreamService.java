@@ -16,6 +16,7 @@ import com.ssafy.be.domain.stream.dto.request.StreamUpdateRequest;
 import com.ssafy.be.domain.stream.dto.response.*;
 import com.ssafy.be.domain.stream.entity.Stream;
 import com.ssafy.be.domain.stream.entity.StreamSortType;
+import com.ssafy.be.domain.stream.entity.StreamStatus;
 import com.ssafy.be.domain.stream.exception.StreamErrorCode;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
 import com.ssafy.be.global.exception.GlobalException;
@@ -104,7 +105,7 @@ public class StreamService {
                 .startType(request.startType())
                 .scheduledAt(request.scheduledAt())
                 .notice(request.notice())
-                .isLive(false)
+                .status(StreamStatus.SCHEDULED)
                 .seller(seller)
                 .build();
     }
@@ -222,7 +223,7 @@ public class StreamService {
                 stream.getScheduledAt(),
                 stream.getStartType(),
                 stream.getNotice(),
-                stream.isLive(),
+                stream.getStatus() == StreamStatus.LIVE,
                 stream.getCreatedAt());
     }
 
@@ -278,7 +279,7 @@ public class StreamService {
                                         stream.getTitle(),
                                         stream.getCategory(),
                                         stream.getThumbnail(),
-                                        stream.isLive(),
+                                        stream.getStatus() == StreamStatus.LIVE,
                                         streamViewerService.getViewerCount(stream.getId()),
                                         stream.getScheduledAt(),
                                         stream.getStartedAt(),
@@ -309,7 +310,6 @@ public class StreamService {
                     case SCHEDULED -> streamRepository.findScheduledStreams(category, pageable);
                 };
 
-        // 256번째 줄 - LATEST 정렬 map 부분
         return streams.map(stream -> {
             Seller sel = stream.getSeller();
             return new StreamListItemResponse(
@@ -317,7 +317,7 @@ public class StreamService {
                     stream.getTitle(),
                     stream.getCategory(),
                     stream.getThumbnail(),
-                    stream.isLive(),
+                    stream.getStatus() == StreamStatus.LIVE,  // isLive() → status 비교
                     streamViewerService.getViewerCount(stream.getId()),
                     stream.getScheduledAt(),
                     stream.getStartedAt(),
@@ -326,5 +326,21 @@ public class StreamService {
                             sel.getUser().getNickname(),
                             sel.getUser().getProfileImage()));
         });
+    }
+
+    @Transactional(readOnly = true)
+    public ScheduledStreamListResponse getScheduledStreamList(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Slice<Stream> slice = streamRepository.findByStatusIn(
+                List.of(StreamStatus.LIVE, StreamStatus.SCHEDULED),
+                pageable
+        );
+
+        List<ScheduledStreamResponse> streams = slice.getContent()
+                .stream()
+                .map(ScheduledStreamResponse::from)
+                .toList();
+
+        return new ScheduledStreamListResponse(streams, slice.hasNext());
     }
 }

@@ -2,6 +2,8 @@ package com.ssafy.be.domain.user.controller;
 
 import com.ssafy.be.domain.follow.dto.response.FollowResponse;
 import com.ssafy.be.domain.follow.service.FollowService;
+import com.ssafy.be.domain.seller.dto.response.SellerStatusResponse;
+import com.ssafy.be.domain.seller.service.SellerService;
 import com.ssafy.be.domain.user.controller.api.UserProfileApi;
 import com.ssafy.be.domain.user.dto.request.AccountRegisterRequest;
 import com.ssafy.be.domain.user.dto.response.AccountRegisterResponse;
@@ -24,6 +26,7 @@ public class UserProfileController implements UserProfileApi {
 
     private final UserService userService;
     private final FollowService followService;
+    private final SellerService sellerService;
 
     @Override
     public ResponseEntity<ApiResponse<String>> uploadProfileImage(
@@ -59,5 +62,13 @@ public class UserProfileController implements UserProfileApi {
 
     private Long getUserId(String principal) {
         return Long.parseLong(principal);
+    }
+
+    @Override
+    public ResponseEntity<ApiResponse<SellerStatusResponse>> getSellerStatus(
+            @AuthenticationPrincipal String principal) {
+
+        Long userId = getUserId(principal);
+        return ResponseEntity.ok(ApiResponse.success(sellerService.getSellerStatus(userId)));
     }
 }
