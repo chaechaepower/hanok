@@ -17,7 +17,78 @@ type MockItem = {
   auctionMethod?: string;
 };
 
-let mockItems: MockItem[] = [];
+let mockItems: MockItem[] = [
+  {
+    id: 1,
+    status: 'ready',
+    title: '나이키 에어포스 1',
+    description: '상태 좋은 265mm',
+    tags: ['nike', 'sneakers'],
+    imageUrls: [],
+    startPrice: 100000,
+    bidUnit: 5000,
+    auctionTime: 30,
+    condition: 'S',
+    category: '스니커즈/신발',
+    auctionMethod: 'ENGLISH',
+  },
+  {
+    id: 2,
+    status: 'ready',
+    title: '나이키 조던 1 하이 시카고',
+    description: '박스 풀구성 깔끔해요',
+    tags: ['jordan', 'chicago'],
+    imageUrls: [],
+    startPrice: 500000,
+    bidUnit: 10000,
+    auctionTime: 60,
+    condition: 'A',
+    category: '스니커즈/신발',
+    auctionMethod: 'ENGLISH',
+  },
+  {
+    id: 3,
+    status: 'ready',
+    title: '아디다스 이지 부스트 350',
+    description: '실착 5회 미만',
+    tags: ['adidas', 'yeezy'],
+    imageUrls: [],
+    startPrice: 200000,
+    bidUnit: 5000,
+    auctionTime: 30,
+    condition: 'A',
+    category: '스니커즈/신발',
+    auctionMethod: 'ENGLISH',
+  },
+  {
+    id: 4,
+    status: 'ready',
+    title: '롤렉스 서브마리너 데이트',
+    description: '2021년식 풀세트 보증서 유',
+    tags: ['rolex', 'submariner'],
+    imageUrls: [],
+    startPrice: 15000000,
+    bidUnit: 100000,
+    auctionTime: 60,
+    condition: 'S',
+    category: '시계',
+    auctionMethod: 'ENGLISH',
+  },
+  {
+    id: 5,
+    status: 'ready',
+    title: '에르메스 버킨 30',
+    description: '금장 토고 레더',
+    tags: ['hermes', 'birkin'],
+    imageUrls: [],
+    startPrice: 20000000,
+    bidUnit: 200000,
+    auctionTime: 60,
+    condition: 'S',
+    category: '가방/패션잡화',
+    auctionMethod: 'ENGLISH',
+  },
+];
 
 const getCategoryName = (categoryId?: number) => {
   if (categoryId === 1) return 'SNEAKERS';
@@ -26,8 +97,13 @@ const getCategoryName = (categoryId?: number) => {
 };
 
 export const itemHandlers = [
-  http.get(`${BASE_URL}/v1/items`, async () => {
-    return HttpResponse.json(mockItems);
+  http.get(`${BASE_URL}/v1/items`, async ({ request }) => {
+    const url = new URL(request.url);
+    const categoryFilter = url.searchParams.get('category');
+    const filtered = categoryFilter
+      ? mockItems.filter((item) => item.category === categoryFilter)
+      : mockItems;
+    return HttpResponse.json(filtered);
   }),
 
   http.post(`${BASE_URL}/v1/items`, async ({ request }) => {

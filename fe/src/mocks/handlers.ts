@@ -6,6 +6,8 @@ import { profileHandlers } from './ProfileHandler';
 import { sellerHandlers } from './SellerHandler';
 import { walletHandlers } from './WalletHandler';
 import { settingsHandlers } from './SettingsHandler';
+import { liveHandlers } from './LiveHandler';
+import { macroHandlers } from './MacroHandler';
 
 export const handlers = [
   ...authHandlers,
@@ -16,4 +18,6 @@ export const handlers = [
   ...profileHandlers,
   ...escrowHandlers,
   ...settingsHandlers,
+  ...liveHandlers,
+  ...macroHandlers,
 ];
