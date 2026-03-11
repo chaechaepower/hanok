@@ -26,7 +26,8 @@ public class Stream {
     @Enumerated(EnumType.STRING)
     private Category category;
 
-    private boolean isLive;
+    @Enumerated(EnumType.STRING)
+    private StreamStatus status;
 
     private String thumbnail;
 
@@ -51,21 +52,19 @@ public class Stream {
     private Stream(
             String title,
             Category category,
-            boolean isLive,
+            StreamStatus status,
             String thumbnail,
             LocalDateTime scheduledAt,
             StartType startType,
             String notice,
-            LocalDateTime createdAt,
             Seller seller) {
         this.title = title;
         this.category = category;
-        this.isLive = isLive;
+        this.status = status;
         this.thumbnail = thumbnail;
         this.scheduledAt = scheduledAt;
         this.startType = startType;
         this.notice = notice;
-        this.createdAt = createdAt;
         this.seller = seller;
     }
 
@@ -87,11 +86,11 @@ public class Stream {
     }
 
     public void start() {
-        this.isLive = true;
+        this.status = StreamStatus.LIVE;
         this.startedAt = LocalDateTime.now();
     }
 
     public void end() {
-        this.isLive = false;
+        this.status = StreamStatus.ENDED;
     }
 }

@@ -4,10 +4,7 @@ import com.ssafy.be.domain.stream.controller.api.StreamApi;
 import com.ssafy.be.domain.stream.dto.request.StreamListRequest;
 import com.ssafy.be.domain.stream.dto.request.StreamRegisterRequest;
 import com.ssafy.be.domain.stream.dto.request.StreamUpdateRequest;
-import com.ssafy.be.domain.stream.dto.response.StreamDetailResponse;
-import com.ssafy.be.domain.stream.dto.response.StreamListItemResponse;
-import com.ssafy.be.domain.stream.dto.response.StreamRegisterResponse;
-import com.ssafy.be.domain.stream.dto.response.StreamTokenResponse;
+import com.ssafy.be.domain.stream.dto.response.*;
 import com.ssafy.be.domain.stream.service.StreamService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -79,5 +76,12 @@ public class StreamController implements StreamApi {
     public ResponseEntity<Page<StreamListItemResponse>> getStreamList(
             @ModelAttribute StreamListRequest request) {
         return ResponseEntity.ok(streamService.getStreamList(request));
+    }
+
+    @GetMapping("/scheduled")
+    public ResponseEntity<ScheduledStreamListResponse> getScheduledStreamList(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "8") int size) {
+        return ResponseEntity.ok(streamService.getScheduledStreamList(page, size));
     }
 }

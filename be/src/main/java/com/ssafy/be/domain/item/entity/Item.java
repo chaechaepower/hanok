@@ -52,6 +52,8 @@ public class Item {
 
     private LocalDateTime submittedAt;
 
+    private LocalDateTime soldAt;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -75,6 +77,7 @@ public class Item {
                  String courierName,
                  String trackingNumber,
                  LocalDateTime submittedAt,
+                 LocalDateTime soldAt,
                  LocalDateTime createdAt,
                  Seller seller) {
         this.name = name;
@@ -91,6 +94,7 @@ public class Item {
         this.courierName = courierName;
         this.trackingNumber = trackingNumber;
         this.submittedAt = submittedAt;
+        this.soldAt = soldAt;
         this.createdAt = createdAt;
         this.seller = seller;
     }
@@ -111,6 +115,11 @@ public class Item {
         Optional.ofNullable(bidUnit).ifPresent(v -> this.bidUnit = v);
         Optional.ofNullable(auctionDuration).ifPresent(v -> this.auctionDuration = v);
         Optional.ofNullable(itemCondition).ifPresent(v -> this.itemCondition = v);
+    }
+
+    public void sold(LocalDateTime soldAt) {
+        this.status = ItemStatus.SOLD;
+        this.soldAt = soldAt;
     }
 
 }
