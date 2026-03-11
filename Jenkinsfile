@@ -16,10 +16,23 @@ pipeline {
         }
 
         stage('Build') {
-            steps {
-                dir('be') {
-                    sh 'chmod +x gradlew'
-                    sh './gradlew bootJar -x test --no-daemon'
+            parallel {
+                stage('Backend Build') {
+                    steps {
+                        dir('be') {
+                            sh 'chmod +x gradlew'
+                            sh './gradlew bootJar -x test --no-daemon'
+                        }
+                    }
+                }
+                stage('Frontend Build') {
+                    steps {
+                        dir('fe') {
+                            sh 'cp /var/jenkins_home/env/.env.fe .env'
+                            sh 'npm install'
+                            sh 'npm run build'
+                        }
+                    }
                 }
             }
         }
@@ -39,7 +52,9 @@ pipeline {
 
         stage('Docker Build') {
             when {
-                branch 'master'
+                expression {
+                    env.GIT_BRANCH == 'origin/master'
+                }
             }
             steps {
                 dir('be') {
@@ -50,13 +65,21 @@ pipeline {
 
         stage('Deploy') {
             when {
-                branch 'master'
+                expression {
+                    env.GIT_BRANCH == 'origin/master'
+                }
             }
             steps {
                 sh '''
                     cp /var/jenkins_home/env/.env.prod infra/.env.prod
                     docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis
                     docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate backend-prod
+                    docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps livekit
+                    docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate backend-prod
+
+                    # 프론트 배포
+                    rm -rf /var/www/hanok/*
+                    cp -r fe/dist/* /var/www/hanok/
                 '''
             }
         }

@@ -135,4 +135,10 @@ public class User {
     public void updateProfileImage(String profileImageUrl) {
         this.profileImage = profileImageUrl;
     }
+
+    public void updateAccount(BankCode bankCode, String accountName, String accountNum) {
+        this.bankCode = bankCode.getCode();
+        this.accountName = accountName;
+        this.accountNum = accountNum;
+    }
 }

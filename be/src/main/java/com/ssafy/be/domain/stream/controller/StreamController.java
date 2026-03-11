@@ -1,0 +1,55 @@
+package com.ssafy.be.domain.stream.controller;
+
+import com.ssafy.be.domain.stream.controller.api.StreamApi;
+import com.ssafy.be.domain.stream.dto.request.StreamRegisterRequest;
+import com.ssafy.be.domain.stream.dto.request.StreamUpdateRequest;
+import com.ssafy.be.domain.stream.dto.response.StreamRegisterResponse;
+import com.ssafy.be.domain.stream.dto.response.StreamTokenResponse;
+import com.ssafy.be.domain.stream.service.StreamService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+@RestController
+@RequestMapping("/api/v1/streams")
+@RequiredArgsConstructor
+public class StreamController implements StreamApi {
+
+    private final StreamService streamService;
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<StreamRegisterResponse> register(
+            @AuthenticationPrincipal Long userId,
+            @RequestPart("request") @Valid StreamRegisterRequest request,
+            @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail) {
+        return ResponseEntity.status(201).body(streamService.register(userId, request, thumbnail));
+    }
+
+    @PatchMapping(value = "/{streamId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<StreamRegisterResponse> update(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long streamId,
+            @RequestPart("request") @Valid StreamUpdateRequest request,
+            @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail) {
+        return ResponseEntity.ok(streamService.updateStream(userId, streamId, request, thumbnail));
+    }
+
+    @DeleteMapping("/{streamId}")
+    public ResponseEntity<Void> delete(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long streamId) {
+        streamService.deleteStream(userId, streamId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{streamId}/token")
+    public ResponseEntity<StreamTokenResponse> generateToken(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long streamId) {
+        return ResponseEntity.ok(streamService.generateToken(userId, streamId));
+    }
+}

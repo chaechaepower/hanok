@@ -23,4 +23,14 @@ public class AuctionTimerRepository {
         String key = AuctionRedisKeys.getTimerKey(auctionId);
         return redisOperator.containsKey(key);
     }
+
+    public long findRemainingSecondsByAuctionId(Long auctionId) {
+        String key = AuctionRedisKeys.getTimerKey(auctionId);
+        return redisOperator.getExpire(key);
+    }
+
+    public void updateExpireByAuctionId(Long auctionId, long seconds) {
+        String key = AuctionRedisKeys.getTimerKey(auctionId);
+        redisOperator.setExpire(key, seconds, TimeUnit.SECONDS);
+    }
 }

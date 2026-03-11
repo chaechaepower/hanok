@@ -28,19 +28,24 @@ public class RedisOperator {
      *           COMMON
      * ================================ */
 
-    // TTL 설정
-    public void setExpire(String key, long timeout, TimeUnit unit) {
-        redisTemplate.expire(key, timeout, unit);
+    public boolean containsKey(String key) {
+        return redisTemplate.hasKey(key);
     }
 
     public void delete(String key) {
         redisTemplate.delete(key);
     }
 
-    public boolean containsKey(String key) {
-        return redisTemplate.hasKey(key);
+    // TTL 설정
+    public void setExpire(String key, long timeout, TimeUnit unit) {
+        redisTemplate.expire(key, timeout, unit);
     }
 
+    // TTL 조회 (초 단위)
+    public long getExpire(String key) {
+        Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
+        return ttl != null ? ttl : -2L; // -2: 키 없음, -1: TTL 없음
+    }
 
     /* ================================
      *           HASH

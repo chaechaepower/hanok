@@ -1,11 +1,14 @@
 package com.ssafy.be.domain.user.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.ssafy.be.domain.user.dto.request.AccountRegisterRequest;
 import com.ssafy.be.domain.user.dto.request.IdentityVerificationRequestDto;
 import com.ssafy.be.domain.user.dto.request.SignupRequestDto;
+import com.ssafy.be.domain.user.dto.response.AccountRegisterResponse;
 import com.ssafy.be.domain.user.dto.response.IdentityVerificationResponseDto;
 import com.ssafy.be.domain.user.dto.response.LoginResponseDto;
 import com.ssafy.be.domain.user.dto.response.SignupResponseDto;
+import com.ssafy.be.domain.user.entity.BankCode;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.exception.UserErrorCode;
 import com.ssafy.be.domain.user.repository.UserRepository;
@@ -233,5 +236,25 @@ public class UserService {
         user.updateProfileImage(imageUrl);
 
         return imageUrl;
+    }
+
+    // -----------------------------------------------
+// 계좌 등록
+// POST /api/v1/users/me/accounts
+// -----------------------------------------------
+    @Transactional
+    public AccountRegisterResponse registerAccount(Long userId, AccountRegisterRequest request) {
+
+        // 1. 유저 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GlobalException(UserErrorCode.USER_NOT_FOUND));
+
+        // 2. 은행 코드 검증
+        BankCode bankCode = BankCode.fromCode(request.bankCode());
+
+        // 3. 계좌 정보 저장
+        user.updateAccount(bankCode, request.accountName(), request.accountNum());
+
+        return new AccountRegisterResponse(bankCode.getName(), request.accountName(), request.accountNum());
     }
 }

@@ -1,0 +1,190 @@
+import { FaUserAlt } from 'react-icons/fa';
+import { FiBell, FiAlertTriangle, FiX } from 'react-icons/fi';
+import { useState } from 'react';
+import { useGetMe } from '@/api/hooks/useGetMe';
+import { useGetNotification } from '@/api/hooks/useGetNotification';
+import { usePatchNotification } from '@/api/hooks/usePatchNotification';
+import { useDeleteWithdraw } from '@/api/hooks/useDeleteWithdraw';
+
+export default function AccountSection() {
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [withdrawPassword, setWithdrawPassword] = useState('');
+  const [withdrawError, setWithdrawError] = useState('');
+
+  const { data: meData } = useGetMe();
+  const { data: notiData } = useGetNotification();
+  const { mutate: patchNotification } = usePatchNotification();
+  const { mutate: deleteWithdraw, isPending: isWithdrawPending } = useDeleteWithdraw();
+
+  const user = meData;
+  const isPushEnabled = notiData?.followStreamAlert ?? false;
+
+  const handleTogglePush = () => {
+    if (!notiData) return;
+    patchNotification({ followStreamAlert: !notiData.followStreamAlert });
+  };
+
+  const handleOpenWithdrawModal = () => {
+    setWithdrawPassword('');
+    setWithdrawError('');
+    setIsWithdrawModalOpen(true);
+  };
+
+  const handleSubmitWithdraw = () => {
+    if (!withdrawPassword.trim()) {
+      setWithdrawError('비밀번호를 입력해주세요.');
+      return;
+    }
+    deleteWithdraw(
+      { password: withdrawPassword },
+      {
+        onSuccess: () => {
+          setIsWithdrawModalOpen(false);
+          alert('회원 탈퇴가 신청되었습니다.');
+        },
+        onError: () => setWithdrawError('탈퇴 처리 중 오류가 발생했습니다. 다시 시도해주세요.'),
+      },
+    );
+  };
+
+  return (
+    <>
+      <div className="flex flex-col gap-2 mb-2">
+        <h2 className="m-0 text-2xl font-bold text-white">계정 관리</h2>
+        <p className="m-0 text-[15px] text-[#aaa]">계정을 관리합니다.</p>
+      </div>
+
+      {/* 계정 정보 */}
+      <div className="w-full box-border border border-[#2e2e40] rounded-2xl p-8 bg-[#0c0c14] flex flex-col gap-8">
+        <div className="flex items-center justify-between">
+          <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
+            <FaUserAlt size={18} className="text-[#aaa]" />
+            계정 관리
+          </h3>
+          <button className="py-2 px-5 bg-white text-[#111] text-sm font-bold border-none rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
+            정보 수정
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <span className="text-[15px] text-white font-medium">이메일(로그인 ID)</span>
+            <span className="text-[15px] text-[#aaa]">{user?.email}</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="text-[15px] text-white font-medium">비밀번호</span>
+            <span className="text-[15px] text-[#aaa]">********</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            <span className="text-[15px] text-white font-medium">휴대폰 번호</span>
+            <span className="text-[15px] text-[#aaa]">{user?.phone}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* 알림 설정 */}
+      <div className="w-full box-border border border-[#2e2e40] rounded-2xl p-8 bg-[#0c0c14] flex flex-col gap-6">
+        <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
+          <FiBell size={20} className="text-[#d9b36d]" />
+          알림 설정
+        </h3>
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex flex-col gap-2">
+            <span className="text-[15px] text-white font-bold">팔로우 알림 설정</span>
+            <p className="m-0 text-[14px] text-[#aaa]">팔로우한 판매자의 경매 방송이 시작 시 푸시 알림을 받습니다.</p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" className="sr-only peer" checked={isPushEnabled} onChange={handleTogglePush} />
+            <div className="w-12 h-6 rounded-full peer bg-[#333] peer-checked:bg-[#d9b36d] transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-6" />
+          </label>
+        </div>
+      </div>
+
+      {/* 회원 탈퇴 */}
+      <div className="w-full box-border border border-[#2e2e40] rounded-2xl p-8 bg-[#0c0c14] flex flex-col gap-6">
+        <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
+          <FiAlertTriangle size={20} className="text-red-500" />
+          회원 탈퇴
+        </h3>
+        <div className="flex flex-col gap-6 mt-2">
+          <div className="flex flex-col gap-3">
+            <span className="text-[15px] text-white font-bold">탈퇴 전 주의사항</span>
+            <p className="m-0 text-[14px] text-[#aaa] leading-relaxed">
+              회원 탈퇴 시 모든 경매 내역과 평판 기록을 더 이상 플랫폼에서 확인할 수 없게 됩니다.<br />
+              지갑에 보관된 잔여 가상머니가 0원이어야만 탈퇴 절차를 진행할 수 있습니다. 진행 중인 경매나 정산 대기금이 있다면 모두 완료된 후 시도해 주세요.
+            </p>
+          </div>
+          <button
+            onClick={handleOpenWithdrawModal}
+            className="self-start py-3 px-6 bg-transparent text-red-500 border border-red-500 rounded-full text-[15px] font-bold cursor-pointer hover:bg-red-500/10 transition-colors"
+          >
+            회원 탈퇴 신청
+          </button>
+        </div>
+      </div>
+
+      {/* 탈퇴 확인 모달 */}
+      {isWithdrawModalOpen && (
+        <div
+          className="fixed inset-0 bg-black/70 z-[999] flex items-center justify-center"
+          onClick={() => setIsWithdrawModalOpen(false)}
+        >
+          <div
+            className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[460px] p-8 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="m-0 text-white text-xl font-bold flex items-center gap-2">
+                <FiAlertTriangle size={20} className="text-red-500" />
+                회원 탈퇴 확인
+              </h2>
+              <button
+                onClick={() => setIsWithdrawModalOpen(false)}
+                className="bg-transparent border-none text-[#888] cursor-pointer hover:text-white transition-colors"
+              >
+                <FiX size={22} />
+              </button>
+            </div>
+
+            <p className="m-0 text-[14px] text-[#aaa] leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+              탈퇴 후에는 계정 복구가 불가능합니다.<br />
+              비밀번호를 입력하여 본인 확인 후 탈퇴를 진행해 주세요.
+            </p>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">비밀번호</label>
+              <input
+                type="password"
+                value={withdrawPassword}
+                onChange={(e) => setWithdrawPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSubmitWithdraw()}
+                placeholder="현재 비밀번호를 입력하세요"
+                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-red-500 transition-colors"
+              />
+            </div>
+
+            {withdrawError && (
+              <p className="m-0 text-[13px] text-red-400">{withdrawError}</p>
+            )}
+
+            <div className="flex justify-end gap-3 mt-2">
+              <button
+                onClick={() => setIsWithdrawModalOpen(false)}
+                className="py-3 px-6 bg-[#333] text-[#ddd] border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-[#444] transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSubmitWithdraw}
+                disabled={isWithdrawPending}
+                className="py-3 px-6 bg-red-600 text-white font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isWithdrawPending ? '처리 중…' : '탈퇴 신청'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

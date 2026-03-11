@@ -81,6 +81,8 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+    volumes:
+      - /var/lib/docker/volumes/jenkins-stack_jenkins_home/_data/env/gcs-key.json:/app/gcs-key.json
     networks:
       - hanok-network
     environment:
@@ -100,6 +102,23 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      GCS_CREDENTIALS_PATH: ${GCS_CREDENTIALS_PATH}
+
+  # =============================================
+  # LiveKit
+  # =============================================
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: hanok-livekit
+    restart: unless-stopped
+    ports:
+      - "7880:7880"
+    volumes:
+      - ./livekit.yaml:/livekit.yaml
+    command: --config /livekit.yaml
+    networks:
+      - hanok-network
 
 # =============================================
 # Volume (데이터 영속성)

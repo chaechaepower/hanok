@@ -1,4 +1,4 @@
-package com.ssafy.be.auction;
+package com.ssafy.be.domain.auction.dto.response;
 
 import com.ssafy.be.domain.item.entity.ItemCondition;
 import lombok.Builder;

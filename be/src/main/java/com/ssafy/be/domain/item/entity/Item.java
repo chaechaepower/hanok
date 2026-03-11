@@ -1,7 +1,6 @@
 package com.ssafy.be.domain.item.entity;
 
 import com.ssafy.be.domain.seller.entity.Seller;
-import com.ssafy.be.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -11,6 +10,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -94,4 +94,23 @@ public class Item {
         this.createdAt = createdAt;
         this.seller = seller;
     }
+
+    public void updateImages(String image1, String image2, String image3) {
+        if (image1 != null) this.image1 = image1;
+        if (image2 != null) this.image2 = image2;
+        if (image3 != null) this.image3 = image3;
+    }
+
+    public void update(String name, String description, Category category,
+                       Long startPrice, Long bidUnit, Integer auctionDuration,
+                       ItemCondition itemCondition) {
+        Optional.ofNullable(name).ifPresent(v -> this.name = v);
+        Optional.ofNullable(description).ifPresent(v -> this.description = v);
+        Optional.ofNullable(category).ifPresent(v -> this.category = v);
+        Optional.ofNullable(startPrice).ifPresent(v -> this.startPrice = v);
+        Optional.ofNullable(bidUnit).ifPresent(v -> this.bidUnit = v);
+        Optional.ofNullable(auctionDuration).ifPresent(v -> this.auctionDuration = v);
+        Optional.ofNullable(itemCondition).ifPresent(v -> this.itemCondition = v);
+    }
+
 }

@@ -11,6 +11,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -23,6 +24,7 @@ public class Stream {
 
     private String title;
 
+    @Enumerated(EnumType.STRING)
     private Category category;
 
     private boolean isLive;
@@ -30,6 +32,11 @@ public class Stream {
     private String thumbnail;
 
     private LocalDateTime scheduledAt;
+
+    @Enumerated(EnumType.STRING)
+    private StartType startType;
+
+    private String notice;
 
     @CreatedDate
     @Column(updatable = false)
@@ -40,19 +47,30 @@ public class Stream {
     private Seller seller;
 
     @Builder
-    private Stream(String title,
-                  Category category,
-                  boolean isLive,
-                  String thumbnail,
-                  LocalDateTime scheduledAt,
-                  LocalDateTime createdAt,
-                  Seller seller) {
+    private Stream(String title, Category category, boolean isLive, String thumbnail,
+                   LocalDateTime scheduledAt, StartType startType, String notice,
+                   LocalDateTime createdAt, Seller seller) {
         this.title = title;
         this.category = category;
         this.isLive = isLive;
         this.thumbnail = thumbnail;
         this.scheduledAt = scheduledAt;
+        this.startType = startType;
+        this.notice = notice;
         this.createdAt = createdAt;
         this.seller = seller;
+    }
+
+    public void update(String title, Category category, StartType startType,
+                       LocalDateTime scheduledAt, String notice) {
+        Optional.ofNullable(title).ifPresent(v -> this.title = v);
+        Optional.ofNullable(category).ifPresent(v -> this.category = v);
+        Optional.ofNullable(startType).ifPresent(v -> this.startType = v);
+        Optional.ofNullable(scheduledAt).ifPresent(v -> this.scheduledAt = v);
+        Optional.ofNullable(notice).ifPresent(v -> this.notice = v);
+    }
+
+    public void updateThumbnail(String thumbnail) {
+        this.thumbnail = thumbnail;
     }
 }

@@ -1,18 +1,24 @@
 package com.ssafy.be.domain.user.controller.api;
 
+import com.ssafy.be.domain.user.dto.request.AccountRegisterRequest;
 import com.ssafy.be.domain.user.dto.request.IdentityVerificationRequestDto;
 import com.ssafy.be.domain.user.dto.request.SignupRequestDto;
+import com.ssafy.be.domain.user.dto.response.AccountRegisterResponse;
 import com.ssafy.be.domain.user.dto.response.IdentityVerificationResponseDto;
 import com.ssafy.be.domain.user.dto.response.SignupResponseDto;
 import com.ssafy.be.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+
 
 @Tag(name = "User", description = "인증 & 회원 APIs")
 public interface UserApi {
@@ -38,4 +44,12 @@ public interface UserApi {
     ResponseEntity<ApiResponse<IdentityVerificationResponseDto>> verifyIdentity(
             @RequestBody @Valid IdentityVerificationRequestDto requestDto
     );
+
+    @Operation(summary = "계좌 등록")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "계좌 등록 성공")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400",
+            description = "유효하지 않은 은행 코드",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    ResponseEntity<AccountRegisterResponse> registerAccount(String userId, AccountRegisterRequest request);
 }

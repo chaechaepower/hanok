@@ -13,7 +13,7 @@ public enum StompType {
     SYSTEM_STREAM_END,      // 방송 종료
 
     // 겸매
-    AUCITON_START,          // 경매 시작
+    AUCTION_START,          // 경매 시작
 
     // 입찰
     BID_PLACED,             // 입찰 발생
