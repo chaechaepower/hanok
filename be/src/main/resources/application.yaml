@@ -8,6 +8,8 @@ spring:
         bucket: ${GCS_BUCKET_NAME:hanok-storage}
         credentials:
           location: ${GCS_CREDENTIALS_PATH:classpath:gcs-key.json}
+      secretmanager:
+        enabled: false
 
 
   datasource:
