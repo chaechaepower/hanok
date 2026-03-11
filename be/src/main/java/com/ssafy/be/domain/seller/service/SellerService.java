@@ -2,6 +2,7 @@ package com.ssafy.be.domain.seller.service;
 
 import com.ssafy.be.domain.seller.dto.request.SellerRegisterRequest;
 import com.ssafy.be.domain.seller.dto.response.SellerRegisterResponse;
+import com.ssafy.be.domain.seller.dto.response.SellerStatusResponse;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
@@ -42,5 +43,12 @@ public class SellerService {
 
         Seller saved = sellerRepository.save(seller);
         return new SellerRegisterResponse(saved.getId(), user.getNickname());
+    }
+
+    @Transactional(readOnly = true)
+    public SellerStatusResponse getSellerStatus(Long userId) {
+        return sellerRepository.findByUserId(userId)
+                .map(seller -> new SellerStatusResponse(true, seller.getId()))
+                .orElse(new SellerStatusResponse(false, null));
     }
 }
