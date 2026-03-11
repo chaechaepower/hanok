@@ -5,6 +5,8 @@ import com.ssafy.be.domain.chat.dto.payload.ChatMessagePayload;
 import com.ssafy.be.domain.chat.dto.request.ChatMessageRequest;
 import com.ssafy.be.domain.chat.service.ChatService;
 import com.ssafy.be.global.infra.portone.PortoneClient;
+import com.ssafy.be.global.websocket.dto.response.StompResponse;
+import com.ssafy.be.global.websocket.enums.StompType;
 import com.ssafy.be.support.annotation.IntegrationTest;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
@@ -16,6 +18,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -34,7 +39,6 @@ class ChatIntegrationTest {
     @Autowired private StringRedisTemplate redisTemplate;
     @Autowired private ObjectMapper objectMapper;
 
-    // 외부 연동 API가 있다면 Mocking 처리
     @MockitoBean
     private PortoneClient portoneClient;
 
@@ -53,15 +57,22 @@ class ChatIntegrationTest {
     @AfterEach
     void printPassLog(TestInfo testInfo) {
         log.info("✅ [PASS] {}", testInfo.getDisplayName());
-        log.info("--------------------------------------------------");
+        log.info("--------------------------------------------------\n");
     }
 
     @Test
     @Order(1)
-    @DisplayName("1. 채팅 메시지 전송 - Redis 저장 확인")
+    @DisplayName("1. 정상 메시지 전송 - Redis 저장 확인")
     void testHandleMessage_savedToRedis() {
-        log.info("▶️ [실행] 메시지 전송 및 Redis 저장 테스트");
-        chatService.handleMessage(USER_ID, NICKNAME, new ChatMessageRequest(STREAM_ID, "안녕하세요!"));
+        log.info("▶️ [실행] 정상 메시지 전송 및 Redis 저장 테스트");
+
+        // Service가 StompResponse를 반환하므로 타입을 맞춰서 받음
+        StompResponse<ChatMessagePayload> response =
+                chatService.handleMessage(USER_ID, NICKNAME, new ChatMessageRequest(STREAM_ID, "안녕하세요!"));
+
+        // 봉투(Envelope) 타입과 내부 페이로드 검증
+        assertThat(response.getEventType()).isEqualTo(StompType.CHAT_MESSAGE);
+        assertThat(response.getPayload().content()).isEqualTo("안녕하세요!");
 
         List<ChatMessagePayload> messages = chatService.getRecentMessage(STREAM_ID);
         log.info("🔍 [결과 분석] Redis에 저장된 메시지 개수: {}", messages.size());
@@ -87,9 +98,59 @@ class ChatIntegrationTest {
 
     @Test
     @Order(3)
-    @DisplayName("3. Redis LTRIM - 100개 초과 시 자동 제거")
+    @DisplayName("3. 금칙어 포함 메시지 - '금칙어' 통치환 후 Redis 저장 확인")
+    void testFilteredMessage_savedAsBannedWord() {
+        int beforeSize = chatService.getRecentMessage(STREAM_ID).size();
+        log.info("▶️ [실행] 금칙어 필터링 테스트 (전송 전 메시지 개수: {})", beforeSize);
+
+        // 악의적인 띄어쓰기 및 특수문자 삽입 우회 시도
+        String dirtyWord = "아니 진짜 개  새@끼 들이네";
+
+        StompResponse<ChatMessagePayload> response =
+                chatService.handleMessage(USER_ID, NICKNAME, new ChatMessageRequest(STREAM_ID, dirtyWord));
+
+        // 검증 1: 정상적인 CHAT_MESSAGE 타입으로 반환되며, 내용은 "금칙어"로 덮어씌워짐
+        assertThat(response.getEventType()).isEqualTo(StompType.CHAT_MESSAGE);
+        assertThat(response.getPayload().content()).isEqualTo("금칙어");
+
+        List<ChatMessagePayload> messages = chatService.getRecentMessage(STREAM_ID);
+        int afterSize = messages.size();
+
+        log.info("🔍 [결과 분석] 금칙어 전송 후 메시지 개수: {}", afterSize);
+        log.info("🔍 [결과 분석] 필터링된 내용: {}", messages.get(afterSize - 1).content());
+
+        // 검증 2: 메시지는 버려지지 않고 정상적으로 1개 늘어나야 함
+        assertThat(afterSize).isEqualTo(beforeSize + 1);
+        assertThat(messages.get(afterSize - 1).content()).isEqualTo("금칙어");
+    }
+
+    @Test
+    @Order(4)
+    @DisplayName("4. 예외 허용어 메시지 - 마스킹 없이 원본 그대로 저장 확인")
+    void testAllowedMessage_savedWithoutMasking() {
+        log.info("▶️ [실행] 화이트리스트(예외 허용어) 과탐지 방지 테스트");
+
+        // '시발'이라는 금칙어가 포함되어 있지만, '시발점'은 허용어 사전(allowedTrie)에 있음
+        String trickyWord = "이번 프로젝트의 시발점은 바로 이것입니다.";
+
+        StompResponse<ChatMessagePayload> response =
+                chatService.handleMessage(USER_ID, NICKNAME, new ChatMessageRequest(STREAM_ID, trickyWord));
+
+        List<ChatMessagePayload> messages = chatService.getRecentMessage(STREAM_ID);
+        String lastMessage = messages.get(messages.size() - 1).content();
+
+        log.info("🔍 [결과 분석] 허용어 처리된 내용: {}", lastMessage);
+
+        // 검증: "금칙어"로 필터링되지 않고 원본 그대로 통과해야 함
+        assertThat(response.getPayload().content()).isEqualTo(trickyWord);
+        assertThat(lastMessage).isEqualTo(trickyWord);
+    }
+
+    @Test
+    @Order(5)
+    @DisplayName("5. Redis LTRIM - 100개 초과 시 자동 제거")
     void testChatCacheMaxLimit() {
-        log.info("▶️ [실행] Redis LTRIM 100개 한도 초과 테스트 (현재까지 2개 존재)");
+        log.info("▶️ [실행] Redis LTRIM 100개 한도 초과 테스트");
         for (int i = 1; i <= 100; i++) {
             chatService.handleMessage(USER_ID, NICKNAME, new ChatMessageRequest(STREAM_ID, "메시지 " + i));
         }
@@ -97,44 +158,9 @@ class ChatIntegrationTest {
         List<ChatMessagePayload> messages = chatService.getRecentMessage(STREAM_ID);
         log.info("🔍 [결과 분석] 100개 추가 후 총 메시지 개수: {}", messages.size());
 
-        assertThat(messages).hasSize(100); // 102개가 아니라 100개여야 함
-        assertThat(messages.get(0).content()).isNotEqualTo("안녕하세요!"); // 가장 오래된 데이터는 삭제되어야 함
-    }
-
-    @Test
-    @Order(4)
-    @DisplayName("4. 금칙어 포함 메시지 - Redis에 저장되지 않아야 함")
-    void testFilteredMessage_notSavedToRedis() {
-        int beforeSize = chatService.getRecentMessage(STREAM_ID).size();
-        log.info("▶️ [실행] 금칙어 필터링 테스트 (전송 전 메시지 개수: {})", beforeSize);
-
-        chatService.handleMessage(USER_ID, NICKNAME, new ChatMessageRequest(STREAM_ID, " 포함 메시지"));
-
-        int afterSize = chatService.getRecentMessage(STREAM_ID).size();
-        log.info("🔍 [결과 분석] 금칙어 전송 후 메시지 개수: {}", afterSize);
-
-        assertThat(afterSize).isEqualTo(beforeSize);
-    }
-
-    @Test
-    @Order(5)
-    @DisplayName("5. 정상 메시지 - 필터 통과 후 Redis 저장 확인")
-    void testNormalMessage_savedToRedis() {
-        int beforeSize = chatService.getRecentMessage(STREAM_ID).size();
-        log.info("▶️ [실행] 정상 메시지 전송 테스트 (전송 전 개수: {})", beforeSize);
-
-        chatService.handleMessage(USER_ID, NICKNAME, new ChatMessageRequest(STREAM_ID, "정상적인 채팅입니다"));
-
-        int afterSize = chatService.getRecentMessage(STREAM_ID).size();
-        log.info("🔍 [결과 분석] 정상 메시지 전송 후 개수: {}", afterSize);
-
-        // 주의: 만약 limit 설정이 100개라면 beforeSize가 이미 100일 경우
-        // 1개를 넣어도 가장 오래된 것이 지워지므로 afterSize도 100입니다.
-        if (beforeSize == 100) {
-            assertThat(afterSize).isEqualTo(100);
-        } else {
-            assertThat(afterSize).isEqualTo(beforeSize + 1);
-        }
+        assertThat(messages).hasSize(100);
+        // 1번 테스트에서 넣었던 "안녕하세요!"는 밀려나서 없어야 함
+        assertThat(messages.get(0).content()).isNotEqualTo("안녕하세요!");
     }
 
     @Test
@@ -169,19 +195,46 @@ class ChatIntegrationTest {
 
     @Test
     @Order(8)
-    @DisplayName("8. 여러 유저 채팅 메시지 순서 보장 확인")
-    void testMultipleUsers_messageOrder() {
-        log.info("▶️ [실행] 여러 유저 메시지 순서 확인 테스트 (기존 데이터 지워진 상태에서 시작)");
-        chatService.handleMessage(USER_ID, NICKNAME, new ChatMessageRequest(STREAM_ID, "유저1 메시지"));
-        chatService.handleMessage(USER_ID_2, "테스트유저2", new ChatMessageRequest(STREAM_ID, "유저2 메시지"));
-        chatService.handleMessage(USER_ID, NICKNAME, new ChatMessageRequest(STREAM_ID, "유저1 두번째"));
+    @DisplayName("8. [부하 테스트] 멀티스레드 동시 접속 및 필터링 안정성 확인")
+    void testConcurrentMessages_ThreadSafeAndFiltering() throws InterruptedException {
+        int threadCount = 10;
+        int messageCount = 100;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(messageCount);
+
+        log.info("▶️ [실행] {}개의 스레드에서 {}개의 메시지 동시 전송 (정상 50개, 욕설 50개 믹스)", threadCount, messageCount);
+
+        for (int i = 0; i < messageCount; i++) {
+            final int idx = i;
+            executorService.submit(() -> {
+                try {
+                    if (idx % 2 == 0) {
+                        chatService.handleMessage(USER_ID, NICKNAME, new ChatMessageRequest(STREAM_ID, "정상적인 소통입니다 " + idx));
+                    } else {
+                        chatService.handleMessage(USER_ID_2, "악성유저", new ChatMessageRequest(STREAM_ID, "tlqkf 새끼 " + idx));
+                    }
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await();
+        executorService.shutdown();
 
         List<ChatMessagePayload> messages = chatService.getRecentMessage(STREAM_ID);
-        log.info("🔍 [결과 분석] 다중 유저 메시지 개수: {}, 3번째 메시지: {}", messages.size(), messages.get(2).content());
+        log.info("🔍 [결과 분석] 동시성 테스트 후 Redis 저장 개수: {}", messages.size());
 
-        assertThat(messages).hasSize(3);
-        assertThat(messages.get(0).userId()).isEqualTo(USER_ID);
-        assertThat(messages.get(1).userId()).isEqualTo(USER_ID_2);
-        assertThat(messages.get(2).content()).isEqualTo("유저1 두번째");
+        assertThat(messages).hasSize(messageCount);
+
+        long bannedCount = messages.stream()
+                .filter(m -> m.content().equals("금칙어"))
+                .count();
+
+        log.info("🔍 [결과 분석] 정상적으로 '금칙어'로 치환된 메시지 개수: {}", bannedCount);
+
+        // 절반(50개)은 반드시 "금칙어"로 치환되어야 함
+        assertThat(bannedCount).isEqualTo(50);
     }
 }

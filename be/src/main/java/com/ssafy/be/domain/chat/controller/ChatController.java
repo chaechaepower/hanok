@@ -34,7 +34,7 @@ public class ChatController {
         Long userId = Long.parseLong(principal.getName());
         String nickname = (String) authentication.getDetails();
 
-        // 1. Service로부터 마스킹 처리가 완료된 통합 응답 객체를 받음
+        // 1. Service로부터 마스킹 처리가 완료된 통합 응답 객체
         StompResponse<ChatMessagePayload> response = chatService.handleMessage(userId, nickname, request);
 
         // 2. 해당 방의 모든 구독자에게 일괄 브로드캐스트

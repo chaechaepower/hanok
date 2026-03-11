@@ -1,14 +1,20 @@
 package com.ssafy.be.domain.chat.filter;
 
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+@Slf4j
 @Component
 public class BadWordFilter {
 
@@ -17,40 +23,45 @@ public class BadWordFilter {
 
     @PostConstruct
     public void initTries() {
-        // 금칙어 사전
-        String[] bannedWords = {"씨발", "개새끼", "바보"};
+        // 1. 외부 파일에서 단어 목록 로드
+        List<String> bannedWords = loadWordsFromFile("banned_words.txt");
+        List<String> allowedWords = loadWordsFromFile("allowed_words.txt");
+
+        // 2. 로드된 단어들로 Trie 빌드
         this.bannedTrie = Trie.builder()
                 .ignoreCase()
                 .ignoreOverlaps()
                 .addKeywords(bannedWords)
                 .build();
 
-        // 예외 허용어 사전
-        String[] allowedWords = {"씨발점", "개새", "바보야"};
         this.allowedTrie = Trie.builder()
                 .ignoreCase()
                 .addKeywords(allowedWords)
                 .build();
+
+        // 3. 부트업 시 로딩된 단어 개수 확인 로그
+        log.info("✅ 금칙어 필터 초기화 완료 (금칙어: {}개, 허용어: {}개)", bannedWords.size(), allowedWords.size());
     }
 
     public ChatFilterResult filter(String original) {
-        // 정규화
+        // 1. 정규화
         TextNormalizer.NormalizeResult result = TextNormalizer.normalize(original);
+        String normText = result.normalizeText();
 
-        String normText = result.normalizeText;
-
-        // 두 개의 사전에서 각각 Emit
+        // 2. 금칙어 사전 탐색
         Collection<Emit> bannedEmits = bannedTrie.parseText(normText);
 
+        // 애초에 금칙어가 없으면 빠른 통과
         if (bannedEmits.isEmpty()) {
             return buildResult(false, original);
         }
 
+        // 3. 허용어 사전 탐색
         Collection<Emit> allowedEmits = allowedTrie.parseText(normText);
 
-        // 금칙어 중 예외 허용어에 포함되는 것 걸러내기
-        List<Emit> validBannedEmits = new ArrayList<>();
+        boolean isBadWordDetected = false;
 
+        // 4. 감지된 금칙어 중 진짜 욕설
         for (Emit banned : bannedEmits) {
             boolean isAllowed = false;
 
@@ -61,31 +72,20 @@ public class BadWordFilter {
                 }
             }
 
+            // 욕설이 하나라도 확인되면
             if (!isAllowed) {
-                validBannedEmits.add(banned);
+                isBadWordDetected = true;
+                break;
             }
         }
 
-        if (validBannedEmits.isEmpty()) {
+        // 5. 최종 결과 반환
+        if (!isBadWordDetected) {
             return buildResult(false, original);
         }
 
-        // 진짜 욕설만 원본 인덱스에 맞춰 마스킹 처리
-        char[] maskedChars = original.toCharArray();
-
-
-        int[] idxMap = result.originalIdxMap;
-
-        for (Emit emit : validBannedEmits) {
-            int startOriginalIdx = idxMap[emit.getStart()];
-            int endOriginalIdx = idxMap[emit.getEnd()];
-
-            for (int i = startOriginalIdx; i <= endOriginalIdx; i++) {
-                maskedChars[i] = '*';
-            }
-        }
-
-        return buildResult(true, new String(maskedChars));
+        //
+        return buildResult(true, "금칙어");
     }
 
     private ChatFilterResult buildResult(boolean isDetected, String text) {
@@ -93,5 +93,28 @@ public class BadWordFilter {
                 .isDetected(isDetected)
                 .maskedText(text)
                 .build();
+    }
+
+    // 파일 로드 전용 헬퍼 메서드
+    private List<String> loadWordsFromFile(String fileName) {
+        List<String> words = new ArrayList<>();
+        try {
+            ClassPathResource resource = new ClassPathResource(fileName);
+            try (BufferedReader br = new BufferedReader(
+                    new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
+
+                String line;
+                while ((line = br.readLine()) != null) {
+                    line = line.trim();
+                    // 빈 줄이거나 주석(#)인 경우 무시
+                    if (!line.isEmpty() && !line.startsWith("#")) {
+                        words.add(line);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("❌ 사전 파일 로드 실패: {}", fileName, e);
+        }
+        return words;
     }
 }
