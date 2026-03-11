@@ -1,21 +1,9 @@
-import { createContext, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Client } from '@stomp/stompjs';
 import { BASE_URL, getAuthToken } from '@/api/instance';
 import { WS_ENDPOINT, RECONNECT_DELAY } from '@/constants/stompChat';
-
-export type StompConnectionState =
-  | 'connecting'
-  | 'connected'
-  | 'disconnected'
-  | 'error';
-
-export interface StompContextValue {
-  client: Client | null;
-  connectionState: StompConnectionState;
-  streamId: number;
-}
-
-export const StompContext = createContext<StompContextValue | null>(null);
+import { StompContext } from './StompContext';
+import type { StompConnectionState } from './StompContext';
 
 function buildWsUrl(): string {
   const base = BASE_URL ?? '';
@@ -33,12 +21,12 @@ interface StompProviderProps {
 export function StompProvider({ streamId, children }: StompProviderProps) {
   const [connectionState, setConnectionState] =
     useState<StompConnectionState>('disconnected');
-  const clientRef = useRef<Client | null>(null);
+  const [client, setClient] = useState<Client | null>(null);
 
   useEffect(() => {
     const token = getAuthToken();
 
-    const client = new Client({
+    const stompClient = new Client({
       brokerURL: buildWsUrl(),
       connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
       reconnectDelay: RECONNECT_DELAY,
@@ -48,21 +36,24 @@ export function StompProvider({ streamId, children }: StompProviderProps) {
       onWebSocketClose: () => setConnectionState('disconnected'),
     });
 
-    clientRef.current = client;
-    setConnectionState('connecting');
-    client.activate();
+    const timer = setTimeout(() => {
+      setClient(stompClient);
+      setConnectionState('connecting');
+    }, 0);
+    stompClient.activate();
 
     return () => {
-      client.deactivate();
-      clientRef.current = null;
-      setConnectionState('disconnected');
+      clearTimeout(timer);
+      stompClient.deactivate();
+      setTimeout(() => {
+        setClient(null);
+        setConnectionState('disconnected');
+      }, 0);
     };
   }, [streamId]);
 
   return (
-    <StompContext.Provider
-      value={{ client: clientRef.current, connectionState, streamId }}
-    >
+    <StompContext.Provider value={{ client, connectionState, streamId }}>
       {children}
     </StompContext.Provider>
   );
