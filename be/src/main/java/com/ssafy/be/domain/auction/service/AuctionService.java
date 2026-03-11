@@ -16,6 +16,7 @@ import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
+import com.ssafy.be.domain.shippingaddress.exception.ShippingAddressErrorCode;
 import com.ssafy.be.domain.shippingaddress.repository.ShippingAddressRepository;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
 import com.ssafy.be.domain.user.entity.User;
@@ -113,7 +114,7 @@ public class AuctionService {
         auction.sold(topBid.amount());
 
         ShippingAddress shippingAddress = shippingAddressRepository.findByUserIdAndIsDefaultTrue(topBid.userId())
-                .orElse(null);
+                .orElseThrow(() -> new StompException(ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
 
         return buildAuctionEndResponse(
                 topBid.userId(),
@@ -227,10 +228,6 @@ public class AuctionService {
     }
 
     private static AuctionEndResponse.WinnerDto.ShippingDto buildShippingDto(ShippingAddress shippingAddress) {
-        if (shippingAddress == null) {
-            return null;
-        }
-
         return AuctionEndResponse.WinnerDto.ShippingDto.builder()
                 .recipientName(shippingAddress.getRecipientName())
                 .phone(shippingAddress.getPhone())
