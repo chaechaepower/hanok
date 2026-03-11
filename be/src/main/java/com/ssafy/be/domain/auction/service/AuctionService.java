@@ -6,6 +6,7 @@ import com.ssafy.be.domain.auction.dto.response.AuctionEndResponse;
 import com.ssafy.be.domain.auction.dto.response.AuctionStartResponse;
 import com.ssafy.be.domain.auction.dto.response.BidPlaceResponse;
 import com.ssafy.be.domain.auction.dto.response.BidSyncResponse;
+import com.ssafy.be.domain.auction.dto.response.ItemSyncResponse;
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
 import com.ssafy.be.domain.auction.exception.AuctionErrorCode;
@@ -14,6 +15,7 @@ import com.ssafy.be.domain.auction.repository.AuctionBidRepository;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.auction.repository.AuctionTimerRepository;
 import com.ssafy.be.domain.item.entity.Item;
+import com.ssafy.be.domain.item.entity.ItemCondition;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
@@ -31,6 +33,8 @@ import com.ssafy.be.global.websocket.exception.StompException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 import static com.ssafy.be.domain.auction.entity.AuctionStatus.*;
 
@@ -157,6 +161,25 @@ public class AuctionService {
                 buildBidSyncItemInfo(auction.getItem().getBidUnit(), currentPrice),
                 buildBidSyncTimerInfo((int) remainingSeconds, serverNow, auction.getStartedAt())
         );
+    }
+
+    @Transactional(readOnly = true)
+    public ItemSyncResponse syncItem(Long streamId) {
+        // 1. 스트림 조회
+        Stream stream = streamRepository.findById(streamId)
+                .orElseThrow(() -> new StompException(StreamErrorCode.STREAM_NOT_FOUND));
+
+        // 2. 해당 스트림의 모든 경매 아이템 조회
+        List<Auction> auctions = auctionRepository.findByStreamId(streamId);
+
+        // 3. 응답 생성
+        List<ItemSyncResponse.ItemInfo> items = auctions.stream()
+                .map(AuctionService::buildItemSyncInfo)
+                .toList();
+
+        return ItemSyncResponse.builder()
+                .items(items)
+                .build();
     }
 
     private void validateStreamHost(Long streamId, Long sellerId) {
@@ -288,6 +311,16 @@ public class AuctionService {
                 .durationSeconds(durationSeconds)
                 .serverNow(serverNow)
                 .serverStartedAt(serverStartedAt)
+                .build();
+    }
+
+    private static ItemSyncResponse.ItemInfo buildItemSyncInfo(Auction auction) {
+        return ItemSyncResponse.ItemInfo.builder()
+                .itemName(auction.getItem().getName())
+                .image(auction.getItem().getImage1())
+                .startPrice(auction.getItem().getStartPrice())
+                .auctionStatus(auction.getAuctionStatus())
+                .itemCondition(auction.getItem().getItemCondition())
                 .build();
     }
 }
