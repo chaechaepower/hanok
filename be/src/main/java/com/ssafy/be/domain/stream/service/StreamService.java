@@ -3,6 +3,7 @@ package com.ssafy.be.domain.stream.service;
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
+import com.ssafy.be.domain.item.dto.response.ItemSummaryResponse;
 import com.ssafy.be.domain.item.entity.Category;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.repository.ItemRepository;
@@ -59,8 +60,7 @@ public class StreamService {
 
         if (thumbnail != null && !thumbnail.isEmpty()) {
             try {
-                String url =
-                        gcsClient.uploadStreamThumbnail(thumbnail, seller.getId(), saved.getId());
+                String url = gcsClient.uploadStreamThumbnail(thumbnail, seller.getId(), saved.getId());
                 saved.updateThumbnail(url);
             } catch (IOException e) {
                 throw new GlobalException(StreamErrorCode.THUMBNAIL_UPLOAD_FAILED);
@@ -68,22 +68,33 @@ public class StreamService {
         }
 
         // 경매 등록
+        List<ItemSummaryResponse> items = List.of();
         if (request.itemIds() != null && !request.itemIds().isEmpty()) {
-            for (Long itemId : request.itemIds()) {
-                Item item =
-                        itemRepository
+            items = request.itemIds().stream()
+                    .map(itemId -> {
+                        Item item = itemRepository
                                 .findByIdAndSellerId(itemId, seller.getId())
                                 .orElseThrow(() -> new GlobalException(ItemErrorCode.ITEM_NOT_FOUND));
-                auctionRepository.save(
-                        Auction.builder()
-                                .auctionStatus(AuctionStatus.READY)
-                                .stream(saved)
-                                .item(item)
-                                .build());
-            }
+                        auctionRepository.save(
+                                Auction.builder()
+                                        .auctionStatus(AuctionStatus.READY)
+                                        .stream(saved)
+                                        .item(item)
+                                        .build());
+                        return new ItemSummaryResponse(
+                                item.getId(),
+                                item.getName(),
+                                item.getCategory(),
+                                item.getStartPrice(),
+                                item.getStatus(),
+                                item.getItemCondition(),
+                                item.getImage1(),
+                                item.getCreatedAt());
+                    })
+                    .toList();
         }
 
-        return new StreamRegisterResponse(saved.getId(), saved.getTitle(), saved.getStartType());
+        return new StreamRegisterResponse(saved.getId(), saved.getTitle(), saved.getStartType(), saved.getThumbnail(), items);
     }
 
     private Stream buildStream(StreamRegisterRequest request, Seller seller) {
@@ -130,7 +141,22 @@ public class StreamService {
             }
         }
 
-        return new StreamRegisterResponse(stream.getId(), stream.getTitle(), stream.getStartType());
+        List<ItemSummaryResponse> items = auctionRepository.findByStreamId(streamId).stream()
+                .map(auction -> {
+                    Item item = auction.getItem();
+                    return new ItemSummaryResponse(
+                            item.getId(),
+                            item.getName(),
+                            item.getCategory(),
+                            item.getStartPrice(),
+                            item.getStatus(),
+                            item.getItemCondition(),
+                            item.getImage1(),
+                            item.getCreatedAt());
+                })
+                .toList();
+
+        return new StreamRegisterResponse(stream.getId(), stream.getTitle(), stream.getStartType(), stream.getThumbnail(), items);
     }
 
     @Transactional
