@@ -16,11 +16,9 @@ export default function LiveRegisterPage() {
   const location = useLocation();
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
 
-  // 모달에서 전달받은 categoryId (문자열 – MAIN_CATEGORY_ITEMS.id 기준)
   const initialCategoryId: string = (location.state as { categoryId?: string })?.categoryId ?? CATEGORIES[0]?.id ?? '';
   const categoryLabel = CATEGORIES.find((c) => c.id === initialCategoryId)?.label ?? '';
 
-  // 해당 카테고리 물품만 API에서 조회
   const { data: filteredInventory = [], isLoading: inventoryLoading } = useGetItemsByCategory(initialCategoryId);
 
   const [title, setTitle] = useState('');
@@ -121,7 +119,6 @@ export default function LiveRegisterPage() {
 
   return (
     <div className="w-full max-w-[1400px] mx-auto px-4 py-6 flex flex-col gap-4">
-      {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
@@ -167,9 +164,7 @@ export default function LiveRegisterPage() {
         </div>
       </div>
 
-      {/* ── Body: 3-column layout ── */}
       <div className="flex gap-4" style={{ minHeight: '600px' }}>
-        {/* ── Left Panel: 경매 물품 리스트 ── */}
         <aside className="w-[190px] shrink-0 flex flex-col gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -212,7 +207,6 @@ export default function LiveRegisterPage() {
           </button>
         </aside>
 
-        {/* ── Center Panel: Video Preview ── */}
         <div className="flex-1 min-w-0 relative rounded-2xl overflow-hidden bg-black flex flex-col">
           <div className="flex-1 flex items-center justify-center">
             {thumbnailUrl ? (
@@ -241,7 +235,6 @@ export default function LiveRegisterPage() {
           )}
         </div>
 
-        {/* ── Right Panel: 방송 기본 설정 ── */}
         <aside className="w-[220px] shrink-0 flex flex-col gap-4">
           <h2 className="text-white font-bold text-base">방송 기본 설정</h2>
 
@@ -345,7 +338,6 @@ export default function LiveRegisterPage() {
         </aside>
       </div>
 
-      {/* Inventory Select Modal */}
       {showInventoryModal && (
         <InventorySelectModal
           categoryLabel={categoryLabel}
@@ -358,7 +350,6 @@ export default function LiveRegisterPage() {
         />
       )}
 
-      {/* 방송 예약 설정 모달 */}
       {showScheduleModal && (
         <ScheduleModal
           onConfirm={async (iso) => {
@@ -370,13 +361,11 @@ export default function LiveRegisterPage() {
         />
       )}
 
-      {/* 방송 시작 확인 모달 */}
       {showStartConfirm && (
         <>
           <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={() => setShowStartConfirm(false)} />
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
             <div className="w-full max-w-[400px] bg-[#0f0f13] rounded-2xl p-8 shadow-2xl border border-white/10 flex flex-col gap-6">
-              {/* Icon */}
               <div className="flex flex-col items-center gap-3 text-center">
                 <div className="w-16 h-16 rounded-full bg-[#e74c3c]/15 flex items-center justify-center">
                   <MdLiveTv size={32} className="text-[#e74c3c]" />
@@ -388,7 +377,6 @@ export default function LiveRegisterPage() {
                 </p>
               </div>
 
-              {/* Info */}
               <div className="bg-white/5 rounded-xl px-4 py-3 flex flex-col gap-1.5">
                 <div className="flex justify-between text-sm">
                   <span className="text-[#888]">방송 제목</span>
@@ -404,7 +392,6 @@ export default function LiveRegisterPage() {
                 </div>
               </div>
 
-              {/* Buttons */}
               <div className="flex gap-3">
                 <button
                   type="button"

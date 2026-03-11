@@ -13,16 +13,13 @@ export default function CategorySelectModal({ onConfirm, onClose }: Props) {
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
         <div className="relative w-full max-w-[480px] bg-[#0f0f13] rounded-2xl p-8 shadow-2xl border border-white/10">
-          {/* Close button */}
           <button
             type="button"
             onClick={onClose}
@@ -31,13 +28,11 @@ export default function CategorySelectModal({ onConfirm, onClose }: Props) {
             <FiX size={24} />
           </button>
 
-          {/* Title */}
           <h2 className="text-2xl font-bold text-white mb-2">방송 카테고리 설정</h2>
           <p className="text-[#888] text-sm mb-8">
             방송의 카테고리를 설정해주세요. 카테고리에 일치하는 물품만 등록 가능합니다
           </p>
 
-          {/* Category select */}
           <div className="flex flex-col gap-2 mb-10">
             <label className="text-white text-sm font-medium">카테고리</label>
             <div className="relative">
@@ -52,7 +47,6 @@ export default function CategorySelectModal({ onConfirm, onClose }: Props) {
                   </option>
                 ))}
               </select>
-              {/* Chevron icon */}
               <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#d9b36d]">
                 <FiChevronDown size={20} />
               </span>
@@ -60,7 +54,6 @@ export default function CategorySelectModal({ onConfirm, onClose }: Props) {
           </div>
 
 
-          {/* Buttons */}
           <div className="flex gap-3">
             <button
               type="button"

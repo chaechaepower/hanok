@@ -16,7 +16,7 @@ const sidebarItems: SideBarItem[] = [
 const formatScheduledAt = (isoString: string | null): string => {
   if (!isoString) return '즉시 시작';
   const d = new Date(isoString);
-  if (Number.isNaN(d.getTime())) return isoString; // fallback
+  if (Number.isNaN(d.getTime())) return isoString;
   return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
 
@@ -61,9 +61,7 @@ export default function LiveCreatePage() {
         className="!w-[200px] shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
       />
 
-      {/* Main Content */}
       <main className="flex-1 flex flex-col gap-6">
-        {/* Header */}
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-white leading-tight">라이브 방송 관리</h1>
@@ -79,7 +77,6 @@ export default function LiveCreatePage() {
           </button>
         </div>
 
-        {/* Live List */}
         <div className="flex flex-col gap-4">
           {isLoading ? (
             <div className="flex items-center justify-center py-20">
@@ -95,7 +92,6 @@ export default function LiveCreatePage() {
                 key={live.id}
                 className="flex items-center gap-5 border border-white/10 rounded-2xl p-4 bg-[#111] hover:bg-white/5 transition-colors"
               >
-                {/* Thumbnail */}
                 <div className="relative w-[130px] h-[100px] rounded-xl overflow-hidden shrink-0 bg-[#1a1a1a]">
                   {live.thumbnail ? (
                     <img
@@ -115,7 +111,6 @@ export default function LiveCreatePage() {
                   )}
                 </div>
 
-                {/* Info */}
                 <div className="flex-1 flex flex-col gap-1.5">
                   <p className="text-[#888] text-sm">
                     방송시간&nbsp;&nbsp;{formatScheduledAt(live.scheduledAt)}
@@ -128,7 +123,6 @@ export default function LiveCreatePage() {
                   </p>
                 </div>
 
-                {/* Actions */}
                 <div className="flex items-center gap-4 shrink-0 pr-2">
                   <button
                     type="button"
@@ -151,7 +145,6 @@ export default function LiveCreatePage() {
         </div>
       </main>
 
-      {/* Category Select Modal */}
       {showModal && (
         <CategorySelectModal
           onConfirm={handleConfirmCategory}

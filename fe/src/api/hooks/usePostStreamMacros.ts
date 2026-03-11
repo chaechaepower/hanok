@@ -5,7 +5,6 @@ import type {
   PostStreamMacrosResponse,
 } from '@/types';
 
-// POST /api/v1/streams/{streamId}/macros
 export const usePostStreamMacros = (streamId: number) => {
   return useMutation<PostStreamMacrosResponse, Error, PostStreamMacrosRequest>({
     mutationFn: async (body) => {

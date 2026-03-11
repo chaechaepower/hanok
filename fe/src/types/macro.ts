@@ -9,7 +9,7 @@ export type MacroQuestionType =
   | string;
 
 export type Macro = {
-  questionType: string; // API 명세서대로 string 사용, 혹은 MacroQuestionType
+  questionType: string;
   answer: string;
 };
 

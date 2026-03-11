@@ -43,7 +43,6 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
       marginBottom: '16px',
       border: '1px solid #2C2C2E'
     }}>
-      {/* 썸네일 영역 */}
       <div style={{
         position: 'relative',
         width: '160px',
@@ -53,7 +52,6 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
         flexShrink: 0,
         backgroundColor: '#FFFFFF',
       }}>
-        {/* 상태 배지 */}
         <div style={{
           position: 'absolute',
           top: '12px',
@@ -69,7 +67,6 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
           {currentStatus.label}
         </div>
         
-        {/* 이미지 슬라이더 */}
         {product.imageUrls && product.imageUrls.length > 1 && (
           <>
             <button
@@ -94,7 +91,6 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
             >
               <FaChevronRight size={10} />
             </button>
-            {/* 인디케이터 */}
             <div style={{
               position: 'absolute', bottom: '8px', left: '0', right: '0',
               display: 'flex', justifyContent: 'center', gap: '4px', zIndex: 10
@@ -123,9 +119,7 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
         )}
       </div>
 
-      {/* 정보 영역 */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* 헤더: 태그 및 수정/삭제 버튼 */}
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
           <div style={{ color: '#8E8E93', fontSize: '13px' }}>
             {product.tags.map(tag => `#${tag}`).join(' ')}
@@ -146,7 +140,6 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
           </div>
         </div>
 
-        {/* 제목 및 설명 */}
         <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '700', margin: '0 0 6px 0' }}>
           {product.title}
         </h3>
@@ -154,7 +147,6 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
           {product.description}
         </p>
 
-        {/* 상세 메트릭 그리드 */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(6, 1fr)',

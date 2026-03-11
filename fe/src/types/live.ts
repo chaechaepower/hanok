@@ -28,7 +28,6 @@ export type ChatMessageType =
   | { id: number; type: 'macro_response'; label: string; message: string }
   | { id: number; type: 'system'; message: string };
 
-// ─── 라이브 방송 관리 (LiveCreate) ──────────────────────────────────────────
 export type LiveStatus = '예약' | '방송중' | '종료' | null;
 
 export type Live = {
@@ -46,7 +45,6 @@ export type LiveListResponse = {
   lives: Live[];
 };
 
-// ─── POST /api/v1/streams/{streamId}/start ───────────────────────────────────
 export type StartStreamRequest = {
   title: string;
   categoryId: string;
@@ -74,10 +72,9 @@ export type StartStreamResponse = {
   data: StartStreamData;
 };
 
-// ─── PATCH /api/v1/streams/{streamId} ───────────────────────────────────────
 export type UpdateStreamRequest = {
   title: string;
-  categoryId: string; // 참고: 명세서는 2 (number)지만 기존 로직상 string으로 맞춤
+  categoryId: string;
   itemIds: number[];
   startType: 'scheduled' | 'immediate';
   thumbnail?: string;
@@ -91,7 +88,6 @@ export type UpdateStreamResponse = {
   status: string;
 };
 
-// ─── DELETE /api/v1/streams/{streamId} ──────────────────────────────────────
 export type DeleteStreamResponse = {
   streamId: number;
   status: 'cancelled';

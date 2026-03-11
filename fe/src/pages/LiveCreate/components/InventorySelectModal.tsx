@@ -24,15 +24,12 @@ export default function InventorySelectModal({
 
   return (
     <>
-      {/* Backdrop */}
       <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
         <div className="relative w-full max-w-[420px] bg-[#0f0f13] rounded-3xl overflow-hidden shadow-2xl flex flex-col"
           style={{ maxHeight: '85vh' }}
         >
-          {/* Header */}
           <div className="flex items-center justify-between px-6 pt-6 pb-4">
             <h2 className="text-white text-xl font-bold">내 인벤토리</h2>
             <div className="flex items-center gap-4">
@@ -47,7 +44,6 @@ export default function InventorySelectModal({
             </div>
           </div>
 
-          {/* Item list */}
           <div className="flex-1 overflow-y-auto px-4 pb-4 flex flex-col gap-3">
             {isLoading ? (
               <div className="flex justify-center py-16">
@@ -69,7 +65,6 @@ export default function InventorySelectModal({
                         : 'border-white/10 bg-[#1a1a1a] hover:border-white/25'
                     }`}
                   >
-                    {/* Thumbnail */}
                     <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-[#222]">
                       {item.imageUrls?.[0] ? (
                         <img
@@ -84,13 +79,11 @@ export default function InventorySelectModal({
                       )}
                     </div>
 
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <p className="text-white font-semibold text-base truncate">{item.title}</p>
                       <p className="text-white/50 text-sm truncate mt-0.5">{item.description}</p>
                     </div>
 
-                    {/* Checkbox */}
                     <div
                       className={`w-6 h-6 rounded-md border-2 flex items-center justify-center shrink-0 transition-all ${
                         selected
@@ -110,7 +103,6 @@ export default function InventorySelectModal({
             )}
           </div>
 
-          {/* Footer */}
           <div className="px-4 py-4 border-t border-white/10">
             <button
               type="button"

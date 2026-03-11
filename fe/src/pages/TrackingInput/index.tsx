@@ -30,7 +30,6 @@ const COURIER_LIST = [
   { Code: '24', Name: 'GS Postbox 택배' },
 ];
 
-// 거래 취소 확인 모달 컴포넌트
 function CancelModal({
   itemName,
   onConfirm,
@@ -58,7 +57,6 @@ function CancelModal({
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px',
         }}
       >
-        {/* 닫기 버튼 */}
         <button
           onClick={onClose}
           style={{
@@ -69,7 +67,6 @@ function CancelModal({
           <FiX size={20} />
         </button>
 
-        {/* 빨간 X 아이콘 */}
         <div style={{
           width: '56px', height: '56px', borderRadius: '50%',
           backgroundColor: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -77,12 +74,10 @@ function CancelModal({
           <FiX size={28} color="#EF4444" />
         </div>
 
-        {/* 제목 */}
         <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1A2238', margin: 0 }}>
           거래를 취소하시겠습니까?
         </h2>
 
-        {/* 상품명 */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: '10px',
           backgroundColor: '#F5F5F7', borderRadius: '10px', padding: '12px 16px', width: '100%',
@@ -91,7 +86,6 @@ function CancelModal({
           <span style={{ fontSize: '15px', color: '#1A2238', fontWeight: '500' }}>{itemName}</span>
         </div>
 
-        {/* 취소 사유 */}
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <label style={{ fontSize: '13px', color: '#888', fontWeight: '500' }}>취소 사유</label>
           <textarea
@@ -108,7 +102,6 @@ function CancelModal({
           />
         </div>
 
-        {/* 확인 버튼 */}
         <button
           onClick={() => onConfirm(reason)}
           style={{
@@ -137,11 +130,9 @@ export default function TrackingInput() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
-  // Find current item to check status
   const currentSelectedItem = items.find((i) => String(i.escrowId) === selectedItemId);
   const isTrackingSubmitted = currentSelectedItem && (currentSelectedItem.escrowState === 'INVOICE_SUBMITTED' || currentSelectedItem.escrowState === 'COMPLETED');
 
-  // Use Escrow Detail API
   const { data: detailResponse } = useGetEscrowDetail(selectedItemId);
   const selectedItemDetail = detailResponse?.data;
 
@@ -180,7 +171,6 @@ export default function TrackingInput() {
 
   return (
     <>
-      {/* 거래 취소 모달 */}
       {showCancelModal && selectedItemDetail && (
         <CancelModal
           itemName={selectedItemDetail.winningInfo.itemName}
@@ -197,10 +187,8 @@ export default function TrackingInput() {
           className="!w-[200px] shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
         />
 
-        {/* Left Column: Lists */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '48px' }}>
           
-          {/* Pending List */}
           <section>
             <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#CEAF82', marginBottom: '16px' }}>배송 등록 대기</h2>
             <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid #3A3A3C', fontSize: '14px', color: '#E5E5EA', marginBottom: '16px' }}>
@@ -244,7 +232,6 @@ export default function TrackingInput() {
             </div>
           </section>
 
-          {/* Completed List */}
           <section>
             <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#CEAF82', marginBottom: '16px' }}>배송 등록 완료</h2>
             <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid #3A3A3C', fontSize: '14px', color: '#E5E5EA', marginBottom: '16px' }}>
@@ -291,7 +278,6 @@ export default function TrackingInput() {
             </div>
           </section>
 
-          {/* Cancelled List */}
           {cancelledItems.length > 0 && (
             <section>
               <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#8E8E93', marginBottom: '16px' }}>거래 취소</h2>
@@ -331,11 +317,9 @@ export default function TrackingInput() {
           )}
         </div>
 
-        {/* Right Column: Detail Panel */}
         <div style={{ width: '420px', flexShrink: 0 }}>
           {selectedItemDetail ? (
             <div style={{ backgroundColor: '#1C1C1E', borderRadius: '24px', padding: '32px', border: '1px solid #3A3A3C', display: 'flex', flexDirection: 'column', minHeight: '600px' }}>
-              {/* Top Product Info */}
               <div style={{ display: 'flex', gap: '20px', marginBottom: '32px' }}>
                 <div style={{ width: '120px', height: '120px', backgroundColor: '#2C2C2E', borderRadius: '16px', overflow: 'hidden', flexShrink: 0 }}>
                   {selectedItemDetail.winningInfo.imageUrl
@@ -355,10 +339,8 @@ export default function TrackingInput() {
                 </div>
               </div>
 
-              {/* Divider */}
               <div style={{ height: '1px', backgroundColor: '#3A3A3C', margin: '0 -32px 32px -32px', width: 'calc(100% + 64px)' }} />
 
-              {/* Shipping Info Header */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#CEAF82', fontWeight: 'bold', fontSize: '16px' }}>
                   <FaTruck size={18} />
@@ -366,14 +348,12 @@ export default function TrackingInput() {
                 </div>
               </div>
 
-              {/* Shipping Info Box */}
               <div style={{ backgroundColor: '#151517', borderRadius: '12px', padding: '24px', border: '1px solid #2C2C2E', marginBottom: '16px', fontSize: '14px', color: '#E5E5EA', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <p>{selectedItemDetail.shippingAddress.name}</p>
                 <p>{selectedItemDetail.shippingAddress.phone}</p>
                 <p>[{selectedItemDetail.shippingAddress.postalCode}] {selectedItemDetail.shippingAddress.address} {selectedItemDetail.shippingAddress.addressDetail}</p>
               </div>
 
-              {/* Delivery Info (if invoice registered) */}
               {selectedItemDetail.delivery && (
                 <div style={{ backgroundColor: '#151517', borderRadius: '12px', padding: '16px 24px', border: '1px solid #2C2C2E', marginBottom: '16px', fontSize: '14px', color: '#E5E5EA', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ color: '#AEAEB2' }}>택배 정보</span>
@@ -389,7 +369,6 @@ export default function TrackingInput() {
                 </div>
               ) : (
                 <>
-                  {/* Tracking Form input */}
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
                     <select
                       value={courier}
@@ -423,7 +402,6 @@ export default function TrackingInput() {
                     />
                   </div>
 
-                  {/* Actions */}
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
                     <button
                       onClick={() => {

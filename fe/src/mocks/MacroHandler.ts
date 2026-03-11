@@ -2,7 +2,6 @@ import { http, HttpResponse } from 'msw';
 import { BASE_URL } from '@/api/instance';
 import { CATEGORY_MACROS } from '@/constants/macro';
 import type { Macro, GetStreamMacrosResponse, PostStreamMacrosRequest, PostStreamMacrosResponse } from '@/types';
-// 저장된 매크로 (streamId → macros)
 const savedMacros: Record<number, { category: string; macros: Macro[] }> = {};
 
 const getDefaultMacros = (category: string): Macro[] => {
@@ -15,7 +14,6 @@ const getDefaultMacros = (category: string): Macro[] => {
 };
 
 export const macroHandlers = [
-  // GET /api/v1/streams/{streamId}/macros
   http.get(`${BASE_URL}/api/v1/streams/:streamId/macros`, ({ params, request }) => {
     const streamId = Number(params.streamId);
     const url = new URL(request.url);
@@ -32,12 +30,10 @@ export const macroHandlers = [
     return HttpResponse.json(response, { status: 200 });
   }),
 
-  // POST /api/v1/streams/{streamId}/macros
   http.post(`${BASE_URL}/api/v1/streams/:streamId/macros`, async ({ params, request }) => {
     const streamId = Number(params.streamId);
     const body = (await request.json()) as PostStreamMacrosRequest;
 
-    // 기존 질문 텍스트와 병합 필요 없음 (API 명세상 Macro는 questionType과 answer만 저장)
     const merged: Macro[] = body.macros.map((m) => ({
       questionType: m.questionType,
       answer: m.answer,

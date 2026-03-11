@@ -41,11 +41,9 @@ export default function ProductRegistrationModal({ isOpen, onClose, onSuccess, i
         setTitle(initialData.title);
         setDescription(initialData.description);
         
-        // Match category from list
         const matchedCategory = MAIN_CATEGORY_ITEMS.find(c => c.label === initialData.category || c.id === initialData.category);
         setCategory(matchedCategory ? matchedCategory.id : '');
         
-        // Map condition
         setCondition(initialData.condition === '미개봉' ? 'new' : initialData.condition === '거의 새것' ? 'like-new' : 'used');
         
         setStartPrice(initialData.startPrice.toString());
@@ -60,7 +58,6 @@ export default function ProductRegistrationModal({ isOpen, onClose, onSuccess, i
           setExistingImages([]);
         }
       } else {
-        // Reset
         setTitle(''); setDescription(''); setCategory(''); setCondition('');
         setStartPrice(''); setBidUnit(''); setAuctionTime(''); setAuctionMethod('');
         setHashtags(''); setExistingImages([]);
@@ -94,13 +91,10 @@ export default function ProductRegistrationModal({ isOpen, onClose, onSuccess, i
   const handleSubmit = async () => {
     if (!title) { setError('상품명을 입력해주세요'); return; }
     if (!category) { setError('카테고리를 선택해주세요'); return; }
-    // Add more basic validation as needed...
-
-    // Parse hashtags
     const parsedTags = hashtags
-      .split(/\s+/) // split by space
-      .map(tag => tag.replace(/^#/, '').trim()) // remove # and trim
-      .filter(tag => tag.length > 0); // remove empty
+      .split(/\s+/)
+      .map(tag => tag.replace(/^#/, '').trim())
+      .filter(tag => tag.length > 0);
 
     try {
       if (initialData) {

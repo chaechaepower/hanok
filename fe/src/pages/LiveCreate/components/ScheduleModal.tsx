@@ -39,13 +39,10 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
 
   return (
     <>
-      {/* Backdrop */}
       <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
         <div className="relative w-full max-w-[500px] bg-[#0f0f13] rounded-2xl p-8 shadow-2xl border border-white/10">
-          {/* Close */}
           <button
             type="button"
             onClick={onClose}
@@ -54,11 +51,9 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
             <FaTimes size={14} />
           </button>
 
-          {/* Title */}
           <h2 className="text-white text-2xl font-bold mb-1">방송 예약 설정</h2>
           <p className="text-[#888] text-sm mb-8">예약은 오늘로부터 최대 1달(30일) 이내로만 가능합니다.</p>
 
-          {/* 날짜 */}
           <div className="flex flex-col gap-2 mb-6">
             <label className="text-white text-sm font-medium">예약 날짜</label>
             <div className="relative">
@@ -77,11 +72,9 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
             </div>
           </div>
 
-          {/* 시간 */}
           <div className="flex flex-col gap-2 mb-10">
             <label className="text-white text-sm font-medium">예약 시간</label>
             <div className="relative">
-              {/* 표시용 오버레이 */}
               <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white text-base pointer-events-none">
                 {formatTime(time)}
               </div>
@@ -98,7 +91,6 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex gap-3">
             <button
               type="button"

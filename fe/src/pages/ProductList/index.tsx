@@ -76,9 +76,7 @@ export default function ProductListPage() {
         className="!w-[200px] shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
       />
 
-      {/* Main Content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
           <div>
             <h1 style={{ fontSize: '24px', fontWeight: '700', margin: '0 0 8px 0' }}>내 인벤토리</h1>
@@ -108,7 +106,6 @@ export default function ProductListPage() {
           </button>
         </div>
 
-        {/* Inventory Box */}
         <div style={{
           backgroundColor: '#151517',
           borderRadius: '16px',
@@ -118,7 +115,6 @@ export default function ProductListPage() {
           display: 'flex',
           flexDirection: 'column',
         }}>
-          {/* Tabs */}
           <div style={{
             display: 'flex',
             borderBottom: '1px solid #2C2C2E',
@@ -158,7 +154,6 @@ export default function ProductListPage() {
             })}
           </div>
 
-          {/* Product List or Empty State */}
           {filteredProducts.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {filteredProducts.map(product => (
