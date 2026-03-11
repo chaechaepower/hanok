@@ -230,9 +230,11 @@ public class AuctionService {
     private static AuctionEndResponse.WinnerDto.ShippingDto buildShippingDto(ShippingAddress shippingAddress) {
         return AuctionEndResponse.WinnerDto.ShippingDto.builder()
                 .recipientName(shippingAddress.getRecipientName())
-                .phone(shippingAddress.getPhone())
+                .addressName(shippingAddress.getAddressName())
+                .postalCode(shippingAddress.getPostalCode())
                 .address(shippingAddress.getAddress())
                 .addressDetail(shippingAddress.getAddressDetail())
+                .phone(shippingAddress.getPhone())
                 .build();
     }
 }
