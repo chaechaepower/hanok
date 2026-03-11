@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @EntityListeners(AuditingEntityListener.class)
 public class Seller {
 
@@ -44,6 +43,9 @@ public class Seller {
     @Column(name = "tiktok_url", length = 100)
     private String tiktokUrl;
 
+    @Column(name = "avg_ship_days")
+    private Double avgShipDays;
+
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -53,7 +55,7 @@ public class Seller {
     private LocalDateTime updatedAt;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id",  nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Builder
@@ -64,8 +66,7 @@ public class Seller {
                    String instaUrl,
                    String youtubeUrl,
                    String tiktokUrl,
-                   LocalDateTime createdAt,
-                   LocalDateTime updatedAt,
+                   Double avgShipDays,
                    User user) {
         this.intro = intro;
         this.rating = rating;
@@ -74,8 +75,7 @@ public class Seller {
         this.instaUrl = instaUrl;
         this.youtubeUrl = youtubeUrl;
         this.tiktokUrl = tiktokUrl;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
+        this.avgShipDays = avgShipDays;
         this.user = user;
     }
 }

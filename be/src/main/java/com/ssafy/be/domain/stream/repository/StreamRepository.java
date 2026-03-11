@@ -2,6 +2,8 @@ package com.ssafy.be.domain.stream.repository;
 
 import com.ssafy.be.domain.item.entity.Category;
 import com.ssafy.be.domain.stream.entity.Stream;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -42,4 +44,7 @@ public interface StreamRepository extends JpaRepository<Stream, Long> {
                     + "WHERE s.isLive = false AND s.scheduledAt IS NOT NULL "
                     + "AND (:category IS NULL OR s.category = :category)")
     List<Stream> findAllScheduledStreams(@Param("category") Category category);
+
+    List<Stream> findTop10BySellerIdAndIsLiveFalseAndScheduledAtAfterOrderByScheduledAtAsc(
+            Long sellerId, LocalDateTime now);
 }

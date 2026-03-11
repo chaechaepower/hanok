@@ -1,11 +1,17 @@
 package com.ssafy.be.domain.seller.service;
 
+import com.ssafy.be.domain.auction.entity.Auction;
+import com.ssafy.be.domain.auction.repository.AuctionRepository;
+import com.ssafy.be.domain.follow.repository.FollowRepository;
+import com.ssafy.be.domain.item.entity.Item;
+import com.ssafy.be.domain.item.entity.ItemStatus;
+import com.ssafy.be.domain.item.repository.ItemRepository;
 import com.ssafy.be.domain.seller.dto.request.SellerRegisterRequest;
-import com.ssafy.be.domain.seller.dto.response.SellerRegisterResponse;
-import com.ssafy.be.domain.seller.dto.response.SellerStatusResponse;
+import com.ssafy.be.domain.seller.dto.response.*;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
+import com.ssafy.be.domain.stream.repository.StreamRepository;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.exception.UserErrorCode;
 import com.ssafy.be.domain.user.repository.UserRepository;
@@ -14,12 +20,18 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class SellerService {
 
     private final SellerRepository sellerRepository;
     private final UserRepository userRepository;
+    private final FollowRepository followRepository;
+    private final ItemRepository itemRepository;
+    private final StreamRepository streamRepository;
 
     @Transactional
     public SellerRegisterResponse register(Long userId, SellerRegisterRequest request) {
@@ -50,5 +62,58 @@ public class SellerService {
         return sellerRepository.findByUserId(userId)
                 .map(seller -> new SellerStatusResponse(true, seller.getId()))
                 .orElse(new SellerStatusResponse(false, null));
+    }
+
+    @Transactional(readOnly = true)
+    public SellerProfileResponse getProfile(Long sellerId) {
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
+
+        User user = seller.getUser();
+
+        long followerCount = followRepository.countBySeller(seller);
+
+        // N+1 개선 - 쿼리 1번으로 해결
+        List<RecentSaleResponse> recentSales = itemRepository
+                .findTop10SoldItemsWithFinalPrice(sellerId)
+                .stream()
+                .map(row -> new RecentSaleResponse(
+                        ((Item) row[0]).getId(),
+                        ((Item) row[0]).getName(),
+                        (Long) row[1],
+                        ((Item) row[0]).getSoldAt()
+                ))
+                .toList();
+
+        // 예약된 방송 목록 (최근 10개)
+        List<ScheduledStreamResponse> posts = streamRepository
+                .findTop10BySellerIdAndIsLiveFalseAndScheduledAtAfterOrderByScheduledAtAsc(
+                        sellerId, LocalDateTime.now())
+                .stream()
+                .map(stream -> new ScheduledStreamResponse(
+                        stream.getId(),
+                        stream.getTitle(),
+                        stream.getNotice(),
+                        stream.getThumbnail(),
+                        stream.getScheduledAt()
+                ))
+                .toList();
+
+        return new SellerProfileResponse(
+                seller.getId(),
+                user.getNickname(),
+                seller.getIntro(),
+                user.getProfileImage(),
+                seller.getInstaUrl(),
+                seller.getYoutubeUrl(),
+                seller.getTiktokUrl(),
+                new SellerStatsResponse(
+                        seller.getRating(),
+                        seller.getAvgShipDays(),
+                        followerCount
+                ),
+                recentSales,
+                posts
+        );
     }
 }
