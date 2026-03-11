@@ -98,17 +98,15 @@ export default function LiveEditPage() {
     setShowStartConfirm(true);
   };
 
-  const submitStream = async (startType: 'scheduled' | 'immediate', scheduledAtValue?: string) => {
+  const submitStream = async (startType: 'SCHEDULED' | 'IMMEDIATE', scheduledAtValue?: string) => {
     setIsSubmitting(true);
     try {
       const payload: UpdateStreamRequest = {
         title,
-        categoryId: initialCategoryId,
-        thumbnail: thumbnailUrl ?? '',
-        itemIds: selectedItems.map((i) => i.id),
+        category: initialCategoryId,
         startType,
         notice: notice || undefined,
-        scheduledAt: startType === 'scheduled' ? (scheduledAtValue ?? scheduledAt) : undefined,
+        scheduledAt: startType === 'SCHEDULED' ? (scheduledAtValue ?? scheduledAt) : undefined,
       };
 
       await patchStream(payload);
@@ -120,7 +118,7 @@ export default function LiveEditPage() {
       await postMacros.mutateAsync({ macros });
 
       alert('방송 및 매크로가 성공적으로 수정되었습니다.');
-      if (startType === 'immediate') {
+      if (startType === 'IMMEDIATE') {
         navigate(`/live/${streamId}`);
       } else {
         navigate('/live/new');
@@ -381,7 +379,7 @@ export default function LiveEditPage() {
           onConfirm={async (iso) => {
             setScheduledAt(iso);
             setShowScheduleModal(false);
-            await submitStream('scheduled', iso);
+            await submitStream('SCHEDULED', iso);
           }}
           onClose={() => setShowScheduleModal(false)}
         />
@@ -432,7 +430,7 @@ export default function LiveEditPage() {
                   disabled={isSubmitting}
                   onClick={async () => {
                     setShowStartConfirm(false);
-                    await submitStream('immediate');
+                    await submitStream('IMMEDIATE');
                   }}
                   className="flex-1 py-3.5 rounded-xl bg-[#e74c3c] text-white font-bold hover:bg-[#c0392b] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >

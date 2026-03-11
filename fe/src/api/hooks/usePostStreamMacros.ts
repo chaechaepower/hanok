@@ -9,7 +9,7 @@ export const usePostStreamMacros = (streamId: number) => {
   return useMutation<PostStreamMacrosResponse, Error, PostStreamMacrosRequest>({
     mutationFn: async (body) => {
       const res = await getFetchInstance().post<PostStreamMacrosResponse>(
-        `/api/v1/streams/${streamId}/macros`,
+        `/v1/streams/${streamId}/macros`,
         body,
       );
       return res.data;

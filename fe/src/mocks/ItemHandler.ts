@@ -30,7 +30,7 @@ let mockItems: MockItem[] = [
     bidUnit: 5000,
     auctionTime: 30,
     condition: 'S',
-    category: '스니커즈/신발',
+    category: 'SNEAKERS_SHOES',
     auctionMethod: 'ENGLISH',
   },
   {
@@ -44,7 +44,7 @@ let mockItems: MockItem[] = [
     bidUnit: 10000,
     auctionTime: 60,
     condition: 'A',
-    category: '스니커즈/신발',
+    category: 'SNEAKERS_SHOES',
     auctionMethod: 'ENGLISH',
   },
   {
@@ -58,7 +58,7 @@ let mockItems: MockItem[] = [
     bidUnit: 5000,
     auctionTime: 30,
     condition: 'A',
-    category: '스니커즈/신발',
+    category: 'SNEAKERS_SHOES',
     auctionMethod: 'ENGLISH',
   },
   {
@@ -72,7 +72,7 @@ let mockItems: MockItem[] = [
     bidUnit: 100000,
     auctionTime: 60,
     condition: 'S',
-    category: '시계',
+    category: 'WATCHES',
     auctionMethod: 'ENGLISH',
   },
   {
@@ -86,15 +86,15 @@ let mockItems: MockItem[] = [
     bidUnit: 200000,
     auctionTime: 60,
     condition: 'S',
-    category: '가방/패션잡화',
+    category: 'BAGS_FASHION_ACCESSORIES',
     auctionMethod: 'ENGLISH',
   },
 ];
 
 const getCategoryName = (categoryId?: number) => {
-  if (categoryId === 1) return 'SNEAKERS';
-  if (categoryId === 3) return 'WATCH';
-  return 'COLLECTIBLE';
+  if (categoryId === 1) return 'SNEAKERS_SHOES';
+  if (categoryId === 3) return 'WATCHES';
+  return 'ETC';
 };
 
 export const itemHandlers = [

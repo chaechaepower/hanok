@@ -72,7 +72,7 @@ export const mainHandlers = [
 
     const categoryId = toNumber(url.searchParams.get('categoryId'), NaN);
     const page = Math.max(0, toNumber(url.searchParams.get('page'), 0));
-    const size = Math.max(1, toNumber(url.searchParams.get('size'), 10));
+    const size = Math.max(1, toNumber(url.searchParams.get('size'), 8));
 
     let streams = [...MAIN_LIVE_STREAMS];
 

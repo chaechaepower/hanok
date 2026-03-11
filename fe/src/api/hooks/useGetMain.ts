@@ -24,7 +24,7 @@ export const getMainLiveStreams = async ({
   status = 'LIVE',
   sort = 'LATEST',
   page = 0,
-  size = 10,
+  size = 8,
 }: GetMainParams = {}) => {
   const response = await getFetchInstance().get<PageResponse<LiveCardData>>(getMainPath(), {
     params: {
@@ -46,7 +46,7 @@ export const useGetMain = (params: UseGetMainParams = {}) => {
   const categoryId = params.categoryId;
   const status = params.status ?? 'LIVE';
   const sort = params.sort ?? 'LATEST';
-  const size = params.size ?? 10;
+  const size = params.size ?? 8;
 
   return useSuspenseInfiniteQuery({
     queryKey: ['liveCards', type, categoryId ?? null, status, sort, size],

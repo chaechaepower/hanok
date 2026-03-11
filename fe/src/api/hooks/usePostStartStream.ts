@@ -6,7 +6,7 @@ export const usePostStartStream = (streamId: number) => {
   return useMutation<StartStreamResponse, Error, StartStreamRequest>({
     mutationFn: async (body) => {
       const res = await getFetchInstance().post<StartStreamResponse>(
-        `/api/v1/streams/${streamId}/start`,
+        `/v1/streams/${streamId}/start`,
         body,
       );
       return res.data;

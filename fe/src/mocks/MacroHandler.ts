@@ -14,7 +14,7 @@ const getDefaultMacros = (category: string): Macro[] => {
 };
 
 export const macroHandlers = [
-  http.get(`${BASE_URL}/api/v1/streams/:streamId/macros`, ({ params, request }) => {
+  http.get(`${BASE_URL}/v1/streams/:streamId/macros`, ({ params, request }) => {
     const streamId = Number(params.streamId);
     const url = new URL(request.url);
     const category = url.searchParams.get('category') ?? '';
@@ -30,7 +30,7 @@ export const macroHandlers = [
     return HttpResponse.json(response, { status: 200 });
   }),
 
-  http.post(`${BASE_URL}/api/v1/streams/:streamId/macros`, async ({ params, request }) => {
+  http.post(`${BASE_URL}/v1/streams/:streamId/macros`, async ({ params, request }) => {
     const streamId = Number(params.streamId);
     const body = (await request.json()) as PostStreamMacrosRequest;
 

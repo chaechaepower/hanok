@@ -28,31 +28,31 @@ export type ChatMessageType =
   | { id: number; type: 'macro_response'; label: string; message: string }
   | { id: number; type: 'system'; message: string };
 
-export type LiveStatus = '예약' | '방송중' | '종료' | null;
-
 export type Live = {
-  id: number;
-  status: LiveStatus;
-  thumbnail: string | null;
-  scheduledAt: string | null;
+  streamId: number;
   title: string;
   category: string;
-  itemIds?: number[];
+  thumbnail: string | null;
+  scheduledAt: string | null;
+  startType: 'SCHEDULED' | 'IMMEDIATE';
   notice?: string;
-};
-
-export type LiveListResponse = {
-  lives: Live[];
+  isLive: boolean;
+  createdAt: string;
 };
 
 export type StartStreamRequest = {
   title: string;
-  categoryId: string;
-  thumbnail: string;
-  itemIds: number[];
-  startType: 'scheduled' | 'immediate';
-  notice?: string;
+  category: string;
+  startType: 'SCHEDULED' | 'IMMEDIATE';
   scheduledAt?: string;
+  notice?: string;
+  itemIds: number[];
+};
+
+export type PostStreamResponse = {
+  streamId: number;
+  title: string;
+  status: string;
 };
 
 export type RtcConfig = {
@@ -74,12 +74,10 @@ export type StartStreamResponse = {
 
 export type UpdateStreamRequest = {
   title: string;
-  categoryId: string;
-  itemIds: number[];
-  startType: 'scheduled' | 'immediate';
-  thumbnail?: string;
-  notice?: string;
+  category: string;
+  startType: 'SCHEDULED' | 'IMMEDIATE';
   scheduledAt?: string;
+  notice?: string;
 };
 
 export type UpdateStreamResponse = {
@@ -91,4 +89,18 @@ export type UpdateStreamResponse = {
 export type DeleteStreamResponse = {
   streamId: number;
   status: 'cancelled';
+};
+
+export type ScheduledStream = {
+  streamId: number;
+  title: string;
+  category: string;
+  thumbnail: string | null;
+  scheduledAt: string | null;
+  state: 'LIVE' | 'SCHEDULED';
+};
+
+export type ScheduledStreamsResponse = {
+  streams: ScheduledStream[];
+  hasNext: boolean;
 };

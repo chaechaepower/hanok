@@ -8,7 +8,7 @@ export const useGetStreamMacros = (streamId: number, category: string) => {
     queryKey: ['stream-macros', streamId, category],
     queryFn: async () => {
       const res = await getFetchInstance().get<GetStreamMacrosResponse>(
-        `/api/v1/streams/${streamId}/macros?category=${encodeURIComponent(category)}`,
+        `/v1/streams/${streamId}/macros?category=${encodeURIComponent(category)}`,
       );
       return res.data;
     },

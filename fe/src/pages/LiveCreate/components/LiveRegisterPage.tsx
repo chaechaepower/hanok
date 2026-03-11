@@ -6,6 +6,7 @@ import { getFetchInstance } from '@/api/instance';
 import { CATEGORY_MACROS } from '@/constants/macro';
 import { CATEGORIES } from './categories';
 import { useGetItemsByCategory } from '@/api/hooks/useGetItems';
+import { usePostStream } from '@/api/hooks/usePostStream';
 import type { Product, StartStreamRequest } from '@/types';
 import InventorySelectModal from './InventorySelectModal';
 import ScheduleModal from './ScheduleModal';
@@ -24,6 +25,7 @@ export default function LiveRegisterPage() {
   const [title, setTitle] = useState('');
   const [notice, setNotice] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [selectedItems, setSelectedItems] = useState<Product[]>([]);
   const [showInventoryModal, setShowInventoryModal] = useState(false);
   const [showStartConfirm, setShowStartConfirm] = useState(false);
@@ -45,6 +47,7 @@ export default function LiveRegisterPage() {
     if (file) {
       const url = URL.createObjectURL(file);
       setThumbnailUrl(url);
+      setThumbnailFile(file);
     }
   };
 
@@ -66,28 +69,29 @@ export default function LiveRegisterPage() {
     setShowStartConfirm(true);
   };
 
-  const submitStream = async (startType: 'scheduled' | 'immediate', scheduledAtValue?: string) => {
+  const postStream = usePostStream();
+
+  const submitStream = async (startType: 'SCHEDULED' | 'IMMEDIATE', scheduledAtValue?: string) => {
     setIsSubmitting(true);
     try {
       const payload: StartStreamRequest = {
         title,
-        categoryId: initialCategoryId,
-        thumbnail: thumbnailUrl ?? '',
+        category: initialCategoryId,
         itemIds: selectedItems.map((i) => i.id),
         startType,
         notice: notice || undefined,
-        scheduledAt: startType === 'scheduled' ? (scheduledAtValue ?? scheduledAt) : undefined,
+        scheduledAt: startType === 'SCHEDULED' ? (scheduledAtValue ?? scheduledAt) : undefined,
       };
 
-      const res = await getFetchInstance().post<{ streamId: number; title: string; status: string }>(
-        '/api/v1/streams',
-        payload,
-      );
-      const newStreamId = res.data.streamId;
+      const res = await postStream.mutateAsync({
+        request: payload,
+        thumbnail: thumbnailFile ?? undefined,
+      });
+      const newStreamId = res.streamId;
 
-      if (startType === 'immediate') {
+      if (startType === 'IMMEDIATE') {
         const startRes = await getFetchInstance().post(
-          `/api/v1/streams/${newStreamId}/start`,
+          `/v1/streams/${newStreamId}/start`,
           payload,
         );
         const token = (startRes.data as { data?: { openviduToken?: string } })?.data?.openviduToken;
@@ -101,9 +105,9 @@ export default function LiveRegisterPage() {
         questionType: m.questionType,
         answer: macroAnswers[m.questionType] ?? '',
       }));
-      await getFetchInstance().post(`/api/v1/streams/${newStreamId}/macros`, { macros });
+      await getFetchInstance().post(`/v1/streams/${newStreamId}/macros`, { macros });
 
-      if (startType === 'immediate') {
+      if (startType === 'IMMEDIATE') {
         navigate(`/live/${newStreamId}`);
       } else {
         navigate('/live/new');
@@ -355,7 +359,7 @@ export default function LiveRegisterPage() {
           onConfirm={async (iso) => {
             setScheduledAt(iso);
             setShowScheduleModal(false);
-            await submitStream('scheduled', iso);
+            await submitStream('SCHEDULED', iso);
           }}
           onClose={() => setShowScheduleModal(false)}
         />
@@ -406,7 +410,7 @@ export default function LiveRegisterPage() {
                   disabled={isSubmitting}
                   onClick={async () => {
                     setShowStartConfirm(false);
-                    await submitStream('immediate');
+                    await submitStream('IMMEDIATE');
                   }}
                   className="flex-1 py-3.5 rounded-xl bg-[#e74c3c] text-white font-bold hover:bg-[#c0392b] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                 >

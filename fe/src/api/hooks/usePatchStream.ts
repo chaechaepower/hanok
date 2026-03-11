@@ -8,13 +8,13 @@ export const usePatchStream = (streamId: number) => {
   return useMutation<UpdateStreamResponse, Error, UpdateStreamRequest>({
     mutationFn: async (body) => {
       const res = await getFetchInstance().patch<UpdateStreamResponse>(
-        `/api/v1/streams/${streamId}`,
+        `/v1/streams/${streamId}`,
         body,
       );
       return res.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['lives'] });
+      queryClient.invalidateQueries({ queryKey: ['scheduled-streams'] });
     },
   });
 };
