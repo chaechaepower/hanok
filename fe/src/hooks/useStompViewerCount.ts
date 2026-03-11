@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStomp } from './useStomp';
-import { DESTINATION_PREFIX } from '@/constants/stomp';
-import type { StompResponse } from '@/types/stomp';
+import { DESTINATION_PREFIX } from '@/constants/stompChat';
+import type { StompResponse } from '@/types/stompChat';
 
 export function useStompViewerCount() {
   const { client, connectionState, streamId } = useStomp();

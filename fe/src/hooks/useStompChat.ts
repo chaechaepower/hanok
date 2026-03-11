@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStomp } from './useStomp';
-import { DESTINATION_PREFIX, MAX_CHAT_HISTORY } from '@/constants/stomp';
+import { DESTINATION_PREFIX, MAX_CHAT_HISTORY } from '@/constants/stompChat';
 import type {
   StompResponse,
   ChatSendPayload,
   MacroPayload,
   ChatMessageType,
-} from '@/types/stomp';
+} from '@/types/stompChat';
 
 let chatIdCounter = 0;
 

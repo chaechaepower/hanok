@@ -1,7 +1,7 @@
 import { createContext, useEffect, useRef, useState } from 'react';
 import { Client } from '@stomp/stompjs';
 import { BASE_URL, getAuthToken } from '@/api/instance';
-import { WS_ENDPOINT, RECONNECT_DELAY } from '@/constants/stomp';
+import { WS_ENDPOINT, RECONNECT_DELAY } from '@/constants/stompChat';
 
 export type StompConnectionState =
   | 'connecting'

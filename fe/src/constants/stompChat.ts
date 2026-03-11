@@ -8,4 +8,3 @@ export const DESTINATION_PREFIX = {
 
 export const RECONNECT_DELAY = 5000;
 export const MAX_CHAT_HISTORY = 200;
-export const MAX_BID_HISTORY = 50;
