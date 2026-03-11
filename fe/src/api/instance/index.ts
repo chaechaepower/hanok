@@ -10,6 +10,8 @@ export const setAuthToken = (token: string | null) => {
   accessToken = token;
 };
 
+export const getAuthToken = (): string | null => accessToken;
+
 const initInstance = (): AxiosInstance => {
   const ax = axios.create({
     baseURL: import.meta.env.VITE_API_BASE_URL,
