@@ -136,7 +136,7 @@ public class StreamService {
 
         if (thumbnail != null && !thumbnail.isEmpty()) {
             if (stream.getThumbnail() != null) {
-                gcsClient.deleteStreamThumbnail(stream.getThumbnail());
+                gcsClient.deleteImage(stream.getThumbnail());
             }
             try {
                 String url = gcsClient.uploadStreamThumbnail(thumbnail, seller.getId(), streamId);
@@ -177,7 +177,7 @@ public class StreamService {
                         .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
         if (stream.getThumbnail() != null) {
-            gcsClient.deleteStreamThumbnail(stream.getThumbnail());
+            gcsClient.deleteImage(stream.getThumbnail());
         }
 
         streamRepository.delete(stream);
@@ -219,6 +219,21 @@ public class StreamService {
                         .findByIdAndSellerId(streamId, seller.getId())
                         .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
+        List<ItemSummaryResponse> items = auctionRepository.findByStreamId(streamId).stream()
+                .map(auction -> {
+                    Item item = auction.getItem();
+                    return new ItemSummaryResponse(
+                            item.getId(),
+                            item.getName(),
+                            item.getCategory(),
+                            item.getStartPrice(),
+                            item.getStatus(),
+                            item.getItemCondition(),
+                            item.getImage1(),
+                            item.getCreatedAt());
+                })
+                .toList();
+
         return new StreamDetailResponse(
                 stream.getId(),
                 stream.getTitle(),
@@ -228,7 +243,8 @@ public class StreamService {
                 stream.getStartType(),
                 stream.getNotice(),
                 stream.getStatus() == StreamStatus.LIVE,
-                stream.getCreatedAt());
+                stream.getCreatedAt(),
+                items);
     }
 
     @Transactional
@@ -355,7 +371,7 @@ public class StreamService {
                 .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
         // 시청자 수 증가 (비회원이면 userId null)
-        streamViewerService.increment(streamId);  // addViewer → increment
+        String identity = streamViewerService.enter(streamId, userId);  // addViewer → increment
 
         long viewerCount = streamViewerService.getViewerCount(streamId);
 
@@ -379,6 +395,20 @@ public class StreamService {
                 })
                 .orElse(List.of());
 
+        // 토큰 발급
+        boolean isHost = stream.getSeller().getUser().getId().equals(userId);
+        String participantIdentity = userId != null ? String.valueOf(userId) : "guest-" + streamId;
+        String roomName = String.valueOf(streamId);
+
+        AccessToken accessToken = new AccessToken(liveKitProperties.apiKey(), liveKitProperties.apiSecret());
+        accessToken.setName(participantIdentity);
+        accessToken.setIdentity(participantIdentity);
+        accessToken.addGrants(
+                new RoomJoin(true),
+                new RoomName(roomName),
+                new CanPublish(isHost),
+                new CanSubscribe(true));
+
         return new StreamEnterResponse(
                 stream.getId(),
                 stream.getTitle(),
@@ -391,7 +421,23 @@ public class StreamService {
                         seller.getUser().getProfileImage()
                 ),
                 viewerCount,
-                topBidders
+                topBidders,
+                accessToken.toJwt(),
+                identity
         );
+    }
+
+    @Transactional(readOnly = true)
+    public StreamItemsResponse getStreamItems(Long streamId) {
+        streamRepository.findById(streamId)
+                .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
+
+        List<StreamItemsResponse.StreamItemResponse> items = auctionRepository
+                .findByStreamId(streamId)
+                .stream()
+                .map(StreamItemsResponse.StreamItemResponse::from)
+                .toList();
+
+        return new StreamItemsResponse(items);
     }
 }

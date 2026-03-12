@@ -226,7 +226,7 @@ public class UserService {
 
         // 2. 기존 이미지 삭제 (있을 경우)
         if (user.getProfileImage() != null) {
-            gcsClient.deleteProfileImage(user.getProfileImage());
+            gcsClient.deleteImage(user.getProfileImage());
         }
 
         // 3. 새 이미지 업로드

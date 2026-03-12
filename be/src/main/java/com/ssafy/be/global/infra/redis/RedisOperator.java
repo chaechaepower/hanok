@@ -11,6 +11,7 @@ import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,8 +29,9 @@ public class RedisOperator {
      *           COMMON
      * ================================ */
 
+    //spring data redis에서 파이프라인이나 트랜잭션 내부에서 기본으로 null 반환하도록 설계되어 NPE 발생 -> null발생해도 false 반환하도록
     public boolean containsKey(String key) {
-        return redisTemplate.hasKey(key);
+        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
 
     public void delete(String key) {
@@ -159,7 +161,8 @@ public class RedisOperator {
 
         return cached.stream()
                 .map(json -> deserialize(json, clazz))
-                .collect(Collectors.toList());
+                //수정 가능한 list라는 명시 필요
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     private String serialize(Object obj) {
@@ -181,5 +184,27 @@ public class RedisOperator {
     public Set<String> getZSetReverseRangeByScore(String key, double min, double max, long offset, long cnt) {
         return redisTemplate.opsForZSet().reverseRangeByScore(key, min, max, offset, cnt);
 
+    }
+
+    /* ================================
+     *           SET
+     * ================================ */
+
+    public void addToSet(String key, String value) {
+        redisTemplate.opsForSet().add(key, value);
+    }
+
+    public void removeFromSet(String key, String value) {
+        redisTemplate.opsForSet().remove(key, value);
+    }
+
+    public boolean isMemberOfSet(String key, String value) {
+        Boolean result = redisTemplate.opsForSet().isMember(key, value);
+        return result != null && result;
+    }
+
+    public long getSetSize(String key) {
+        Long size = redisTemplate.opsForSet().size(key);
+        return size != null ? size : 0L;
     }
 }

@@ -22,28 +22,28 @@ public class StompExceptionHandler {
     // @Valid 검증 실패
     @MessageExceptionHandler(MethodArgumentNotValidException.class)
     @SendToUser("/private/errors")
-    public StompResponse<?> handleValidation(MethodArgumentNotValidException ex) {
+    public StompResponse<StompErrorPayload> handleValidation(MethodArgumentNotValidException ex) {
         return buildErrorResponse(GlobalErrorCode.INVALID_PARAMETER);
     }
 
     // 인증 실패
     @MessageExceptionHandler(AccessDeniedException.class)
     @SendToUser("/private/errors")
-    public StompResponse<?> handleAccessDenied(AccessDeniedException ex) {
+    public StompResponse<StompErrorPayload> handleAccessDenied(AccessDeniedException ex) {
         return buildErrorResponse(GlobalErrorCode.UNAUTHORIZED);
     }
 
     // 비즈니스 예외 (StompException)
     @MessageExceptionHandler(StompException.class)
     @SendToUser("/private/errors")
-    public StompResponse<?> handleWebSocketException(StompException ex) {
+    public StompResponse<StompErrorPayload> handleWebSocketException(StompException ex) {
         return buildErrorResponse(ex.getErrorType());
     }
 
     // 나머지
     @MessageExceptionHandler(Exception.class)
     @SendToUser("/private/errors")
-    public StompResponse<?> handleException(Exception ex) {
+    public StompResponse<StompErrorPayload> handleException(Exception ex) {
         log.error("[STOMP] 처리되지 않은 예외 발생", ex);
         return buildErrorResponse(GlobalErrorCode.INTERNAL_SERVER_ERROR);
     }

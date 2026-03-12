@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/streams")
 @RequiredArgsConstructor
+@SuppressWarnings("java:S112")
 public class StreamWebhookController {
 
     private final StreamViewerService streamViewerService;
@@ -30,9 +31,10 @@ public class StreamWebhookController {
             Long streamId = Long.parseLong(event.getRoom().getName());
 
             if ("participant_joined".equals(event.getEvent())) {
-                streamViewerService.increment(streamId);
+                // enter() 호출 시 이미 Redis Set에 추가되므로 webhook에서 처리 불필요
             } else if ("participant_left".equals(event.getEvent())) {
-                streamViewerService.decrement(streamId);
+                String identity = event.getParticipant().getIdentity();
+                streamViewerService.leave(streamId, identity);
             }
         } catch (Exception e) {
             throw new GlobalException(StreamErrorCode.INVALID_STREAM_EVENT_TYPE);

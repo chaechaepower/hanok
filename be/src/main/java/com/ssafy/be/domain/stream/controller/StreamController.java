@@ -81,7 +81,7 @@ public class StreamController implements StreamApi {
     @GetMapping("/scheduled")
     public ResponseEntity<ScheduledStreamListResponse> getScheduledStreamList(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "8") int size) {
+            @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(streamService.getScheduledStreamList(page, size));
     }
 
@@ -90,5 +90,11 @@ public class StreamController implements StreamApi {
             @AuthenticationPrincipal Long userId,
             @PathVariable Long streamId) {
         return ResponseEntity.ok(streamService.enterStream(userId, streamId));
+    }
+
+    @GetMapping("/{streamId}/items")
+    public ResponseEntity<StreamItemsResponse> getStreamItems(
+            @PathVariable Long streamId) {
+        return ResponseEntity.ok(streamService.getStreamItems(streamId));
     }
 }
