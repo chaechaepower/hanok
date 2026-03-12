@@ -166,7 +166,7 @@ export default function LiveEditPage() {
             className="flex items-center gap-2 px-5 py-2 bg-[#e74c3c] text-white text-sm font-semibold rounded-lg hover:bg-[#c0392b] transition-colors disabled:opacity-50"
           >
             <MdLiveTv size={16} />
-            즉시 시작 (수정)
+            즉시 시작
           </button>
         </div>
       </div>
