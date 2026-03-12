@@ -4,6 +4,5 @@ public enum StreamStatus {
     LIVE,
     SCHEDULED,
     PAUSED,
-    FAILED,
     ENDED
 }

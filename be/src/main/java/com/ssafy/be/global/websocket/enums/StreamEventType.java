@@ -29,6 +29,11 @@ public enum StreamEventType {
     MACRO_TEMPLATE,
 
     // 에러
-    ERROR
+    ERROR,
+
+    // 방송 끊김
+    STREAM_PAUSED,      // 방송 일시 중단 (재연결 대기)
+    STREAM_RESUMED,     // 방송 재연결 성공
+    STREAM_FAILED,      // 방송 재연결 실패
 }
 

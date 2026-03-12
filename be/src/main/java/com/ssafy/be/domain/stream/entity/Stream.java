@@ -104,7 +104,7 @@ public class Stream {
     }
 
     public void fail() {
-        this.status = StreamStatus.FAILED;
+        this.status = StreamStatus.ENDED;
     }
 
 }
