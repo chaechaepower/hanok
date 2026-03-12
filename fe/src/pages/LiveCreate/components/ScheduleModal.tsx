@@ -87,14 +87,12 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
           <h2 className="text-white text-xl font-bold mb-1">방송 예약 설정</h2>
           <p className="text-[#888] text-xs mb-5">오늘로부터 최대 30일 이내로 예약할 수 있습니다.</p>
 
-          {/* 선택된 날짜/시간 미리보기 */}
           <div className="bg-[#1a1a20] rounded-xl px-4 py-3 mb-5 text-center">
             <span className="text-[#d9b36d] font-semibold text-base">
               {formatDisplay(selectedDate, hour, minute)}
             </span>
           </div>
 
-          {/* 캘린더 */}
           <div className="mb-5">
             <div className="flex items-center justify-between mb-3">
               <button
@@ -160,11 +158,9 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
             </div>
           </div>
 
-          {/* 시간 선택 */}
           <div className="mb-6">
             <label className="text-white text-sm font-medium mb-3 block">시간 선택</label>
             <div className="flex gap-2">
-              {/* 오전/오후 */}
               <div className="flex flex-col gap-1">
                 {(['오전', '오후'] as const).map((label) => {
                   const isAm = label === '오전';
@@ -189,7 +185,6 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
                 })}
               </div>
 
-              {/* 시 */}
               <div className="flex-1 bg-[#1a1a20] rounded-xl p-2">
                 <div className="text-white/40 text-[10px] mb-1 text-center">시</div>
                 <div className="grid grid-cols-4 gap-1">
@@ -215,7 +210,6 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
                 </div>
               </div>
 
-              {/* 분 */}
               <div className="w-[80px] bg-[#1a1a20] rounded-xl p-2">
                 <div className="text-white/40 text-[10px] mb-1 text-center">분</div>
                 <div className="grid grid-cols-2 gap-1">
@@ -238,7 +232,6 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
             </div>
           </div>
 
-          {/* 버튼 */}
           <div className="flex gap-3">
             <button
               type="button"

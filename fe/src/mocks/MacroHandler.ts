@@ -3,7 +3,6 @@ import { BASE_URL } from '@/api/instance';
 import { CATEGORY_MACROS } from '@/constants/macro';
 import type { Macro, GetStreamMacrosResponse, PostStreamMacrosRequest, PostStreamMacrosResponse } from '@/types';
 
-// 영문 카테고리 ID → 한글 라벨 매핑 (CATEGORY_MACROS 키가 한글이므로)
 const CATEGORY_ID_TO_LABEL: Record<string, string> = {
   SNEAKERS_SHOES: '스니커즈/신발',
   CLOTHING: '의류',
