@@ -1,6 +1,6 @@
 package com.ssafy.be.domain.auction.listener;
 
-import com.ssafy.be.domain.auction.dto.response.AuctionEndResponse;
+import com.ssafy.be.global.websocket.dto.StreamPublishTask;
 import com.ssafy.be.global.websocket.publisher.StreamPublisher;
 import com.ssafy.be.domain.auction.service.AuctionService;
 import com.ssafy.be.domain.auction.util.AuctionRedisKeys;
@@ -10,7 +10,8 @@ import org.springframework.data.redis.listener.KeyExpirationEventMessageListener
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.stereotype.Component;
 
-import static com.ssafy.be.global.websocket.enums.StreamEventType.BID_WINNER;
+import java.util.List;
+
 
 @Slf4j
 @Component
@@ -49,12 +50,8 @@ public class RedisAuctionTimerKeyExpirationListener extends KeyExpirationEventMe
         log.info("경매 타이머 종료 auctionId={}", auctionId);
 
         // 경매 종료 처리
-        AuctionEndResponse response = auctionService.endAuction(auctionId);
+        List<StreamPublishTask> streamPublishTasks = auctionService.endAuction(auctionId);
 
-        if (response == null) {
-            return;
-        }
-
-        streamPublisher.sendToUser(response.winnerId(), response.streamId(), BID_WINNER, response.winnerDto());
+        streamPublishTasks.forEach(streamPublisher::publish);
     }
 }
