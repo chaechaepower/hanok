@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
-import type { LoginPayload, LoginResponse, IdentityVerificationResponse, CheckEmailResponse, SignUpPayload } from '@/types';
+import type { LoginPayload, SignUpPayload } from '@/types';
 
 import { clearCurrentMockUser, mockLoginUsers, setCurrentMockUser } from './mockState';
 
@@ -14,15 +14,22 @@ export const authHandlers = [
     console.log('[Mock] 이메일 중복 확인:', email);
 
     const isDuplicated = registeredEmails.includes(email);
-    return HttpResponse.json<CheckEmailResponse>({ isDuplicated });
+    if (isDuplicated) {
+      return HttpResponse.json(
+        { status: 'FAIL', message: '이미 사용 중인 이메일입니다.', data: {} },
+        { status: 400 },
+      );
+    }
+    return HttpResponse.json({ status: 'SUCCESS', message: '사용 가능한 이메일입니다.', data: {} });
   }),
 
   http.post(`${BASE_URL}/v1/auth/identity-verification`, async ({ request }) => {
     const { identityVerificationId } = (await request.json()) as { identityVerificationId: string };
     console.log('[Mock] 본인인증 요청:', identityVerificationId);
 
-    return HttpResponse.json<IdentityVerificationResponse>({
+    return HttpResponse.json({
       status: 'SUCCESS',
+      message: '본인인증이 완료되었습니다.',
       data: {
         name: '홍길동',
         phoneNumber: '01012345678',
@@ -46,13 +53,12 @@ export const authHandlers = [
 
     setCurrentMockUser({ ...matchedUser });
 
-    return HttpResponse.json<LoginResponse>({
-      accessToken: matchedUser.accessToken,
-      refreshToken: matchedUser.refreshToken,
-      user: {
-        userId: matchedUser.userId,
-        email: matchedUser.email,
-        phone: matchedUser.phone,
+    return HttpResponse.json({
+      status: 'SUCCESS',
+      message: '로그인 성공',
+      data: {
+        accessToken: matchedUser.accessToken,
+        refreshToken: matchedUser.refreshToken,
       },
     });
   }),
@@ -78,7 +84,9 @@ export const authHandlers = [
     clearCurrentMockUser();
 
     return HttpResponse.json({
-      success: true,
+      status: 'SUCCESS',
+      message: '로그아웃 성공',
+      data: {},
     });
   }),
 ];

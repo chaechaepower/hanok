@@ -20,21 +20,14 @@ export default function SettingsPage() {
   const { mutate: logout, isPending: isLogoutPending } = useLogout();
 
   const handleLogout = () => {
-    // Note: Assuming there is a way to get the refreshToken.
-    // For now, passing an empty string or fetching from storage if applicable.
-    // In a real scenario, this would come from a global store or localStorage.
-    const refreshToken = localStorage.getItem('refreshToken') || '';
-    
-    logout({ refreshToken }, {
+    logout(undefined, {
       onSuccess: () => {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
         navigate('/login');
       },
       onError: (error) => {
         console.error('Logout failed:', error);
         alert('로그아웃에 실패했습니다.');
-      }
+      },
     });
   };
 

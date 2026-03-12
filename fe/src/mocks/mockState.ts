@@ -1,6 +1,7 @@
-import type { LoginResponse } from '@/types';
-
-export type MockLoginUser = LoginResponse['user'] & {
+export type MockLoginUser = {
+  userId: number;
+  email: string;
+  phone: string;
   password: string;
   nickname: string;
   profileImage: string | null;

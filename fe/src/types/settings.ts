@@ -95,3 +95,23 @@ export type AddressFormState = {
 };
 
 export type AddressModalMode = 'add' | 'edit';
+
+export type CreateAddressPayload = {
+  label: string;
+  name: string;
+  zipCode: string;
+  address: string;
+  phone: string;
+};
+
+export type UpdateAddressPayload = {
+  label: string;
+  name: string;
+  zipCode: string;
+  address: string;
+  phone: string;
+};
+
+export type SetDefaultAddressPayload = {
+  isDefault: boolean;
+};

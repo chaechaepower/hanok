@@ -1,31 +1,15 @@
+export type ApiResponse<T = Record<string, never>> = {
+  status: string;
+  message: string;
+  data: T;
+};
+
 export type LoginPayload = {
   email: string;
   password: string;
 };
 
-export type LoginResponse = {
-  accessToken: string;
-  refreshToken: string;
-  user: {
-    userId: number;
-    email: string;
-    phone: string;
-  };
-};
-
-export type LogoutPayload = {
-  refreshToken: string;
-};
-
-export type LogoutResponse = {
-  success: boolean;
-};
-
-export type RefreshTokenPayload = {
-  refreshToken: string;
-};
-
-export type RefreshTokenResponse = {
+export type LoginResponseData = {
   accessToken: string;
   refreshToken: string;
 };
@@ -37,18 +21,10 @@ export type SignUpPayload = {
   phone: string;
 };
 
-export type SignUpResponse = {
-  status: string;
-  message: string;
-  data: {
-    userId: number;
-    email: string;
-    nickname: string;
-  };
-};
-
-export type CheckEmailResponse = {
-  isDuplicated: boolean;
+export type SignUpResponseData = {
+  userId: number;
+  email: string;
+  nickname: string;
 };
 
 export type IdentityVerificationRequest = {
@@ -59,9 +35,4 @@ export type IdentityVerificationData = {
   name: string;
   phoneNumber: string;
   birthDate: string;
-};
-
-export type IdentityVerificationResponse = {
-  status: 'SUCCESS' | 'FAIL';
-  data: IdentityVerificationData;
 };

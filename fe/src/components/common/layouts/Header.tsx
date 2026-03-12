@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
 import Logo from '@/assets/Logo.png';
+import { getUserIdFromToken } from '@/utils/getUserIdFromToken';
 import SearchBar from '../SearchBar';
 import Button from '../Button';
 
@@ -22,7 +23,7 @@ export default function Header() {
   };
 
   const handleProfileClick = () => {
-    const userId = localStorage.getItem('userId');
+    const userId = getUserIdFromToken();
 
     navigate(userId ? `/profile/${userId}` : '/login');
   };
@@ -91,7 +92,7 @@ function HeaderIcon({ children, onClick, ariaLabel, tooltip }: HeaderIconProps) 
         type="button"
         onClick={onClick}
         aria-label={ariaLabel}
-        className="flex h-9 w-9 items-center justify-center rounded-full bg-point text-background transition hover:bg-white"
+        className="flex h-9 w-9 items-center justify-center rounded-full bg-point text-white transition hover:bg-white hover:text-background"
       >
         {children}
       </button>

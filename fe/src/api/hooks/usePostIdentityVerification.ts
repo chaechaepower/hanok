@@ -1,10 +1,10 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
-import type { IdentityVerificationResponse } from '@/types';
+import type { ApiResponse, IdentityVerificationData } from '@/types';
 
 export const postIdentityVerification = async (identityVerificationId: string) => {
-  const response = await getFetchInstance().post<IdentityVerificationResponse>(
+  const response = await getFetchInstance().post<ApiResponse<IdentityVerificationData>>(
     '/v1/auth/identity-verification',
     { identityVerificationId },
   );

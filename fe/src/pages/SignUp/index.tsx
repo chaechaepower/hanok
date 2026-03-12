@@ -33,29 +33,26 @@ export default function SignUpPage() {
       return;
     }
     try {
-      const { isDuplicated } = await checkEmailDuplicate(email);
-      if (isDuplicated) {
-        setEmailError('이미 사용 중인 이메일입니다.');
-        setIsEmailVerified(false);
-      } else {
-        setEmailError('');
-        setIsEmailVerified(true);
-        alert('사용 가능한 이메일입니다.');
-      }
-    } catch (error) {
-      console.error(error);
-      setEmailError('이메일 중복 확인에 실패했습니다.');
+      await checkEmailDuplicate(email);
+      setEmailError('');
+      setIsEmailVerified(true);
+    } catch {
+      setEmailError('이미 사용 중인 이메일입니다.');
+      setIsEmailVerified(false);
     }
+  };
+
+  const validatePassword = (val: string) => {
+    if (val.length < 8 || !/[0-9]/.test(val) || !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(val)) {
+      return '비밀번호는 특수문자, 숫자를 포함한 8자 이상이어야 합니다.';
+    }
+    return '';
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setPassword(val);
-    if (val.length < 8) {
-      setPasswordError('비밀번호는 8자 이상이어야 합니다.');
-    } else {
-      setPasswordError('');
-    }
+    setPasswordError(validatePassword(val));
   };
 
   const handleIdentityVerification = async () => {
@@ -82,7 +79,7 @@ export default function SignUpPage() {
     e.preventDefault();
     if (!isEmailVerified) return alert('이메일 중복 확인을 해주세요.');
     if (!nickname) return alert('닉네임을 입력해주세요.');
-    if (password.length < 8 || password !== passwordConfirm) return alert('비밀번호를 바르게 입력 및 확인해주세요.');
+    if (validatePassword(password) || password !== passwordConfirm) return alert('비밀번호를 바르게 입력 및 확인해주세요.');
     if (!isIdentityVerified || !phone) return alert('휴대폰 본인 인증을 완료해주세요.');
     if (!termsAgreed || !privacyAgreed) return alert('필수 약관에 모두 동의해주세요.');
 
@@ -206,7 +203,7 @@ export default function SignUpPage() {
             </svg>
             <input
               type="password"
-              placeholder="비밀번호(8자 이상 영문, 숫자 조합)"
+              placeholder="비밀번호(특수문자, 숫자 포함 8자 이상)"
               value={password}
               onChange={handlePasswordChange}
               className={inputClass}

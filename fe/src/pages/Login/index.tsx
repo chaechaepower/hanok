@@ -33,14 +33,8 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      const data = await login({ email, password });
+      await login({ email, password });
 
-      // 토큰 저장
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
-      localStorage.setItem('userId', data.user.userId.toString());
-
-      // 이메일 기억하기
       if (rememberEmail) {
         localStorage.setItem('savedEmail', email);
       } else {
@@ -66,7 +60,6 @@ export default function LoginPage() {
         color: 'white',
       }}
     >
-      {/* Header */}
       <div
         style={{
           width: '100%',
@@ -89,7 +82,6 @@ export default function LoginPage() {
           gap: '24px',
         }}
       >
-        {/* Email */}
         <div className="flex flex-col gap-2">
           <label className="text-[13px] font-medium text-[#E5E5EA] ml-1">이메일</label>
           <div className={inputContainerClass}>
@@ -113,7 +105,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Password */}
         <div className="flex flex-col gap-2">
           <label className="text-[13px] font-medium text-[#E5E5EA] ml-1">비밀번호</label>
           <div className={inputContainerClass}>
@@ -137,7 +128,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Remember Email */}
         <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', marginTop: '-8px' }}>
           <div
             style={{
@@ -177,17 +167,14 @@ export default function LoginPage() {
           <span style={{ fontSize: '14px', color: '#E5E5EA' }}>이메일 기억하기</span>
         </label>
 
-        {/* Error Message */}
         {error && <p className="text-[#FF453A] text-sm px-1 -mt-2">{error}</p>}
 
-        {/* Submit */}
         <div className="w-full">
           <Button type="submit" variant="white" size="large" disabled={isLoading}>
             {isLoading ? '로그인 중...' : '로그인'}
           </Button>
         </div>
 
-        {/* Sign Up Link */}
         <div className="text-center text-[13px] text-[#A0A0A0] mt-1 flex items-center justify-center gap-1">
           아직 계정이 없으신가요?
           <button type="button" onClick={() => navigate('/signup')} className="text-gold font-semibold hover:underline">
