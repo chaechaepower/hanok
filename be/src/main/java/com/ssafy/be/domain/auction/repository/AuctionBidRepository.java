@@ -7,6 +7,8 @@ import com.ssafy.be.global.infra.redis.RedisOperator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -36,5 +38,19 @@ public class AuctionBidRepository {
         }
 
         return Optional.of(jsonConverter.convert(result.iterator().next(), Bid.class));
+    }
+
+    public List<Bid> findAll(Long auctionId) {
+        String key = AuctionRedisKeys.getBidKey(auctionId);
+
+        Set<String> result = redisOperator.getZSetReverseRange(key, 0, -1); // score 내림차순(높은 가격순)
+
+        if (result == null || result.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        return result.stream()
+                .map(json -> jsonConverter.convert(json, Bid.class))
+                .toList();
     }
 }

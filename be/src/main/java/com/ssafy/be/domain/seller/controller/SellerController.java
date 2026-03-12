@@ -1,9 +1,12 @@
 package com.ssafy.be.domain.seller.controller;
 
 import com.ssafy.be.domain.seller.controller.api.SellerApi;
+import com.ssafy.be.domain.seller.dto.request.SellerProfileUpdateRequest;
 import com.ssafy.be.domain.seller.dto.request.SellerRegisterRequest;
+import com.ssafy.be.domain.seller.dto.response.SellerProfileResponse;
 import com.ssafy.be.domain.seller.dto.response.SellerRegisterResponse;
 import com.ssafy.be.domain.seller.service.SellerService;
+import com.ssafy.be.global.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,5 +28,20 @@ public class SellerController implements SellerApi {
 
         SellerRegisterResponse response = sellerService.register(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/{sellerId}/profile")
+    public ResponseEntity<SellerProfileResponse> getProfile(@PathVariable Long sellerId) {
+        return ResponseEntity.ok(sellerService.getProfile(sellerId));
+    }
+
+    @PatchMapping("/{sellerId}/profile")
+    public ResponseEntity<ApiResponse<Void>> updateProfile(
+            @PathVariable Long sellerId,
+            @AuthenticationPrincipal String userId,
+            @RequestBody SellerProfileUpdateRequest request) {
+
+        sellerService.updateProfile(sellerId, Long.parseLong(userId), request);
+        return ResponseEntity.ok(ApiResponse.success());
     }
 }

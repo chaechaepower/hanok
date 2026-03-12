@@ -1,5 +1,6 @@
 package com.ssafy.be.global.websocket.publisher;
 
+import com.ssafy.be.global.websocket.dto.StreamPublishTask;
 import com.ssafy.be.global.websocket.dto.response.StompResponse;
 import com.ssafy.be.global.websocket.enums.StreamEventType;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,7 @@ import org.springframework.stereotype.Component;
 public class StreamPublisher {
     private final SimpMessagingTemplate messagingTemplate;
 
-    public <T> void broadcastToStream(Long streamId, StreamEventType eventType, T payload) {
+    public <T> void broadcast(Long streamId, StreamEventType eventType, T payload) {
         messagingTemplate.convertAndSend(
                 "/broadcast/streams/" + streamId,
 
@@ -33,5 +34,12 @@ public class StreamPublisher {
                         .payload(payload)
                         .build()
         );
+    }
+
+    public <T> void publish(StreamPublishTask<T> task) {
+        switch (task.getDestType()) {
+            case BROADCAST -> broadcast(task.getStreamId(), task.getEventType(), task.getPayload());
+            case PRIVATE -> sendToUser(task.getUserId(), task.getStreamId(), task.getEventType(),task.getPayload());
+        }
     }
 }

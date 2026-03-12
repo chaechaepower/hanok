@@ -3,6 +3,7 @@ package com.ssafy.be.domain.stream.service;
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
+import com.ssafy.be.domain.item.dto.response.ItemSummaryResponse;
 import com.ssafy.be.domain.item.entity.Category;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.repository.ItemRepository;
@@ -15,6 +16,7 @@ import com.ssafy.be.domain.stream.dto.request.StreamUpdateRequest;
 import com.ssafy.be.domain.stream.dto.response.*;
 import com.ssafy.be.domain.stream.entity.Stream;
 import com.ssafy.be.domain.stream.entity.StreamSortType;
+import com.ssafy.be.domain.stream.entity.StreamStatus;
 import com.ssafy.be.domain.stream.exception.StreamErrorCode;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
 import com.ssafy.be.global.exception.GlobalException;
@@ -59,8 +61,7 @@ public class StreamService {
 
         if (thumbnail != null && !thumbnail.isEmpty()) {
             try {
-                String url =
-                        gcsClient.uploadStreamThumbnail(thumbnail, seller.getId(), saved.getId());
+                String url = gcsClient.uploadStreamThumbnail(thumbnail, seller.getId(), saved.getId());
                 saved.updateThumbnail(url);
             } catch (IOException e) {
                 throw new GlobalException(StreamErrorCode.THUMBNAIL_UPLOAD_FAILED);
@@ -68,22 +69,33 @@ public class StreamService {
         }
 
         // 경매 등록
+        List<ItemSummaryResponse> items = List.of();
         if (request.itemIds() != null && !request.itemIds().isEmpty()) {
-            for (Long itemId : request.itemIds()) {
-                Item item =
-                        itemRepository
+            items = request.itemIds().stream()
+                    .map(itemId -> {
+                        Item item = itemRepository
                                 .findByIdAndSellerId(itemId, seller.getId())
                                 .orElseThrow(() -> new GlobalException(ItemErrorCode.ITEM_NOT_FOUND));
-                auctionRepository.save(
-                        Auction.builder()
-                                .auctionStatus(AuctionStatus.READY)
-                                .stream(saved)
-                                .item(item)
-                                .build());
-            }
+                        auctionRepository.save(
+                                Auction.builder()
+                                        .auctionStatus(AuctionStatus.READY)
+                                        .stream(saved)
+                                        .item(item)
+                                        .build());
+                        return new ItemSummaryResponse(
+                                item.getId(),
+                                item.getName(),
+                                item.getCategory(),
+                                item.getStartPrice(),
+                                item.getStatus(),
+                                item.getItemCondition(),
+                                item.getImage1(),
+                                item.getCreatedAt());
+                    })
+                    .toList();
         }
 
-        return new StreamRegisterResponse(saved.getId(), saved.getTitle(), saved.getStartType());
+        return new StreamRegisterResponse(saved.getId(), saved.getTitle(), saved.getStartType(), saved.getThumbnail(), items);
     }
 
     private Stream buildStream(StreamRegisterRequest request, Seller seller) {
@@ -93,7 +105,7 @@ public class StreamService {
                 .startType(request.startType())
                 .scheduledAt(request.scheduledAt())
                 .notice(request.notice())
-                .isLive(false)
+                .status(StreamStatus.SCHEDULED)
                 .seller(seller)
                 .build();
     }
@@ -130,7 +142,22 @@ public class StreamService {
             }
         }
 
-        return new StreamRegisterResponse(stream.getId(), stream.getTitle(), stream.getStartType());
+        List<ItemSummaryResponse> items = auctionRepository.findByStreamId(streamId).stream()
+                .map(auction -> {
+                    Item item = auction.getItem();
+                    return new ItemSummaryResponse(
+                            item.getId(),
+                            item.getName(),
+                            item.getCategory(),
+                            item.getStartPrice(),
+                            item.getStatus(),
+                            item.getItemCondition(),
+                            item.getImage1(),
+                            item.getCreatedAt());
+                })
+                .toList();
+
+        return new StreamRegisterResponse(stream.getId(), stream.getTitle(), stream.getStartType(), stream.getThumbnail(), items);
     }
 
     @Transactional
@@ -196,7 +223,7 @@ public class StreamService {
                 stream.getScheduledAt(),
                 stream.getStartType(),
                 stream.getNotice(),
-                stream.isLive(),
+                stream.getStatus() == StreamStatus.LIVE,
                 stream.getCreatedAt());
     }
 
@@ -240,6 +267,7 @@ public class StreamService {
                     switch (request.status()) {
                         case LIVE -> streamRepository.findAllLiveStreams(category);
                         case SCHEDULED -> streamRepository.findAllScheduledStreams(category);
+                        case ENDED -> List.of();
                     };
 
             List<StreamListItemResponse> sorted =
@@ -252,7 +280,7 @@ public class StreamService {
                                         stream.getTitle(),
                                         stream.getCategory(),
                                         stream.getThumbnail(),
-                                        stream.isLive(),
+                                        stream.getStatus() == StreamStatus.LIVE,
                                         streamViewerService.getViewerCount(stream.getId()),
                                         stream.getScheduledAt(),
                                         stream.getStartedAt(),
@@ -281,9 +309,9 @@ public class StreamService {
                 switch (request.status()) {
                     case LIVE -> streamRepository.findLiveStreams(category, pageable);
                     case SCHEDULED -> streamRepository.findScheduledStreams(category, pageable);
+                    case ENDED -> Page.empty(pageable);
                 };
 
-        // 256번째 줄 - LATEST 정렬 map 부분
         return streams.map(stream -> {
             Seller sel = stream.getSeller();
             return new StreamListItemResponse(
@@ -291,7 +319,7 @@ public class StreamService {
                     stream.getTitle(),
                     stream.getCategory(),
                     stream.getThumbnail(),
-                    stream.isLive(),
+                    stream.getStatus() == StreamStatus.LIVE,  // isLive() → status 비교
                     streamViewerService.getViewerCount(stream.getId()),
                     stream.getScheduledAt(),
                     stream.getStartedAt(),
@@ -300,5 +328,21 @@ public class StreamService {
                             sel.getUser().getNickname(),
                             sel.getUser().getProfileImage()));
         });
+    }
+
+    @Transactional(readOnly = true)
+    public ScheduledStreamListResponse getScheduledStreamList(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Slice<Stream> slice = streamRepository.findByStatusIn(
+                List.of(StreamStatus.LIVE, StreamStatus.SCHEDULED),
+                pageable
+        );
+
+        List<ScheduledStreamResponse> streams = slice.getContent()
+                .stream()
+                .map(ScheduledStreamResponse::from)
+                .toList();
+
+        return new ScheduledStreamListResponse(streams, slice.hasNext());
     }
 }

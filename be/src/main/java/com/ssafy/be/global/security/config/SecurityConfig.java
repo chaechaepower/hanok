@@ -79,13 +79,15 @@ public class SecurityConfig {
                                 auth.requestMatchers(
                                                 "/api/v1/auth/**",
                                                 "/api/v1/streams/**",
+                                                "/api/v1/sellers/*/profile",
                                                 "/swagger-ui/**",
                                                 "/swagger-ui.html",
                                                 "/v3/api-docs",
                                                 "/v3/api-docs/**",
                                                 "/error",
                                                 "/api/v1/wallet/charges/webhook",
-                                                "/api/v1/streams/webhook")
+                                                "/api/v1/streams/webhook",
+                                                "/ws-connect/**")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
