@@ -168,6 +168,7 @@ const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
       image: 'https://picsum.photos/400/300?random=1',
       startPrice: 130000,
       auctionStatus: 'LIVE',
+      finalPrice: null,
       itemCondition: 'BRAND_NEW',
     },
     {
@@ -175,6 +176,7 @@ const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
       image: 'https://picsum.photos/400/300?random=2',
       startPrice: 130000,
       auctionStatus: 'READY',
+      finalPrice: null,
       itemCondition: 'OPEN_BOX',
     },
     {
@@ -182,6 +184,7 @@ const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
       image: 'https://picsum.photos/400/300?random=3',
       startPrice: 130000,
       auctionStatus: 'READY',
+      finalPrice: null,
       itemCondition: 'USED',
     },
     {
@@ -189,6 +192,7 @@ const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
       image: 'https://picsum.photos/400/300?random=3',
       startPrice: 130000,
       auctionStatus: 'SOLD',
+      finalPrice: 200000,
       itemCondition: 'USED',
     },
     {
@@ -196,6 +200,7 @@ const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
       image: 'https://picsum.photos/400/300?random=3',
       startPrice: 130000,
       auctionStatus: 'UNSOLD',
+      finalPrice: null,
       itemCondition: 'USED',
     },
   ],
@@ -246,7 +251,7 @@ const activateNextReadyItem = (streamId: string) => {
   return nextPayload;
 };
 
-const completeLiveItem = (streamId: string) => {
+const completeLiveItem = (streamId: string, finalPrice: number) => {
   const itemSyncPayload = streamItemSyncStates.get(streamId) ?? createDefaultItemSyncPayload();
   let completed = false;
 
@@ -257,6 +262,7 @@ const completeLiveItem = (streamId: string) => {
         return {
           ...item,
           auctionStatus: 'SOLD',
+          finalPrice,
         };
       }
 
@@ -369,7 +375,7 @@ const scheduleWinnerAnnouncement = (streamId: string) => {
       },
     });
 
-    completeLiveItem(streamId);
+    completeLiveItem(streamId, finalState.finalPrice);
     streamTimerStates.delete(streamId);
 
     broadcastToDestination(`/broadcast/streams/${streamId}`, {

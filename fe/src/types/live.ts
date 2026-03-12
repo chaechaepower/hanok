@@ -72,6 +72,7 @@ export type ItemSyncItem = {
   image: string;
   startPrice: number;
   auctionStatus: ItemSyncAuctionStatus;
+  finalPrice: number | null;
   itemCondition: ItemSyncItemCondition;
 };
 

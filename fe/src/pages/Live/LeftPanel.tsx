@@ -62,6 +62,7 @@ function toAuctionItems(items: ItemSyncItem[]): AuctionItem[] {
     id: index + 1,
     name: item.itemName,
     startPrice: item.startPrice,
+    finalPrice: item.finalPrice ?? undefined,
     status: item.auctionStatus,
     condition: item.itemCondition,
     thumbnailUrl: item.image || undefined,
