@@ -34,8 +34,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static com.ssafy.be.domain.auction.enums.Comment.AUCTION_START;
-import static com.ssafy.be.domain.auction.enums.Comment.BID_PLACE;
+import static com.ssafy.be.domain.auction.enums.Comment.*;
+import static com.ssafy.be.domain.auction.enums.Comment.SOLD;
+import static com.ssafy.be.domain.auction.enums.Comment.UNSOLD;
 import static com.ssafy.be.global.websocket.enums.DestType.BROADCAST;
 import static com.ssafy.be.global.websocket.enums.DestType.PRIVATE;
 import static com.ssafy.be.global.websocket.enums.StreamEventType.*;
@@ -58,6 +59,21 @@ public class AuctionService {
     private final SellerRepository sellerRepository;
     private final UserRepository userRepository;
     private final ShippingAddressRepository shippingAddressRepository;
+
+    @Transactional
+    public void introduceItem(ItemIntroduceRequest request, Long streamId, Long userId) {
+        // 1. 호스트인지 확인
+        Seller seller = sellerRepository.findByUserId(userId)
+                .orElseThrow(() -> new StompException(SellerErrorCode.SELLER_NOT_FOUND));
+
+        validateStreamHost(streamId, seller.getId());
+
+        // 2. 경매 상태 '설명중'으로 변경
+        Auction auction = auctionRepository.findById(request.auctionId())
+                .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
+
+        auction.introduceAuction();
+    }
 
     @Transactional
     public List<StreamPublishTask> startAuction(AuctionStartRequest request, Long streamId, Long userId) {
@@ -101,25 +117,10 @@ public class AuctionService {
                 streamId,
                 null,
                 AUCTION_COMMENT,
-                buildAuctionCommentResponse(AUCTION_START.getValue())
+                buildAuctionCommentResponse(SOLD.getValue())
         );
 
-        return List.of(auctionStartPublishTask, auctionCommentPublishTask);
-    }
-
-    @Transactional
-    public void introduceItem(ItemIntroduceRequest request, Long streamId, Long userId) {
-        // 1. 호스트인지 확인
-        Seller seller = sellerRepository.findByUserId(userId)
-                .orElseThrow(() -> new StompException(SellerErrorCode.SELLER_NOT_FOUND));
-
-        validateStreamHost(streamId, seller.getId());
-
-        // 2. 경매 상태 '설명중'으로 변경
-        Auction auction = auctionRepository.findById(request.auctionId())
-                .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
-
-        auction.introduceAuction();
+        return List.of(auctionStartPublishTask, auctionCommentPublishTask, auctionCommentPublishTask);
     }
 
     @Transactional // TODO: 트랜잭션 범위 줄이기
@@ -214,10 +215,19 @@ public class AuctionService {
                 null
         );
 
+        //  AUCTION_COMMENT로 경매 중계 메시지 브로드캐스트
+        StreamPublishTask auctionCommentPublishTask = buildStreamPublishTask(
+                BROADCAST,
+                auction.getStream().getId(),
+                null,
+                AUCTION_COMMENT,
+                buildAuctionCommentResponse(UNSOLD.getValue())
+        );
+
         // 유찰
         if (topBid == null) {
             auction.unsold();
-            return List.of(endPublishTask);
+            return List.of(endPublishTask, auctionCommentPublishTask);
         }
 
         // 낙찰
@@ -240,9 +250,16 @@ public class AuctionService {
                 bidWinnerResponse
         );
 
-        return List.of(endPublishTask, winnerPublishTask);
+        //  AUCTION_COMMENT로 경매 중계 메시지 브로드캐스트
+        auctionCommentPublishTask = buildStreamPublishTask(
+                BROADCAST,
+                auction.getStream().getId(),
+                null,
+                AUCTION_COMMENT,
+                buildAuctionCommentResponse(UNSOLD.getValue())
+        );
 
-        // TODO: 중계 메시지 브로드캐스트 추가 예정
+        return List.of(endPublishTask, winnerPublishTask);
     }
 
     @Transactional(readOnly = true)
