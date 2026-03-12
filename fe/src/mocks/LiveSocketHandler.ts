@@ -184,6 +184,20 @@ const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
       auctionStatus: 'READY',
       itemCondition: 'USED',
     },
+    {
+      itemName: '청자 투각 칠보문 향로',
+      image: 'https://picsum.photos/400/300?random=3',
+      startPrice: 130000,
+      auctionStatus: 'SOLD',
+      itemCondition: 'USED',
+    },
+    {
+      itemName: '청자 투각 칠보문 향로',
+      image: 'https://picsum.photos/400/300?random=3',
+      startPrice: 130000,
+      auctionStatus: 'UNSOLD',
+      itemCondition: 'USED',
+    },
   ],
 });
 
