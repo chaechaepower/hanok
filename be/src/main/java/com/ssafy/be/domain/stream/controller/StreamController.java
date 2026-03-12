@@ -84,4 +84,11 @@ public class StreamController implements StreamApi {
             @RequestParam(defaultValue = "8") int size) {
         return ResponseEntity.ok(streamService.getScheduledStreamList(page, size));
     }
+
+    @GetMapping("/{streamId}/enter")
+    public ResponseEntity<StreamEnterResponse> enterStream(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long streamId) {
+        return ResponseEntity.ok(streamService.enterStream(userId, streamId));
+    }
 }

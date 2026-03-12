@@ -67,8 +67,20 @@ public class Auction {
     }
 
     public void startAuction(String startedAt) {
+        if (auctionStatus != INTRODUCING) {
+            throw new IllegalArgumentException("상품 설명 단계가 아닙니다.");
+        }
+
         this.auctionStatus = LIVE;
         this.startedAt = startedAt;
+    }
+
+    public void introduceAuction() {
+        if (auctionStatus != READY) {
+            throw new IllegalArgumentException("경매 물품이 아닙니다.");
+        }
+
+        this.auctionStatus = INTRODUCING;
     }
 
     public void sold(Long finalPrice) {

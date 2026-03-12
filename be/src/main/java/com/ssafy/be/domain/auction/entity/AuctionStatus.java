@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum AuctionStatus {
     READY("경매 시작 전"),
+    INTRODUCING("상품 설명중"),
     LIVE("경매중"),
     SOLD("낙찰됨"),
     UNSOLD("유찰됨");

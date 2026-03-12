@@ -2,13 +2,10 @@ package com.ssafy.be.domain.auction.service;
 
 import com.ssafy.be.domain.auction.dto.request.AuctionStartRequest;
 import com.ssafy.be.domain.auction.dto.request.BidPlaceRequest;
-import com.ssafy.be.domain.auction.dto.response.AuctionEndResponse;
-import com.ssafy.be.domain.auction.dto.response.AuctionStartResponse;
-import com.ssafy.be.domain.auction.dto.response.AuctionStatisticsResponse;
-import com.ssafy.be.domain.auction.dto.response.BidPlaceResponse;
-import com.ssafy.be.domain.auction.dto.response.BidSyncResponse;
-import com.ssafy.be.domain.auction.dto.response.ItemSyncResponse;
+import com.ssafy.be.domain.auction.dto.request.ItemIntroduceRequest;
+import com.ssafy.be.domain.auction.dto.response.*;
 import com.ssafy.be.domain.auction.entity.Auction;
+import com.ssafy.be.domain.auction.entity.AuctionStatus;
 import com.ssafy.be.domain.auction.exception.AuctionErrorCode;
 import com.ssafy.be.domain.auction.model.Bid;
 import com.ssafy.be.domain.auction.repository.AuctionBidRepository;
@@ -21,8 +18,6 @@ import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
 import com.ssafy.be.domain.shippingaddress.exception.ShippingAddressErrorCode;
 import com.ssafy.be.domain.shippingaddress.repository.ShippingAddressRepository;
-import com.ssafy.be.domain.stream.entity.Stream;
-import com.ssafy.be.domain.stream.exception.StreamErrorCode;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.exception.UserErrorCode;
@@ -39,6 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import static com.ssafy.be.global.websocket.enums.DestType.BROADCAST;
+import static com.ssafy.be.global.websocket.enums.DestType.PRIVATE;
+import static com.ssafy.be.global.websocket.enums.StreamEventType.*;
 import static com.ssafy.be.global.websocket.enums.StreamEventType.AUCTION_STATISTICS;
 import static com.ssafy.be.global.websocket.enums.StreamEventType.BID_PLACED;
 
@@ -87,6 +84,21 @@ public class AuctionService {
         );
     }
 
+    @Transactional
+    public void introduceItem(ItemIntroduceRequest request, Long streamId, Long userId) {
+        // 1. 호스트인지 확인
+        Seller seller = sellerRepository.findByUserId(userId)
+                .orElseThrow(() -> new StompException(SellerErrorCode.SELLER_NOT_FOUND));
+
+        validateStreamHost(streamId, seller.getId());
+
+        // 2. 경매 상태 '설명중'으로 변경
+        Auction auction = auctionRepository.findById(request.auctionId())
+                .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
+
+        auction.introduceAuction();
+    }
+
     @Transactional // TODO: 트랜잭션 범위 줄이기
     public List<StreamPublishTask> placeBid(BidPlaceRequest request, Long streamId, Long userId) {
         Auction auction = auctionRepository.findById(request.auctionId())
@@ -112,11 +124,16 @@ public class AuctionService {
 
         // 6. 응답
         // 6-1. BID_PLACE로 입찰 정보 브로드캐스트
-        StreamPublishTask bidPlacePublishTask = buildStreamPublishTask(BROADCAST, streamId, BID_PLACED,
+        StreamPublishTask bidPlacePublishTask = buildStreamPublishTask(
+                BROADCAST,
+                streamId,
+                null,
+                BID_PLACED,
                 buildBidPlaceResponse(
                         bidInfoDto,
                         isSniping ? buildSnipingTimerDto(TimeUtils.nowAsString()) : null
-                ));
+                )
+        );
 
         // 6-2. AUCTION_STATISTICS로 실시간 통계 정보 브로드캐스트
         List<Bid> bids = auctionBidRepository.findAll(auction.getId());
@@ -126,7 +143,11 @@ public class AuctionService {
                 .map(AuctionService::buildRecentBidDto)
                 .toList();
 
-        StreamPublishTask statisticsPublishTask = buildStreamPublishTask(BROADCAST, streamId, AUCTION_STATISTICS,
+        StreamPublishTask statisticsPublishTask = buildStreamPublishTask(
+                BROADCAST,
+                streamId,
+                null,
+                AUCTION_STATISTICS,
                 buildAuctionStatisticsResponse(
                         auction.getItem().getName(),
                         bids.stream().mapToLong(Bid::amount).sum(),
@@ -140,16 +161,25 @@ public class AuctionService {
     }
 
     @Transactional
-    public AuctionEndResponse endAuction(Long auctionId) {
+    public List<StreamPublishTask> endAuction(Long auctionId) {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
 
         Bid topBid = auctionBidRepository.findTopBid(auctionId).orElse(null);
 
+        // AUCTION_END로 경매 종료 broadcast
+        StreamPublishTask endPublishTask = buildStreamPublishTask(
+                BROADCAST,
+                auction.getStream().getId(),
+                null,
+                AUCTION_END,
+                null
+        );
+
         // 유찰
         if (topBid == null) {
             auction.unsold();
-            return null;
+            return List.of(endPublishTask);
         }
 
         // 낙찰
@@ -158,14 +188,21 @@ public class AuctionService {
         ShippingAddress shippingAddress = shippingAddressRepository.findByUserIdAndIsDefaultTrue(topBid.userId())
                 .orElseThrow(() -> new StompException(ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
 
-        return buildAuctionEndResponse(
-                topBid.userId(),
-                auction.getStream().getId(),
-                buildWinnerDto(
-                        buildItemDto(auction.getItem().getName(), topBid.amount()),
-                        buildShippingDto(shippingAddress)
-                )
+        // BID_WINNER로 낙찰 정보 private
+        BidWinnerResponse payload = buildBidWinnerResponse(
+                buildItemDto(auction.getItem().getName(), topBid.amount()),
+                buildShippingDto(shippingAddress)
         );
+
+        StreamPublishTask winnerPublishTask = buildStreamPublishTask(
+                PRIVATE,
+                auction.getStream().getId(),
+                topBid.userId(),
+                BID_WINNER,
+                payload
+        );
+
+        return List.of(endPublishTask, winnerPublishTask);
 
         // TODO: 중계 메시지 브로드캐스트 추가 예정
     }
@@ -194,14 +231,10 @@ public class AuctionService {
 
     @Transactional(readOnly = true)
     public ItemSyncResponse syncItem(Long streamId) {
-        // 1. 스트림 조회
-        Stream stream = streamRepository.findById(streamId)
-                .orElseThrow(() -> new StompException(StreamErrorCode.STREAM_NOT_FOUND));
-
-        // 2. 해당 스트림의 모든 경매 아이템 조회
+        // 1. 해당 스트림의 모든 경매 아이템 조회
         List<Auction> auctions = auctionRepository.findByStreamId(streamId);
 
-        // 3. 응답 생성
+        // 2. 응답 생성
         List<ItemSyncResponse.ItemInfo> items = auctions.stream()
                 .map(AuctionService::buildItemSyncInfo)
                 .toList();
@@ -288,30 +321,22 @@ public class AuctionService {
                 .build();
     }
 
-    private static AuctionEndResponse buildAuctionEndResponse(Long winnerId, Long streamId, AuctionEndResponse.WinnerDto winnerDto) {
-        return AuctionEndResponse.builder()
-                .winnerId(winnerId)
-                .streamId(streamId)
-                .winnerDto(winnerDto)
-                .build();
-    }
-
-    private static AuctionEndResponse.WinnerDto buildWinnerDto(AuctionEndResponse.WinnerDto.ItemDto itemDto, AuctionEndResponse.WinnerDto.ShippingDto shippingDto) {
-        return AuctionEndResponse.WinnerDto.builder()
+    private static BidWinnerResponse buildBidWinnerResponse(BidWinnerResponse.ItemDto itemDto, BidWinnerResponse.ShippingDto shippingDto) {
+        return BidWinnerResponse.builder()
                 .item(itemDto)
                 .shipping(shippingDto)
                 .build();
     }
 
-    private static AuctionEndResponse.WinnerDto.ItemDto buildItemDto(String itemName, Long finalPrice) {
-        return AuctionEndResponse.WinnerDto.ItemDto.builder()
+    private static BidWinnerResponse.ItemDto buildItemDto(String itemName, Long finalPrice) {
+        return BidWinnerResponse.ItemDto.builder()
                 .itemName(itemName)
                 .finalPrice(finalPrice)
                 .build();
     }
 
-    private static AuctionEndResponse.WinnerDto.ShippingDto buildShippingDto(ShippingAddress shippingAddress) {
-        return AuctionEndResponse.WinnerDto.ShippingDto.builder()
+    private static BidWinnerResponse.ShippingDto buildShippingDto(ShippingAddress shippingAddress) {
+        return BidWinnerResponse.ShippingDto.builder()
                 .recipientName(shippingAddress.getRecipientName())
                 .addressName(shippingAddress.getAddressName())
                 .postalCode(shippingAddress.getPostalCode())
@@ -345,19 +370,22 @@ public class AuctionService {
 
     private static ItemSyncResponse.ItemInfo buildItemSyncInfo(Auction auction) {
         return ItemSyncResponse.ItemInfo.builder()
+                .auctionId(auction.getId())
                 .itemName(auction.getItem().getName())
                 .image(auction.getItem().getImage1())
                 .startPrice(auction.getItem().getStartPrice())
                 .auctionStatus(auction.getAuctionStatus())
+                .finalPrice(auction.getAuctionStatus() == AuctionStatus.SOLD ? auction.getFinalPrice() : null)
                 .itemCondition(auction.getItem().getItemCondition())
                 .build();
     }
 
 
-    public <T> StreamPublishTask buildStreamPublishTask(DestType destType, Long streamId, StreamEventType eventType, T payload) {
+    public <T> StreamPublishTask buildStreamPublishTask(DestType destType, Long streamId, Long userId,StreamEventType eventType, T payload) {
         return StreamPublishTask.builder()
                 .destType(destType)
                 .streamId(streamId)
+                .userId(userId)
                 .eventType(eventType)
                 .payload(payload)
                 .build();

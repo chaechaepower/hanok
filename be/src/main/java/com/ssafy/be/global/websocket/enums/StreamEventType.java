@@ -14,8 +14,10 @@ public enum StreamEventType {
 
     // 겸매
     AUCTION_START,          // 경매 시작
+    AUCTION_END,            // 경매 종료
     AUCTION_STATISTICS,     // 경매 실시간 통계
     ITEM_SYNC,              // 경매 물품 정보 동기화
+    ITEM_INTRODUCE,         // 경매 물품 설명 시작
 
     // 입찰
     BID_PLACED,             // 입찰 발생
