@@ -355,7 +355,7 @@ public class StreamService {
                 .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
         // 시청자 수 증가 (비회원이면 userId null)
-        streamViewerService.increment(streamId);  // addViewer → increment
+        String identity = streamViewerService.enter(streamId, userId);  // addViewer → increment
 
         long viewerCount = streamViewerService.getViewerCount(streamId);
 
@@ -379,6 +379,20 @@ public class StreamService {
                 })
                 .orElse(List.of());
 
+        // 토큰 발급
+        boolean isHost = stream.getSeller().getUser().getId().equals(userId);
+        String participantIdentity = userId != null ? String.valueOf(userId) : "guest-" + streamId;
+        String roomName = String.valueOf(streamId);
+
+        AccessToken accessToken = new AccessToken(liveKitProperties.apiKey(), liveKitProperties.apiSecret());
+        accessToken.setName(participantIdentity);
+        accessToken.setIdentity(participantIdentity);
+        accessToken.addGrants(
+                new RoomJoin(true),
+                new RoomName(roomName),
+                new CanPublish(isHost),
+                new CanSubscribe(true));
+
         return new StreamEnterResponse(
                 stream.getId(),
                 stream.getTitle(),
@@ -391,7 +405,9 @@ public class StreamService {
                         seller.getUser().getProfileImage()
                 ),
                 viewerCount,
-                topBidders
+                topBidders,
+                accessToken.toJwt(),
+                identity
         );
     }
 }

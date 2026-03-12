@@ -185,4 +185,26 @@ public class RedisOperator {
         return redisTemplate.opsForZSet().reverseRangeByScore(key, min, max, offset, cnt);
 
     }
+
+    /* ================================
+     *           SET
+     * ================================ */
+
+    public void addToSet(String key, String value) {
+        redisTemplate.opsForSet().add(key, value);
+    }
+
+    public void removeFromSet(String key, String value) {
+        redisTemplate.opsForSet().remove(key, value);
+    }
+
+    public boolean isMemberOfSet(String key, String value) {
+        Boolean result = redisTemplate.opsForSet().isMember(key, value);
+        return result != null && result;
+    }
+
+    public long getSetSize(String key) {
+        Long size = redisTemplate.opsForSet().size(key);
+        return size != null ? size : 0L;
+    }
 }
