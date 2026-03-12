@@ -18,7 +18,7 @@ const getCategoryLabel = (categoryId: string): string =>
   MAIN_CATEGORY_ITEMS.find((c) => c.id === categoryId)?.label ?? categoryId;
 
 const formatScheduledAt = (isoString: string | null): string => {
-  if (!isoString) return '즉시 시작';
+  if (!isoString) return '방송 중';
   const d = new Date(isoString);
   if (Number.isNaN(d.getTime())) return isoString;
   return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -87,7 +87,7 @@ export default function LiveCreatePage() {
 
         <div className="flex-1 flex flex-col gap-1.5">
           <p className="text-[#888] text-sm">
-            방송시간&nbsp;&nbsp;{formatScheduledAt(stream.scheduledAt)}
+            {formatScheduledAt(stream.scheduledAt)}
           </p>
           <p className="text-white text-base font-semibold">
             방송 제목 : {stream.title}
