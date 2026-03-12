@@ -52,6 +52,10 @@ type BroadcastStreamEvent =
       payload?: ItemSyncPayload | null;
     }
   | {
+      eventType: 'BID_END';
+      payload: null;
+    }
+  | {
       eventType: string;
       payload?: unknown;
     };
@@ -87,6 +91,10 @@ const isItemSyncEvent = (
   event: BroadcastStreamEvent,
 ): event is Extract<BroadcastStreamEvent, { eventType: 'ITEM_SYNC' }> => event.eventType === 'ITEM_SYNC';
 
+const isBidEndEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'BID_END' }> => event.eventType === 'BID_END';
+
 const isBidWinnerEvent = (
   event: PrivateStreamEvent,
 ): event is Extract<PrivateStreamEvent, { eventType: 'BID_WINNER' }> => event.eventType === 'BID_WINNER';
@@ -112,6 +120,13 @@ export default function LivePage() {
     if (!streamId) {
       return;
     }
+
+    const requestItemSync = async () => {
+      await sendStreamMessage(streamId, {
+        eventType: 'ITEM_SYNC',
+        payload: null,
+      });
+    };
 
     const handleBroadcastEvent = (event: BroadcastStreamEvent) => {
       if (isAuctionStartEvent(event) && event.payload?.timer) {
@@ -161,6 +176,11 @@ export default function LivePage() {
         return;
       }
 
+      if (isBidEndEvent(event)) {
+        void requestItemSync();
+        return;
+      }
+
       if (isAuctionStatisticsEvent(event) && event.payload) {
         setAuctionStatistics(event.payload);
       }
@@ -181,10 +201,7 @@ export default function LivePage() {
     })
       .then(async (cleanup) => {
         unsubscribeStream = cleanup;
-        await sendStreamMessage(streamId, {
-          eventType: 'ITEM_SYNC',
-          payload: null,
-        });
+        await requestItemSync();
       })
       .catch((error) => {
         console.error('[stream] failed to subscribe', error);
