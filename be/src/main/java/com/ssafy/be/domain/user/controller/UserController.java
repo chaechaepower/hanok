@@ -87,7 +87,7 @@ public class UserController {
     // -----------------------------------------------
     @Operation(summary = "로그인", description = "로그인 후 Access Token(헤더), Refresh Token(쿠키) 발급")
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<Void>> login(
+    public ResponseEntity<ApiResponse<LoginResponseDto>> login(
             @RequestBody @Valid LoginRequestDto requestDto,
             HttpServletResponse response) {
 
@@ -99,7 +99,7 @@ public class UserController {
         // Refresh Token → HttpOnly Cookie
         response.addHeader(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokens.refreshToken()).toString());
 
-        return ResponseEntity.ok(ApiResponse.success());
+        return ResponseEntity.ok(ApiResponse.success(tokens));
     }
 
     // -----------------------------------------------
