@@ -69,7 +69,6 @@ export default function PaymentSection() {
     );
   }
 
-  // Handle case where accountData might not exist or be empty
   const hasAccount = accountData && accountData.bankName && accountData.accountNumber;
 
   return (

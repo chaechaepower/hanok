@@ -40,7 +40,6 @@ export default function FollowedStoresSection() {
               key={followId}
               className="w-full box-border border border-[#2e2e40] rounded-2xl p-6 bg-[#0c0c14] flex items-center gap-5 hover:border-[#3a3a50] transition-colors"
             >
-              {/* 아바타 + 라이브 뱃지 */}
               <div className="relative flex-shrink-0">
                 {seller.profileImageUri ? (
                   <img
@@ -60,7 +59,6 @@ export default function FollowedStoresSection() {
                 )}
               </div>
 
-              {/* 정보 */}
               <div className="flex-1 min-w-0 flex flex-col gap-1">
                 <div className="flex items-center gap-2">
                   <span className="text-white font-bold text-[16px]">{seller.nickname}</span>
@@ -68,7 +66,6 @@ export default function FollowedStoresSection() {
                 </div>
               </div>
 
-              {/* 언팔로우 버튼 */}
               <button
                 onClick={() => handleUnfollow(seller.sellerId)}
                 disabled={isPending}

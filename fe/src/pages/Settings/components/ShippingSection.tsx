@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { FiX } from 'react-icons/fi';
 import { FaMapMarkerAlt } from 'react-icons/fa';
 import type { Address, AddressFormState, AddressModalMode } from '@/types';
-import { getFetchInstance } from '@/api/instance';
+import { useGetAddresses } from '@/api/hooks/useGetAddresses';
+import { usePostAddress } from '@/api/hooks/usePostAddress';
+import { usePatchAddress } from '@/api/hooks/usePatchAddress';
+import { useDeleteAddress } from '@/api/hooks/useDeleteAddress';
 
 const EMPTY_FORM: AddressFormState = {
   label: '',
@@ -14,21 +17,18 @@ const EMPTY_FORM: AddressFormState = {
 };
 
 export default function ShippingSection() {
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<AddressModalMode>('add');
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState<AddressFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState('');
 
-  // 초기 배송지 목록 불러오기
-  useEffect(() => {
-    getFetchInstance()
-      .get<{ addresses: Address[] }>('/v1/users/me/addresses')
-      .then((res) => setAddresses(res.data.addresses))
-      .finally(() => setIsLoading(false));
-  }, []);
+  const { data, isLoading } = useGetAddresses();
+  const { mutate: createAddress } = usePostAddress();
+  const { mutate: updateAddress } = usePatchAddress();
+  const { mutate: removeAddress } = useDeleteAddress();
+
+  const addresses = data?.addresses ?? [];
 
   const openAddModal = () => {
     setForm(EMPTY_FORM);
@@ -54,26 +54,11 @@ export default function ShippingSection() {
   };
 
   const handleDelete = (id: number) => {
-    getFetchInstance()
-      .delete(`/v1/users/me/addresses/${id}`)
-      .then(() => {
-        setAddresses((prev: Address[]) => {
-          const remaining = prev.filter((a) => a.id !== id);
-          const wasDefault = prev.find((a) => a.id === id)?.isDefault;
-          if (wasDefault && remaining.length > 0) {
-            return remaining.map((a, i) => ({ ...a, isDefault: i === 0 }));
-          }
-          return remaining;
-        });
-      });
+    removeAddress(id);
   };
 
   const handleSetDefault = (id: number) => {
-    getFetchInstance()
-      .patch(`/v1/users/me/addresses/${id}`, { isDefault: true })
-      .then(() => {
-        setAddresses((prev: Address[]) => prev.map((a) => ({ ...a, isDefault: a.id === id })));
-      });
+    updateAddress({ id, isDefault: true });
   };
 
   const handleSubmit = () => {
@@ -84,53 +69,28 @@ export default function ShippingSection() {
     const fullAddress = form.addressDetail ? `${form.address} ${form.addressDetail}` : form.address;
 
     if (modalMode === 'add') {
-      getFetchInstance()
-        .post('/v1/users/me/addresses', {
+      createAddress(
+        {
           label: form.label,
           name: form.name,
           zipCode: form.zipCode,
           address: fullAddress,
           phone: form.phone,
-        })
-        .then(() => {
-          const newAddr: Address = {
-            id: Date.now(),
-            label: form.label,
-            isDefault: addresses.length === 0,
-            name: form.name,
-            zipCode: form.zipCode,
-            address: fullAddress,
-            phone: form.phone,
-          };
-          setAddresses((prev: Address[]) => [...prev, newAddr]);
-          setModalOpen(false);
-        });
+        },
+        { onSuccess: () => setModalOpen(false) },
+      );
     } else {
-      getFetchInstance()
-        .patch(`/v1/users/me/addresses/${editId}`, {
+      updateAddress(
+        {
+          id: editId!,
           label: form.label,
           name: form.name,
           zipCode: form.zipCode,
           address: fullAddress,
           phone: form.phone,
-        })
-        .then(() => {
-          setAddresses((prev: Address[]) =>
-            prev.map((a) =>
-              a.id === editId
-                ? {
-                    ...a,
-                    label: form.label,
-                    name: form.name,
-                    zipCode: form.zipCode,
-                    address: fullAddress,
-                    phone: form.phone,
-                  }
-                : a,
-            ),
-          );
-          setModalOpen(false);
-        });
+        },
+        { onSuccess: () => setModalOpen(false) },
+      );
     }
   };
 
@@ -144,7 +104,6 @@ export default function ShippingSection() {
 
   return (
     <>
-      {/* 헤더 */}
       <div className="flex items-start justify-between mb-2">
         <div className="flex flex-col gap-1">
           <h2 className="m-0 text-2xl font-bold text-white">배송지 관리</h2>
@@ -158,7 +117,6 @@ export default function ShippingSection() {
         </button>
       </div>
 
-      {/* 주소 목록 카드 */}
       {addresses.length === 0 ? (
         <div className="w-full box-border border border-[#2e2e40] rounded-2xl p-12 bg-[#0c0c14] flex flex-col items-center gap-4">
           <FaMapMarkerAlt size={40} className="text-[#333]" />
@@ -170,7 +128,6 @@ export default function ShippingSection() {
             .sort((a, b) => Number(b.isDefault) - Number(a.isDefault))
             .map((addr, idx) => (
               <div key={addr.id} className={`p-8 flex flex-col gap-2 ${idx !== 0 ? 'border-t border-[#2e2e40]' : ''}`}>
-                {/* 레이블 + 기본 뱃지 */}
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-white font-bold text-[16px]">{addr.label}</span>
                   {addr.isDefault && (
@@ -178,14 +135,12 @@ export default function ShippingSection() {
                   )}
                 </div>
 
-                {/* 주소 정보 */}
                 <p className="m-0 text-[15px] text-[#ddd]">
                   {addr.name}&nbsp;&nbsp;{addr.zipCode}
                 </p>
                 <p className="m-0 text-[15px] text-[#ddd]">{addr.address}</p>
                 <p className="m-0 text-[15px] text-[#ddd]">{addr.phone}</p>
 
-                {/* 액션 버튼 */}
                 <div className="flex items-center gap-4 mt-2 justify-end">
                   {!addr.isDefault && (
                     <button
@@ -214,7 +169,6 @@ export default function ShippingSection() {
         </div>
       )}
 
-      {/* 배송지 추가/수정 모달 */}
       {modalOpen && (
         <div
           className="fixed inset-0 bg-black/70 z-[999] flex items-center justify-center"
@@ -224,7 +178,6 @@ export default function ShippingSection() {
             className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[500px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* 모달 헤더 */}
             <div className="flex items-center justify-between">
               <h2 className="m-0 text-white text-xl font-bold">
                 {modalMode === 'add' ? '새 배송지 추가' : '배송지 수정'}
@@ -237,7 +190,6 @@ export default function ShippingSection() {
               </button>
             </div>
 
-            {/* 폼 필드 */}
             {(
               [
                 { label: '이름', key: 'name', placeholder: '받는 분 이름', type: 'text' },
@@ -262,7 +214,6 @@ export default function ShippingSection() {
 
             {formError && <p className="m-0 text-[13px] text-red-400">{formError}</p>}
 
-            {/* 버튼 */}
             <div className="flex justify-end gap-3 mt-2">
               <button
                 onClick={() => setModalOpen(false)}

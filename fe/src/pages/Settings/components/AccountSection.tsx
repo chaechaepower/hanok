@@ -54,7 +54,6 @@ export default function AccountSection() {
         <p className="m-0 text-[15px] text-[#aaa]">계정을 관리합니다.</p>
       </div>
 
-      {/* 계정 정보 */}
       <div className="w-full box-border border border-[#2e2e40] rounded-2xl p-8 bg-[#0c0c14] flex flex-col gap-8">
         <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
@@ -82,7 +81,6 @@ export default function AccountSection() {
         </div>
       </div>
 
-      {/* 알림 설정 */}
       <div className="w-full box-border border border-[#2e2e40] rounded-2xl p-8 bg-[#0c0c14] flex flex-col gap-6">
         <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
           <FiBell size={20} className="text-[#d9b36d]" />
@@ -100,7 +98,6 @@ export default function AccountSection() {
         </div>
       </div>
 
-      {/* 회원 탈퇴 */}
       <div className="w-full box-border border border-[#2e2e40] rounded-2xl p-8 bg-[#0c0c14] flex flex-col gap-6">
         <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
           <FiAlertTriangle size={20} className="text-red-500" />
@@ -125,7 +122,6 @@ export default function AccountSection() {
         </div>
       </div>
 
-      {/* 탈퇴 확인 모달 */}
       {isWithdrawModalOpen && (
         <div
           className="fixed inset-0 bg-black/70 z-[999] flex items-center justify-center"
