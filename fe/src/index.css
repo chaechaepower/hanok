@@ -8,51 +8,45 @@
    ══════════════════════════════════════════════════════════ */
 
 @theme {
-<<<<<<< fe/src/index.css
   /* ── 베이스 배경 ── */
   --color-background: #121010;
-  --color-surface: #1A1614;
-  --color-surface-elevated: #221E1A;
-=======
-  --color-background: #0a0c13;
-  --color-point: #f5f2eb;
-  --color-gold: #c7b282;
->>>>>>> fe/src/index.css
+  --color-surface: #1a1614;
+  --color-surface-elevated: #221e1a;
 
   /* ── PRIMARY (브랜드 톤, UI 뼈대, 판매자센터) ── */
-  --color-primary-light: #B09880;
-  --color-primary: #8A6E52;
-  --color-primary-dark: #6B5540;
-  --color-primary-muted: #4A3B2E;
+  --color-primary-light: #b09880;
+  --color-primary: #8a6e52;
+  --color-primary-dark: #6b5540;
+  --color-primary-muted: #4a3b2e;
 
   /* ── ACCENT (경고, 알림, 낙관, 위험) ── */
-  --color-accent-light: #C9645A;
-  --color-accent: #A63D2E;
-  --color-accent-dark: #802E22;
-  --color-accent-muted: #5A201A;
+  --color-accent-light: #c9645a;
+  --color-accent: #a63d2e;
+  --color-accent-dark: #802e22;
+  --color-accent-muted: #5a201a;
 
   /* ── GOLD (경매, 가격, CTA, 입찰, 낙찰) ── */
-  --color-gold-light: #E8B36A;
-  --color-gold: #CD9150;
-  --color-gold-dark: #A87540;
-  --color-gold-muted: #7A5A35;
+  --color-gold-light: #e8b36a;
+  --color-gold: #cd9150;
+  --color-gold-dark: #a87540;
+  --color-gold-muted: #7a5a35;
 
   /* ── EMBER (성공, 완료, 팔로우, 긍정 액션 — 에메랄드 불꽃) ── */
-  --color-ember-light: #5ECDAC;
-  --color-ember: #3BA88A;
-  --color-ember-dark: #2D8A6E;
-  --color-ember-muted: #1E5C4A;
+  --color-ember-light: #5ecdac;
+  --color-ember: #3ba88a;
+  --color-ember-dark: #2d8a6e;
+  --color-ember-muted: #1e5c4a;
 
   /* ── 뉴트럴 (웜톤 조정) ── */
-  --color-neutral-900: #1C1816;
-  --color-neutral-800: #2A2420;
-  --color-neutral-700: #3E3630;
-  --color-neutral-600: #5A4E44;
-  --color-neutral-500: #7A6E62;
-  --color-neutral-400: #A89A8C;
-  --color-neutral-300: #D4C4B0;
-  --color-neutral-200: #E8DDD0;
-  --color-neutral-100: #F5F0E8;
+  --color-neutral-900: #1c1816;
+  --color-neutral-800: #2a2420;
+  --color-neutral-700: #3e3630;
+  --color-neutral-600: #5a4e44;
+  --color-neutral-500: #7a6e62;
+  --color-neutral-400: #a89a8c;
+  --color-neutral-300: #d4c4b0;
+  --color-neutral-200: #e8ddd0;
+  --color-neutral-100: #f5f0e8;
 
   /* ── 타이포그래피 ── */
 
@@ -147,14 +141,17 @@
 }
 
 @keyframes badgePulse {
-
   0%,
   100% {
-    box-shadow: 0 0 12px rgba(166, 61, 46, .15), 0 0 4px rgba(166, 61, 46, .3);
+    box-shadow:
+      0 0 12px rgba(166, 61, 46, 0.15),
+      0 0 4px rgba(166, 61, 46, 0.3);
   }
 
   50% {
-    box-shadow: 0 0 20px rgba(166, 61, 46, .5), 0 0 8px rgba(166, 61, 46, .6);
+    box-shadow:
+      0 0 20px rgba(166, 61, 46, 0.5),
+      0 0 8px rgba(166, 61, 46, 0.6);
   }
 }
 
@@ -383,7 +380,6 @@ table {
    ══════════════════════════════════════════════════════════ */
 
 @layer utilities {
-
   /* 부제목: Pretendard 700, tracking -0.01em, leading 1.5 */
   .text-subtitle-lg {
     font-family: var(--font-heading);
@@ -501,7 +497,7 @@ table {
 @supports not selector(::-webkit-scrollbar) {
   .macro-scroll {
     scrollbar-width: thin;
-    scrollbar-color: rgba(205, 145, 80, .35) transparent;
+    scrollbar-color: rgba(205, 145, 80, 0.35) transparent;
   }
 }
 
@@ -514,7 +510,7 @@ table {
 }
 
 .macro-scroll::-webkit-scrollbar-thumb {
-  background: rgba(205, 145, 80, .35);
+  background: rgba(205, 145, 80, 0.35);
   border-radius: 999px;
 }
 
