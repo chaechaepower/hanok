@@ -1,6 +1,7 @@
 package com.ssafy.be.domain.stream.controller;
 
 import com.ssafy.be.domain.stream.exception.StreamErrorCode;
+import com.ssafy.be.domain.stream.service.StreamReconnectService;
 import com.ssafy.be.domain.stream.service.StreamViewerService;
 import com.ssafy.be.global.exception.GlobalException;
 import com.ssafy.be.global.infra.livekit.LiveKitProperties;
@@ -18,24 +19,40 @@ public class StreamWebhookController {
 
     private final StreamViewerService streamViewerService;
     private final LiveKitProperties liveKitProperties;
+    private final StreamReconnectService streamReconnectService;
 
     @PostMapping("/webhook")
     public ResponseEntity<Void> webhook(
-            @RequestHeader("Authorization") String authHeader, @RequestBody String body) {
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody String body) {
 
         try {
             WebhookReceiver receiver =
                     new WebhookReceiver(liveKitProperties.apiKey(), liveKitProperties.apiSecret());
 
             WebhookEvent event = receiver.receive(body, authHeader);
+            String eventType = event.getEvent();
             Long streamId = Long.parseLong(event.getRoom().getName());
+            String identity = event.getParticipant().getIdentity();
 
-            if ("participant_joined".equals(event.getEvent())) {
-                // enter() 호출 시 이미 Redis Set에 추가되므로 webhook에서 처리 불필요
-            } else if ("participant_left".equals(event.getEvent())) {
-                String identity = event.getParticipant().getIdentity();
+            if ("participant_joined".equals(eventType)) {
+                // guest면 숫자 변환 불가 → 무시
+                if (!identity.startsWith("guest-")) {
+                    Long userId = Long.parseLong(identity);
+                    streamReconnectService.handleReconnect(streamId, userId);
+                }
+
+            } else if ("participant_left".equals(eventType)) {
+                // 시청자 수 감소
                 streamViewerService.leave(streamId, identity);
+
+                // guest면 재연결 로직 불필요 → 무시
+                if (!identity.startsWith("guest-")) {
+                    Long userId = Long.parseLong(identity);
+                    streamReconnectService.handleDisconnect(streamId, userId);
+                }
             }
+
         } catch (Exception e) {
             throw new GlobalException(StreamErrorCode.INVALID_STREAM_EVENT_TYPE);
         }

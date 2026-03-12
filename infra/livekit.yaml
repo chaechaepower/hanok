@@ -4,5 +4,5 @@ keys:
 
 webhook:
   urls:
-    - http://13.124.238.68/api/v1/streams/webhook
+    - https://j14d105.p.ssafy.io/api/v1/streams/webhook
   api_key: devkey
