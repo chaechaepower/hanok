@@ -36,6 +36,7 @@ public class StreamPublisher {
         );
     }
 
+    @SuppressWarnings("java:S1301")
     public <T> void publish(StreamPublishTask<T> task) {
         switch (task.getDestType()) {
             case BROADCAST -> broadcast(task.getStreamId(), task.getEventType(), task.getPayload());

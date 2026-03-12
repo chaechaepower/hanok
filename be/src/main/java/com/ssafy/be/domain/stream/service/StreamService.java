@@ -132,7 +132,7 @@ public class StreamService {
 
         if (thumbnail != null && !thumbnail.isEmpty()) {
             if (stream.getThumbnail() != null) {
-                gcsClient.deleteStreamThumbnail(stream.getThumbnail());
+                gcsClient.deleteImage(stream.getThumbnail());
             }
             try {
                 String url = gcsClient.uploadStreamThumbnail(thumbnail, seller.getId(), streamId);
@@ -173,7 +173,7 @@ public class StreamService {
                         .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
         if (stream.getThumbnail() != null) {
-            gcsClient.deleteStreamThumbnail(stream.getThumbnail());
+            gcsClient.deleteImage(stream.getThumbnail());
         }
 
         streamRepository.delete(stream);

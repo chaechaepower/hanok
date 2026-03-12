@@ -1,6 +1,6 @@
 package com.ssafy.be.domain.stream.dto.response;
 
-import com.ssafy.be.domain.seller.entity.Seller;
 
+@SuppressWarnings("java:S1128")
 public record StreamSellerResponse(Long sellerId, String nickname, String profileImageUri) {
 }

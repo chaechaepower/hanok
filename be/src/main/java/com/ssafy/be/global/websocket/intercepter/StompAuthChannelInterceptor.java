@@ -3,7 +3,9 @@ package com.ssafy.be.global.websocket.intercepter;
 import com.ssafy.be.global.infra.redis.RedisService;
 import com.ssafy.be.global.security.util.JwtUtil;
 import io.jsonwebtoken.Claims;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.MessageDeliveryException;
@@ -26,14 +28,16 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
     private static final String BEARER_PREFIX = "Bearer ";
     private static final String BLACKLIST_PREFIX = "blacklist:";
 
+    // null처리 강화
     @Override
-    public Message<?> preSend(Message<?> message, MessageChannel channel) {
+    @Nullable
+    public Message<?> preSend(@NonNull Message<?> message, @NonNull MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(
                 message, StompHeaderAccessor.class
         );
 
-
-        if(StompCommand.CONNECT.equals(accessor.getCommand())) {
+        // accessor null 방지 추가
+        if(accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
             String authHeader = accessor.getFirstNativeHeader("Authorization");
 
             if(authHeader == null || !authHeader.startsWith(BEARER_PREFIX)) {

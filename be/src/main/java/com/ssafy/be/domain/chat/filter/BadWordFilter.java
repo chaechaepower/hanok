@@ -59,33 +59,26 @@ public class BadWordFilter {
         // 3. 허용어 사전 탐색
         Collection<Emit> allowedEmits = allowedTrie.parseText(normText);
 
-        boolean isBadWordDetected = false;
-
-        // 4. 감지된 금칙어 중 진짜 욕설
+        // 4. 감지된 금칙어 중 진짜 욕설인지 확인
         for (Emit banned : bannedEmits) {
             boolean isAllowed = false;
 
             for (Emit allowed : allowedEmits) {
+                // 금칙어가 허용어에 완전히 포함되는지 검사 (예: '발'이 '발가락'에 포함되는지)
                 if (allowed.getStart() <= banned.getStart() && banned.getEnd() <= allowed.getEnd()) {
                     isAllowed = true;
                     break;
                 }
             }
 
-            // 욕설이 하나라도 확인되면
+            //  허용어가 아닌 '진짜 욕설'이 하나라도 발견되면 즉시 "금칙어" 반환
             if (!isAllowed) {
-                isBadWordDetected = true;
-                break;
+                return buildResult(true, "금칙어");
             }
         }
 
-        // 5. 최종 결과 반환
-        if (!isBadWordDetected) {
-            return buildResult(false, original);
-        }
-
-        //
-        return buildResult(true, "금칙어");
+        // 5. 발견된 금칙어가 모두 허용어였다면 안전한 텍스트로 간주
+        return buildResult(false, original);
     }
 
     private ChatFilterResult buildResult(boolean isDetected, String text) {
