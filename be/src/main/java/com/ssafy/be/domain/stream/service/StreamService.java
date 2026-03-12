@@ -219,6 +219,21 @@ public class StreamService {
                         .findByIdAndSellerId(streamId, seller.getId())
                         .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
+        List<ItemSummaryResponse> items = auctionRepository.findByStreamId(streamId).stream()
+                .map(auction -> {
+                    Item item = auction.getItem();
+                    return new ItemSummaryResponse(
+                            item.getId(),
+                            item.getName(),
+                            item.getCategory(),
+                            item.getStartPrice(),
+                            item.getStatus(),
+                            item.getItemCondition(),
+                            item.getImage1(),
+                            item.getCreatedAt());
+                })
+                .toList();
+
         return new StreamDetailResponse(
                 stream.getId(),
                 stream.getTitle(),
@@ -228,7 +243,8 @@ public class StreamService {
                 stream.getStartType(),
                 stream.getNotice(),
                 stream.getStatus() == StreamStatus.LIVE,
-                stream.getCreatedAt());
+                stream.getCreatedAt(),
+                items);
     }
 
     @Transactional

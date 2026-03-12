@@ -1,8 +1,10 @@
 package com.ssafy.be.domain.stream.dto.response;
 
+import com.ssafy.be.domain.item.dto.response.ItemSummaryResponse;
 import com.ssafy.be.domain.item.entity.Category;
 import com.ssafy.be.domain.stream.entity.StartType;
 import java.time.LocalDateTime;
+import java.util.List;
 
 public record StreamDetailResponse(
         Long streamId,
@@ -13,5 +15,6 @@ public record StreamDetailResponse(
         StartType startType,
         String notice,
         boolean isLive,
-        LocalDateTime createdAt) {
+        LocalDateTime createdAt,
+        List<ItemSummaryResponse> items) {
 }
