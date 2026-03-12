@@ -2,10 +2,13 @@ package com.ssafy.be.domain.stream.service;
 
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
+import com.ssafy.be.domain.auction.model.Bid;
+import com.ssafy.be.domain.auction.repository.AuctionBidRepository;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.item.dto.response.ItemSummaryResponse;
 import com.ssafy.be.domain.item.entity.Category;
 import com.ssafy.be.domain.item.entity.Item;
+import com.ssafy.be.domain.item.exception.ItemErrorCode;
 import com.ssafy.be.domain.item.repository.ItemRepository;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
@@ -30,12 +33,12 @@ import io.livekit.server.RoomName;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import com.ssafy.be.domain.item.exception.ItemErrorCode;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +49,7 @@ public class StreamService {
     private final GcsClient gcsClient;
     private final LiveKitProperties liveKitProperties;
     private final StreamViewerService streamViewerService;
+    private final AuctionBidRepository auctionBidRepository;
     private final AuctionRepository auctionRepository;
     private final ItemRepository itemRepository;
 
@@ -272,7 +276,6 @@ public class StreamService {
 
             List<StreamListItemResponse> sorted =
                     streams.stream()
-                            // 228번째 줄 - VIEWER_COUNT 정렬 map 부분
                             .map(stream -> {
                                 Seller sel = stream.getSeller();
                                 return new StreamListItemResponse(
@@ -319,7 +322,7 @@ public class StreamService {
                     stream.getTitle(),
                     stream.getCategory(),
                     stream.getThumbnail(),
-                    stream.getStatus() == StreamStatus.LIVE,  // isLive() → status 비교
+                    stream.getStatus() == StreamStatus.LIVE,
                     streamViewerService.getViewerCount(stream.getId()),
                     stream.getScheduledAt(),
                     stream.getStartedAt(),
@@ -344,5 +347,51 @@ public class StreamService {
                 .toList();
 
         return new ScheduledStreamListResponse(streams, slice.hasNext());
+    }
+
+    @Transactional
+    public StreamEnterResponse enterStream(Long userId, Long streamId) {
+        Stream stream = streamRepository.findById(streamId)
+                .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
+
+        // 시청자 수 증가 (비회원이면 userId null)
+        streamViewerService.increment(streamId);  // addViewer → increment
+
+        long viewerCount = streamViewerService.getViewerCount(streamId);
+
+        Seller seller = stream.getSeller();
+
+        // 현재 진행 중인 경매의 상위 입찰자 3명
+        List<StreamEnterResponse.TopBidder> topBidders = auctionRepository
+                .findByStreamId(streamId)
+                .stream()
+                .filter(auction -> auction.getAuctionStatus() == AuctionStatus.LIVE)
+                .findFirst()
+                .map(auction -> {
+                    List<Bid> bids = auctionBidRepository.findAll(auction.getId());
+                    return IntStream.range(0, Math.min(3, bids.size()))
+                            .mapToObj(i -> new StreamEnterResponse.TopBidder(
+                                    i + 1,
+                                    bids.get(i).nickname(),
+                                    bids.get(i).amount()
+                            ))
+                            .toList();
+                })
+                .orElse(List.of());
+
+        return new StreamEnterResponse(
+                stream.getId(),
+                stream.getTitle(),
+                stream.getCategory(),
+                stream.getStatus(),
+                stream.getNotice(),
+                new StreamEnterResponse.SellerInfo(
+                        seller.getId(),
+                        seller.getUser().getNickname(),
+                        seller.getUser().getProfileImage()
+                ),
+                viewerCount,
+                topBidders
+        );
     }
 }
