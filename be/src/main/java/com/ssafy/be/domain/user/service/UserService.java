@@ -86,7 +86,7 @@ public class UserService {
                 .profileImage("https://storage.googleapis.com/hanok-storage/profiles/default/default-profile.png")
                 .isActive(true)
                 .balance(0L)
-                .depositedAuctionBalance(0L)
+                .depositedEscrowBalance(0L)
                 .depositedWithdrawBalance(0L)
                 .notificationSetting(true)
                 .build();
@@ -207,7 +207,7 @@ public class UserService {
         String newRefreshToken = jwtUtil.generateRefreshToken(userId);
 
         // 4. Redis 업데이트
-        redisService.save(REFRESH_TOKEN_PREFIX + userId, refreshToken,
+        redisService.save(REFRESH_TOKEN_PREFIX + userId, newRefreshToken,
                 jwtUtil.getRefreshExpiration(), TimeUnit.MILLISECONDS);
 
         return new LoginResponseDto(newAccessToken, newRefreshToken);

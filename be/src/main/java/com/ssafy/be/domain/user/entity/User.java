@@ -43,8 +43,11 @@ public class User {
     @Column(nullable = false)
     private Long balance; // 가상머니 잔액
 
-    @Column(name = "deposited_auction_balance", nullable = false)
-    private Long depositedAuctionBalance; // 예치된 낙찰 잔액
+    @Column(name = "deposited_bid_balance", nullable = false)
+    private Long depositedBidBalance; // 예치된 입찰 잔액
+
+    @Column(name = "deposited_escrow_balance", nullable = false)
+    private Long depositedEscrowBalance; // 예치된 에스크로(낙찰) 잔액
 
     @Column(name = "deposited_withdraw_balance", nullable = false)
     private Long depositedWithdrawBalance; // 예치된 출금 잔액
@@ -81,12 +84,38 @@ public class User {
                 .profileImage("https://storage.googleapis.com/hanok-storage/profiles/default/default-profile.png")   // GCS 기본 프로필 이미지   // GCS 연동 후 default 이미지 URL로 교체 예정
                 .isActive(true)
                 .balance(0L)
-                .depositedAuctionBalance(0L)
+                .depositedBidBalance(0L)
+                .depositedEscrowBalance(0L)
                 .depositedWithdrawBalance(0L)
                 .notificationSetting(true)
                 .build();
     }
 
+    // 출금 요청
+    public void requestWithdraw(Long amount) {
+        decreaseBalance(amount);
+        increaseDepositedWithdrawBalance(amount);
+    }
+
+    // 입찰 예치
+    public void depositBidBalance(Long amount) {
+        decreaseBalance(amount);
+        increaseDepositedBidBalance(amount);
+    }
+
+    // 입찰 예치 취소
+    public void cancelDepositedBidBalance(Long amount) {
+        increaseBalance(amount);
+        decreaseDepositedBidBalance(amount);
+    }
+
+    // 에스크로 잔액 예치
+    public void depositEscrowBalance(Long amount) {
+        decreaseDepositedBidBalance(amount);
+        increaseDepositedEscrowBalance(amount);
+    }
+
+    // 잔액 증가
     public void increaseBalance(Long amount) {
         if (amount <= 0) {
             throw new IllegalArgumentException("금액이 0보다 작습니다.");
@@ -95,11 +124,34 @@ public class User {
         this.balance += amount;
     }
 
-    public void requestWithdraw(Long amount) {
-        decreaseBalance(amount);
-        increaseDepositedWithdrawBalance(amount);
+    // 예치된 입찰 잔액 증가
+    public void increaseDepositedBidBalance(Long amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("금액이 0보다 작습니다.");
+        }
+
+        this.depositedBidBalance += amount;
     }
 
+    // 예치된 에스크로 잔액 증가
+    private void increaseDepositedEscrowBalance(Long amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("금액이 0보다 작습니다.");
+        }
+
+        this.depositedEscrowBalance += amount;
+    }
+
+    // 예치된 출금 잔액 증가
+    private void increaseDepositedWithdrawBalance(Long amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("금액이 0보다 작습니다.");
+        }
+
+        this.depositedWithdrawBalance += amount;
+    }
+
+    // 잔액 감소
     private void decreaseBalance(Long amount) {
         if (!hasSufficientBalance(amount)) {
             throw new IllegalArgumentException("잔액이 부족합니다.");
@@ -108,6 +160,7 @@ public class User {
         this.balance -= amount;
     }
 
+    // 예치된 출금 잔액 감소
     public void decreaseDepositedWithdrawBalance(Long amount) {
         if (!hasSufficientDepositedWithdrawBalance(amount)) {
             throw new IllegalArgumentException("잔액이 부족합니다.");
@@ -116,12 +169,16 @@ public class User {
         this.depositedWithdrawBalance -= amount;
     }
 
-    private void increaseDepositedWithdrawBalance(Long amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("금액이 0보다 작습니다.");
+    private void decreaseDepositedBidBalance(Long amount) {
+        if (!hasSufficientDepositedBidBalance(amount)) {
+            throw new IllegalArgumentException("잔액이 부족합니다.");
         }
 
-        this.depositedWithdrawBalance += amount;
+        this.depositedBidBalance -= amount;
+    }
+
+    private boolean hasSufficientDepositedBidBalance(Long amount) {
+        return this.depositedBidBalance >= amount;
     }
 
     public boolean hasSufficientBalance(Long amount) {

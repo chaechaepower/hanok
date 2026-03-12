@@ -3,6 +3,7 @@ package com.ssafy.be.domain.escrow.entity;
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.seller.entity.Seller;
+import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
 import com.ssafy.be.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -44,8 +45,8 @@ public class Escrow {
     private Seller seller;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "item_id")
-    private Item item;
+    @JoinColumn(name = "shipping_address_id")
+    private ShippingAddress shippingAddress;
 
     @CreatedDate
     @Column(updatable = false)
@@ -57,20 +58,20 @@ public class Escrow {
     @Builder
     private Escrow(Long winningPrice,
                    Long feeAmount,
-                  EscrowStatus escrowStatus,
-                  Auction auction,
-                  User buyer,
-                  Seller seller,
-                  Item item,
-                  LocalDateTime createdAt,
-                  LocalDateTime modifiedAt) {
+                   EscrowStatus escrowStatus,
+                   Auction auction,
+                   User buyer,
+                   Seller seller,
+                   ShippingAddress shippingAddress,
+                   LocalDateTime createdAt,
+                   LocalDateTime modifiedAt) {
         this.winningPrice = winningPrice;
         this.feeAmount = feeAmount;
         this.escrowStatus = escrowStatus;
         this.auction = auction;
         this.buyer = buyer;
         this.seller = seller;
-        this.item = item;
+        this.shippingAddress = shippingAddress;
         this.createdAt = createdAt;
         this.modifiedAt = modifiedAt;
     }

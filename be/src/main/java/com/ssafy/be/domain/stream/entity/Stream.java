@@ -94,4 +94,17 @@ public class Stream {
         this.status = StreamStatus.ENDED;
     }
 
+    // Stream.java에 추가
+    public void pause() {
+        this.status = StreamStatus.PAUSED;
+    }
+
+    public void resume() {
+        this.status = StreamStatus.LIVE;
+    }
+
+    public void fail() {
+        this.status = StreamStatus.ENDED;
+    }
+
 }

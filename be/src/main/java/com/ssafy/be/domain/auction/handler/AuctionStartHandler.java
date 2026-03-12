@@ -1,7 +1,6 @@
 package com.ssafy.be.domain.auction.handler;
 
 import com.ssafy.be.domain.auction.dto.request.AuctionStartRequest;
-import com.ssafy.be.domain.auction.dto.response.AuctionStartResponse;
 import com.ssafy.be.domain.auction.service.AuctionService;
 import com.ssafy.be.global.common.response.JsonConverter;
 import com.ssafy.be.global.websocket.dto.StreamPublishTask;
@@ -15,7 +14,6 @@ import org.springframework.stereotype.Component;
 import java.security.Principal;
 import java.util.List;
 
-import static com.ssafy.be.global.websocket.enums.StreamEventType.AUCTION_START;
 
 @RequiredArgsConstructor
 @Component

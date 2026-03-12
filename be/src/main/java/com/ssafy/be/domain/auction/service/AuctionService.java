@@ -6,12 +6,12 @@ import com.ssafy.be.domain.auction.dto.request.ItemIntroduceRequest;
 import com.ssafy.be.domain.auction.dto.response.*;
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
-import com.ssafy.be.domain.auction.enums.Comment;
 import com.ssafy.be.domain.auction.exception.AuctionErrorCode;
 import com.ssafy.be.domain.auction.model.Bid;
 import com.ssafy.be.domain.auction.repository.AuctionBidRepository;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.auction.repository.AuctionTimerRepository;
+import com.ssafy.be.domain.escrow.service.EscrowService;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
@@ -60,6 +60,7 @@ public class AuctionService {
     private final SellerRepository sellerRepository;
     private final UserRepository userRepository;
     private final ShippingAddressRepository shippingAddressRepository;
+    private final EscrowService escrowService;
 
     @Transactional
     public void introduceItem(ItemIntroduceRequest request, Long streamId, Long userId) {
@@ -121,7 +122,7 @@ public class AuctionService {
                 buildAuctionCommentResponse(AUCTION_START.getValue())
         );
 
-        return List.of(auctionStartPublishTask, auctionCommentPublishTask, auctionCommentPublishTask);
+        return List.of(auctionStartPublishTask, auctionCommentPublishTask);
     }
 
     @Transactional // TODO: 트랜잭션 범위 줄이기
@@ -232,10 +233,13 @@ public class AuctionService {
         }
 
         // 낙찰
-        auction.sold(topBid.amount());
-
         ShippingAddress shippingAddress = shippingAddressRepository.findByUserIdAndIsDefaultTrue(topBid.userId())
                 .orElseThrow(() -> new StompException(ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
+
+        auction.sold(topBid.amount());
+
+        // 에스크로 시작
+        escrowService.startEscrow(topBid, auction, shippingAddress);
 
         // BID_WINNER로 낙찰 정보 private
         BidWinnerResponse bidWinnerResponse = buildBidWinnerResponse(
@@ -262,7 +266,7 @@ public class AuctionService {
                 buildAuctionCommentResponse(message)
         );
 
-        return List.of(endPublishTask, winnerPublishTask);
+        return List.of(endPublishTask, winnerPublishTask, auctionCommentPublishTask);
     }
 
     @Transactional(readOnly = true)
@@ -302,6 +306,17 @@ public class AuctionService {
                 .build();
     }
 
+    private boolean preventSniping(Long auctionId) {
+        long remaining = auctionTimerRepository.findRemainingSecondsByAuctionId(auctionId);
+
+        if (remaining > 0 && remaining <= SNIPING_THRESHOLD_SECONDS) {
+            auctionTimerRepository.updateExpireByAuctionId(auctionId, SNIPING_THRESHOLD_SECONDS);
+            return true;
+        }
+
+        return false;
+    }
+
     private void validateStreamHost(Long streamId, Long sellerId) {
         boolean isStreamHost = streamRepository.existsByIdAndSellerId(streamId, sellerId);
 
@@ -328,18 +343,7 @@ public class AuctionService {
         }
     }
 
-    private boolean preventSniping(Long auctionId) {
-        long remaining = auctionTimerRepository.findRemainingSecondsByAuctionId(auctionId);
-
-        if (remaining > 0 && remaining <= SNIPING_THRESHOLD_SECONDS) {
-            auctionTimerRepository.updateExpireByAuctionId(auctionId, SNIPING_THRESHOLD_SECONDS);
-            return true;
-        }
-
-        return false;
-    }
-
-    public <T> StreamPublishTask buildStreamPublishTask(DestType destType, Long streamId, Long userId,StreamEventType eventType, T payload) {
+    public <T> StreamPublishTask buildStreamPublishTask(DestType destType, Long streamId, Long userId, StreamEventType eventType, T payload) {
         return StreamPublishTask.builder()
                 .destType(destType)
                 .streamId(streamId)

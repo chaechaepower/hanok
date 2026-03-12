@@ -30,7 +30,7 @@ public class WalletQueryService {
 
         return WalletSummaryResponse.builder()
                 .balance(user.getBalance())
-                .depositedAuctionBalance(user.getDepositedAuctionBalance())
+                .depositedAuctionBalance(user.getDepositedEscrowBalance())
                 .build();
     }
 

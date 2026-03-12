@@ -66,9 +66,8 @@ public class WalletWithdrawService {
 
         withdrawRequest.completeWithDraw();
 
-        // 2. user의 DepositedWithdrawAmount 감소
+        // 2. user의 예치된 출금 잔액 감소
         User user = withdrawRequest.getUser();
-
         user.decreaseDepositedWithdrawBalance(withdrawRequest.getAmount());
 
         // 3. tradeReport 생성 후 저장

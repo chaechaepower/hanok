@@ -141,8 +141,9 @@ class AuctionServiceTest {
                 .profileImage("https://storage.googleapis.com/hanok-storage/profiles/default/default-profile.png")
                 .isActive(true)
                 .balance(50000L)
-                .depositedAuctionBalance(0L)
+                .depositedEscrowBalance(0L)
                 .depositedWithdrawBalance(0L)
+                .depositedBidBalance(0L)
                 .notificationSetting(true)
                 .build();
         userRepository.save(bidder);
