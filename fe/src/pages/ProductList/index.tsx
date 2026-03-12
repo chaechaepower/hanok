@@ -67,7 +67,6 @@ export default function ProductListPage() {
       minHeight: '100vh',
       backgroundColor: '#0B0C10',
       color: 'white',
-      fontFamily: "'MuseumCulturalFoundationClassic', sans-serif",
     }}>
       <SideBar
         items={sidebarItems}

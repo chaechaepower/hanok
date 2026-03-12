@@ -1,21 +1,114 @@
 @import 'tailwindcss';
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap');
+
+/* ══════════════════════════════════════════════════════════
+   디자인 시스템 토큰
+   4계열 × 4단계 = 16색 + 배경/서피스 + 뉴트럴 + 타이포
+   ══════════════════════════════════════════════════════════ */
 
 @theme {
+<<<<<<< fe/src/index.css
+  /* ── 베이스 배경 ── */
+  --color-background: #121010;
+  --color-surface: #1A1614;
+  --color-surface-elevated: #221E1A;
+=======
   --color-background: #0a0c13;
   --color-point: #f5f2eb;
   --color-gold: #c7b282;
+>>>>>>> fe/src/index.css
 
+  /* ── PRIMARY (브랜드 톤, UI 뼈대, 판매자센터) ── */
+  --color-primary-light: #B09880;
+  --color-primary: #8A6E52;
+  --color-primary-dark: #6B5540;
+  --color-primary-muted: #4A3B2E;
+
+  /* ── ACCENT (경고, 알림, 낙관, 위험) ── */
+  --color-accent-light: #C9645A;
+  --color-accent: #A63D2E;
+  --color-accent-dark: #802E22;
+  --color-accent-muted: #5A201A;
+
+  /* ── GOLD (경매, 가격, CTA, 입찰, 낙찰) ── */
+  --color-gold-light: #E8B36A;
+  --color-gold: #CD9150;
+  --color-gold-dark: #A87540;
+  --color-gold-muted: #7A5A35;
+
+  /* ── EMBER (성공, 완료, 팔로우, 긍정 액션 — 에메랄드 불꽃) ── */
+  --color-ember-light: #5ECDAC;
+  --color-ember: #3BA88A;
+  --color-ember-dark: #2D8A6E;
+  --color-ember-muted: #1E5C4A;
+
+  /* ── 뉴트럴 (웜톤 조정) ── */
+  --color-neutral-900: #1C1816;
+  --color-neutral-800: #2A2420;
+  --color-neutral-700: #3E3630;
+  --color-neutral-600: #5A4E44;
+  --color-neutral-500: #7A6E62;
+  --color-neutral-400: #A89A8C;
+  --color-neutral-300: #D4C4B0;
+  --color-neutral-200: #E8DDD0;
+  --color-neutral-100: #F5F0E8;
+
+  /* ── 타이포그래피 ── */
+
+  /* 제목 전용 (Pretendard — 모던, 웨이트 풍부) */
+  --font-heading: 'Pretendard Variable', 'Pretendard', 'NanumGothic', sans-serif;
+
+  /* 본문/UI 전용 (나눔고딕 — 로컬 TTF, 친근하고 가독성 높음) */
+  --font-base: 'NanumGothic', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+
+  /* 가격/숫자 전용 (Noto Sans KR — 숫자 자간이 균일, 가격 표시에 최적) */
+  --font-mono-num: 'Noto Sans KR', 'NanumGothic', sans-serif;
+
+  /* 제목 (Heading) — 800 ExtraBold */
+  --text-h1: 28px;
+  --text-h2: 22px;
+  --text-h3: 18px;
+  --text-h4: 15px;
+
+  /* 부제목 (Subtitle) — 700 Bold */
+  --text-sub-lg: 15px;
+  --text-sub-md: 13px;
+  --text-sub-sm: 12px;
+
+  /* 본문 (Body) — 400 Regular */
+  --text-body-lg: 14px;
+  --text-body-md: 13px;
+  --text-body-sm: 12px;
+  --text-body-xs: 11px;
+
+  /* 가격 (Price) — 800 ExtraBold */
+  --text-price-lg: 24px;
+  --text-price-md: 18px;
+  --text-price-sm: 14px;
+
+  /* 캡션/라벨 — 700 Bold */
+  --text-label: 11px;
+  --text-caption: 10px;
+
+  /* ── 애니메이션 ── */
   --animate-shimmer: shimmer 2.5s ease-in-out infinite;
   --animate-urgent-pulse: urgentPulse 1s ease-in-out infinite;
   --animate-pop: pop 0.25s ease-out;
   --animate-blink: blink 1.2s ease-in-out infinite;
+  --animate-badge-pulse: badgePulse 2s ease-in-out infinite;
 }
+
+/* ══════════════════════════════════════════════════════════
+   키프레임
+   ══════════════════════════════════════════════════════════ */
 
 @keyframes shimmer {
   0%,
   100% {
     opacity: 0.7;
   }
+
   50% {
     opacity: 1;
   }
@@ -53,32 +146,56 @@
   }
 }
 
+@keyframes badgePulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 12px rgba(166, 61, 46, .15), 0 0 4px rgba(166, 61, 46, .3);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(166, 61, 46, .5), 0 0 8px rgba(166, 61, 46, .6);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   폰트 로딩 — 나눔고딕 로컬 TTF (본문/UI)
+   ══════════════════════════════════════════════════════════ */
+
 @font-face {
-  font-family: 'MuseumCulturalFoundationClassic';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/국립박물관문화재단클래식L.woff')
-    format('woff');
+  font-family: 'NanumGothic';
+  src: url('./assets/fonts/NanumFontSetup_TTF_GOTHIC/NanumGothicLight.ttf') format('truetype');
   font-weight: 300;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'MuseumCulturalFoundationClassic';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/국립박물관문화재단클래식M.woff')
-    format('woff');
-  font-weight: 500;
+  font-family: 'NanumGothic';
+  src: url('./assets/fonts/NanumFontSetup_TTF_GOTHIC/NanumGothic.ttf') format('truetype');
+  font-weight: 400;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'MuseumCulturalFoundationClassic';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_twelve@1.0/국립박물관문화재단클래식B.woff')
-    format('woff');
+  font-family: 'NanumGothic';
+  src: url('./assets/fonts/NanumFontSetup_TTF_GOTHIC/NanumGothicBold.ttf') format('truetype');
   font-weight: 700;
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'NanumGothic';
+  src: url('./assets/fonts/NanumFontSetup_TTF_GOTHIC/NanumGothicExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-display: swap;
+}
+
+/* ══════════════════════════════════════════════════════════
+   글로벌 리셋 & 베이스
+   ══════════════════════════════════════════════════════════ */
+
 html {
-  background-color: #0b0c10;
+  background-color: var(--color-background);
 }
 
 @layer base {
@@ -170,12 +287,54 @@ html {
     vertical-align: baseline;
     text-decoration: none;
   }
+
+  /* ── 타이포그래피 프리셋 ── */
+
+  h1 {
+    font-family: var(--font-heading);
+    font-size: var(--text-h1);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+    color: var(--color-neutral-100);
+  }
+
+  h2 {
+    font-family: var(--font-heading);
+    font-size: var(--text-h2);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+    color: var(--color-neutral-100);
+  }
+
+  h3 {
+    font-family: var(--font-heading);
+    font-size: var(--text-h3);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+    color: var(--color-neutral-100);
+  }
+
+  h4 {
+    font-family: var(--font-heading);
+    font-size: var(--text-h4);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.35;
+    color: var(--color-neutral-200);
+  }
 }
 
 body {
-  line-height: 1;
-  font-family: 'MuseumCulturalFoundationClassic', sans-serif;
-  color: black;
+  line-height: 1.65;
+  font-family: var(--font-base);
+  font-weight: 400;
+  font-size: var(--text-body-md);
+  color: var(--color-neutral-200);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 ol,
@@ -219,17 +378,133 @@ table {
   border-spacing: 0;
 }
 
-/* ─── 매크로 가로 스크롤바 ─────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   유틸리티 클래스 — 타이포그래피
+   ══════════════════════════════════════════════════════════ */
 
-/* Firefox용 */
-@supports not selector(::-webkit-scrollbar) {
-  .macro-scroll {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(197, 160, 89, 0.35) transparent;
+@layer utilities {
+
+  /* 부제목: Pretendard 700, tracking -0.01em, leading 1.5 */
+  .text-subtitle-lg {
+    font-family: var(--font-heading);
+    font-size: var(--text-sub-lg);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.5;
+  }
+
+  .text-subtitle-md {
+    font-family: var(--font-heading);
+    font-size: var(--text-sub-md);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.5;
+  }
+
+  .text-subtitle-sm {
+    font-family: var(--font-heading);
+    font-size: var(--text-sub-sm);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.5;
+  }
+
+  /* 본문: 나눔고딕 400, tracking 0, leading 1.65 */
+  .text-body-lg {
+    font-size: var(--text-body-lg);
+    font-weight: 400;
+    line-height: 1.65;
+  }
+
+  .text-body-md {
+    font-size: var(--text-body-md);
+    font-weight: 400;
+    line-height: 1.65;
+  }
+
+  .text-body-sm {
+    font-size: var(--text-body-sm);
+    font-weight: 400;
+    line-height: 1.65;
+  }
+
+  .text-body-xs {
+    font-size: var(--text-body-xs);
+    font-weight: 400;
+    line-height: 1.65;
+  }
+
+  /* 가격: Noto Sans KR 800, tracking -0.02em, leading 1.2 */
+  .text-price-lg {
+    font-family: var(--font-mono-num);
+    font-size: var(--text-price-lg);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .text-price-md {
+    font-family: var(--font-mono-num);
+    font-size: var(--text-price-md);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  .text-price-sm {
+    font-family: var(--font-mono-num);
+    font-size: var(--text-price-sm);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  /* 라벨/캡션: 나눔고딕 700, tracking 0.04em, leading 1.4 */
+  .text-label {
+    font-size: var(--text-label);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+  }
+
+  .text-caption {
+    font-size: var(--text-caption);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
   }
 }
 
-/* Chrome / Safari / Edge용 */
+/* ══════════════════════════════════════════════════════════
+   스크롤바
+   ══════════════════════════════════════════════════════════ */
+
+/* 다크 테마 모달용 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-neutral-800);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-neutral-700);
+}
+
+/* ─── 매크로 가로 스크롤바 ─────────────────────────────── */
+@supports not selector(::-webkit-scrollbar) {
+  .macro-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(205, 145, 80, .35) transparent;
+  }
+}
+
 .macro-scroll::-webkit-scrollbar {
   height: 3px;
 }
@@ -239,21 +514,18 @@ table {
 }
 
 .macro-scroll::-webkit-scrollbar-thumb {
-  background: rgba(197, 160, 89, 0.35);
+  background: rgba(205, 145, 80, .35);
   border-radius: 999px;
 }
 
 /* ─── 채팅 세로 스크롤바 ──────────────────────────────── */
-
-/* Firefox용 */
 @supports not selector(::-webkit-scrollbar) {
   .chat-scroll {
     scrollbar-width: thin;
-    scrollbar-color: #333 transparent;
+    scrollbar-color: var(--color-neutral-800) transparent;
   }
 }
 
-/* Chrome / Safari / Edge용 */
 .chat-scroll::-webkit-scrollbar {
   width: 4px;
 }
@@ -263,7 +535,7 @@ table {
 }
 
 .chat-scroll::-webkit-scrollbar-thumb {
-  background: #333;
+  background: var(--color-neutral-800);
   border-radius: 999px;
 }
 
@@ -290,16 +562,13 @@ table {
 }
 
 /* ─── 입찰 피드 세로 스크롤바 ────────────────────────── */
-
-/* Firefox용 */
 @supports not selector(::-webkit-scrollbar) {
   .bid-feed-scroll {
     scrollbar-width: thin;
-    scrollbar-color: #222 transparent;
+    scrollbar-color: var(--color-neutral-900) transparent;
   }
 }
 
-/* Chrome / Safari / Edge용 */
 .bid-feed-scroll::-webkit-scrollbar {
   width: 3px;
 }
@@ -309,6 +578,6 @@ table {
 }
 
 .bid-feed-scroll::-webkit-scrollbar-thumb {
-  background: #222;
+  background: var(--color-neutral-900);
   border-radius: 999px;
 }

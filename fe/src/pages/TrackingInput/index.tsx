@@ -179,14 +179,13 @@ export default function TrackingInput() {
         />
       )}
 
-      <div style={{ display: 'flex', gap: '40px', color: 'white', padding: '40px 16px', backgroundColor: '#0B0C10', minHeight: '100vh', fontFamily: "'MuseumCulturalFoundationClassic', sans-serif", width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', gap: '40px', color: 'white', padding: '40px 16px', backgroundColor: '#0B0C10', minHeight: '100vh', width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
         <SideBar
           items={sidebarItems}
           activeItemId={activeMenu}
           onItemClick={(item) => setActiveMenu(item.id)}
           className="!w-[200px] shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
         />
-
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '48px' }}>
           
           <section>
