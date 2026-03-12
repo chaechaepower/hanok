@@ -4,6 +4,7 @@ import com.ssafy.be.domain.auction.dto.request.AuctionStartRequest;
 import com.ssafy.be.domain.auction.dto.request.BidPlaceRequest;
 import com.ssafy.be.domain.auction.dto.response.*;
 import com.ssafy.be.domain.auction.entity.Auction;
+import com.ssafy.be.domain.auction.entity.AuctionStatus;
 import com.ssafy.be.domain.auction.exception.AuctionErrorCode;
 import com.ssafy.be.domain.auction.model.Bid;
 import com.ssafy.be.domain.auction.repository.AuctionBidRepository;
@@ -16,8 +17,6 @@ import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
 import com.ssafy.be.domain.shippingaddress.exception.ShippingAddressErrorCode;
 import com.ssafy.be.domain.shippingaddress.repository.ShippingAddressRepository;
-import com.ssafy.be.domain.stream.entity.Stream;
-import com.ssafy.be.domain.stream.exception.StreamErrorCode;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.exception.UserErrorCode;
@@ -216,10 +215,10 @@ public class AuctionService {
 
     @Transactional(readOnly = true)
     public ItemSyncResponse syncItem(Long streamId) {
-        // 2. 해당 스트림의 모든 경매 아이템 조회
+        // 1. 해당 스트림의 모든 경매 아이템 조회
         List<Auction> auctions = auctionRepository.findByStreamId(streamId);
 
-        // 3. 응답 생성
+        // 2. 응답 생성
         List<ItemSyncResponse.ItemInfo> items = auctions.stream()
                 .map(AuctionService::buildItemSyncInfo)
                 .toList();
@@ -355,10 +354,12 @@ public class AuctionService {
 
     private static ItemSyncResponse.ItemInfo buildItemSyncInfo(Auction auction) {
         return ItemSyncResponse.ItemInfo.builder()
+                .auctionId(auction.getId())
                 .itemName(auction.getItem().getName())
                 .image(auction.getItem().getImage1())
                 .startPrice(auction.getItem().getStartPrice())
                 .auctionStatus(auction.getAuctionStatus())
+                .finalPrice(auction.getAuctionStatus() == AuctionStatus.SOLD ? auction.getFinalPrice() : null)
                 .itemCondition(auction.getItem().getItemCondition())
                 .build();
     }

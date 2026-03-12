@@ -8,13 +8,17 @@ import java.util.List;
 import lombok.Builder;
 
 @Builder
-public record ItemSyncResponse(List<ItemInfo> items) {
-
+public record ItemSyncResponse(
+        List<ItemInfo> items
+) {
     @Builder
     public record ItemInfo(
+            Long auctionId,
             String itemName,
             String image,
             Long startPrice,
             AuctionStatus auctionStatus,
-            ItemCondition itemCondition) {}
+            Long finalPrice,
+            ItemCondition itemCondition
+    ) {}
 }
