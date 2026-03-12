@@ -68,8 +68,7 @@ export default function MainPage() {
   const [sortFilter, setSortFilter] = useState<MainStreamSort>('LATEST');
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
 
-  const selectedCategoryIndex = MAIN_CATEGORY_ITEMS.findIndex((item) => item.id === selectedCategoryItemId);
-  const selectedCategoryId = selectedCategoryIndex > 0 ? selectedCategoryIndex : undefined;
+  const selectedCategory = selectedCategoryItemId !== 'ALL' ? selectedCategoryItemId : undefined;
   const selectedSortLabel = SORT_OPTIONS.find((option) => option.value === sortFilter)?.label ?? '';
 
   const handleCategoryClick = (item: SideBarItem) => {
@@ -83,7 +82,7 @@ export default function MainPage() {
     isFetchingNextPage: isFetchingAllNextPage,
   } = useGetMain({
     type: 'ALL',
-    categoryId: selectedCategoryId,
+    category: selectedCategory,
     status: statusFilter,
     sort: sortFilter,
     size: PAGE_SIZE,
@@ -96,7 +95,7 @@ export default function MainPage() {
     isFetchingNextPage: isFetchingFollowingNextPage,
   } = useGetMain({
     type: 'FOLLOWING',
-    categoryId: selectedCategoryId,
+    category: selectedCategory,
     status: statusFilter,
     sort: sortFilter,
     size: PAGE_SIZE,

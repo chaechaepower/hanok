@@ -9,7 +9,7 @@ export type MainStreamSort = 'LATEST' | 'VIEWER_COUNT';
 
 type GetMainParams = {
   type?: MainStreamType;
-  categoryId?: number;
+  category?: string;
   status?: MainStreamStatus;
   sort?: MainStreamSort;
   page?: number;
@@ -20,7 +20,7 @@ export const getMainPath = () => '/v1/streams';
 
 export const getMainLiveStreams = async ({
   type = 'ALL',
-  categoryId,
+  category,
   status = 'LIVE',
   sort = 'LATEST',
   page = 0,
@@ -29,11 +29,11 @@ export const getMainLiveStreams = async ({
   const response = await getFetchInstance().get<PageResponse<LiveCardData>>(getMainPath(), {
     params: {
       type,
+      category,
       status,
       sort,
       page,
       size,
-      ...(categoryId !== undefined ? { categoryId } : {}),
     },
   });
   return response.data;
@@ -43,24 +43,24 @@ type UseGetMainParams = Omit<GetMainParams, 'page'>;
 
 export const useGetMain = (params: UseGetMainParams = {}) => {
   const type = params.type ?? 'ALL';
-  const categoryId = params.categoryId;
+  const category = params.category;
   const status = params.status ?? 'LIVE';
   const sort = params.sort ?? 'LATEST';
   const size = params.size ?? 10;
 
   return useSuspenseInfiniteQuery({
-    queryKey: ['liveCards', type, categoryId ?? null, status, sort, size],
+    queryKey: ['liveCards', type, category ?? null, status, sort, size],
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
       getMainLiveStreams({
         type,
-        categoryId,
+        category,
         status,
         sort,
         size,
         page: typeof pageParam === 'number' ? pageParam : 0,
       }),
-    getNextPageParam: (lastPage) => (lastPage.hasNext ? lastPage.page + 1 : undefined),
+    getNextPageParam: (lastPage) => (!lastPage.last ? lastPage.number + 1 : undefined),
     staleTime: 1000 * 60,
   });
 };

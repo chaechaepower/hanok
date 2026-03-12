@@ -49,15 +49,8 @@ export default function LiveEditPage() {
       setScheduledAt(streamData.scheduledAt || '');
       setThumbnailUrl(streamData.thumbnail || null);
       if (streamData.notice) setNotice(streamData.notice);
-
-      if (streamData.itemIds && filteredInventory.length > 0) {
-        const matched = streamData.itemIds
-          .map((id) => filteredInventory.find((item) => item.id === id))
-          .filter(Boolean) as Product[];
-        setSelectedItems(matched);
-      }
     }
-  }, [streamData, filteredInventory]);
+  }, [streamData]);
 
   const { data: macroData } = useGetStreamMacros(streamId, initialCategoryId);
   const postMacros = usePostStreamMacros();
