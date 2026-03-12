@@ -12,7 +12,9 @@ public record StreamEnterResponse(
         String notice,
         SellerInfo seller,
         long viewerCount,
-        List<TopBidder> topBidders
+        List<TopBidder> topBidders,
+        String token,
+        String identity
 ) {
     public record SellerInfo(
             Long sellerId,

@@ -1,6 +1,7 @@
 package com.ssafy.be.domain.stream.service;
 
 import com.ssafy.be.global.infra.redis.RedisOperator;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -8,19 +9,22 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class StreamViewerService {
 
-    private static final String VIEWER_COUNT_KEY = "stream:viewerCount:";
+    private static final String VIEWER_SET_KEY = "stream:viewers:";
     private final RedisOperator redisOperator;
 
-    public void increment(Long streamId) {
-        redisOperator.incrementValue(VIEWER_COUNT_KEY + streamId);
+    // 입장 - 이미 있으면 추가 안 함 (Set이라 자동 중복 제거)
+    public String enter(Long streamId, Long userId) {
+        String identity = userId != null ? String.valueOf(userId) : "guest-" + UUID.randomUUID();
+        redisOperator.addToSet(VIEWER_SET_KEY + streamId, identity);
+        return identity;
     }
 
-    public void decrement(Long streamId) {
-        redisOperator.decrementValue(VIEWER_COUNT_KEY + streamId);
+    // 퇴장
+    public void leave(Long streamId, String identity) {
+        redisOperator.removeFromSet(VIEWER_SET_KEY + streamId, identity);
     }
 
     public long getViewerCount(Long streamId) {
-        String value = redisOperator.getValue(VIEWER_COUNT_KEY + streamId);
-        return value != null ? Long.parseLong(value) : 0L;
+        return redisOperator.getSetSize(VIEWER_SET_KEY + streamId);
     }
 }

@@ -81,7 +81,7 @@ public class StreamController implements StreamApi {
     @GetMapping("/scheduled")
     public ResponseEntity<ScheduledStreamListResponse> getScheduledStreamList(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "8") int size) {
+            @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(streamService.getScheduledStreamList(page, size));
     }
 
