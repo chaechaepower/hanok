@@ -63,6 +63,30 @@ const toNumber = (value: string | null, fallback: number) => {
 };
 
 export const mainHandlers = [
+  http.get(`${BASE_URL}/v1/streams/:streamId/enter`, ({ params }) => {
+    const streamId = Number(params.streamId);
+    const stream = MAIN_LIVE_STREAMS.find((item) => item.streamId === streamId) ?? MAIN_LIVE_STREAMS[0];
+
+    return HttpResponse.json({
+      streamId: stream?.streamId ?? streamId,
+      title: stream?.title ?? '방송 제목',
+      category: stream?.category ?? 'ELECTRONICS',
+      status: 'LIVE',
+      notice: '공지는 어쩌구입니다. 배송은 2일 내로 일괄 배송됩니다.',
+      seller: {
+        sellerId: stream?.seller.sellerId ?? 1,
+        nickname: stream?.seller.nickname ?? '판매자명',
+        profileImage: stream?.seller.profileImageUri ?? null,
+        grade: 'GENERAL',
+      },
+      viewerCount: stream?.viewerCount ?? 100,
+      topBidders: [
+        { rank: 1, nickname: '고미술애호가', amount: 685000 },
+        { rank: 2, nickname: '전통수집광', amount: 650000 },
+        { rank: 3, nickname: 'Heritage_K', amount: 620000 },
+      ],
+    });
+  }),
   http.get(`${BASE_URL}/v1/streams`, ({ request }) => {
     const url = new URL(request.url);
 

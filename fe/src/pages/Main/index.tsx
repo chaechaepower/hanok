@@ -1,8 +1,9 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 
 import { useGetMain } from '@/api/hooks/useGetMain';
 import type { MainStreamSort, MainStreamStatus } from '@/api/hooks/useGetMain';
+import { useGetMe } from '@/api/hooks/useGetMe';
 import LiveCard from '@/components/Main/LiveCard';
 import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
 import SideBar from '@/components/common/layouts/SideBar';
@@ -62,11 +63,68 @@ const useInfiniteScrollTrigger = ({
   }, [fetchNextPage, hasNextPage, isFetchingNextPage, triggerRef]);
 };
 
+type FollowingSectionProps = {
+  categoryId?: number;
+  isLiveStatus: boolean;
+  sortFilter: MainStreamSort;
+  statusFilter: MainStreamStatus;
+};
+
+const FollowingSection = ({ categoryId, isLiveStatus, sortFilter, statusFilter }: FollowingSectionProps) => {
+  const { data: meData } = useGetMe();
+  const {
+    data: followingLiveData,
+    fetchNextPage: fetchFollowingNextPage,
+    hasNextPage: hasFollowingNextPage,
+    isFetchingNextPage: isFetchingFollowingNextPage,
+  } = useGetMain({
+    type: 'FOLLOWING',
+    categoryId,
+    status: statusFilter,
+    sort: sortFilter,
+    size: PAGE_SIZE,
+  });
+
+  const followingTriggerRef = useRef<HTMLDivElement | null>(null);
+
+  useInfiniteScrollTrigger({
+    fetchNextPage: fetchFollowingNextPage,
+    hasNextPage: hasFollowingNextPage,
+    isFetchingNextPage: isFetchingFollowingNextPage,
+    triggerRef: followingTriggerRef,
+  });
+
+  const followingBroadcasts = followingLiveData.pages.flatMap((page) => page.content);
+  const sectionTitle = isLiveStatus ? `${meData?.nickname ?? '회원'}님의 단골 경매!` : '다음 경매를 기다려보세요!';
+
+  return (
+    <section className="flex flex-1 flex-col gap-8 pb-10 pl-4 pr-8 pt-6">
+      <h2 className="text-[24px] font-semibold text-point">{sectionTitle}</h2>
+      {followingBroadcasts.length > 0 ? (
+        <>
+          <div className={GRID_CLASS_NAME}>
+            {followingBroadcasts.map((broadcast) => (
+              <LiveCard key={broadcast.streamId} stream={broadcast} />
+            ))}
+          </div>
+          {hasFollowingNextPage && <div ref={followingTriggerRef} className="h-8 w-full" />}
+          {isFetchingFollowingNextPage && <p className="text-center text-[14px] text-white/60">불러오는 중...</p>}
+        </>
+      ) : (
+        <p className="pt-12 text-center text-[16px] text-white/60">
+          {isLiveStatus ? '현재 진행중인 경매가 없습니다.' : '예약된 경매가 없습니다.'}
+        </p>
+      )}
+    </section>
+  );
+};
+
 export default function MainPage() {
   const [selectedCategoryItemId, setSelectedCategoryItemId] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<MainStreamStatus>('LIVE');
   const [sortFilter, setSortFilter] = useState<MainStreamSort>('LATEST');
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
 
   const selectedCategoryIndex = MAIN_CATEGORY_ITEMS.findIndex((item) => item.id === selectedCategoryItemId);
   const selectedCategoryId = selectedCategoryIndex > 0 ? selectedCategoryIndex : undefined;
@@ -89,21 +147,7 @@ export default function MainPage() {
     size: PAGE_SIZE,
   });
 
-  const {
-    data: followingLiveData,
-    fetchNextPage: fetchFollowingNextPage,
-    hasNextPage: hasFollowingNextPage,
-    isFetchingNextPage: isFetchingFollowingNextPage,
-  } = useGetMain({
-    type: 'FOLLOWING',
-    categoryId: selectedCategoryId,
-    status: statusFilter,
-    sort: sortFilter,
-    size: PAGE_SIZE,
-  });
-
   const allTriggerRef = useRef<HTMLDivElement | null>(null);
-  const followingTriggerRef = useRef<HTMLDivElement | null>(null);
   const sortDropdownRef = useRef<HTMLDivElement | null>(null);
 
   useInfiniteScrollTrigger({
@@ -111,13 +155,6 @@ export default function MainPage() {
     hasNextPage: hasAllNextPage,
     isFetchingNextPage: isFetchingAllNextPage,
     triggerRef: allTriggerRef,
-  });
-
-  useInfiniteScrollTrigger({
-    fetchNextPage: fetchFollowingNextPage,
-    hasNextPage: hasFollowingNextPage,
-    isFetchingNextPage: isFetchingFollowingNextPage,
-    triggerRef: followingTriggerRef,
   });
 
   useEffect(() => {
@@ -135,7 +172,6 @@ export default function MainPage() {
   }, []);
 
   const allBroadcasts = allLiveData.pages.flatMap((page) => page.content);
-  const followingBroadcasts = followingLiveData.pages.flatMap((page) => page.content);
   const isLiveStatus = statusFilter === 'LIVE';
 
   return (
@@ -207,26 +243,14 @@ export default function MainPage() {
           </div>
         </div>
 
-        <section className="flex flex-1 flex-col gap-8 pb-10 pl-4 pr-8 pt-6">
-          <h2 className="text-[24px] font-semibold text-point">
-            {isLiveStatus ? '최재각님의 단골 경매!' : '다음 경매를 기다려보세요!'}
-          </h2>
-          {followingBroadcasts.length > 0 ? (
-            <>
-              <div className={GRID_CLASS_NAME}>
-                {followingBroadcasts.map((broadcast) => (
-                  <LiveCard key={broadcast.streamId} stream={broadcast} />
-                ))}
-              </div>
-              {hasFollowingNextPage && <div ref={followingTriggerRef} className="h-8 w-full" />}
-              {isFetchingFollowingNextPage && <p className="text-center text-[14px] text-white/60">불러오는 중...</p>}
-            </>
-          ) : (
-            <p className="pt-12 text-center text-[16px] text-white/60">
-              {isLiveStatus ? '현재 진행중인 경매가 없습니다.' : '예약된 경매가 없습니다.'}
-            </p>
-          )}
-        </section>
+        {isLoggedIn && (
+          <FollowingSection
+            categoryId={selectedCategoryId}
+            isLiveStatus={isLiveStatus}
+            sortFilter={sortFilter}
+            statusFilter={statusFilter}
+          />
+        )}
 
         <section className="flex flex-1 flex-col gap-8 py-10 pl-4 pr-8">
           <h2 className="text-[24px] font-semibold text-point">

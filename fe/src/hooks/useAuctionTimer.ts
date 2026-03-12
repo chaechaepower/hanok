@@ -1,12 +1,11 @@
-import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 
-import { TIMER_EXTENSION_SECONDS, TIMER_URGENT_THRESHOLD } from '@/constants/auction';
-import type { AuctionDuration, TimerPhase } from '@/types';
+import { TIMER_URGENT_THRESHOLD } from '@/constants/auction';
+import type { SyncedAuctionTimer, TimerPhase } from '@/types';
 
 interface UseAuctionTimerOptions {
-  totalSeconds: AuctionDuration;
+  timer: SyncedAuctionTimer;
   onExpire: () => void;
-  resetTrigger?: number;
 }
 
 interface UseAuctionTimerReturn {
@@ -28,13 +27,25 @@ const formatTime = (seconds: number): string => {
   return `${mm}:${ss}`;
 };
 
-export default function useAuctionTimer({
-  totalSeconds,
-  onExpire,
-  resetTrigger,
-}: UseAuctionTimerOptions): UseAuctionTimerReturn {
-  const [secondsLeft, setSecondsLeft] = useState<number>(totalSeconds);
-  const prevResetTrigger = useRef(resetTrigger);
+const getSecondsLeft = (timer: SyncedAuctionTimer, clientNowMs: number) => {
+  const serverNowMs = Date.parse(timer.serverNow);
+  const serverStartedAtMs = Date.parse(timer.serverStartedAt);
+
+  if (Number.isNaN(serverNowMs) || Number.isNaN(serverStartedAtMs)) {
+    return 0;
+  }
+
+  const offsetMs = serverNowMs - timer.receivedAtMs;
+  const estimatedServerNowMs = clientNowMs + offsetMs;
+  const elapsedMs = estimatedServerNowMs - serverStartedAtMs;
+  const remainingMs = timer.durationSeconds * 1000 - elapsedMs;
+
+  return Math.max(0, Math.ceil(remainingMs / 1000));
+};
+
+export default function useAuctionTimer({ timer, onExpire }: UseAuctionTimerOptions): UseAuctionTimerReturn {
+  const [clientNowMs, setClientNowMs] = useState(() => Date.now());
+  const secondsLeft = getSecondsLeft(timer, clientNowMs);
   const handleExpire = useEffectEvent(onExpire);
 
   useEffect(() => {
@@ -42,12 +53,12 @@ export default function useAuctionTimer({
       return;
     }
 
-    const timeoutId = window.setTimeout(() => {
-      setSecondsLeft((prev) => Math.max(prev - 1, 0));
-    }, 1000);
+    const intervalId = window.setInterval(() => {
+      setClientNowMs(Date.now());
+    }, 250);
 
-    return () => window.clearTimeout(timeoutId);
-  }, [secondsLeft]);
+    return () => window.clearInterval(intervalId);
+  }, [secondsLeft, timer.receivedAtMs]);
 
   useEffect(() => {
     if (secondsLeft > 0) {
@@ -57,26 +68,9 @@ export default function useAuctionTimer({
     handleExpire();
   }, [secondsLeft]);
 
-  useEffect(() => {
-    const isResetRequested =
-      resetTrigger !== undefined && prevResetTrigger.current !== undefined && resetTrigger !== prevResetTrigger.current;
-
-    prevResetTrigger.current = resetTrigger;
-
-    if (!isResetRequested) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setSecondsLeft((prev) => (getPhase(prev) === 'urgent' ? TIMER_EXTENSION_SECONDS : prev));
-    }, 0);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [resetTrigger]);
-
   const phase = getPhase(secondsLeft);
-  const displayValue = phase === 'normal' ? formatTime(secondsLeft) : phase === 'urgent' ? String(secondsLeft) : '마감';
-  const displaySize = phase === 'normal' ? 'md' : phase === 'urgent' ? 'lg' : 'sm';
+  const displayValue = phase === 'normal' ? formatTime(secondsLeft) : phase === 'urgent' ? String(secondsLeft) : '종료';
+  const displaySize = phase === 'ended' ? 'sm' : 'md';
 
   return { secondsLeft, phase, displayValue, displaySize };
 }

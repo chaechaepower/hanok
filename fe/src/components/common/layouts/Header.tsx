@@ -17,6 +17,10 @@ export default function Header() {
   const sellerButtonLabel = sellerStatus?.isSeller ? '판매자 센터' : '판매자 등록';
   const sellerButtonPath = sellerStatus?.isSeller ? '/products' : '/seller/register';
 
+  const handleSellerButtonClick = () => {
+    navigate(isLoggedIn ? sellerButtonPath : '/login');
+  };
+
   const handleProfileClick = () => {
     const userId = localStorage.getItem('userId');
 
@@ -36,7 +40,7 @@ export default function Header() {
             <img src={Logo} alt="Logo" className="h-full w-full object-contain" />
           </button>
 
-          <Button onClick={() => navigate(sellerButtonPath)} className="ml-8 h-10 px-2">
+          <Button onClick={handleSellerButtonClick} className="ml-8 h-10 px-2">
             {sellerButtonLabel}
           </Button>
         </div>
