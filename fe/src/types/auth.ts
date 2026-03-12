@@ -1,9 +1,3 @@
-export type ApiResponse<T = Record<string, never>> = {
-  status: string;
-  message: string;
-  data: T;
-};
-
 export type LoginPayload = {
   email: string;
   password: string;

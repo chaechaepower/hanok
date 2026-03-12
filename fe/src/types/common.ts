@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export type ApiResponse<T> = {
+export type ApiResponse<T = Record<string, never>> = {
   status: string;
   message: string;
   data: T;
