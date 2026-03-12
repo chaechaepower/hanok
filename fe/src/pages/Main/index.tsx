@@ -64,13 +64,13 @@ const useInfiniteScrollTrigger = ({
 };
 
 type FollowingSectionProps = {
-  categoryId?: number;
+  category?: string;
   isLiveStatus: boolean;
   sortFilter: MainStreamSort;
   statusFilter: MainStreamStatus;
 };
 
-const FollowingSection = ({ categoryId, isLiveStatus, sortFilter, statusFilter }: FollowingSectionProps) => {
+const FollowingSection = ({ category, isLiveStatus, sortFilter, statusFilter }: FollowingSectionProps) => {
   const { data: meData } = useGetMe();
   const {
     data: followingLiveData,
@@ -79,7 +79,7 @@ const FollowingSection = ({ categoryId, isLiveStatus, sortFilter, statusFilter }
     isFetchingNextPage: isFetchingFollowingNextPage,
   } = useGetMain({
     type: 'FOLLOWING',
-    categoryId,
+    category,
     status: statusFilter,
     sort: sortFilter,
     size: PAGE_SIZE,
@@ -182,7 +182,7 @@ export default function MainPage() {
         className="min-h-[calc(100vh-108px)]"
       />
       <div className="flex w-full flex-col">
-        <div className="flex items-center justify-between gap-4 pb-2 pl-4 pr-8 pt-8">
+        <div className="flex items-center justify-between gap-4 pb-0 pl-4 pr-8 pt-8">
           <div className="inline-flex items-center rounded-xl bg-white/6 p-1">
             {STATUS_OPTIONS.map((option) => {
               const isSelected = statusFilter === option.value;
@@ -244,7 +244,7 @@ export default function MainPage() {
 
         {isLoggedIn && (
           <FollowingSection
-            categoryId={selectedCategoryId}
+            category={selectedCategory}
             isLiveStatus={isLiveStatus}
             sortFilter={sortFilter}
             statusFilter={statusFilter}
