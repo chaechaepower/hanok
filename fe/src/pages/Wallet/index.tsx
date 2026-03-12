@@ -287,11 +287,11 @@ export default function WalletPage() {
                       type="button"
                       onClick={() => setActiveTab(tab.key)}
                       className={`relative shrink-0 px-3 py-4 text-sm font-semibold transition sm:px-4 sm:text-[15px] ${
-                        isActive ? 'text-[#d7c08f]' : 'text-[#8d8579] hover:text-[#d4c8b8]'
+                        isActive ? 'text-gold' : 'text-[#8d8579] hover:text-[#d4c8b8]'
                       }`}
                     >
                       {tab.label}
-                      {isActive && <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-[#d7c08f]" />}
+                      {isActive && <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-gold" />}
                     </button>
                   );
                 })}

@@ -9,4 +9,4 @@ export * from './macro';
 export * from './seller';
 export * from './wallet';
 export * from './settings';
-export * from './stomp';
+export * from './stompChat';

@@ -110,8 +110,10 @@ export default function AccountSection() {
           <div className="flex flex-col gap-3">
             <span className="text-[15px] text-white font-bold">탈퇴 전 주의사항</span>
             <p className="m-0 text-[14px] text-[#aaa] leading-relaxed">
-              회원 탈퇴 시 모든 경매 내역과 평판 기록을 더 이상 플랫폼에서 확인할 수 없게 됩니다.<br />
-              지갑에 보관된 잔여 가상머니가 0원이어야만 탈퇴 절차를 진행할 수 있습니다. 진행 중인 경매나 정산 대기금이 있다면 모두 완료된 후 시도해 주세요.
+              회원 탈퇴 시 모든 경매 내역과 평판 기록을 더 이상 플랫폼에서 확인할 수 없게 됩니다.
+              <br />
+              지갑에 보관된 잔여 가상머니가 0원이어야만 탈퇴 절차를 진행할 수 있습니다. 진행 중인 경매나 정산 대기금이
+              있다면 모두 완료된 후 시도해 주세요.
             </p>
           </div>
           <button
@@ -147,7 +149,8 @@ export default function AccountSection() {
             </div>
 
             <p className="m-0 text-[14px] text-[#aaa] leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-              탈퇴 후에는 계정 복구가 불가능합니다.<br />
+              탈퇴 후에는 계정 복구가 불가능합니다.
+              <br />
               비밀번호를 입력하여 본인 확인 후 탈퇴를 진행해 주세요.
             </p>
 
@@ -163,9 +166,7 @@ export default function AccountSection() {
               />
             </div>
 
-            {withdrawError && (
-              <p className="m-0 text-[13px] text-red-400">{withdrawError}</p>
-            )}
+            {withdrawError && <p className="m-0 text-[13px] text-red-400">{withdrawError}</p>}
 
             <div className="flex justify-end gap-3 mt-2">
               <button

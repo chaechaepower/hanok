@@ -1,6 +1,15 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaArrowLeft, FaBroadcastTower, FaCalendarAlt, FaCamera, FaSave, FaCircle, FaList, FaTimes } from 'react-icons/fa';
+import {
+  FaArrowLeft,
+  FaBroadcastTower,
+  FaCalendarAlt,
+  FaCamera,
+  FaSave,
+  FaCircle,
+  FaList,
+  FaTimes,
+} from 'react-icons/fa';
 import { MdLiveTv } from 'react-icons/md';
 import { CATEGORY_MACROS } from '@/constants/macro';
 import { CATEGORIES } from './categories';
@@ -11,7 +20,6 @@ import { usePostStreamMacros } from '@/api/hooks/usePostStreamMacros';
 import type { Product, StartStreamRequest } from '@/types';
 import InventorySelectModal from './InventorySelectModal';
 import ScheduleModal from './ScheduleModal';
-
 
 export default function LiveRegisterPage() {
   const navigate = useNavigate();
@@ -33,13 +41,15 @@ export default function LiveRegisterPage() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const defaultMacros = useMemo(() => CATEGORY_MACROS[categoryLabel] ?? [], [categoryLabel]);
   const [macroAnswers, setMacroAnswers] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const initial: Record<string, string> = {};
-    defaultMacros.forEach((m) => { initial[m.questionType] = ''; });
+    defaultMacros.forEach((m) => {
+      initial[m.questionType] = '';
+    });
     setMacroAnswers(initial);
   }, [categoryLabel, defaultMacros]);
 
@@ -54,19 +64,23 @@ export default function LiveRegisterPage() {
 
   const toggleItem = (item: Product) => {
     setSelectedItems((prev) =>
-      prev.some((i) => i.id === item.id)
-        ? prev.filter((i) => i.id !== item.id)
-        : [...prev, item],
+      prev.some((i) => i.id === item.id) ? prev.filter((i) => i.id !== item.id) : [...prev, item],
     );
   };
 
   const handleSchedule = () => {
-    if (!title.trim()) { alert('방송 제목을 입력해주세요.'); return; }
+    if (!title.trim()) {
+      alert('방송 제목을 입력해주세요.');
+      return;
+    }
     setShowScheduleModal(true);
   };
 
   const handleStart = () => {
-    if (!title.trim()) { alert('방송 제목을 입력해주세요.'); return; }
+    if (!title.trim()) {
+      alert('방송 제목을 입력해주세요.');
+      return;
+    }
     setShowStartConfirm(true);
   };
 
@@ -143,7 +157,9 @@ export default function LiveRegisterPage() {
               <FaCircle className="text-[#e74c3c] text-sm" />
               <h1 className="text-xl font-bold text-white">라이브 방송 등록</h1>
             </div>
-            <p className="text-[#888] text-sm mt-0.5">경매 방송을 기획하세요. · 카테고리: <span className="text-[#d9b36d] font-semibold">{categoryLabel}</span></p>
+            <p className="text-[#888] text-sm mt-0.5">
+              경매 방송을 기획하세요. · 카테고리: <span className="text-[#d9b36d] font-semibold">{categoryLabel}</span>
+            </p>
           </div>
         </div>
 
@@ -158,7 +174,12 @@ export default function LiveRegisterPage() {
             방송 예약
             {scheduledAt && (
               <span className="text-[#d9b36d] text-xs font-medium ml-1">
-                {new Date(scheduledAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                {new Date(scheduledAt).toLocaleDateString('ko-KR', {
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
               </span>
             )}
           </button>
@@ -181,17 +202,12 @@ export default function LiveRegisterPage() {
               <FaList className="text-[#e74c3c] text-sm" />
               <h2 className="text-white font-bold text-base">경매 물품 리스트</h2>
             </div>
-            <p className="text-[#888] text-xs leading-relaxed">
-              방송 중 아래 순서대로 화면에 표시 됩니다.
-            </p>
+            <p className="text-[#888] text-xs leading-relaxed">방송 중 아래 순서대로 화면에 표시 됩니다.</p>
           </div>
 
           <div className="flex flex-col gap-2 flex-1">
             {selectedItems.map((item, idx) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-2 border border-white/10 rounded-lg p-2 bg-[#111]"
-              >
+              <div key={item.id} className="flex items-center gap-2 border border-white/10 rounded-lg p-2 bg-[#111]">
                 <span className="text-[#888] text-xs w-4">{idx + 1}</span>
                 <div className="w-8 h-8 rounded bg-[#222] flex items-center justify-center shrink-0">
                   <FaBroadcastTower size={12} className="text-white/30" />
@@ -238,9 +254,7 @@ export default function LiveRegisterPage() {
                 <p className="text-white font-bold text-base">{currentItem.title}</p>
                 <p className="text-white/60 text-sm">{currentItem.description}</p>
               </div>
-              <p className="text-white font-bold text-lg">
-                {currentItem.startPrice.toLocaleString()}원
-              </p>
+              <p className="text-white font-bold text-lg">{currentItem.startPrice.toLocaleString()}원</p>
             </div>
           )}
         </div>
@@ -309,7 +323,12 @@ export default function LiveRegisterPage() {
             </div>
             <div className="flex flex-col gap-2">
               {defaultMacros.map((macro) => {
-                const cleanCmd = macro.question.replace('?', '').replace('은', '').replace('는', '').replace('가', '').trim();
+                const cleanCmd = macro.question
+                  .replace('?', '')
+                  .replace('은', '')
+                  .replace('는', '')
+                  .replace('가', '')
+                  .trim();
 
                 return (
                   <div key={macro.questionType} className="flex items-center gap-2">
@@ -328,21 +347,17 @@ export default function LiveRegisterPage() {
                     >
                       !{cleanCmd}
                     </button>
-                  <input
-                    type="text"
-                    value={macroAnswers[macro.questionType] ?? ''}
-                    onChange={(e) =>
-                      setMacroAnswers((prev) => ({ ...prev, [macro.questionType]: e.target.value }))
-                    }
-                    placeholder="응답을 입력해주세요."
-                    className="flex-1 min-w-0 bg-transparent border border-white/15 rounded-lg px-2 py-1.5 text-white text-xs placeholder:text-white/25 outline-none focus:border-white/40"
-                  />
+                    <input
+                      type="text"
+                      value={macroAnswers[macro.questionType] ?? ''}
+                      onChange={(e) => setMacroAnswers((prev) => ({ ...prev, [macro.questionType]: e.target.value }))}
+                      placeholder="응답을 입력해주세요."
+                      className="flex-1 min-w-0 bg-transparent border border-white/15 rounded-lg px-2 py-1.5 text-white text-xs placeholder:text-white/25 outline-none focus:border-white/40"
+                    />
                   </div>
                 );
               })}
-              {!defaultMacros.length && (
-                <p className="text-[#888] text-xs">해당 카테고리의 매크로가 없습니다.</p>
-              )}
+              {!defaultMacros.length && <p className="text-[#888] text-xs">해당 카테고리의 매크로가 없습니다.</p>}
             </div>
           </div>
         </aside>
@@ -382,7 +397,8 @@ export default function LiveRegisterPage() {
                 </div>
                 <h2 className="text-white text-xl font-bold">방송을 시작할까요?</h2>
                 <p className="text-[#888] text-sm leading-relaxed">
-                  지금 바로 라이브 방송을 시작합니다.<br />
+                  지금 바로 라이브 방송을 시작합니다.
+                  <br />
                   시작 후에는 취소할 수 없습니다.
                 </p>
               </div>

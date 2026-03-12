@@ -49,6 +49,13 @@ export default function LiveEditPage() {
       setScheduledAt(streamData.scheduledAt || '');
       setThumbnailUrl(streamData.thumbnail || null);
       if (streamData.notice) setNotice(streamData.notice);
+
+      if (streamData.items && filteredInventory.length > 0) {
+        const matched = streamData.items
+          .map((item) => filteredInventory.find((inventoryItem) => inventoryItem.id === item.itemId))
+          .filter(Boolean) as Product[];
+        setSelectedItems(matched);
+      }
     }
   }, [streamData]);
 

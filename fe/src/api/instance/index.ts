@@ -2,15 +2,9 @@ import type { AxiosInstance } from 'axios';
 import axios from 'axios';
 import { QueryClient } from '@tanstack/react-query';
 
-let accessToken: string | null = null;
 let instance: AxiosInstance | null = null;
 
 export const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-export const setAuthToken = (token: string | null) => {
-  accessToken = token;
-};
-
-export const getAuthToken = (): string | null => accessToken;
 
 const initInstance = (): AxiosInstance => {
   const ax = axios.create({
@@ -23,6 +17,8 @@ const initInstance = (): AxiosInstance => {
 
   ax.interceptors.request.use(
     (config) => {
+      const accessToken = localStorage.getItem('accessToken');
+
       if (accessToken) {
         config.headers.Authorization = `Bearer ${accessToken}`;
       }

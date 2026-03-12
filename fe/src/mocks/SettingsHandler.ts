@@ -1,6 +1,8 @@
 import { http, HttpResponse } from 'msw';
 import { BASE_URL } from '@/api/instance';
 
+import { getCurrentMockUser, setCurrentMockUser } from './mockState';
+
 const mockMeData = {
   email: 'user@example.com',
   nickname: 'rerak',
@@ -43,6 +45,22 @@ export const settingsHandlers = [
 
   // GET  /v1/users/me
   http.get(`${BASE_URL}/v1/users/me`, () => {
+    const currentUser = getCurrentMockUser();
+
+    if (currentUser) {
+      return HttpResponse.json(
+        {
+          email: currentUser.email,
+          nickname: currentUser.nickname,
+          profileImage: currentUser.profileImage,
+          phone: currentUser.phone,
+          balance: currentUser.balance,
+          depositedBalance: currentUser.depositedBalance,
+        },
+        { status: 200 },
+      );
+    }
+
     return HttpResponse.json(mockMeData, { status: 200 });
   }),
 
@@ -58,6 +76,18 @@ export const settingsHandlers = [
     if (body.phone) mockMeData.phone = body.phone;
     if (body.nickname) mockMeData.nickname = body.nickname;
     if (body.profileImage) mockMeData.profileImage = body.profileImage;
+
+    const currentUser = getCurrentMockUser();
+    if (currentUser) {
+      setCurrentMockUser({
+        ...currentUser,
+        email: body.email ?? currentUser.email,
+        phone: body.phone ?? currentUser.phone,
+        nickname: body.nickname ?? currentUser.nickname,
+        profileImage: body.profileImage ?? currentUser.profileImage,
+      });
+    }
+
     return HttpResponse.json(
       { userId: 1, email: mockMeData.email, phone: mockMeData.phone, updatedAt: new Date().toISOString() },
       { status: 200 },

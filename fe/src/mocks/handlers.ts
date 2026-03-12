@@ -1,6 +1,7 @@
 import { authHandlers } from './AuthHandler';
 import { escrowHandlers } from './EscrowHandler';
 import { itemHandlers } from './ItemHandler';
+import { liveSocketHandler } from './LiveSocketHandler';
 import { mainHandlers } from './MainHandler';
 import { profileHandlers } from './ProfileHandler';
 import { sellerHandlers } from './SellerHandler';
@@ -18,6 +19,7 @@ export const handlers = [
   ...profileHandlers,
   ...escrowHandlers,
   ...settingsHandlers,
+  liveSocketHandler,
   ...LiveCreateHandlers,
   ...macroHandlers,
 ];

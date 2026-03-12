@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import type { AuctionDuration } from '@/types';
+
 import useAuctionTimer from '@/hooks/useAuctionTimer';
+import type { SyncedAuctionTimer } from '@/types';
 
 interface Props {
-  totalSeconds: AuctionDuration;
+  timer: SyncedAuctionTimer;
   onExpire: () => void;
-  resetTrigger?: number;
 }
 
 const phaseStyles = {
@@ -38,15 +38,14 @@ const sizeStyles = {
   lg: 'text-[32px]',
 };
 
-export default function AuctionTimer({ totalSeconds, onExpire, resetTrigger }: Props) {
+export default function AuctionTimer({ timer, onExpire }: Props) {
   const { phase, displayValue, displaySize, secondsLeft } = useAuctionTimer({
-    totalSeconds,
+    timer,
     onExpire,
-    resetTrigger,
   });
 
-  // urgent 숫자 변경 시 pop 애니메이션
   const [pop, setPop] = useState(false);
+
   useEffect(() => {
     if (phase !== 'urgent') return;
     const startTimer = setTimeout(() => setPop(true), 0);
@@ -57,30 +56,17 @@ export default function AuctionTimer({ totalSeconds, onExpire, resetTrigger }: P
     };
   }, [secondsLeft, phase]);
 
-  // 입찰 리셋 시 테두리 깜빡임
-  const [resetFlash, setResetFlash] = useState(false);
-  useEffect(() => {
-    if (resetTrigger === undefined || resetTrigger === 0) return;
-    const startTimer = setTimeout(() => setResetFlash(true), 0);
-    const endTimer = setTimeout(() => setResetFlash(false), 300);
-    return () => {
-      clearTimeout(startTimer);
-      clearTimeout(endTimer);
-    };
-  }, [resetTrigger]);
-
   const style = phaseStyles[phase];
-  const borderClass = resetFlash ? 'border-[rgba(59,130,246,.8)]' : style.border;
 
   return (
     <div
-      className={`flex flex-col items-center gap-1 rounded-2xl border bg-[rgba(0,0,0,.5)] px-5 py-3 transition-all ${borderClass} ${style.glow} ${style.animation}`}
+      className={`flex flex-col items-center gap-1 rounded-2xl border bg-[rgba(0,0,0,.5)] px-5 py-3 transition-all ${style.border} ${style.glow} ${style.animation}`}
     >
       <span className={`text-[10px] font-medium ${style.label}`}>{phase === 'ended' ? '경매 종료' : '남은 시간'}</span>
       <span
         className={`font-black leading-none tabular-nums ${style.text} ${sizeStyles[displaySize]} ${
           pop ? 'animate-pop' : ''
-        } ${phase === 'urgent' && secondsLeft <= 3 ? 'text-4xl!' : ''}`}
+        }`}
       >
         {displayValue}
       </span>

@@ -1,4 +1,5 @@
 import type { LiveCardData } from '@/types';
+import { useNavigate } from 'react-router-dom';
 
 type LiveCardProps = {
   stream: LiveCardData;
@@ -36,14 +37,41 @@ const formatScheduledAt = (scheduledAt: string | null) => {
 };
 
 export default function LiveCard({ stream, className = '' }: LiveCardProps) {
+  const navigate = useNavigate();
   const sellerInitial = stream.seller.nickname.trim().charAt(0) || '?';
   const categoryLabel = CATEGORY_LABEL_MAP[stream.category] ?? stream.category;
   const isScheduledCard = stream.scheduledAt !== null;
   const scheduledAtLabel = formatScheduledAt(stream.scheduledAt);
-  const containerClassName = `group w-full max-w-[230px] ${className}`.trim();
+  const canNavigate = stream.isLive && !isScheduledCard;
+  const containerClassName = `group w-full max-w-[230px] ${canNavigate ? 'cursor-pointer' : ''} ${className}`.trim();
+
+  const handleClick = () => {
+    if (!canNavigate) {
+      return;
+    }
+
+    navigate(`/live/${stream.streamId}`);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (!canNavigate) {
+      return;
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      navigate(`/live/${stream.streamId}`);
+    }
+  };
 
   return (
-    <article className={containerClassName}>
+    <article
+      className={containerClassName}
+      onClick={canNavigate ? handleClick : undefined}
+      onKeyDown={canNavigate ? handleKeyDown : undefined}
+      role={canNavigate ? 'link' : undefined}
+      tabIndex={canNavigate ? 0 : undefined}
+    >
       <div className="relative aspect-3/4 w-full overflow-hidden rounded-2xl bg-[#111827]">
         {stream.thumbnailUri ? (
           <img

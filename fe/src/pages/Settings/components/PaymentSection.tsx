@@ -46,16 +46,19 @@ export default function PaymentSection() {
     e.preventDefault();
     if (!form.bankCode || !form.accountNum || !form.accountName) return;
 
-    registerAccount({ bankCode: form.bankCode, bankName: form.bankName, accountNum: form.accountNum, accountName: form.accountName }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['account'] });
-        setForm({ bankCode: '', bankName: '', accountNum: '', accountName: '' });
-        alert('계좌가 등록/변경되었습니다.');
+    registerAccount(
+      { bankCode: form.bankCode, bankName: form.bankName, accountNum: form.accountNum, accountName: form.accountName },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['account'] });
+          setForm({ bankCode: '', bankName: '', accountNum: '', accountName: '' });
+          alert('계좌가 등록/변경되었습니다.');
+        },
+        onError: () => {
+          alert('계좌 등록/변경에 실패했습니다.');
+        },
       },
-      onError: () => {
-        alert('계좌 등록/변경에 실패했습니다.');
-      }
-    });
+    );
   };
 
   if (isLoading) {
@@ -102,7 +105,7 @@ export default function PaymentSection() {
                 formElement.scrollIntoView({ behavior: 'smooth' });
                 const inputs = formElement.querySelectorAll('input');
                 if (inputs.length > 0) {
-                   (inputs[0] as HTMLElement).focus();
+                  (inputs[0] as HTMLElement).focus();
                 }
               }
             }}
@@ -111,17 +114,17 @@ export default function PaymentSection() {
           </button>
         ) : (
           <button
-             className="px-6 py-2 bg-white text-black text-[14px] font-semibold rounded-full hover:bg-gray-200 transition-colors"
-             onClick={() => {
-                const formElement = document.getElementById('account-registration-form');
-                if (formElement) {
-                  formElement.scrollIntoView({ behavior: 'smooth' });
-                  const inputs = formElement.querySelectorAll('input');
-                  if (inputs.length > 0) {
-                     (inputs[0] as HTMLElement).focus();
-                  }
+            className="px-6 py-2 bg-white text-black text-[14px] font-semibold rounded-full hover:bg-gray-200 transition-colors"
+            onClick={() => {
+              const formElement = document.getElementById('account-registration-form');
+              if (formElement) {
+                formElement.scrollIntoView({ behavior: 'smooth' });
+                const inputs = formElement.querySelectorAll('input');
+                if (inputs.length > 0) {
+                  (inputs[0] as HTMLElement).focus();
                 }
-             }}
+              }
+            }}
           >
             계좌 변경
           </button>
@@ -135,21 +138,23 @@ export default function PaymentSection() {
             <select
               value={form.bankCode}
               onChange={(e) => {
-                const selected = BANKS.find(b => b.code === e.target.value);
+                const selected = BANKS.find((b) => b.code === e.target.value);
                 setForm({ ...form, bankCode: e.target.value, bankName: selected?.name ?? '' });
               }}
               className="w-[180px] h-[52px] bg-transparent border border-[#2e2e40] rounded-lg px-4 text-[#aaa] outline-none focus:border-[#d9b36d] transition-colors appearance-none cursor-pointer"
             >
-              <option value="" disabled>은행 선택</option>
-              {BANKS.map(bank => (
-                <option key={bank.code} value={bank.code}>{bank.name}</option>
+              <option value="" disabled>
+                은행 선택
+              </option>
+              {BANKS.map((bank) => (
+                <option key={bank.code} value={bank.code}>
+                  {bank.name}
+                </option>
               ))}
             </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#555] text-xs">
-              ▼
-            </div>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#555] text-xs">▼</div>
           </div>
-          
+
           <input
             type="text"
             placeholder="계좌번호 - 없이 숫자만 입력"

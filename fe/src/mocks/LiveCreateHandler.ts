@@ -1,12 +1,32 @@
 import { http, HttpResponse } from 'msw';
+
 import { BASE_URL } from '@/api/instance';
 import Logo from '@/assets/Logo.png';
-import type { Live, StartStreamRequest, UpdateStreamRequest, UpdateStreamResponse, DeleteStreamResponse } from '@/types';
+import type {
+  DeleteStreamResponse,
+  Live,
+  LiveStreamItem,
+  StartStreamRequest,
+  UpdateStreamRequest,
+  UpdateStreamResponse,
+} from '@/types';
+
+const createStreamItems = (itemIds: number[], category: string, thumbnail: string | null): LiveStreamItem[] =>
+  itemIds.map((itemId, index) => ({
+    itemId,
+    name: `상품 ${itemId}`,
+    category,
+    startPrice: 10000 * (index + 1),
+    status: 'READY',
+    itemCondition: 'BRAND_NEW',
+    image1: thumbnail,
+    createdAt: new Date(Date.now() - index * 60000).toISOString(),
+  }));
 
 const registeredLives: Live[] = [
   {
     streamId: 1,
-    title: '명품 가방 경매 시작합니다!',
+    title: '명품 가방 경매 시작합니다',
     category: 'BAGS_FASHION_ACCESSORIES',
     thumbnail: Logo,
     scheduledAt: new Date(Date.now() + 86400000).toISOString(),
@@ -14,6 +34,7 @@ const registeredLives: Live[] = [
     notice: '정품 인증서 포함, 경매 시작가 50만원부터',
     isLive: false,
     createdAt: new Date(Date.now() - 3600000).toISOString(),
+    items: createStreamItems([101, 102, 103], 'BAGS_FASHION_ACCESSORIES', Logo),
   },
   {
     streamId: 2,
@@ -25,6 +46,7 @@ const registeredLives: Live[] = [
     notice: '한정 수량 3족, 선착순 입찰',
     isLive: true,
     createdAt: new Date(Date.now() - 7200000).toISOString(),
+    items: createStreamItems([201, 202], 'SNEAKERS_SHOES', Logo),
   },
   {
     streamId: 3,
@@ -36,8 +58,10 @@ const registeredLives: Live[] = [
     notice: '2023년 구매, 풀박스 보증서 포함',
     isLive: false,
     createdAt: new Date(Date.now() - 172800000).toISOString(),
+    items: createStreamItems([301], 'WATCHES', Logo),
   },
 ];
+
 let nextLiveId = 4;
 
 export const LiveCreateHandlers = [
@@ -47,14 +71,14 @@ export const LiveCreateHandlers = [
     const size = Math.max(1, Number(url.searchParams.get('size') ?? '8'));
 
     const scheduled = registeredLives
-      .filter((l) => l.isLive || l.startType === 'SCHEDULED')
-      .map((l) => ({
-        streamId: l.streamId,
-        title: l.title,
-        category: l.category,
-        thumbnail: l.thumbnail,
-        scheduledAt: l.scheduledAt,
-        state: l.isLive ? ('LIVE' as const) : ('SCHEDULED' as const),
+      .filter((live) => live.isLive || live.startType === 'SCHEDULED')
+      .map((live) => ({
+        streamId: live.streamId,
+        title: live.title,
+        category: live.category,
+        thumbnail: live.thumbnail,
+        scheduledAt: live.scheduledAt,
+        state: live.isLive ? ('LIVE' as const) : ('SCHEDULED' as const),
       }));
 
     const start = page * size;
@@ -66,10 +90,12 @@ export const LiveCreateHandlers = [
 
   http.get(`${BASE_URL}/v1/streams/:streamId`, ({ params }) => {
     const streamId = Number(params.streamId);
-    const live = registeredLives.find((l) => l.streamId === streamId);
+    const live = registeredLives.find((item) => item.streamId === streamId);
+
     if (!live) {
       return HttpResponse.json({ message: 'Stream not found' }, { status: 404 });
     }
+
     return HttpResponse.json(live, { status: 200 });
   }),
 
@@ -90,9 +116,11 @@ export const LiveCreateHandlers = [
         const buffer = await thumbnailFile.arrayBuffer();
         const bytes = new Uint8Array(buffer);
         let binary = '';
-        for (let i = 0; i < bytes.length; i++) {
-          binary += String.fromCharCode(bytes[i]);
+
+        for (let index = 0; index < bytes.length; index += 1) {
+          binary += String.fromCharCode(bytes[index]);
         }
+
         thumbnailUrl = `data:${thumbnailFile.type || 'image/png'};base64,${btoa(binary)}`;
       }
     } else {
@@ -110,10 +138,11 @@ export const LiveCreateHandlers = [
       notice: body.notice,
       isLive: body.startType === 'IMMEDIATE',
       createdAt: new Date().toISOString(),
+      items: createStreamItems(body.itemIds, body.category, thumbnailUrl),
     };
 
     registeredLives.push(newLive);
-    console.log('[Mock] 방송 등록됨:', newLive);
+    console.log('[Mock] 방송 등록:', newLive);
 
     return HttpResponse.json(
       {
@@ -129,7 +158,7 @@ export const LiveCreateHandlers = [
     const streamId = Number(params.streamId);
     const body = (await request.json()) as StartStreamRequest;
 
-    if (!registeredLives.find((l) => l.streamId === streamId)) {
+    if (!registeredLives.find((live) => live.streamId === streamId)) {
       const newLive: Live = {
         streamId,
         title: body.title,
@@ -140,14 +169,18 @@ export const LiveCreateHandlers = [
         notice: body.notice,
         isLive: true,
         createdAt: new Date().toISOString(),
+        items: createStreamItems(body.itemIds, body.category, null),
       };
       registeredLives.push(newLive);
     } else {
-      const live = registeredLives.find((l) => l.streamId === streamId);
-      if (live) live.isLive = true;
+      const live = registeredLives.find((item) => item.streamId === streamId);
+
+      if (live) {
+        live.isLive = true;
+      }
     }
 
-    console.log('[Mock] POST /api/v1/streams/:streamId/start → streamId:', streamId, body);
+    console.log('[Mock] POST /api/v1/streams/:streamId/start, streamId:', streamId, body);
 
     return HttpResponse.json(
       {
@@ -170,7 +203,8 @@ export const LiveCreateHandlers = [
     const streamId = Number(params.streamId);
     const body = (await request.json()) as UpdateStreamRequest;
 
-    const liveIndex = registeredLives.findIndex((l) => l.streamId === streamId);
+    const liveIndex = registeredLives.findIndex((item) => item.streamId === streamId);
+
     if (liveIndex !== -1) {
       registeredLives[liveIndex] = {
         ...registeredLives[liveIndex],
@@ -179,6 +213,10 @@ export const LiveCreateHandlers = [
         startType: body.startType,
         scheduledAt: body.scheduledAt || null,
         notice: body.notice,
+        items: registeredLives[liveIndex].items.map((item) => ({
+          ...item,
+          category: body.category,
+        })),
       };
     }
 
@@ -188,14 +226,15 @@ export const LiveCreateHandlers = [
       status: body.startType === 'SCHEDULED' ? 'SCHEDULED' : 'LIVE',
     };
 
-    console.log('[Mock] 방송 수정됨:', response);
+    console.log('[Mock] 방송 수정:', response);
     return HttpResponse.json(response, { status: 200 });
   }),
 
   http.delete(`${BASE_URL}/v1/streams/:streamId`, ({ params }) => {
     const streamId = Number(params.streamId);
 
-    const liveIndex = registeredLives.findIndex((l) => l.streamId === streamId);
+    const liveIndex = registeredLives.findIndex((item) => item.streamId === streamId);
+
     if (liveIndex !== -1) {
       registeredLives.splice(liveIndex, 1);
     }
@@ -205,7 +244,7 @@ export const LiveCreateHandlers = [
       status: 'cancelled',
     };
 
-    console.log('[Mock] 방송 삭제됨 (취소):', response);
+    console.log('[Mock] 방송 삭제(취소):', response);
     return HttpResponse.json(response, { status: 200 });
   }),
 ];
