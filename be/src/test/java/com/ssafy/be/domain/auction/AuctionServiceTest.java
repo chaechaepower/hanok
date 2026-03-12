@@ -29,26 +29,33 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.List;
 
-import static com.ssafy.be.domain.auction.entity.AuctionStatus.LIVE;
-import static com.ssafy.be.domain.auction.entity.AuctionStatus.READY;
+import static com.ssafy.be.domain.auction.entity.AuctionStatus.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @IntegrationTest
 class AuctionServiceTest {
-    @Autowired private AuctionService auctionService;
-    @Autowired private UserRepository userRepository;
-    @Autowired private SellerRepository sellerRepository;
-    @Autowired private StreamRepository streamRepository;
-    @Autowired private ItemRepository itemRepository;
-    @Autowired private AuctionRepository auctionRepository;
-    @Autowired private AuctionTimerRepository auctionTimerRepository;
-    @Autowired private StringRedisTemplate redisTemplate;
+    @Autowired
+    private AuctionService auctionService;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private SellerRepository sellerRepository;
+    @Autowired
+    private StreamRepository streamRepository;
+    @Autowired
+    private ItemRepository itemRepository;
+    @Autowired
+    private AuctionRepository auctionRepository;
+    @Autowired
+    private AuctionTimerRepository auctionTimerRepository;
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     private User sellerUser;
     private Seller seller;
     private Stream stream;
     private Item item;
-    private Auction readyAuction;
+    private Auction introductingAuction;
     private Auction liveAuction;
 
     @BeforeEach
@@ -65,8 +72,8 @@ class AuctionServiceTest {
         item = TestFixture.createItem("테스트 상품");
         itemRepository.save(item);
 
-        readyAuction = TestFixture.createAuction(READY, stream, item);
-        auctionRepository.save(readyAuction);
+        introductingAuction = TestFixture.createAuction(INTRODUCING, stream, item);
+        auctionRepository.save(introductingAuction);
 
         liveAuction = TestFixture.createAuction(LIVE, stream, item);
         auctionRepository.save(liveAuction);
@@ -74,9 +81,9 @@ class AuctionServiceTest {
 
     @AfterEach
     void cleanup() {
-        redisTemplate.delete(AuctionRedisKeys.getTimerKey(readyAuction.getId()));
+        redisTemplate.delete(AuctionRedisKeys.getTimerKey(introductingAuction.getId()));
         redisTemplate.delete(AuctionRedisKeys.getTimerKey(liveAuction.getId()));
-        redisTemplate.delete(AuctionRedisKeys.getBidKey(readyAuction.getId()));
+        redisTemplate.delete(AuctionRedisKeys.getBidKey(introductingAuction.getId()));
         redisTemplate.delete(AuctionRedisKeys.getBidKey(liveAuction.getId()));
 
         auctionRepository.deleteAllInBatch();
@@ -91,18 +98,25 @@ class AuctionServiceTest {
     void startAuction() {
         // given
         AuctionStartRequest request = AuctionStartRequest.builder()
-                .auctionId(readyAuction.getId())
+                .auctionId(introductingAuction.getId())
                 .build();
 
         // when
-        AuctionStartResponse response = auctionService.startAuction(request, stream.getId(), sellerUser.getId());
+        List<StreamPublishTask> streamPublishTasks = auctionService.startAuction(request, stream.getId(), sellerUser.getId());
+
+        AuctionStartResponse response = streamPublishTasks.stream()
+                .map(StreamPublishTask::getPayload)
+                .filter(AuctionStartResponse.class::isInstance)
+                .map(AuctionStartResponse.class::cast)
+                .findFirst()
+                .orElse(null);
 
         // then
-        Auction savedAuction = auctionRepository.findById(readyAuction.getId()).orElseThrow();
+        Auction savedAuction = auctionRepository.findById(introductingAuction.getId()).orElseThrow();
 
         assertThat(savedAuction.getAuctionStatus()).isEqualTo(LIVE);
         assertThat(savedAuction.getStartedAt()).isNotNull();
-        assertThat(auctionTimerRepository.existsByAuctionId(readyAuction.getId())).isTrue();
+        assertThat(auctionTimerRepository.existsByAuctionId(introductingAuction.getId())).isTrue();
 
         AuctionStartResponse.AuctionStartItemDto itemDto = response.item();
         assertThat(itemDto.name()).isEqualTo("테스트 상품");
