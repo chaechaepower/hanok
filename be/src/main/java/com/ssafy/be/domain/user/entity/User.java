@@ -109,9 +109,9 @@ public class User {
         decreaseDepositedBidBalance(amount);
     }
 
-    // 에스크로 잔액 예치 TODO: 예치bid에 있는걸 예치escrow로 이동해야함)
-    public void escrowWinningBidAmount(Long amount) {
-        decreaseBalance(amount);
+    // 에스크로 잔액 예치
+    public void depositEscrowBalance(Long amount) {
+        decreaseDepositedBidBalance(amount);
         increaseDepositedEscrowBalance(amount);
     }
 

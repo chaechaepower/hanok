@@ -11,8 +11,7 @@ import com.ssafy.be.domain.auction.model.Bid;
 import com.ssafy.be.domain.auction.repository.AuctionBidRepository;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.auction.repository.AuctionTimerRepository;
-import com.ssafy.be.domain.escrow.entity.Escrow;
-import com.ssafy.be.domain.escrow.repository.EscrowRepository;
+import com.ssafy.be.domain.escrow.service.EscrowService;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
@@ -39,7 +38,6 @@ import static com.ssafy.be.domain.auction.enums.Comment.*;
 import static com.ssafy.be.domain.auction.enums.Comment.AUCTION_START;
 import static com.ssafy.be.domain.auction.enums.Comment.SOLD;
 import static com.ssafy.be.domain.auction.enums.Comment.UNSOLD;
-import static com.ssafy.be.domain.escrow.entity.EscrowStatus.DEPOSITED;
 import static com.ssafy.be.global.websocket.enums.DestType.BROADCAST;
 import static com.ssafy.be.global.websocket.enums.DestType.PRIVATE;
 import static com.ssafy.be.global.websocket.enums.StreamEventType.*;
@@ -62,7 +60,7 @@ public class AuctionService {
     private final SellerRepository sellerRepository;
     private final UserRepository userRepository;
     private final ShippingAddressRepository shippingAddressRepository;
-    private final EscrowRepository escrowRepository;
+    private final EscrowService escrowService;
 
     @Transactional
     public void introduceItem(ItemIntroduceRequest request, Long streamId, Long userId) {
@@ -241,7 +239,7 @@ public class AuctionService {
         auction.sold(topBid.amount());
 
         // 에스크로 시작
-        startEscrow(topBid, auction, shippingAddress);
+        escrowService.startEscrow(topBid, auction, shippingAddress);
 
         // BID_WINNER로 낙찰 정보 private
         BidWinnerResponse bidWinnerResponse = buildBidWinnerResponse(
@@ -317,25 +315,6 @@ public class AuctionService {
         }
 
         return false;
-    }
-
-    private void startEscrow(Bid topBid, Auction auction, ShippingAddress shippingAddress) {
-        User user = userRepository.findById(topBid.userId())
-                .orElseThrow(() -> new StompException(UserErrorCode.USER_NOT_FOUND));
-
-        user.escrowWinningBidAmount(topBid.amount());
-
-        Escrow escrow = Escrow.builder()
-                .winningPrice(topBid.amount())
-                .feeAmount((long) (topBid.amount() * 0.05))
-                .escrowStatus(DEPOSITED)
-                .auction(auction)
-                .buyer(user)
-                .seller(auction.getStream().getSeller())
-                .shippingAddress(shippingAddress)
-                .build();
-
-        escrowRepository.save(escrow);
     }
 
     private void validateStreamHost(Long streamId, Long sellerId) {
