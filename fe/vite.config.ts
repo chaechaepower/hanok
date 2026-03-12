@@ -18,6 +18,10 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      '/api': {
+        target: 'http://j14d105.p.ssafy.io',
+        changeOrigin: true,
+      },
       '/bizno-api': {
         target: 'https://bizno.net',
         changeOrigin: true,
