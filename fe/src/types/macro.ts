@@ -1,13 +1,3 @@
-export type MacroQuestionType =
-  | 'WEARABLE_SIZE'
-  | 'WEARABLE_WORN_COUNT'
-  | 'WEARABLE_BOX_TAG'
-  | 'WEARABLE_WASHING'
-  | 'CONDITION'
-  | 'SHIPPING'
-  | 'DEFECT'
-  | string;
-
 export type Macro = {
   questionType: string;
   answer: string;
@@ -24,7 +14,5 @@ export type PostStreamMacrosRequest = {
 };
 
 export type PostStreamMacrosResponse = {
-  streamId: number;
-  macroCount: number;
-  cachedAt: string;
+  macros: Macro[];
 };

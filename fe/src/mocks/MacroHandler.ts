@@ -59,9 +59,7 @@ export const macroHandlers = [
     savedMacros[streamId] = { category: existingCategory, macros: merged };
 
     const response: PostStreamMacrosResponse = {
-      streamId,
-      macroCount: merged.length,
-      cachedAt: new Date().toISOString(),
+      macros: merged,
     };
     return HttpResponse.json(response, { status: 200 });
   }),
