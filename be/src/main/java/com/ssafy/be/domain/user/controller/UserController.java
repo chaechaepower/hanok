@@ -132,7 +132,7 @@ public class UserController {
     // -----------------------------------------------
     @Operation(summary = "토큰 재발급", description = "Refresh Token으로 새 Access Token, Refresh Token 발급")
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<Void>> refresh(
+    public ResponseEntity<ApiResponse<LoginResponseDto>> refresh(
             @CookieValue(name = REFRESH_TOKEN_COOKIE) String refreshToken,
             HttpServletResponse response) {
 
@@ -144,7 +144,7 @@ public class UserController {
         // 새 Refresh Token → HttpOnly Cookie 갱신
         response.addHeader(HttpHeaders.SET_COOKIE, buildRefreshCookie(tokens.refreshToken()).toString());
 
-        return ResponseEntity.ok(ApiResponse.success());
+        return ResponseEntity.ok(ApiResponse.success(tokens));
     }
 
     // Refresh Token 쿠키 생성 헬퍼 메서드 (중복 제거)

@@ -207,7 +207,7 @@ public class UserService {
         String newRefreshToken = jwtUtil.generateRefreshToken(userId);
 
         // 4. Redis 업데이트
-        redisService.save(REFRESH_TOKEN_PREFIX + userId, refreshToken,
+        redisService.save(REFRESH_TOKEN_PREFIX + userId, newRefreshToken,
                 jwtUtil.getRefreshExpiration(), TimeUnit.MILLISECONDS);
 
         return new LoginResponseDto(newAccessToken, newRefreshToken);
