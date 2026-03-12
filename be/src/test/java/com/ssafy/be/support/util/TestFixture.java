@@ -4,7 +4,6 @@ import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.seller.entity.Seller;
-import com.ssafy.be.domain.seller.entity.SellerType;
 import com.ssafy.be.domain.stream.entity.Stream;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.wallet.model.PaymentStatus;

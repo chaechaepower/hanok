@@ -108,9 +108,9 @@ public class ItemService {
 
         if (images != null && !images.isEmpty()) {
             // 기존 이미지 삭제
-            gcsClient.deleteItemImage(item.getImage1());
-            gcsClient.deleteItemImage(item.getImage2());
-            gcsClient.deleteItemImage(item.getImage3());
+            gcsClient.deleteImage(item.getImage1());
+            gcsClient.deleteImage(item.getImage2());
+            gcsClient.deleteImage(item.getImage3());
 
             try {
                 String image1 = getImage(images, 0, seller.getId(), itemId);
@@ -133,9 +133,9 @@ public class ItemService {
         Item item = itemRepository.findByIdAndSellerId(itemId, seller.getId())
                 .orElseThrow(() -> new GlobalException(ItemErrorCode.ITEM_NOT_FOUND));
 
-        gcsClient.deleteItemImage(item.getImage1());
-        gcsClient.deleteItemImage(item.getImage2());
-        gcsClient.deleteItemImage(item.getImage3());
+        gcsClient.deleteImage(item.getImage1());
+        gcsClient.deleteImage(item.getImage2());
+        gcsClient.deleteImage(item.getImage3());
 
         itemRepository.delete(item);
     }

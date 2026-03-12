@@ -5,10 +5,8 @@ import com.ssafy.be.domain.notification.model.NotificationRedisKeys;
 import com.ssafy.be.global.common.response.JsonConverter;
 import com.ssafy.be.global.infra.redis.RedisOperator;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.users.SparseUserDatabase;
 import org.springframework.stereotype.Repository;
 
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -63,7 +61,7 @@ public class NotificationRepository {
         // 2. ID 리스트를 완전한 Redis Key 리스트로 변환
         List<String> notiKeys = notifIds.stream()
                 .map(id -> NotificationRedisKeys.getNotiKey(Long.parseLong(id)))
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
 
         // 3. 모든 Hash 데이터를 가져옵니다.
         List<Map<Object, Object>> pipelinedResults = redisOperator.getHashEntriesPipelined(notiKeys);
@@ -72,7 +70,7 @@ public class NotificationRepository {
         return pipelinedResults.stream()
                 .filter(hash -> hash != null && !hash.isEmpty()) // 혹시 삭제된 데이터면 무시
                 .map(hash -> converter.fromHash(hash, Notification.class))
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public void markAsRead(Long userId, Long notifId) {
@@ -105,7 +103,7 @@ public class NotificationRepository {
         if (notifIds != null && !notifIds.isEmpty()) {
             List<String> notiKeys = notifIds.stream()
                     .map(id -> NotificationRedisKeys.getNotiKey(Long.parseLong(id)))
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toCollection(ArrayList::new));
 
             // 2. 파이프라인으로 모두 열어서 isRead를 true
             redisOperator.updateHashFieldsPipelined(notiKeys, "isRead", "true");
@@ -133,7 +131,8 @@ public class NotificationRepository {
         if(cursor == null || cursor.isBlank()) {
 
             // 커서 없으면 첫 페이지 요청 = 최신
-            notiIds = redisOperator.getZSetReverseRange(inboxKey, 0, limit-1);
+            // operator 세 번째 매개변수 Long이라 명시 필요
+            notiIds = redisOperator.getZSetReverseRange(inboxKey, 0, limit-1L);
         } else {
 
             // 있으면 커서 이전의 값 = max에서 최신순으로 limit 개수 조회
@@ -150,7 +149,7 @@ public class NotificationRepository {
         // String id -> redisID
         List<String> notiKeys = notiIds.stream()
                 .map(id -> NotificationRedisKeys.getNotiKey(Long.parseLong(id)))
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
 
         // redisKey -> Hash
         List<Map<Object, Object>> pipeLineResults = redisOperator.getHashEntriesPipelined(notiKeys);
@@ -160,7 +159,7 @@ public class NotificationRepository {
         return pipeLineResults.stream()
                 .filter(hash -> hash != null && !hash.isEmpty())
                 .map(hash -> converter.fromHash(hash, Notification.class))
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
 }

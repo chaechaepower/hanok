@@ -21,8 +21,8 @@ public class GcsClient {
 
     // 프로필 이미지 업로드
     public String uploadProfileImage(MultipartFile file, Long userId) throws IOException {
-        String fileName =
-                "profiles/" + userId + "/" + UUID.randomUUID() + getExtension(file.getOriginalFilename());
+        String uniqueId = UUID.randomUUID() + getExtension(file.getOriginalFilename());
+        String fileName = String.format("profiles/%d/%s", userId, uniqueId);
 
         BlobInfo blobInfo =
                 BlobInfo.newBuilder(bucketName, fileName)
@@ -35,7 +35,7 @@ public class GcsClient {
     }
 
     // 프로필 이미지 삭제
-    public void deleteProfileImage(String imageUrl) {
+    public void deleteImage(String imageUrl) {
         if (imageUrl == null || imageUrl.isBlank()) return;
 
         String fileName = imageUrl.replace(buildPublicUrl(""), "");
@@ -53,10 +53,10 @@ public class GcsClient {
         return originalFilename.substring(originalFilename.lastIndexOf("."));
     }
 
-    // 물품 이미지 업로드 (기존 있으면 생략)
+    // 물품 이미지 업로드
     public String uploadItemImage(MultipartFile file, Long sellerId, Long itemId) throws IOException {
-        String fileName = "items/" + sellerId + "/" + itemId + "/"
-                + UUID.randomUUID() + getExtension(file.getOriginalFilename());
+        String uniqueId = UUID.randomUUID() + getExtension(file.getOriginalFilename());
+        String fileName = String.format("profiles/%d/%d/%s", sellerId, itemId , uniqueId);
 
         BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, fileName)
                 .setContentType(file.getContentType())
@@ -66,17 +66,11 @@ public class GcsClient {
         return buildPublicUrl(fileName);
     }
 
-    // 물품 이미지 삭제 (기존 있으면 생략)
-    public void deleteItemImage(String imageUrl) {
-        if (imageUrl == null || imageUrl.isBlank()) return;
-        String fileName = imageUrl.replace(buildPublicUrl(""), "");
-        storage.delete(BlobId.of(bucketName, fileName));
-    }
 
     // 스트림 썸네일 업로드
     public String uploadStreamThumbnail(MultipartFile file, Long sellerId, Long streamId) throws IOException {
-        String fileName = "streams/" + sellerId + "/" + streamId + "/"
-                + UUID.randomUUID() + getExtension(file.getOriginalFilename());
+        String uniqueId = UUID.randomUUID() + getExtension(file.getOriginalFilename());
+        String fileName = String.format("profiles/%d/%d/%s", sellerId, streamId , uniqueId);
 
         BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, fileName)
                 .setContentType(file.getContentType())
@@ -86,10 +80,4 @@ public class GcsClient {
         return buildPublicUrl(fileName);
     }
 
-    // 스트림 썸네일 삭제
-    public void deleteStreamThumbnail(String imageUrl) {
-        if (imageUrl == null || imageUrl.isBlank()) return;
-        String fileName = imageUrl.replace(buildPublicUrl(""), "");
-        storage.delete(BlobId.of(bucketName, fileName));
-    }
 }

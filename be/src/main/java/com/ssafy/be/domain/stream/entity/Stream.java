@@ -94,7 +94,4 @@ public class Stream {
         this.status = StreamStatus.ENDED;
     }
 
-    public boolean IsLive() {
-        return this.status == StreamStatus.LIVE;
-    }
 }

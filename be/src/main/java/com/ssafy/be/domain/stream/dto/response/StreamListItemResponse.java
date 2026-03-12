@@ -1,7 +1,6 @@
 package com.ssafy.be.domain.stream.dto.response;
 
 import com.ssafy.be.domain.item.entity.Category;
-import com.ssafy.be.domain.stream.entity.Stream;
 import java.time.LocalDateTime;
 
 public record StreamListItemResponse(

@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/streams")
 @RequiredArgsConstructor
+@SuppressWarnings("java:S112")
 public class StreamWebhookController {
 
     private final StreamViewerService streamViewerService;
