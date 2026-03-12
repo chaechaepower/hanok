@@ -1,28 +1,51 @@
-import { useEffect, useRef, useState } from 'react';
-import { useStomp } from './useStomp';
-import { DESTINATION_PREFIX } from '@/constants/stompChat';
-import type { StompResponse } from '@/types/stompChat';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+
+import {
+  getStompConnectionState,
+  subscribeStream,
+  subscribeToStompConnectionState,
+  type StompConnectionState,
+} from '@/websocket/stompClient';
 
 export function useStompViewerCount() {
-  const { client, connectionState, streamId } = useStomp();
+  const { id: streamIdParam } = useParams<{ id: string }>();
+  const streamId = streamIdParam ?? '';
   const [viewerCount, setViewerCount] = useState(0);
-  const subRef = useRef<{ unsubscribe: () => void } | null>(null);
+  const [connectionState, setConnectionState] = useState<StompConnectionState>(getStompConnectionState());
 
   useEffect(() => {
-    if (connectionState !== 'connected' || !client) return;
+    return subscribeToStompConnectionState(setConnectionState);
+  }, []);
 
-    const destination = `${DESTINATION_PREFIX.BROADCAST}/streams/${streamId}`;
+  useEffect(() => {
+    if (!streamId) {
+      return;
+    }
 
-    subRef.current = client.subscribe(destination, (frame) => {
-      const res: StompResponse<number> = JSON.parse(frame.body);
-      setViewerCount(res.payload);
-    });
+    let unsubscribe: (() => void) | null = null;
+
+    void subscribeStream<{ eventType?: string; payload?: unknown }>({
+      streamId,
+      onBroadcast: (response) => {
+        if (response.eventType !== 'VIEWER_COUNT') {
+          return;
+        }
+
+        setViewerCount(typeof response.payload === 'number' ? response.payload : 0);
+      },
+    })
+      .then((cleanup) => {
+        unsubscribe = cleanup;
+      })
+      .catch((error) => {
+        console.error('[viewer-count] failed to subscribe', error);
+      });
 
     return () => {
-      subRef.current?.unsubscribe();
-      subRef.current = null;
+      unsubscribe?.();
     };
-  }, [client, connectionState, streamId]);
+  }, [streamId]);
 
-  return { viewerCount };
+  return { viewerCount, connectionState };
 }

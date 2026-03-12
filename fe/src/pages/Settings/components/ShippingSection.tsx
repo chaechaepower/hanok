@@ -118,7 +118,14 @@ export default function ShippingSection() {
           setAddresses((prev: Address[]) =>
             prev.map((a) =>
               a.id === editId
-                ? { ...a, label: form.label, name: form.name, zipCode: form.zipCode, address: fullAddress, phone: form.phone }
+                ? {
+                    ...a,
+                    label: form.label,
+                    name: form.name,
+                    zipCode: form.zipCode,
+                    address: fullAddress,
+                    phone: form.phone,
+                  }
                 : a,
             ),
           );
@@ -159,50 +166,51 @@ export default function ShippingSection() {
         </div>
       ) : (
         <div className="w-full box-border border border-[#2e2e40] rounded-2xl bg-[#0c0c14] overflow-hidden">
-          {[...addresses].sort((a, b) => Number(b.isDefault) - Number(a.isDefault)).map((addr, idx) => (
-            <div
-              key={addr.id}
-              className={`p-8 flex flex-col gap-2 ${idx !== 0 ? 'border-t border-[#2e2e40]' : ''}`}
-            >
-              {/* 레이블 + 기본 뱃지 */}
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-white font-bold text-[16px]">{addr.label}</span>
-                {addr.isDefault && (
-                  <span className="px-2.5 py-0.5 bg-white text-[#111] text-xs font-bold rounded-full">기본</span>
-                )}
-              </div>
+          {[...addresses]
+            .sort((a, b) => Number(b.isDefault) - Number(a.isDefault))
+            .map((addr, idx) => (
+              <div key={addr.id} className={`p-8 flex flex-col gap-2 ${idx !== 0 ? 'border-t border-[#2e2e40]' : ''}`}>
+                {/* 레이블 + 기본 뱃지 */}
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-white font-bold text-[16px]">{addr.label}</span>
+                  {addr.isDefault && (
+                    <span className="px-2.5 py-0.5 bg-white text-[#111] text-xs font-bold rounded-full">기본</span>
+                  )}
+                </div>
 
-              {/* 주소 정보 */}
-              <p className="m-0 text-[15px] text-[#ddd]">{addr.name}&nbsp;&nbsp;{addr.zipCode}</p>
-              <p className="m-0 text-[15px] text-[#ddd]">{addr.address}</p>
-              <p className="m-0 text-[15px] text-[#ddd]">{addr.phone}</p>
+                {/* 주소 정보 */}
+                <p className="m-0 text-[15px] text-[#ddd]">
+                  {addr.name}&nbsp;&nbsp;{addr.zipCode}
+                </p>
+                <p className="m-0 text-[15px] text-[#ddd]">{addr.address}</p>
+                <p className="m-0 text-[15px] text-[#ddd]">{addr.phone}</p>
 
-              {/* 액션 버튼 */}
-              <div className="flex items-center gap-4 mt-2 justify-end">
-                {!addr.isDefault && (
+                {/* 액션 버튼 */}
+                <div className="flex items-center gap-4 mt-2 justify-end">
+                  {!addr.isDefault && (
+                    <button
+                      onClick={() => handleSetDefault(addr.id)}
+                      className="text-[14px] text-[#aaa] bg-transparent border-none cursor-pointer hover:text-white transition-colors"
+                    >
+                      기본으로 설정
+                    </button>
+                  )}
                   <button
-                    onClick={() => handleSetDefault(addr.id)}
+                    onClick={() => openEditModal(addr)}
                     className="text-[14px] text-[#aaa] bg-transparent border-none cursor-pointer hover:text-white transition-colors"
                   >
-                    기본으로 설정
+                    수정
                   </button>
-                )}
-                <button
-                  onClick={() => openEditModal(addr)}
-                  className="text-[14px] text-[#aaa] bg-transparent border-none cursor-pointer hover:text-white transition-colors"
-                >
-                  수정
-                </button>
-                <button
-                  onClick={() => handleDelete(addr.id)}
-                  disabled={addr.isDefault && addresses.length > 1}
-                  className="text-[14px] text-[#aaa] bg-transparent border-none cursor-pointer hover:text-red-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  삭제
-                </button>
+                  <button
+                    onClick={() => handleDelete(addr.id)}
+                    disabled={addr.isDefault && addresses.length > 1}
+                    className="text-[14px] text-[#aaa] bg-transparent border-none cursor-pointer hover:text-red-400 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  >
+                    삭제
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
         </div>
       )}
 

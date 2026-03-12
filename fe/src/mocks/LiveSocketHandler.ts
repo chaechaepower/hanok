@@ -1,0 +1,766 @@
+import { ws, type WebSocketData } from 'msw';
+
+import type { AuctionStatisticsPayload, BidSyncPayload, ItemSyncPayload } from '@/types';
+import { getStreamSocketConnectUrl } from '@/websocket/socket';
+
+import { getCurrentMockUser } from './mockState';
+
+type StompFrame = {
+  command: string;
+  headers: Record<string, string>;
+  body: string;
+};
+
+type MockTimerState = {
+  durationSeconds: number;
+  startedAtMs: number;
+  finalPrice: number;
+};
+
+type MockAuctionStatisticsState = AuctionStatisticsPayload;
+type MockBidSyncState = {
+  bidUnit: number;
+};
+
+const AUCTION_DURATION_SECONDS = 10;
+const SNIPING_THRESHOLD_SECONDS = 5;
+const SNIPING_DURATION_SECONDS = 5;
+const HEARTBEAT_INTERVAL_MS = 5_000;
+const RECENT_BIDS_LIMIT = 15;
+const textEncoder = new TextEncoder();
+const CHAT_MACRO_RESPONSES: Record<string, string> = {
+  '@사이즈': '사이즈는 실측 기준으로 안내드리며, 상세 수치는 상품 설명에서 다시 안내드리겠습니다.',
+  '@360도': '잠시 후 제품을 360도로 돌려서 상태를 다시 보여드리겠습니다.',
+  '@소재': '주요 소재와 디테일은 잠시 후 클로즈업으로 다시 보여드리겠습니다.',
+  '@배송': '낙찰 후 영업일 기준 2~5일 이내 순차 발송됩니다.',
+  '@진품인증': '인증 정보와 검수 기준은 라이브 중에 다시 설명드리겠습니다.',
+  '@상태': '현재 보이는 컨디션 외에 특이사항이 있으면 바로 말씀드리겠습니다.',
+  '@무게': '무게는 측정 후 채팅으로 다시 안내드리겠습니다.',
+  '@보증서': '보증서 및 구성품 포함 여부를 바로 확인해드리겠습니다.',
+  '@출처': '확보 경로와 스토리는 설명 타임에 함께 안내드리겠습니다.',
+  '@작가소개': '작가와 브랜드 배경은 설명 구간에서 정리해서 말씀드리겠습니다.',
+};
+
+const liveSocket = ws.link(getStreamSocketConnectUrl());
+const clientSubscriptions = new Map<string, Map<string, string>>();
+const heartbeatTimers = new Map<string, number>();
+const streamTimerStates = new Map<string, MockTimerState>();
+const streamAuctionStatisticsStates = new Map<string, MockAuctionStatisticsState>();
+const streamBidSyncStates = new Map<string, MockBidSyncState>();
+const streamItemSyncStates = new Map<string, ItemSyncPayload>();
+const winnerAnnouncementTimers = new Map<string, number>();
+
+const createTimestamp = (ms: number) => new Date(ms).toISOString();
+
+const splitFrames = (data: string) =>
+  data
+    .split('\0')
+    .map((frame) => frame.replace(/\r/g, ''))
+    .filter((frame) => frame.trim().length > 0);
+
+const parseFrame = (rawFrame: string): StompFrame | null => {
+  const separatorIndex = rawFrame.indexOf('\n\n');
+  const head = separatorIndex >= 0 ? rawFrame.slice(0, separatorIndex) : rawFrame;
+  const body = separatorIndex >= 0 ? rawFrame.slice(separatorIndex + 2) : '';
+  const lines = head.split('\n').filter(Boolean);
+  const command = lines.shift()?.trim();
+
+  if (!command) {
+    return null;
+  }
+
+  const headers = lines.reduce<Record<string, string>>((acc, line) => {
+    const separator = line.indexOf(':');
+
+    if (separator === -1) {
+      return acc;
+    }
+
+    const key = line.slice(0, separator);
+    const value = line.slice(separator + 1);
+    acc[key] = value;
+    return acc;
+  }, {});
+
+  return {
+    command,
+    headers,
+    body,
+  };
+};
+
+const serializeFrame = ({ command, headers, body }: StompFrame) => {
+  const headerLines = Object.entries(headers).map(([key, value]) => `${key}:${value}`);
+  const frame = [command, ...headerLines, '', body].join('\n');
+  return `${frame}\0`;
+};
+
+const getClientSubscriptions = (clientId: string) => {
+  let subscriptions = clientSubscriptions.get(clientId);
+
+  if (!subscriptions) {
+    subscriptions = new Map<string, string>();
+    clientSubscriptions.set(clientId, subscriptions);
+  }
+
+  return subscriptions;
+};
+
+const sendConnectedFrame = (client: { send: (data: WebSocketData) => void }) => {
+  client.send(
+    serializeFrame({
+      command: 'CONNECTED',
+      headers: {
+        version: '1.2',
+        'heart-beat': `${HEARTBEAT_INTERVAL_MS},${HEARTBEAT_INTERVAL_MS}`,
+      },
+      body: '',
+    }),
+  );
+};
+
+const sendHeartbeat = (client: { send: (data: WebSocketData) => void }) => {
+  client.send('\n');
+};
+
+const startHeartbeat = (client: { id: string; send: (data: WebSocketData) => void }) => {
+  if (heartbeatTimers.has(client.id)) {
+    return;
+  }
+
+  const heartbeatTimerId = globalThis.setInterval(() => {
+    sendHeartbeat(client);
+  }, HEARTBEAT_INTERVAL_MS);
+
+  heartbeatTimers.set(client.id, heartbeatTimerId);
+};
+
+const createMessageFrame = (subscriptionId: string, destination: string, payload: unknown): StompFrame => {
+  const body = JSON.stringify(payload);
+
+  return {
+    command: 'MESSAGE',
+    headers: {
+      subscription: subscriptionId,
+      destination,
+      'message-id': `${destination}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      'content-type': 'application/json',
+      'content-length': String(textEncoder.encode(body).length),
+    },
+    body,
+  };
+};
+
+const broadcastToDestination = (destination: string, payload: unknown) => {
+  liveSocket.clients.forEach((client) => {
+    const subscriptions = clientSubscriptions.get(client.id);
+
+    if (!subscriptions) {
+      return;
+    }
+
+    subscriptions.forEach((subscribedDestination, subscriptionId) => {
+      if (subscribedDestination !== destination) {
+        return;
+      }
+
+      client.send(serializeFrame(createMessageFrame(subscriptionId, destination, payload)));
+    });
+  });
+};
+
+const createTimerPayload = (state: MockTimerState, nowMs: number) => ({
+  durationSeconds: state.durationSeconds,
+  serverNow: createTimestamp(nowMs),
+  serverStartedAt: createTimestamp(state.startedAtMs),
+});
+
+const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
+  items: [
+    {
+      itemName: '청자 투각 칠보문 향로',
+      image: 'https://picsum.photos/400/300?random=1',
+      startPrice: 130000,
+      auctionId: 1,
+      auctionStatus: 'READY',
+      finalPrice: null,
+      itemCondition: 'BRAND_NEW',
+    },
+    {
+      itemName: '청자 투각 칠보문 향로',
+      image: 'https://picsum.photos/400/300?random=2',
+      startPrice: 130000,
+      auctionId: 2,
+      auctionStatus: 'READY',
+      finalPrice: null,
+      itemCondition: 'OPEN_BOX',
+    },
+    {
+      itemName: '청자 투각 칠보문 향로',
+      image: 'https://picsum.photos/400/300?random=3',
+      startPrice: 130000,
+      auctionId: 3,
+      auctionStatus: 'READY',
+      finalPrice: null,
+      itemCondition: 'USED',
+    },
+    {
+      itemName: '청자 투각 칠보문 향로',
+      image: 'https://picsum.photos/400/300?random=3',
+      startPrice: 130000,
+      auctionId: 4,
+      auctionStatus: 'SOLD',
+      finalPrice: 200000,
+      itemCondition: 'USED',
+    },
+    {
+      itemName: '청자 투각 칠보문 향로',
+      image: 'https://picsum.photos/400/300?random=3',
+      startPrice: 130000,
+      auctionId: 5,
+      auctionStatus: 'UNSOLD',
+      finalPrice: null,
+      itemCondition: 'USED',
+    },
+  ],
+});
+
+const getStreamIdFromDestination = (destination: string) => destination.split('/').pop() ?? '';
+
+const getRemainingSeconds = (state: MockTimerState, nowMs: number) => {
+  const elapsedSeconds = (nowMs - state.startedAtMs) / 1000;
+  return state.durationSeconds - elapsedSeconds;
+};
+
+const clearWinnerAnnouncement = (streamId: string) => {
+  const winnerAnnouncementTimer = winnerAnnouncementTimers.get(streamId);
+
+  if (!winnerAnnouncementTimer) {
+    return;
+  }
+
+  globalThis.clearTimeout(winnerAnnouncementTimer);
+  winnerAnnouncementTimers.delete(streamId);
+};
+
+const activateNextReadyItem = (streamId: string, targetAuctionId?: number) => {
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? createDefaultItemSyncPayload();
+
+  if (itemSyncPayload.items.some((item) => item.auctionStatus === 'LIVE')) {
+    streamItemSyncStates.set(streamId, itemSyncPayload);
+    return itemSyncPayload;
+  }
+
+  const resolvedAuctionId =
+    targetAuctionId ??
+    itemSyncPayload.items.find((item) => item.auctionStatus === 'INTRODUCING')?.auctionId ??
+    itemSyncPayload.items.find((item) => item.auctionStatus === 'READY')?.auctionId;
+
+  if (typeof resolvedAuctionId !== 'number') {
+    streamItemSyncStates.set(streamId, itemSyncPayload);
+    return itemSyncPayload;
+  }
+
+  const nextPayload: ItemSyncPayload = {
+    items: itemSyncPayload.items.map((item) => {
+      if (item.auctionId !== resolvedAuctionId) {
+        return item;
+      }
+
+      if (item.auctionStatus !== 'INTRODUCING' && item.auctionStatus !== 'READY') {
+        return item;
+      }
+
+      return {
+        ...item,
+        auctionStatus: 'LIVE',
+      };
+    }),
+  };
+
+  streamItemSyncStates.set(streamId, nextPayload);
+  return nextPayload;
+};
+
+const introduceAuctionItem = (streamId: string, auctionId: number) => {
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? createDefaultItemSyncPayload();
+
+  const nextPayload: ItemSyncPayload = {
+    items: itemSyncPayload.items.map((item) => {
+      if (item.auctionId !== auctionId) {
+        return item;
+      }
+
+      if (item.auctionStatus !== 'READY') {
+        return item;
+      }
+
+      return {
+        ...item,
+        auctionStatus: 'INTRODUCING',
+      };
+    }),
+  };
+
+  streamItemSyncStates.set(streamId, nextPayload);
+  return nextPayload;
+};
+
+const completeLiveItem = (streamId: string, finalPrice: number) => {
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? createDefaultItemSyncPayload();
+  let completed = false;
+
+  const nextPayload: ItemSyncPayload = {
+    items: itemSyncPayload.items.map((item) => {
+      if (!completed && item.auctionStatus === 'LIVE') {
+        completed = true;
+        return {
+          ...item,
+          auctionStatus: 'SOLD',
+          finalPrice,
+        };
+      }
+
+      return item;
+    }),
+  };
+
+  streamItemSyncStates.set(streamId, nextPayload);
+  return nextPayload;
+};
+
+const broadcastAuctionStatistics = (streamId: string) => {
+  const auctionStatistics = streamAuctionStatisticsStates.get(streamId);
+
+  if (!auctionStatistics) {
+    return;
+  }
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'AUCTION_STATISTICS',
+    payload: auctionStatistics,
+  });
+};
+
+const createBidSyncPayload = (streamId: string, nowMs: number): BidSyncPayload | null => {
+  const timerState = streamTimerStates.get(streamId);
+  const bidSyncState = streamBidSyncStates.get(streamId);
+
+  if (!timerState || !bidSyncState) {
+    return null;
+  }
+
+  return {
+    item: {
+      bidUnit: bidSyncState.bidUnit,
+      currentPrice: timerState.finalPrice,
+    },
+    timer: createTimerPayload(timerState, nowMs),
+  };
+};
+
+const broadcastBidSync = (streamId: string) => {
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'BID_SYNC',
+    payload: createBidSyncPayload(streamId, Date.now()),
+  });
+};
+
+const broadcastItemSync = (streamId: string) => {
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? createDefaultItemSyncPayload();
+
+  streamItemSyncStates.set(streamId, itemSyncPayload);
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'ITEM_SYNC',
+    payload: itemSyncPayload,
+  });
+};
+
+const broadcastAuctionComment = (streamId: string, message: string) => {
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'AUCTION_COMMENT',
+    payload: {
+      message,
+    },
+  });
+};
+
+const getChatNickname = () => getCurrentMockUser()?.nickname ?? '테스트유저';
+
+const broadcastChatEvent = (streamId: string, payload: unknown) => {
+  broadcastToDestination(`/broadcast/streams/${streamId}`, payload);
+};
+
+const sendItemSyncToClient = (
+  client: { send: (data: WebSocketData) => void },
+  subscriptionId: string,
+  destination: string,
+) => {
+  const streamId = getStreamIdFromDestination(destination);
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? createDefaultItemSyncPayload();
+
+  streamItemSyncStates.set(streamId, itemSyncPayload);
+  client.send(
+    serializeFrame(
+      createMessageFrame(subscriptionId, destination, {
+        eventType: 'ITEM_SYNC',
+        payload: itemSyncPayload,
+      }),
+    ),
+  );
+};
+
+const scheduleWinnerAnnouncement = (streamId: string) => {
+  clearWinnerAnnouncement(streamId);
+
+  const currentState = streamTimerStates.get(streamId);
+
+  if (!currentState) {
+    return;
+  }
+
+  const remainingMs = Math.max(0, currentState.startedAtMs + currentState.durationSeconds * 1000 - Date.now());
+  const winnerAnnouncementTimer = globalThis.setTimeout(() => {
+    const finalState = streamTimerStates.get(streamId);
+
+    if (!finalState) {
+      return;
+    }
+
+    broadcastToDestination(`/user/private/streams/${streamId}`, {
+      eventType: 'BID_WINNER',
+      payload: {
+        item: {
+          itemName: '조선시대 백자 달항아리',
+          finalPrice: finalState.finalPrice,
+        },
+        shipping: {
+          recipientName: '김싸피',
+          phone: '010-1234-5678',
+          addressName: '집',
+          postalCode: 123412,
+          address: '서울특별시 강남구 테헤란로 212',
+          addressDetail: '멀티캠퍼스 10층',
+        },
+      },
+    });
+
+    completeLiveItem(streamId, finalState.finalPrice);
+    streamTimerStates.delete(streamId);
+
+    broadcastToDestination(`/broadcast/streams/${streamId}`, {
+      eventType: 'AUCTION_END',
+      payload: null,
+    });
+
+    winnerAnnouncementTimers.delete(streamId);
+  }, remainingMs);
+
+  winnerAnnouncementTimers.set(streamId, winnerAnnouncementTimer);
+};
+
+const handleAuctionStart = (destination: string, body: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  const payload = JSON.parse(body) as {
+    payload?: {
+      auctionId?: number;
+    };
+  };
+  const auctionId = payload.payload?.auctionId;
+  const nowMs = Date.now();
+  const itemName = '나이키 에어맥스 95';
+  const startPrice = 50000;
+  const bidAmount = 0;
+  const bidUnit = 1000;
+  const state: MockTimerState = {
+    durationSeconds: AUCTION_DURATION_SECONDS,
+    startedAtMs: nowMs,
+    finalPrice: startPrice,
+  };
+  const auctionStatisticsState: MockAuctionStatisticsState = {
+    itemName,
+    totalPrice: 0,
+    bidCount: 0,
+    startPrice,
+    currentPrice: 0,
+    recentBids: [],
+  };
+
+  streamTimerStates.set(streamId, state);
+  streamAuctionStatisticsStates.set(streamId, auctionStatisticsState);
+  streamBidSyncStates.set(streamId, { bidUnit });
+  activateNextReadyItem(streamId, auctionId);
+  scheduleWinnerAnnouncement(streamId);
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'AUCTION_START',
+    payload: {
+      item: {
+        name: itemName,
+        image: 'https://cdn.example.com/items/shoes.jpg',
+        condition: 'GOOD',
+        bidUnit,
+        startPrice,
+      },
+      timer: createTimerPayload(state, nowMs),
+    },
+  });
+
+  if (bidAmount > 0) {
+    broadcastAuctionComment(streamId, `현재 최고 입찰가 ${bidAmount.toLocaleString('ko-KR')}원입니다!`);
+  }
+
+  broadcastAuctionStatistics(streamId);
+};
+
+const handleBidPlace = (destination: string, body: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  const payload = JSON.parse(body) as {
+    payload?: {
+      amount?: number;
+    };
+  };
+  const nowMs = Date.now();
+  const bidAmount = payload.payload?.amount ?? 0;
+  let currentState = streamTimerStates.get(streamId);
+  let snipingTimer: ReturnType<typeof createTimerPayload> | null = null;
+
+  if (currentState) {
+    currentState = {
+      ...currentState,
+      finalPrice: bidAmount || currentState.finalPrice,
+    };
+
+    streamTimerStates.set(streamId, currentState);
+  }
+
+  const currentStatisticsState = streamAuctionStatisticsStates.get(streamId);
+
+  if (currentStatisticsState) {
+    streamAuctionStatisticsStates.set(streamId, {
+      ...currentStatisticsState,
+      totalPrice: currentStatisticsState.totalPrice + bidAmount,
+      bidCount: currentStatisticsState.bidCount + 1,
+      currentPrice: bidAmount || currentStatisticsState.currentPrice,
+      recentBids: [
+        {
+          nickname: '홍길동',
+          amount: bidAmount,
+          placedAt: createTimestamp(nowMs),
+        },
+        ...currentStatisticsState.recentBids,
+      ].slice(0, RECENT_BIDS_LIMIT),
+    });
+  }
+
+  if (currentState && getRemainingSeconds(currentState, nowMs) <= SNIPING_THRESHOLD_SECONDS) {
+    const nextState: MockTimerState = {
+      durationSeconds: SNIPING_DURATION_SECONDS,
+      startedAtMs: nowMs,
+      finalPrice: currentState.finalPrice,
+    };
+
+    streamTimerStates.set(streamId, nextState);
+    snipingTimer = createTimerPayload(nextState, nowMs);
+    scheduleWinnerAnnouncement(streamId);
+  }
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'BID_PLACED',
+    payload: {
+      bidInfo: {
+        nickname: '홍길동',
+        amount: bidAmount,
+        placedAt: createTimestamp(nowMs),
+      },
+      snipingTimer,
+    },
+  });
+
+  if (bidAmount > 0) {
+    broadcastAuctionComment(streamId, `현재 최고 입찰가 ${bidAmount.toLocaleString('ko-KR')}원입니다!`);
+  }
+
+  broadcastAuctionStatistics(streamId);
+};
+
+const handleBidSync = (destination: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  broadcastBidSync(streamId);
+};
+
+const handleItemSync = (destination: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  broadcastItemSync(streamId);
+};
+
+const handleAuctionItemIntroduce = (destination: string, body: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  const payload = JSON.parse(body) as {
+    payload?: {
+      auctionId?: number;
+    };
+  };
+  const auctionId = payload.payload?.auctionId;
+
+  if (typeof auctionId === 'number') {
+    introduceAuctionItem(streamId, auctionId);
+  }
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'ITEM_INTRODUCE',
+    payload: null,
+  });
+};
+
+const handleChatMessage = (destination: string, body: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  const payload = JSON.parse(body) as {
+    payload?: {
+      message?: string;
+    };
+  };
+  const message = payload.payload?.message?.trim();
+
+  if (!message) {
+    return;
+  }
+
+  broadcastChatEvent(streamId, {
+    eventType: 'CHAT_MESSAGE',
+    payload: {
+      nickname: getChatNickname(),
+      message,
+    },
+  });
+};
+
+const handleMacroTemplate = (destination: string, body: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  const payload = JSON.parse(body) as {
+    payload?: {
+      command?: string;
+    };
+  };
+  const command = payload.payload?.command?.trim();
+
+  if (!command) {
+    return;
+  }
+
+  broadcastChatEvent(streamId, {
+    eventType: 'MACRO_TEMPLATE',
+    payload: {
+      nickname: getChatNickname(),
+      command,
+    },
+  });
+
+  const responseMessage = CHAT_MACRO_RESPONSES[command] ?? '해당 질문은 잠시 후 라이브에서 안내드리겠습니다.';
+
+  globalThis.setTimeout(() => {
+    broadcastChatEvent(streamId, {
+      eventType: 'MACRO_TEMPLATE',
+      payload: {
+        label: 'Seller',
+        message: responseMessage,
+      },
+    });
+  }, 250);
+};
+
+const handleSendFrame = (frame: StompFrame) => {
+  if (frame.headers.destination?.startsWith('/app/streams/')) {
+    const body = JSON.parse(frame.body) as { eventType?: string };
+
+    if (body.eventType === 'AUCTION_START') {
+      handleAuctionStart(frame.headers.destination, frame.body);
+    }
+
+    if (body.eventType === 'BID_PLACED') {
+      handleBidPlace(frame.headers.destination, frame.body);
+    }
+
+    if (body.eventType === 'BID_SYNC') {
+      handleBidSync(frame.headers.destination);
+    }
+
+    if (body.eventType === 'ITEM_SYNC') {
+      handleItemSync(frame.headers.destination);
+    }
+
+    if (body.eventType === 'ITEM_INTRODUCE') {
+      handleAuctionItemIntroduce(frame.headers.destination, frame.body);
+    }
+
+    if (body.eventType === 'CHAT_MESSAGE') {
+      handleChatMessage(frame.headers.destination, frame.body);
+    }
+
+    if (body.eventType === 'MACRO_TEMPLATE') {
+      handleMacroTemplate(frame.headers.destination, frame.body);
+    }
+  }
+};
+
+export const liveSocketHandler = liveSocket.addEventListener('connection', ({ client }) => {
+  getClientSubscriptions(client.id);
+
+  client.addEventListener('message', (event) => {
+    if (typeof event.data !== 'string') {
+      return;
+    }
+
+    splitFrames(event.data).forEach((rawFrame) => {
+      const frame = parseFrame(rawFrame);
+
+      if (!frame) {
+        return;
+      }
+
+      if (frame.command === 'CONNECT' || frame.command === 'STOMP') {
+        sendConnectedFrame(client);
+        startHeartbeat(client);
+        return;
+      }
+
+      if (frame.command === 'SUBSCRIBE') {
+        const subscriptionId = frame.headers.id;
+        const destination = frame.headers.destination;
+
+        if (subscriptionId && destination) {
+          getClientSubscriptions(client.id).set(subscriptionId, destination);
+
+          if (destination.startsWith('/broadcast/streams/')) {
+            sendItemSyncToClient(client, subscriptionId, destination);
+          }
+        }
+        return;
+      }
+
+      if (frame.command === 'UNSUBSCRIBE') {
+        const subscriptionId = frame.headers.id;
+
+        if (subscriptionId) {
+          getClientSubscriptions(client.id).delete(subscriptionId);
+        }
+        return;
+      }
+
+      if (frame.command === 'SEND') {
+        handleSendFrame(frame);
+      }
+    });
+  });
+
+  client.addEventListener('close', () => {
+    const heartbeatTimer = heartbeatTimers.get(client.id);
+
+    if (heartbeatTimer) {
+      globalThis.clearInterval(heartbeatTimer);
+      heartbeatTimers.delete(client.id);
+    }
+
+    clientSubscriptions.delete(client.id);
+  });
+});

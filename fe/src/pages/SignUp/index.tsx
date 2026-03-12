@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { checkEmailDuplicate } from '@/api/hooks/useGetCheckEmailDuplicate';
-import { requestSmsCode } from '@/api/hooks/usePostRequestSmsCode';
-import { verifySmsCode } from '@/api/hooks/usePostVerifySmsCode';
+import { postIdentityVerification } from '@/api/hooks/usePostIdentityVerification';
 import { signUp } from '@/api/hooks/usePostSignUp';
+import { requestIdentityVerification } from '@/utils/requestIdentityVerification';
 import Button from '@/components/common/Button';
 
 export default function SignUpPage() {
   const navigate = useNavigate();
 
-  // Form states
   const [email, setEmail] = useState('');
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [emailError, setEmailError] = useState('');
@@ -21,17 +20,13 @@ export default function SignUpPage() {
   const [passwordError, setPasswordError] = useState('');
 
   const [phone, setPhone] = useState('');
-  const [isSmsRequested, setIsSmsRequested] = useState(false);
-  const [smsCode, setSmsCode] = useState('');
-  const [smsToken, setSmsToken] = useState('');
-  const [isSmsVerified, setIsSmsVerified] = useState(false);
+  const [isIdentityVerified, setIsIdentityVerified] = useState(false);
+  const [verifiedName, setVerifiedName] = useState('');
   const [phoneError, setPhoneError] = useState('');
-  const [smsCodeError, setSmsCodeError] = useState('');
 
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
 
-  // Form Validation and Handlers (기존과 동일)
   const handleEmailCheck = async () => {
     if (!email.includes('@')) {
       setEmailError('유효한 이메일 형식을 입력해주세요.');
@@ -63,40 +58,23 @@ export default function SignUpPage() {
     }
   };
 
-  const handleSmsRequest = async () => {
-    if (phone.length < 10) {
-      setPhoneError('유효한 휴대폰 번호를 입력해주세요.');
-      return;
-    }
+  const handleIdentityVerification = async () => {
     try {
-      await requestSmsCode(phone);
-      setIsSmsRequested(true);
       setPhoneError('');
-      alert('인증 번호가 발송되었습니다.');
-    } catch (error) {
-      console.error(error);
-      setPhoneError('인증 번호 발송에 실패했습니다.');
-    }
-  };
+      const verificationId = await requestIdentityVerification();
+      const res = await postIdentityVerification(verificationId);
 
-  const handleSmsVerify = async () => {
-    if (!smsCode) {
-      setSmsCodeError('인증 번호를 입력해주세요.');
-      return;
-    }
-    try {
-      const res = await verifySmsCode(phone, smsCode);
-      if (res.verified && res.sessionToken) {
-        setIsSmsVerified(true);
-        setSmsToken(res.sessionToken);
-        setSmsCodeError('');
-        alert('인증이 완료되었습니다.');
+      if (res.status === 'SUCCESS') {
+        setIsIdentityVerified(true);
+        setVerifiedName(res.data.name);
+        setPhone(res.data.phoneNumber);
+        alert(`본인인증이 완료되었습니다. (${res.data.name})`);
       } else {
-        setSmsCodeError('인증 번호가 일치하지 않습니다.');
+        setPhoneError('본인인증에 실패했습니다.');
       }
     } catch (error) {
       console.error(error);
-      setSmsCodeError('인증 처리에 실패했습니다.');
+      setPhoneError('본인인증 처리 중 오류가 발생했습니다.');
     }
   };
 
@@ -105,11 +83,11 @@ export default function SignUpPage() {
     if (!isEmailVerified) return alert('이메일 중복 확인을 해주세요.');
     if (!nickname) return alert('닉네임을 입력해주세요.');
     if (password.length < 8 || password !== passwordConfirm) return alert('비밀번호를 바르게 입력 및 확인해주세요.');
-    if (!isSmsVerified || !smsToken) return alert('휴대폰 본인 인증을 완료해주세요.');
+    if (!isIdentityVerified || !phone) return alert('휴대폰 본인 인증을 완료해주세요.');
     if (!termsAgreed || !privacyAgreed) return alert('필수 약관에 모두 동의해주세요.');
 
     try {
-      await signUp({ email, nickname, password, phone, smsToken });
+      await signUp({ email, nickname, password, phone });
       alert('회원가입이 완료되었습니다!');
       navigate('/login');
     } catch (error) {
@@ -118,7 +96,6 @@ export default function SignUpPage() {
     }
   };
 
-  // 공통 색상 변수처럼 사용할 클래스
   const inputContainerClass =
     'flex items-center border border-[#3A3A3C] rounded-[10px] h-[52px] px-3 bg-transparent focus-within:border-[#CEAF82] transition-colors';
   const inputClass = 'flex-1 bg-transparent text-[15px] text-white px-2 focus:outline-none placeholder-[#636366]';
@@ -134,7 +111,6 @@ export default function SignUpPage() {
         padding: '40px 16px',
       }}
     >
-      {/* Header */}
       <div
         style={{
           width: '100%',
@@ -161,7 +137,6 @@ export default function SignUpPage() {
           marginRight: 'auto',
         }}
       >
-        {/* Email */}
         <div className="flex flex-col gap-2">
           <label className="text-[13px] font-medium text-[#E5E5EA] ml-1">이메일</label>
           <div className={inputContainerClass}>
@@ -197,7 +172,6 @@ export default function SignUpPage() {
           {isEmailVerified && <p className="text-[#32D74B] text-xs px-1">사용 가능한 이메일입니다.</p>}
         </div>
 
-        {/* Nickname */}
         <div className="flex flex-col gap-2">
           <label className="text-[13px] font-medium text-[#E5E5EA] ml-1">닉네임</label>
           <div className={inputContainerClass}>
@@ -219,7 +193,6 @@ export default function SignUpPage() {
           </div>
         </div>
 
-        {/* Password */}
         <div className="flex flex-col gap-2">
           <label className="text-[13px] font-medium text-[#E5E5EA] ml-1">비밀번호</label>
           <div className={`${inputContainerClass} mb-1`}>
@@ -263,57 +236,38 @@ export default function SignUpPage() {
           )}
         </div>
 
-        {/* Phone */}
         <div className="flex flex-col gap-2">
-          <label className="text-[13px] font-medium text-[#E5E5EA] ml-1">휴대폰 번호</label>
+          <label className="text-[13px] font-medium text-[#E5E5EA] ml-1">휴대폰 본인인증</label>
           <div className={inputContainerClass}>
             <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={1.5}
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4"
               />
             </svg>
             <input
               type="text"
-              placeholder="010-1234-5678"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              placeholder={isIdentityVerified ? `${verifiedName} (${phone})` : '본인인증을 진행해주세요'}
+              value={isIdentityVerified ? `${verifiedName} (${phone})` : ''}
+              readOnly
               className={inputClass}
             />
             <Button
               variant="white"
               size="small"
-              onClick={handleSmsRequest}
-              disabled={isSmsVerified}
+              onClick={handleIdentityVerification}
+              disabled={isIdentityVerified}
               className="w-auto! px-5"
             >
-              인증 번호
+              {isIdentityVerified ? '인증완료' : '본인인증'}
             </Button>
           </div>
           {phoneError && <p className="text-[#FF453A] text-xs px-1">{phoneError}</p>}
-
-          {/* SMS Code Input */}
-          {isSmsRequested && !isSmsVerified && (
-            <div className={`${inputContainerClass} mt-1`}>
-              <input
-                type="text"
-                placeholder="인증 번호 입력"
-                value={smsCode}
-                onChange={(e) => setSmsCode(e.target.value)}
-                className={`${inputClass} ml-8`}
-              />
-              <Button variant="outline" size="small" onClick={handleSmsVerify} className="w-auto! px-6">
-                확인
-              </Button>
-            </div>
-          )}
-          {smsCodeError && <p className="text-[#FF453A] text-xs px-1">{smsCodeError}</p>}
-          {isSmsVerified && <p className="text-[#32D74B] text-xs px-1">인증이 완료되었습니다.</p>}
+          {isIdentityVerified && <p className="text-[#32D74B] text-xs px-1">본인인증이 완료되었습니다. ({verifiedName})</p>}
         </div>
 
-        {/* Terms */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
             <div
@@ -393,14 +347,12 @@ export default function SignUpPage() {
           </label>
         </div>
 
-        {/* Submit */}
         <div className="mt-4">
           <Button type="submit" variant="white" size="large">
             가입 하기
           </Button>
         </div>
 
-        {/* Login Link */}
         <div className="text-center text-[13px] text-[#A0A0A0] mt-1 flex items-center justify-center gap-1">
           이미 계정이 있으신가요?
           <button

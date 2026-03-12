@@ -8,10 +8,16 @@
    ══════════════════════════════════════════════════════════ */
 
 @theme {
+<<<<<<< fe/src/index.css
   /* ── 베이스 배경 ── */
   --color-background: #121010;
   --color-surface: #1A1614;
   --color-surface-elevated: #221E1A;
+=======
+  --color-background: #0a0c13;
+  --color-point: #f5f2eb;
+  --color-gold: #c7b282;
+>>>>>>> fe/src/index.css
 
   /* ── PRIMARY (브랜드 톤, UI 뼈대, 판매자센터) ── */
   --color-primary-light: #B09880;
@@ -98,7 +104,6 @@
    ══════════════════════════════════════════════════════════ */
 
 @keyframes shimmer {
-
   0%,
   100% {
     opacity: 0.7;
@@ -110,12 +115,10 @@
 }
 
 @keyframes urgentPulse {
-
   0%,
   100% {
     transform: scale(1);
   }
-
   50% {
     transform: scale(1.05);
   }
@@ -125,23 +128,19 @@
   0% {
     transform: scale(0.85);
   }
-
   60% {
     transform: scale(1.04);
   }
-
   100% {
     transform: scale(1);
   }
 }
 
 @keyframes blink {
-
   0%,
   100% {
     opacity: 1;
   }
-
   50% {
     opacity: 0.3;
   }
@@ -200,7 +199,6 @@ html {
 }
 
 @layer base {
-
   html,
   body,
   div,
@@ -342,6 +340,24 @@ body {
 ol,
 ul {
   user-select: none;
+}
+
+/* Custom Scrollbar for Dark Theme Modals */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #2c2c2e;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #3a3a3c;
 }
 
 blockquote,
