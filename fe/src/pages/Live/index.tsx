@@ -155,6 +155,7 @@ export default function LivePage() {
   const fallbackReadyAuctionItem = readyItems[0] ?? null;
   const introduceAuctionId = selectedReadyAuctionItem?.auctionId ?? fallbackReadyAuctionItem?.auctionId ?? null;
   const startAuctionId = introducingAuctionItem?.auctionId ?? null;
+  const activeBidAuctionId = liveAuctionItem?.auctionId ?? introducingAuctionItem?.auctionId ?? null;
   const canIntroduce = liveAuctionItem === null && introducingAuctionItem === null && introduceAuctionId !== null;
   const canStart = liveAuctionItem === null && startAuctionId !== null;
 
@@ -328,13 +329,20 @@ export default function LivePage() {
           <ControlBar
             isSeller={isSeller}
             bidSync={bidSync}
+            activeBidAuctionId={activeBidAuctionId}
             introduceAuctionId={introduceAuctionId}
             startAuctionId={startAuctionId}
             canIntroduce={canIntroduce}
             canStart={canStart}
           />
 
-          {auctionComment && <AuctionCommentToast key={auctionComment.id} message={auctionComment.message} />}
+          {(streamEnter?.notice || auctionComment) && (
+            <AuctionCommentToast
+              key={auctionComment?.id ?? 'stream-notice'}
+              notice={streamEnter?.notice ?? null}
+              message={auctionComment?.message ?? null}
+            />
+          )}
 
           <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
             <div className="flex gap-1 rounded-lg bg-[rgba(0,0,0,.6)] p-1">

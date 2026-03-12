@@ -5,13 +5,22 @@ import type { BidSyncPayload } from '@/types';
 interface Props {
   isSeller: boolean;
   bidSync: BidSyncPayload | null;
+  activeBidAuctionId: number | null;
   introduceAuctionId: number | null;
   startAuctionId: number | null;
   canIntroduce: boolean;
   canStart: boolean;
 }
 
-export default function ControlBar({ isSeller, bidSync, introduceAuctionId, startAuctionId, canIntroduce, canStart }: Props) {
+export default function ControlBar({
+  isSeller,
+  bidSync,
+  activeBidAuctionId,
+  introduceAuctionId,
+  startAuctionId,
+  canIntroduce,
+  canStart,
+}: Props) {
   return isSeller ? (
     <SellerControlBar
       introduceAuctionId={introduceAuctionId}
@@ -20,6 +29,6 @@ export default function ControlBar({ isSeller, bidSync, introduceAuctionId, star
       canStart={canStart}
     />
   ) : (
-    <BuyerControlBar bidSync={bidSync} />
+    <BuyerControlBar bidSync={bidSync} activeAuctionId={activeBidAuctionId} />
   );
 }

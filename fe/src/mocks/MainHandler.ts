@@ -72,7 +72,7 @@ export const mainHandlers = [
       title: stream?.title ?? '방송 제목',
       category: stream?.category ?? 'ELECTRONICS',
       status: 'LIVE',
-      notice: '공지사항',
+      notice: '공지는 어쩌구입니다. 배송은 2일 내로 일괄 배송됩니다.',
       seller: {
         sellerId: stream?.seller.sellerId ?? 1,
         nickname: stream?.seller.nickname ?? '판매자명',

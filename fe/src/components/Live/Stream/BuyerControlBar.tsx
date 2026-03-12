@@ -22,9 +22,10 @@ type BidAccessModalType = 'login' | 'shipping' | null;
 
 interface Props {
   bidSync: BidSyncPayload | null;
+  activeAuctionId: number | null;
 }
 
-export default function BuyerControlBar({ bidSync }: Props) {
+export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
   const navigate = useNavigate();
   const { id: streamId } = useParams<{ id: string }>();
   const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
@@ -85,18 +86,23 @@ export default function BuyerControlBar({ bidSync }: Props) {
     }
 
     if (!streamId) {
-      console.error('[stream] missing streamId for BID_PLACE');
+      console.error('[stream] missing streamId for BID_PLACED');
+      return;
+    }
+
+    if (activeAuctionId === null) {
+      console.error('[stream] missing active auctionId for BID_PLACED');
       return;
     }
 
     void sendStreamMessage(streamId, {
-      eventType: 'BID_PLACE',
+      eventType: 'BID_PLACED',
       payload: {
-        auctionId: 1,
+        auctionId: activeAuctionId,
         amount: effectiveBidAmount,
       },
     }).catch((error) => {
-      console.error('[stream] failed to send BID_PLACE', error);
+      console.error('[stream] failed to send BID_PLACED', error);
     });
   };
 

@@ -24,7 +24,7 @@ export type StreamEnterResponse = {
   title: string;
   category: string;
   status: string;
-  notice: string;
+  notice: string | null;
   seller: StreamEnterSeller;
   viewerCount: number;
   topBidders: StreamEnterTopBidder[];
