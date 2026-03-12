@@ -321,6 +321,15 @@ const broadcastItemSync = (streamId: string) => {
   });
 };
 
+const broadcastAuctionComment = (streamId: string, message: string) => {
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'AUCTION_COMMENT',
+    payload: {
+      message,
+    },
+  });
+};
+
 const sendItemSyncToClient = (
   client: { send: (data: WebSocketData) => void },
   subscriptionId: string,
@@ -394,6 +403,7 @@ const handleAuctionStart = (destination: string) => {
   const nowMs = Date.now();
   const itemName = '나이키 에어맥스 95';
   const startPrice = 50000;
+  const bidAmount = 0;
   const bidUnit = 1000;
   const state: MockTimerState = {
     durationSeconds: AUCTION_DURATION_SECONDS,
@@ -428,6 +438,10 @@ const handleAuctionStart = (destination: string) => {
       timer: createTimerPayload(state, nowMs),
     },
   });
+
+  if (bidAmount > 0) {
+    broadcastAuctionComment(streamId, `현재 최고 입찰가 ${bidAmount.toLocaleString('ko-KR')}원입니다!`);
+  }
 
   broadcastAuctionStatistics(streamId);
 };
@@ -495,6 +509,10 @@ const handleBidPlace = (destination: string, body: string) => {
       snipingTimer,
     },
   });
+
+  if (bidAmount > 0) {
+    broadcastAuctionComment(streamId, `현재 최고 입찰가 ${bidAmount.toLocaleString('ko-KR')}원입니다!`);
+  }
 
   broadcastAuctionStatistics(streamId);
 };

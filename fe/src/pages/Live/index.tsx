@@ -5,11 +5,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import WinModal from '@/components/Live/Auction/Buyer/WinModal';
 import AuctionTimer from '@/components/Live/Auction/shared/AuctionTimer';
+import AuctionCommentToast from '@/components/Live/Stream/AuctionCommentToast';
 import ControlBar from '@/components/Live/Stream/ControlBar';
 import SellerGuideOverlay from '@/components/Live/Stream/SellerGuideOverlay';
 import StreamOverlay from '@/components/Live/Stream/StreamOverlay';
 import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
-import type { BidWinnerPayload, ItemSyncPayload, StreamTimerPayload, SyncedAuctionTimer } from '@/types';
+import type {
+  AuctionCommentPayload,
+  BidWinnerPayload,
+  ItemSyncPayload,
+  StreamTimerPayload,
+  SyncedAuctionTimer,
+} from '@/types';
 import type { AuctionStatisticsPayload } from '@/types';
 import type { BidSyncPayload } from '@/types';
 import { disconnectStompClient, sendStreamMessage, subscribeStream } from '@/websocket/stompClient';
@@ -52,6 +59,10 @@ type BroadcastStreamEvent =
       payload?: ItemSyncPayload | null;
     }
   | {
+      eventType: 'AUCTION_COMMENT';
+      payload?: AuctionCommentPayload | null;
+    }
+  | {
       eventType: 'BID_END';
       payload: null;
     }
@@ -91,6 +102,10 @@ const isItemSyncEvent = (
   event: BroadcastStreamEvent,
 ): event is Extract<BroadcastStreamEvent, { eventType: 'ITEM_SYNC' }> => event.eventType === 'ITEM_SYNC';
 
+const isAuctionCommentEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'AUCTION_COMMENT' }> => event.eventType === 'AUCTION_COMMENT';
+
 const isBidEndEvent = (
   event: BroadcastStreamEvent,
 ): event is Extract<BroadcastStreamEvent, { eventType: 'BID_END' }> => event.eventType === 'BID_END';
@@ -115,6 +130,21 @@ export default function LivePage() {
   const [auctionStatistics, setAuctionStatistics] = useState<AuctionStatisticsPayload | null>(null);
   const [bidSync, setBidSync] = useState<BidSyncPayload | null>(null);
   const [itemSync, setItemSync] = useState<ItemSyncPayload | null>(null);
+  const [auctionComment, setAuctionComment] = useState<{ id: number; message: string } | null>(null);
+
+  useEffect(() => {
+    if (!auctionComment) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setAuctionComment(null);
+    }, 2400);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [auctionComment]);
 
   useEffect(() => {
     if (!streamId) {
@@ -173,6 +203,14 @@ export default function LivePage() {
 
       if (isItemSyncEvent(event)) {
         setItemSync(event.payload ?? null);
+        return;
+      }
+
+      if (isAuctionCommentEvent(event) && event.payload?.message) {
+        setAuctionComment({
+          id: Date.now(),
+          message: event.payload.message,
+        });
         return;
       }
 
@@ -251,6 +289,8 @@ export default function LivePage() {
           <SellerGuideOverlay />
           <StreamPlaceholder />
           <ControlBar isSeller={isSeller} bidSync={bidSync} />
+
+          {auctionComment && <AuctionCommentToast key={auctionComment.id} message={auctionComment.message} />}
 
           <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
             <div className="flex gap-1 rounded-lg bg-[rgba(0,0,0,.6)] p-1">

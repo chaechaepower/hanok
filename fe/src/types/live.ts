@@ -63,6 +63,10 @@ export type BidSyncPayload = {
   timer: StreamTimerPayload;
 };
 
+export type AuctionCommentPayload = {
+  message: string;
+};
+
 export type ItemSyncAuctionStatus = 'READY' | 'INTRODUCING' | 'LIVE' | 'SOLD' | 'UNSOLD';
 
 export type ItemSyncItemCondition = 'BRAND_NEW' | 'OPEN_BOX' | 'REFURBISHED' | 'USED';
