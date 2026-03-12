@@ -2,6 +2,7 @@ package com.ssafy.be.domain.auction.service;
 
 import com.ssafy.be.domain.auction.dto.request.AuctionStartRequest;
 import com.ssafy.be.domain.auction.dto.request.BidPlaceRequest;
+import com.ssafy.be.domain.auction.dto.request.ItemIntroduceRequest;
 import com.ssafy.be.domain.auction.dto.response.*;
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
@@ -81,6 +82,21 @@ public class AuctionService {
                 buildItemDto(auctionItem),
                 buildTimerDto(auctionItem, serverNow)
         );
+    }
+
+    @Transactional
+    public void introduceItem(ItemIntroduceRequest request, Long streamId, Long userId) {
+        // 1. 호스트인지 확인
+        Seller seller = sellerRepository.findByUserId(userId)
+                .orElseThrow(() -> new StompException(SellerErrorCode.SELLER_NOT_FOUND));
+
+        validateStreamHost(streamId, seller.getId());
+
+        // 2. 경매 상태 '설명중'으로 변경
+        Auction auction = auctionRepository.findById(request.auctionId())
+                .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
+
+        auction.introduceAuction();
     }
 
     @Transactional // TODO: 트랜잭션 범위 줄이기
