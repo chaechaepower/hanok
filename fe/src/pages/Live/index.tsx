@@ -14,7 +14,6 @@ import type {
   AuctionCommentPayload,
   BidWinnerPayload,
   ItemSyncPayload,
-  ItemSyncItem,
   StreamTimerPayload,
   SyncedAuctionTimer,
 } from '@/types';
@@ -128,13 +127,12 @@ const createSyncedTimer = (timer: StreamTimerPayload): SyncedAuctionTimer => ({
   receivedAtMs: Date.now(),
 });
 
-const isCurrentAuctionItem = (item: ItemSyncItem) => item.auctionStatus !== 'SOLD' && item.auctionStatus !== 'UNSOLD';
-
 export default function LivePage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { id: streamId } = useParams<{ id: string }>();
   const [isSeller, setIsSeller] = useState(true);
+  const [selectedAuctionId, setSelectedAuctionId] = useState<number | null>(null);
   const [timer, setTimer] = useState<SyncedAuctionTimer | null>(null);
   const [winnerInfo, setWinnerInfo] = useState<BidWinnerPayload | null>(null);
   const [currentItemCond, setCurrentItemCond] = useState('');
@@ -142,7 +140,20 @@ export default function LivePage() {
   const [bidSync, setBidSync] = useState<BidSyncPayload | null>(null);
   const [itemSync, setItemSync] = useState<ItemSyncPayload | null>(null);
   const [auctionComment, setAuctionComment] = useState<{ id: number; message: string } | null>(null);
-  const currentAuctionItem = itemSync?.items.find(isCurrentAuctionItem) ?? null;
+  const readyItems = itemSync?.items.filter((item) => item.auctionStatus === 'READY') ?? [];
+  const introducingAuctionItem = itemSync?.items.find((item) => item.auctionStatus === 'INTRODUCING') ?? null;
+  const liveAuctionItem = itemSync?.items.find((item) => item.auctionStatus === 'LIVE') ?? null;
+  const selectedAuctionItem = itemSync?.items.find((item) => item.auctionId === selectedAuctionId) ?? null;
+  const visibleSelectedAuctionId =
+    selectedAuctionItem && selectedAuctionItem.auctionStatus !== 'SOLD' && selectedAuctionItem.auctionStatus !== 'UNSOLD'
+      ? selectedAuctionId
+      : null;
+  const selectedReadyAuctionItem = selectedAuctionItem?.auctionStatus === 'READY' ? selectedAuctionItem : null;
+  const fallbackReadyAuctionItem = readyItems[0] ?? null;
+  const introduceAuctionId = selectedReadyAuctionItem?.auctionId ?? fallbackReadyAuctionItem?.auctionId ?? null;
+  const startAuctionId = introducingAuctionItem?.auctionId ?? null;
+  const canIntroduce = liveAuctionItem === null && introducingAuctionItem === null && introduceAuctionId !== null;
+  const canStart = liveAuctionItem === null && startAuctionId !== null;
 
   useEffect(() => {
     if (!auctionComment) {
@@ -184,6 +195,7 @@ export default function LivePage() {
           });
         }
         setWinnerInfo(null);
+        void requestItemSync();
         return;
       }
 
@@ -299,7 +311,12 @@ export default function LivePage() {
 
       <div className="flex min-h-0 flex-1 gap-3">
         <div className="min-w-0 flex-1">
-          <LeftPanel isSeller={isSeller} syncedItems={itemSync?.items ?? null} />
+          <LeftPanel
+            isSeller={isSeller}
+            syncedItems={itemSync?.items ?? null}
+            selectedAuctionId={visibleSelectedAuctionId}
+            onSelectAuctionItem={setSelectedAuctionId}
+          />
         </div>
         <div className="relative min-w-0 flex-2 overflow-hidden rounded-2xl bg-background">
           <StreamOverlay />
@@ -308,8 +325,10 @@ export default function LivePage() {
           <ControlBar
             isSeller={isSeller}
             bidSync={bidSync}
-            currentAuctionId={currentAuctionItem?.auctionId ?? null}
-            currentAuctionStatus={currentAuctionItem?.auctionStatus ?? null}
+            introduceAuctionId={introduceAuctionId}
+            startAuctionId={startAuctionId}
+            canIntroduce={canIntroduce}
+            canStart={canStart}
           />
 
           {auctionComment && <AuctionCommentToast key={auctionComment.id} message={auctionComment.message} />}

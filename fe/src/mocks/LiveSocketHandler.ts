@@ -229,7 +229,7 @@ const clearWinnerAnnouncement = (streamId: string) => {
   winnerAnnouncementTimers.delete(streamId);
 };
 
-const activateNextReadyItem = (streamId: string) => {
+const activateNextReadyItem = (streamId: string, targetAuctionId?: number) => {
   const itemSyncPayload = streamItemSyncStates.get(streamId) ?? createDefaultItemSyncPayload();
 
   if (itemSyncPayload.items.some((item) => item.auctionStatus === 'LIVE')) {
@@ -237,18 +237,30 @@ const activateNextReadyItem = (streamId: string) => {
     return itemSyncPayload;
   }
 
-  let activated = false;
+  const resolvedAuctionId =
+    targetAuctionId ??
+    itemSyncPayload.items.find((item) => item.auctionStatus === 'INTRODUCING')?.auctionId ??
+    itemSyncPayload.items.find((item) => item.auctionStatus === 'READY')?.auctionId;
+
+  if (typeof resolvedAuctionId !== 'number') {
+    streamItemSyncStates.set(streamId, itemSyncPayload);
+    return itemSyncPayload;
+  }
+
   const nextPayload: ItemSyncPayload = {
     items: itemSyncPayload.items.map((item) => {
-      if (!activated && (item.auctionStatus === 'INTRODUCING' || item.auctionStatus === 'READY')) {
-        activated = true;
-        return {
-          ...item,
-          auctionStatus: 'LIVE',
-        };
+      if (item.auctionId !== resolvedAuctionId) {
+        return item;
       }
 
-      return item;
+      if (item.auctionStatus !== 'INTRODUCING' && item.auctionStatus !== 'READY') {
+        return item;
+      }
+
+      return {
+        ...item,
+        auctionStatus: 'LIVE',
+      };
     }),
   };
 
@@ -427,8 +439,14 @@ const scheduleWinnerAnnouncement = (streamId: string) => {
   winnerAnnouncementTimers.set(streamId, winnerAnnouncementTimer);
 };
 
-const handleAuctionStart = (destination: string) => {
+const handleAuctionStart = (destination: string, body: string) => {
   const streamId = getStreamIdFromDestination(destination);
+  const payload = JSON.parse(body) as {
+    payload?: {
+      auctionId?: number;
+    };
+  };
+  const auctionId = payload.payload?.auctionId;
   const nowMs = Date.now();
   const itemName = '나이키 에어맥스 95';
   const startPrice = 50000;
@@ -451,7 +469,7 @@ const handleAuctionStart = (destination: string) => {
   streamTimerStates.set(streamId, state);
   streamAuctionStatisticsStates.set(streamId, auctionStatisticsState);
   streamBidSyncStates.set(streamId, { bidUnit });
-  activateNextReadyItem(streamId);
+  activateNextReadyItem(streamId, auctionId);
   scheduleWinnerAnnouncement(streamId);
 
   broadcastToDestination(`/broadcast/streams/${streamId}`, {
@@ -580,7 +598,7 @@ const handleSendFrame = (frame: StompFrame) => {
     const body = JSON.parse(frame.body) as { eventType?: string };
 
     if (body.eventType === 'AUCTION_START') {
-      handleAuctionStart(frame.headers.destination);
+      handleAuctionStart(frame.headers.destination, frame.body);
     }
 
     if (body.eventType === 'BID_PLACED') {

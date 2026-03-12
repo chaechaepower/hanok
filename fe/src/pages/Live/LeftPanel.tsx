@@ -20,6 +20,8 @@ export interface AuctionItem {
 interface Props {
   isSeller: boolean;
   syncedItems?: ItemSyncItem[] | null;
+  selectedAuctionId?: number | null;
+  onSelectAuctionItem?: (auctionId: number | null) => void;
 }
 
 const STATUS_BADGE: Record<ItemStatus, { label: string; text: string; bg: string; border: string }> = {
@@ -53,6 +55,12 @@ const CARD_BORDER: Record<ItemStatus, string> = {
   UNSOLD: 'rgba(255,255,255,0.06)',
 };
 
+const ACTIVE_STATUS_PRIORITY: Record<Exclude<ItemStatus, 'SOLD' | 'UNSOLD'>, number> = {
+  INTRODUCING: 0,
+  LIVE: 0,
+  READY: 1,
+};
+
 function formatPrice(n: number) {
   return `${n.toLocaleString('ko-KR')}원`;
 }
@@ -69,12 +77,30 @@ function toAuctionItems(items: ItemSyncItem[]): AuctionItem[] {
   }));
 }
 
-export default function LeftPanel({ isSeller, syncedItems = null }: Props) {
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+export default function LeftPanel({
+  isSeller,
+  syncedItems = null,
+  selectedAuctionId = null,
+  onSelectAuctionItem,
+}: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const items: AuctionItem[] = syncedItems ? toAuctionItems(syncedItems) : [];
 
-  const activeItems = items.filter((item) => item.status !== 'SOLD' && item.status !== 'UNSOLD');
+  const activeItems = items
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => item.status !== 'SOLD' && item.status !== 'UNSOLD')
+    .sort((a, b) => {
+      const priorityDiff =
+        ACTIVE_STATUS_PRIORITY[a.item.status as Exclude<ItemStatus, 'SOLD' | 'UNSOLD'>] -
+        ACTIVE_STATUS_PRIORITY[b.item.status as Exclude<ItemStatus, 'SOLD' | 'UNSOLD'>];
+
+      if (priorityDiff !== 0) {
+        return priorityDiff;
+      }
+
+      return a.index - b.index;
+    })
+    .map(({ item }) => item);
   const doneItems = items.filter((item) => item.status === 'SOLD' || item.status === 'UNSOLD');
   const totalCount = items.length;
 
@@ -91,7 +117,7 @@ export default function LeftPanel({ isSeller, syncedItems = null }: Props) {
 
         <div className="left-panel-scroll flex flex-1 flex-col gap-2 overflow-y-auto pr-2">
           {activeItems.map((item) => {
-            const isSelected = isSeller && selectedId === item.id;
+            const isSelected = isSeller && selectedAuctionId === item.id;
             const statusBadge = STATUS_BADGE[item.status];
             const conditionBadge = CONDITION_BADGE[item.condition];
 
@@ -110,7 +136,7 @@ export default function LeftPanel({ isSeller, syncedItems = null }: Props) {
                   cursor: isSeller ? 'pointer' : 'default',
                   pointerEvents: isSeller ? 'all' : 'none',
                 }}
-                onClick={isSeller ? () => setSelectedId(item.id) : undefined}
+                onClick={isSeller ? () => onSelectAuctionItem?.(selectedAuctionId === item.id ? null : item.id) : undefined}
               >
                 <div
                   className="h-16 w-16 shrink-0 rounded-[14px] bg-[#27272A]"

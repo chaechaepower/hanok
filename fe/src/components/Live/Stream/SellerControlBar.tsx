@@ -1,22 +1,21 @@
 import { useState } from 'react';
 import { LuMic, LuRadio } from 'react-icons/lu';
 import KeyboardGuide from '@/components/Live/Auction/Seller/KeyboardGuide';
-import type { ItemSyncAuctionStatus } from '@/types';
 import { useParams } from 'react-router-dom';
 import { sendStreamMessage } from '@/websocket/stompClient';
 
 // 판매자 전용 컨트롤바
 // 좌: 키보드 가이드 | 중앙: 액션 버튼 (설명/경매 시작) | 우: 미디어
 interface Props {
-  currentAuctionId: number | null;
-  currentAuctionStatus: ItemSyncAuctionStatus | null;
+  introduceAuctionId: number | null;
+  startAuctionId: number | null;
+  canIntroduce: boolean;
+  canStart: boolean;
 }
 
-export default function SellerControlBar({ currentAuctionId, currentAuctionStatus }: Props) {
+export default function SellerControlBar({ introduceAuctionId, startAuctionId, canIntroduce, canStart }: Props) {
   const [guideOpen, setGuideOpen] = useState(false);
   const { id: streamId } = useParams<{ id: string }>();
-  const canIntroduce = currentAuctionStatus === 'READY';
-  const canStart = currentAuctionStatus === 'INTRODUCING';
 
   // 경매 시작 socket
   const handleAuctionStart = () => {
@@ -25,7 +24,7 @@ export default function SellerControlBar({ currentAuctionId, currentAuctionStatu
       return;
     }
 
-    if (currentAuctionId === null) {
+    if (startAuctionId === null) {
       console.error('[stream] missing auctionId for AUCTION_START');
       return;
     }
@@ -33,7 +32,7 @@ export default function SellerControlBar({ currentAuctionId, currentAuctionStatu
     void sendStreamMessage(streamId, {
       eventType: 'AUCTION_START',
       payload: {
-        auctionId: currentAuctionId,
+        auctionId: startAuctionId,
       },
     }).catch((error) => {
       console.error('[stream] failed to send AUCTION_START', error);
@@ -46,7 +45,7 @@ export default function SellerControlBar({ currentAuctionId, currentAuctionStatu
       return;
     }
 
-    if (currentAuctionId === null) {
+    if (introduceAuctionId === null) {
       console.error('[stream] missing auctionId for ITEM_INTRODUCE');
       return;
     }
@@ -54,7 +53,7 @@ export default function SellerControlBar({ currentAuctionId, currentAuctionStatu
     void sendStreamMessage(streamId, {
       eventType: 'ITEM_INTRODUCE',
       payload: {
-        auctionId: currentAuctionId,
+        auctionId: introduceAuctionId,
       },
     }).catch((error) => {
       console.error('[stream] failed to send ITEM_INTRODUCE', error);
