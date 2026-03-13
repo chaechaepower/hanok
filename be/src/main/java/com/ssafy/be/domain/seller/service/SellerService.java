@@ -3,6 +3,7 @@ package com.ssafy.be.domain.seller.service;
 import com.ssafy.be.domain.follow.repository.FollowRepository;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.repository.ItemRepository;
+import com.ssafy.be.domain.seller.client.BiznoClient;
 import com.ssafy.be.domain.seller.dto.request.SellerProfileUpdateRequest;
 import com.ssafy.be.domain.seller.dto.request.SellerRegisterRequest;
 import com.ssafy.be.domain.seller.dto.response.*;
@@ -19,7 +20,9 @@ import com.ssafy.be.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestClient;
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -32,6 +35,12 @@ public class SellerService {
     private final FollowRepository followRepository;
     private final ItemRepository itemRepository;
     private final StreamRepository streamRepository;
+    private final BiznoClient biznoClient;
+
+    @Value("${bizno.api.key}")
+    private String biznoApiKey;
+
+    private final RestClient restClient = RestClient.create();
 
     @Transactional
     public SellerRegisterResponse register(Long userId, SellerRegisterRequest request) {
@@ -130,5 +139,20 @@ public class SellerService {
 
         seller.updateProfile(request.intro(), request.instaUrl(), request.youtubeUrl(), request.tiktokUrl());
         seller.getUser().updateProfile(request.nickname(), request.profileImage());
+    }
+
+    public BiznoVerifyResponse verifyBizno(String bizno, int gb) {
+        BiznoApiResponse response = biznoClient.verify(bizno, gb);
+
+        if (response == null || response.resultCode() != 0 || response.totalCount() == 0) {
+            return new BiznoVerifyResponse(false);
+        }
+
+        boolean valid = response.items().stream()
+                .findFirst()
+                .map(item -> item.bstt() != null && item.bstt().contains("계속사업자"))
+                .orElse(false);
+
+        return new BiznoVerifyResponse(valid);
     }
 }
