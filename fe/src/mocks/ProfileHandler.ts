@@ -3,7 +3,13 @@ import { http, HttpResponse } from 'msw';
 import { BASE_URL } from '@/api/instance';
 import LogoImage from '@/assets/Logo.png';
 
-import { decrementMockFollowerCount, getMockFollowerCount, incrementMockFollowerCount } from './mockState';
+import {
+  decrementMockFollowerCount,
+  followSeller,
+  getMockFollowerCount,
+  incrementMockFollowerCount,
+  unfollowSeller,
+} from './mockState';
 
 type MockNoticeItem = {
   postId: number;
@@ -31,7 +37,8 @@ let mockNoticeItems: MockNoticeItem[] = [
 ];
 
 export const profileHandlers = [
-  http.patch(`${BASE_URL}/v1/users/:userId/follow`, async () => {
+  http.patch(`${BASE_URL}/v1/users/:userId/follow`, async ({ params }) => {
+    followSeller(Number(params.userId));
     return HttpResponse.json({
       following: true,
       followerCount: incrementMockFollowerCount(),
@@ -39,7 +46,8 @@ export const profileHandlers = [
     });
   }),
 
-  http.delete(`${BASE_URL}/v1/users/:userId/unfollow`, async () => {
+  http.delete(`${BASE_URL}/v1/users/:userId/unfollow`, async ({ params }) => {
+    unfollowSeller(Number(params.userId));
     return HttpResponse.json({
       following: false,
       followerCount: decrementMockFollowerCount(),

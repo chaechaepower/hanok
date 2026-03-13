@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { IconType } from 'react-icons';
 import { FiArrowDown, FiArrowUp, FiChevronLeft, FiCreditCard, FiInfo, FiZap } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/components/common/Toast';
 
 import { useGetTradeReports } from '@/api/hooks/useGetTradeReports';
 import { useGetAccount } from '@/api/hooks/useGetAccount';
@@ -48,6 +49,7 @@ export default function WalletPage() {
   const pointInputRef = useRef<HTMLInputElement>(null);
   const { data: account } = useGetAccount();
   const { data: wallet, isLoading } = useGetWallet();
+  const { showToast } = useToast();
 
   const chargeReportsQuery = useGetTradeReports('CHARGE', activeTab === 'charge');
   const withdrawReportsQuery = useGetTradeReports('WITHDRAW', activeTab === 'withdraw');
@@ -140,7 +142,7 @@ export default function WalletPage() {
           queryClient.invalidateQueries({ queryKey: ['tradeReports', 'WITHDRAW'] }),
         ]);
 
-        alert('출금 요청이 완료되었습니다.');
+        showToast({ message: '출금 요청이 완료되었습니다.' });
         closePointModal();
         return;
       }
@@ -156,12 +158,12 @@ export default function WalletPage() {
       });
 
       if (!response) {
-        alert('결제창을 열지 못했습니다. 팝업 차단 여부를 확인해주세요.');
+        showToast({ message: '결제창을 열지 못했습니다. 팝업 차단 여부를 확인해주세요.' });
         return;
       }
 
       if (response.code) {
-        alert(response.message ?? '결제가 취소되었거나 실패했습니다.');
+        showToast({ message: response.message ?? '결제가 취소되었거나 실패했습니다.' });
         return;
       }
 
@@ -174,10 +176,10 @@ export default function WalletPage() {
         queryClient.invalidateQueries({ queryKey: ['tradeReports', 'CHARGE'] }),
       ]);
 
-      alert('결제가 완료되었습니다.');
+      showToast({ message: '결제가 완료되었습니다.' });
       closePointModal();
     } catch (error) {
-      alert(error instanceof Error ? error.message : '결제 요청 중 오류가 발생했습니다.');
+      showToast({ message: error instanceof Error ? error.message : '결제 요청 중 오류가 발생했습니다.' });
     } finally {
       setIsPointSubmitting(false);
     }

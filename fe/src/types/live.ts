@@ -10,7 +10,6 @@ export type StreamEnterSeller = {
   sellerId: number;
   nickname: string;
   profileImage: string | null;
-  grade: string;
 };
 
 export type StreamEnterTopBidder = {
@@ -23,11 +22,20 @@ export type StreamEnterResponse = {
   streamId: number;
   title: string;
   category: string;
+  thumbnail: string | null;
+  scheduledAt: string | null;
+  startType: 'SCHEDULED' | 'IMMEDIATE';
   status: string;
   notice: string | null;
+  isLive: boolean;
+  createdAt: string;
+  items: LiveStreamItem[];
   seller: StreamEnterSeller;
   viewerCount: number;
   topBidders: StreamEnterTopBidder[];
+  token: string;
+  identity: string;
+  isFollowing: boolean;
 };
 
 export type LiveCardData = {
@@ -143,13 +151,18 @@ export type Live = {
   items: LiveStreamItem[];
 };
 
-export type StartStreamRequest = {
+export type StreamRequest = {
   title: string;
   category: string;
   startType: 'SCHEDULED' | 'IMMEDIATE';
   scheduledAt?: string;
   notice?: string;
   itemIds: number[];
+};
+
+export type StreamMultipartPayload = {
+  request: StreamRequest;
+  thumbnail?: File;
 };
 
 export type PostStreamResponse = {
@@ -173,14 +186,6 @@ export type StartStreamResponse = {
   status: 'SUCCESS' | 'FAIL';
   message: string;
   data: StartStreamData;
-};
-
-export type UpdateStreamRequest = {
-  title: string;
-  category: string;
-  startType: 'SCHEDULED' | 'IMMEDIATE';
-  scheduledAt?: string;
-  notice?: string;
 };
 
 export type UpdateStreamResponse = {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/components/common/Toast';
 import type { BusinessType } from '@/types';
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
 import Step1 from '@/components/SellerOnboarding/Step1';
@@ -11,16 +12,17 @@ import Step4 from '@/components/SellerOnboarding/Step4';
 export default function SellerOnboardingPage() {
   const navigate = useNavigate();
   const { data: sellerStatus, isLoading } = useGetSellerStatus();
+  const { showToast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [businessType, setBusinessType] = useState<BusinessType>('individual');
   const [businessNumber, setBusinessNumber] = useState<string | null>(null);
 
   useEffect(() => {
     if (sellerStatus?.isSeller) {
-      alert('이미 판매자로 등록되어 있습니다.');
+      showToast({ message: '이미 판매자로 등록되어 있습니다.' });
       navigate('/'); // Redirect to home or inventory
     }
-  }, [sellerStatus, navigate]);
+  }, [sellerStatus, navigate, showToast]);
 
   if (isLoading) {
     return (

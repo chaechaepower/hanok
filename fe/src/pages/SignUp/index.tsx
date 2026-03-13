@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/components/common/Toast';
 import { checkEmailDuplicate } from '@/api/hooks/useGetCheckEmailDuplicate';
 import { postIdentityVerification } from '@/api/hooks/usePostIdentityVerification';
 import { signUp } from '@/api/hooks/usePostSignUp';
@@ -8,6 +9,7 @@ import Button from '@/components/common/Button';
 
 export default function SignUpPage() {
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const [email, setEmail] = useState('');
   const [isEmailVerified, setIsEmailVerified] = useState(false);
@@ -65,7 +67,7 @@ export default function SignUpPage() {
         setIsIdentityVerified(true);
         setVerifiedName(res.data.name);
         setPhone(res.data.phoneNumber);
-        alert(`본인인증이 완료되었습니다. (${res.data.name})`);
+        showToast({ message: `본인인증이 완료되었습니다. (${res.data.name})` });
       } else {
         setPhoneError('본인인증에 실패했습니다.');
       }
@@ -77,19 +79,19 @@ export default function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isEmailVerified) return alert('이메일 중복 확인을 해주세요.');
-    if (!nickname) return alert('닉네임을 입력해주세요.');
-    if (validatePassword(password) || password !== passwordConfirm) return alert('비밀번호를 바르게 입력 및 확인해주세요.');
-    if (!isIdentityVerified || !phone) return alert('휴대폰 본인 인증을 완료해주세요.');
-    if (!termsAgreed || !privacyAgreed) return alert('필수 약관에 모두 동의해주세요.');
+    if (!isEmailVerified) { showToast({ message: '이메일 중복 확인을 해주세요.' }); return; }
+    if (!nickname) { showToast({ message: '닉네임을 입력해주세요.' }); return; }
+    if (validatePassword(password) || password !== passwordConfirm) { showToast({ message: '비밀번호를 바르게 입력 및 확인해주세요.' }); return; }
+    if (!isIdentityVerified || !phone) { showToast({ message: '휴대폰 본인 인증을 완료해주세요.' }); return; }
+    if (!termsAgreed || !privacyAgreed) { showToast({ message: '필수 약관에 모두 동의해주세요.' }); return; }
 
     try {
       await signUp({ email, nickname, password, phone });
-      alert('회원가입이 완료되었습니다!');
+      showToast({ message: '회원가입이 완료되었습니다!' });
       navigate('/login');
     } catch (error) {
       console.error(error);
-      alert('회원가입 처리 중 오류가 발생했습니다.');
+      showToast({ message: '회원가입 처리 중 오류가 발생했습니다.' });
     }
   };
 

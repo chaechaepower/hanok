@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useToast } from '@/components/common/Toast';
 import { useGetSellerProfile } from '@/api/hooks/useGetSellerProfile';
 import { useGetSellerNotice } from '@/api/hooks/useGetSellerNotice';
 import { usePostSellerNotice } from '@/api/hooks/usePostSellerNotice';
@@ -108,6 +109,7 @@ export default function ProfilePage() {
   const { mutate: patchFollow, isPending: isFollowPending } = usePatchFollow();
   const { mutate: deleteFollow, isPending: isUnfollowPending } = useDeleteFollow();
 
+  const { showToast } = useToast();
   const [isFollowing, setIsFollowing] = useState(false);
 
   const myUserId = localStorage.getItem('userId');
@@ -155,7 +157,7 @@ export default function ProfilePage() {
 
   const handleSubmitNotice = () => {
     if (!noticeTitle.trim() || !noticeContent.trim()) {
-      alert('제목과 내용을 모두 입력해주세요.');
+      showToast({ message: '제목과 내용을 모두 입력해주세요.' });
       return;
     }
     if (modalMode === 'create') {
@@ -195,10 +197,10 @@ export default function ProfilePage() {
           <div>
             {profile_image ? (
               <>
-                <img 
-                  src={profile_image} 
-                  alt={nickname} 
-                  className="w-[140px] h-[140px] min-w-[140px] min-h-[140px] flex-shrink-0 rounded-full object-contain object-center bg-[#1e1e2d]" 
+                <img
+                  src={profile_image}
+                  alt={nickname}
+                  className="w-[140px] h-[140px] min-w-[140px] min-h-[140px] flex-shrink-0 rounded-full object-contain object-center bg-[#1e1e2d]"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
                     (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
@@ -230,8 +232,15 @@ export default function ProfilePage() {
               )}
               <div className="ml-auto flex gap-4">
                 {/* TODO: 수정api연결 필요 */}
-                <button className="border-none bg-transparent text-[#888] text-sm cursor-pointer hover:text-[var(--color-point)] transition-colors">수정</button>
-                <button onClick={() => setIsReportModalOpen(true)} className="border-none bg-transparent text-[#888] text-sm cursor-pointer hover:text-[var(--color-point)] transition-colors">신고</button>
+                <button className="border-none bg-transparent text-[#888] text-sm cursor-pointer hover:text-[var(--color-point)] transition-colors">
+                  수정
+                </button>
+                <button
+                  onClick={() => setIsReportModalOpen(true)}
+                  className="border-none bg-transparent text-[#888] text-sm cursor-pointer hover:text-[var(--color-point)] transition-colors"
+                >
+                  신고
+                </button>
               </div>
             </div>
 
@@ -548,7 +557,7 @@ export default function ProfilePage() {
           onSubmit={(reportData) => {
             // TODO: 신고 API 연결
             console.log('신고 데이터:', reportData);
-            alert('신고가 접수되었습니다.');
+            showToast({ message: '신고가 접수되었습니다.' });
             setIsReportModalOpen(false);
           }}
         />

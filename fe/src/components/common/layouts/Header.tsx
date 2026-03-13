@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom';
 
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
 import Logo from '@/assets/Logo.png';
-import { getUserIdFromToken } from '@/utils/getUserIdFromToken';
 import SearchBar from '../SearchBar';
 import Button from '../Button';
 
@@ -23,7 +22,7 @@ export default function Header() {
   };
 
   const handleProfileClick = () => {
-    const userId = getUserIdFromToken();
+    const userId = localStorage.getItem('userId');
 
     navigate(userId ? `/profile/${userId}` : '/login');
   };

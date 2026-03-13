@@ -1,7 +1,8 @@
 import { http, HttpResponse } from 'msw';
+
 import { BASE_URL } from '@/api/instance';
 
-import { getCurrentMockUser, setCurrentMockUser } from './mockState';
+import { getCurrentMockUser, getFollowedSellerIds, setCurrentMockUser } from './mockState';
 
 const mockMeData = {
   email: 'user@example.com',
@@ -16,34 +17,82 @@ const mockNotification = {
   followStreamAlert: true,
 };
 
+const FOLLOWED_SELLER_CATALOG = [
+  {
+    sellerId: 1,
+    nickname: 'store_one',
+    profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store1',
+    rating: 4.8,
+    isLive: true,
+  },
+  {
+    sellerId: 2,
+    nickname: 'luxury_lab',
+    profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store2',
+    rating: 4.5,
+    isLive: false,
+  },
+  {
+    sellerId: 3,
+    nickname: 'card_room',
+    profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store3',
+    rating: 4.2,
+    isLive: false,
+  },
+  {
+    sellerId: 4,
+    nickname: 'tech_house',
+    profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store4',
+    rating: 4.6,
+    isLive: true,
+  },
+  {
+    sellerId: 5,
+    nickname: 'vintage_zone',
+    profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store5',
+    rating: 4.9,
+    isLive: false,
+  },
+  {
+    sellerId: 10,
+    nickname: 'vintage_hub',
+    profileImageUri: 'https://picsum.photos/seed/seller-10/120/120',
+    rating: 4.7,
+    isLive: true,
+  },
+  {
+    sellerId: 12,
+    nickname: 'sneaker_room',
+    profileImageUri: 'https://picsum.photos/seed/seller-12/120/120',
+    rating: 4.9,
+    isLive: true,
+  },
+  {
+    sellerId: 14,
+    nickname: 'card_deck',
+    profileImageUri: 'https://picsum.photos/seed/seller-14/120/120',
+    rating: 4.4,
+    isLive: true,
+  },
+];
+
 export const settingsHandlers = [
-  // ─── Auth ────────────────────────────────────────────────────────────────────
-  http.post(`${BASE_URL}/v1/auth/logout`, () => {
-    return HttpResponse.json({ success: true }, { status: 200 });
-  }),
+  http.post(`${BASE_URL}/v1/auth/logout`, () => HttpResponse.json({ success: true }, { status: 200 })),
 
-  // ─── Settings – 구체적인 경로를 먼저 등록해야 /me 가 /me/* 요청을 가로채지 않음 ───
+  http.get(`${BASE_URL}/v1/users/me/seller-status`, () => HttpResponse.json({ isSeller: false }, { status: 200 })),
 
-  // GET  /v1/users/me/seller-status
-  http.get(`${BASE_URL}/v1/users/me/seller-status`, () => {
-    return HttpResponse.json({ isSeller: false }, { status: 200 });
-  }),
+  http.get(`${BASE_URL}/v1/users/me/notification`, () => HttpResponse.json(mockNotification, { status: 200 })),
 
-  // GET  /v1/users/me/notification
-  http.get(`${BASE_URL}/v1/users/me/notification`, () => {
-    return HttpResponse.json(mockNotification, { status: 200 });
-  }),
-
-  // PATCH /v1/users/me/notification
   http.patch(`${BASE_URL}/v1/users/me/notification`, async ({ request }) => {
     const body = (await request.json()) as { followStreamAlert: boolean };
+
     if (typeof body.followStreamAlert === 'boolean') {
       mockNotification.followStreamAlert = body.followStreamAlert;
     }
+
     return HttpResponse.json(mockNotification, { status: 200 });
   }),
 
-  // GET  /v1/users/me
   http.get(`${BASE_URL}/v1/users/me`, () => {
     const currentUser = getCurrentMockUser();
 
@@ -64,7 +113,6 @@ export const settingsHandlers = [
     return HttpResponse.json(mockMeData, { status: 200 });
   }),
 
-  // PATCH /v1/users/me/settings
   http.patch(`${BASE_URL}/v1/users/me/settings`, async ({ request }) => {
     const body = (await request.json()) as {
       email?: string;
@@ -72,6 +120,7 @@ export const settingsHandlers = [
       nickname?: string;
       profileImage?: string;
     };
+
     if (body.email) mockMeData.email = body.email;
     if (body.phone) mockMeData.phone = body.phone;
     if (body.nickname) mockMeData.nickname = body.nickname;
@@ -89,101 +138,109 @@ export const settingsHandlers = [
     }
 
     return HttpResponse.json(
-      { userId: 1, email: mockMeData.email, phone: mockMeData.phone, updatedAt: new Date().toISOString() },
+      {
+        userId: currentUser?.userId ?? 1,
+        email: mockMeData.email,
+        phone: mockMeData.phone,
+        updatedAt: new Date().toISOString(),
+      },
       { status: 200 },
     );
   }),
 
-  // DELETE /v1/users/me/withdraw
-  http.delete(`${BASE_URL}/v1/users/me/withdraw`, () => {
-    return HttpResponse.json(
+  http.delete(`${BASE_URL}/v1/users/me/withdraw`, () =>
+    HttpResponse.json(
       {
         status: 'SUCCESS',
-        message: '요청이 성공적으로 처리되었습니다.',
+        message: 'User withdrawn successfully.',
         data: { status: 'withdrawn' },
       },
       { status: 200 },
-    );
-  }),
+    ),
+  ),
 
-  // GET /v1/following
   http.get(`${BASE_URL}/v1/following`, () => {
-    const content = [
-      {
-        followId: 1,
-        seller: { sellerId: 1, nickname: '신재혁상점', profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store1', rating: 4.8, isLive: true },
-        followedAt: '2024-01-01T10:00:00Z',
-      },
-      {
-        followId: 2,
-        seller: { sellerId: 2, nickname: '빈티지마켓', profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store2', rating: 4.5, isLive: false },
-        followedAt: '2024-01-05T09:00:00Z',
-      },
-      {
-        followId: 3,
-        seller: { sellerId: 3, nickname: '패션왕', profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store3', rating: 4.2, isLive: false },
-        followedAt: '2024-01-10T14:00:00Z',
-      },
-      {
-        followId: 4,
-        seller: { sellerId: 4, nickname: '전자기기마트', profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store4', rating: 4.6, isLive: true },
-        followedAt: '2024-01-12T08:30:00Z',
-      },
-      {
-        followId: 5,
-        seller: { sellerId: 5, nickname: '수집품갤러리', profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store5', rating: 4.9, isLive: false },
-        followedAt: '2024-01-15T11:00:00Z',
-      },
-    ];
+    const content = getFollowedSellerIds()
+      .map((sellerId, index) => {
+        const seller = FOLLOWED_SELLER_CATALOG.find((item) => item.sellerId === sellerId);
+
+        if (!seller) {
+          return null;
+        }
+
+        return {
+          followId: index + 1,
+          seller,
+          followedAt: new Date(Date.now() - index * 86400000).toISOString(),
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+
     return HttpResponse.json(
       { content, page: 0, size: 20, totalElements: content.length, hasNext: false },
       { status: 200 },
     );
   }),
 
-  // GET /v1/users/me/account
-  http.get(`${BASE_URL}/v1/users/me/account`, () => {
-    return HttpResponse.json(
+  http.get(`${BASE_URL}/v1/users/me/account`, () =>
+    HttpResponse.json(
       {
-        bankName: '국민',
-        accountNumber: '921381203',
+        bankName: null,
+        accountNumber: null,
       },
-      { status: 200 }
-    );
-  }),
+      { status: 200 },
+    ),
+  ),
 
-  // POST /v1/users/me/accounts
   http.post(`${BASE_URL}/v1/users/me/accounts`, async ({ request }) => {
-    const body = await request.json() as { bankCode: string; bankName: string; accountNum: string; accountName: string };
-    console.log('Mock: Account registered', body);
+    const body = (await request.json()) as {
+      bankCode: string;
+      bankName: string;
+      accountNum: string;
+      accountName: string;
+    };
+
+    console.log('Mock: account registered', body);
     return HttpResponse.json({ success: true }, { status: 200 });
   }),
 
-  // GET /v1/users/me/addresses
-  http.get(`${BASE_URL}/v1/users/me/addresses`, () => {
-    return HttpResponse.json(
+  http.get(`${BASE_URL}/v1/users/me/addresses`, () =>
+    HttpResponse.json(
       {
         addresses: [
-          { id: 1, label: '집', isDefault: true, name: '이효은', zipCode: '43123', address: '경상북도 구미시 산동읍 첨단산업1로 17', phone: '010-****-5678' },
-          { id: 2, label: '회사', isDefault: false, name: '이효은', zipCode: '12312', address: '서울특별시 강남구 테헤란로 123 3층', phone: '010-****-5678' },
+          {
+            id: 1,
+            label: 'Home',
+            isDefault: true,
+            name: 'Mock User',
+            zipCode: '43123',
+            address: '17 Mock Street, Seoul',
+            phone: '010-0000-5678',
+          },
+          {
+            id: 2,
+            label: 'Office',
+            isDefault: false,
+            name: 'Mock User',
+            zipCode: '12312',
+            address: '123 Test Avenue, Seoul',
+            phone: '010-0000-5678',
+          },
         ],
       },
       { status: 200 },
-    );
-  }),
+    ),
+  ),
 
-  // POST /v1/users/me/addresses
-  http.post(`${BASE_URL}/v1/users/me/addresses`, () => {
-    return HttpResponse.json({ message: '배송지가 추가되었습니다.' }, { status: 200 });
-  }),
+  http.post(`${BASE_URL}/v1/users/me/addresses`, () =>
+    HttpResponse.json({ message: 'Address added successfully.' }, { status: 200 }),
+  ),
 
-  // PATCH /v1/users/me/addresses/:id
-  http.patch(`${BASE_URL}/v1/users/me/addresses/:id`, () => {
-    return HttpResponse.json({ message: '배송지가 수정되었습니다.' }, { status: 200 });
-  }),
+  http.patch(`${BASE_URL}/v1/users/me/addresses/:id`, () =>
+    HttpResponse.json({ message: 'Address updated successfully.' }, { status: 200 }),
+  ),
 
-  // DELETE /v1/users/me/addresses/:id
-  http.delete(`${BASE_URL}/v1/users/me/addresses/:id`, () => {
-    return HttpResponse.json({ message: '배송지가 삭제되었습니다.' }, { status: 200 });
-  }),
+  http.delete(`${BASE_URL}/v1/users/me/addresses/:id`, () =>
+    HttpResponse.json({ message: 'Address deleted successfully.' }, { status: 200 }),
+  ),
 ];

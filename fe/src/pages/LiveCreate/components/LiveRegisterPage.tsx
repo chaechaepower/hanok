@@ -1,35 +1,66 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   FaArrowLeft,
   FaBroadcastTower,
   FaCalendarAlt,
   FaCamera,
-  FaSave,
   FaCircle,
   FaList,
+  FaSave,
   FaTimes,
 } from 'react-icons/fa';
 import { MdLiveTv } from 'react-icons/md';
 import { CATEGORY_MACROS } from '@/constants/macro';
-import { CATEGORIES } from './categories';
 import { useGetItemsByCategory } from '@/api/hooks/useGetItems';
-import { usePostStream } from '@/api/hooks/usePostStream';
+import { useGetStream } from '@/api/hooks/useGetStream';
+import { useGetStreamMacros } from '@/api/hooks/useGetStreamMacros';
+import { usePatchStream } from '@/api/hooks/usePatchStream';
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
+import { usePostStream } from '@/api/hooks/usePostStream';
 import { usePostStreamMacros } from '@/api/hooks/usePostStreamMacros';
-import type { Product, StartStreamRequest } from '@/types';
+import type { LiveStreamItem, Product, StreamRequest } from '@/types';
+import { CATEGORIES } from './categories';
 import InventorySelectModal from './InventorySelectModal';
 import ScheduleModal from './ScheduleModal';
 
+const toFallbackProduct = (item: LiveStreamItem): Product => ({
+  id: item.itemId,
+  status: 'WAITING',
+  title: item.name,
+  description: '',
+  tags: [],
+  imageUrls: item.image1 ? [item.image1] : [],
+  startPrice: item.startPrice,
+  bidUnit: 0,
+  auctionTime: 0,
+  condition: item.itemCondition,
+  category: item.category,
+  auctionMethod: '',
+});
+import { useToast } from '@/components/common/Toast';
+
 export default function LiveRegisterPage() {
+  const [searchParams] = useSearchParams();
+  const rawStreamId = Number(searchParams.get('streamId') ?? 0);
+  const streamId = Number.isFinite(rawStreamId) ? rawStreamId : 0;
+  const isEditMode = streamId > 0;
+
   const navigate = useNavigate();
   const location = useLocation();
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
+  const initializedStreamIdRef = useRef<number | null>(null);
+  const initializedItemsStreamIdRef = useRef<number | null>(null);
+  const initializedMacroKeyRef = useRef<string | null>(null);
 
-  const initialCategoryId: string = (location.state as { categoryId?: string })?.categoryId ?? CATEGORIES[0]?.id ?? '';
-  const categoryLabel = CATEGORIES.find((c) => c.id === initialCategoryId)?.label ?? '';
+  const createCategoryId = (location.state as { categoryId?: string } | null)?.categoryId ?? CATEGORIES[0]?.id ?? '';
 
-  const { data: filteredInventory = [], isLoading: inventoryLoading } = useGetItemsByCategory(initialCategoryId);
+  const { data: streamData, isLoading: streamLoading } = useGetStream(streamId);
+  const categoryId = isEditMode ? (streamData?.category ?? '') : createCategoryId;
+  const categoryLabel = CATEGORIES.find((category) => category.id === categoryId)?.label ?? streamData?.category ?? '';
+
+  const { data: filteredInventory = [], isLoading: inventoryLoading } = useGetItemsByCategory(categoryId);
+  const { data: macroData, isLoading: macroLoading } = useGetStreamMacros(streamId, isEditMode ? categoryId : '');
 
   const [title, setTitle] = useState('');
   const [notice, setNotice] = useState('');
@@ -37,109 +68,321 @@ export default function LiveRegisterPage() {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [selectedItems, setSelectedItems] = useState<Product[]>([]);
   const [showInventoryModal, setShowInventoryModal] = useState(false);
-  const [showStartConfirm, setShowStartConfirm] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const defaultMacros = useMemo(() => CATEGORY_MACROS[categoryLabel] ?? [], [categoryLabel]);
   const [macroAnswers, setMacroAnswers] = useState<Record<string, string>>({});
 
+  const { showToast } = useToast();
+  const defaultMacros = useMemo(() => CATEGORY_MACROS[categoryLabel] ?? [], [categoryLabel]);
+
+  const macroFields = useMemo(() => {
+    if (!isEditMode || !macroData?.macros?.length) {
+      return defaultMacros;
+    }
+
+    return macroData.macros.map((macro) => ({
+      questionType: macro.questionType,
+      question: defaultMacros.find((item) => item.questionType === macro.questionType)?.question ?? macro.questionType,
+      answer: macro.answer,
+    }));
+  }, [defaultMacros, isEditMode, macroData]);
+
   useEffect(() => {
-    const initial: Record<string, string> = {};
-    defaultMacros.forEach((m) => {
-      initial[m.questionType] = '';
-    });
-    setMacroAnswers(initial);
-  }, [categoryLabel, defaultMacros]);
+    if (!isEditMode) {
+      initializedStreamIdRef.current = null;
+      return;
+    }
+
+    if (!streamData || initializedStreamIdRef.current === streamId) {
+      return;
+    }
+
+    setTitle(streamData.title);
+    setNotice(streamData.notice ?? '');
+    setThumbnailUrl(streamData.thumbnail ?? null);
+    setThumbnailFile(null);
+    setScheduledAt(streamData.scheduledAt ?? '');
+    initializedStreamIdRef.current = streamId;
+  }, [isEditMode, streamData, streamId]);
+
+  useEffect(() => {
+    if (!isEditMode) {
+      initializedItemsStreamIdRef.current = null;
+      return;
+    }
+
+    if (!streamData || inventoryLoading || initializedItemsStreamIdRef.current === streamId) {
+      return;
+    }
+
+    const inventoryById = new Map(filteredInventory.map((item) => [item.id, item]));
+    const items = streamData.items.map((item) => inventoryById.get(item.itemId) ?? toFallbackProduct(item));
+    setSelectedItems(items);
+    initializedItemsStreamIdRef.current = streamId;
+  }, [filteredInventory, inventoryLoading, isEditMode, streamData, streamId]);
+
+  useEffect(() => {
+    if (!categoryId) {
+      return;
+    }
+
+    if (!isEditMode) {
+      const createMacroKey = `create:${categoryId}`;
+      if (initializedMacroKeyRef.current === createMacroKey) {
+        return;
+      }
+
+      const initialAnswers: Record<string, string> = {};
+      defaultMacros.forEach((macro) => {
+        initialAnswers[macro.questionType] = '';
+      });
+      setMacroAnswers(initialAnswers);
+      initializedMacroKeyRef.current = createMacroKey;
+      return;
+    }
+
+    if (!streamData || macroLoading) {
+      return;
+    }
+
+    const editMacroKey = `edit:${streamId}`;
+    if (initializedMacroKeyRef.current === editMacroKey) {
+      return;
+    }
+
+    const initialAnswers: Record<string, string> = {};
+    if (macroData?.macros?.length) {
+      macroData.macros.forEach((macro) => {
+        initialAnswers[macro.questionType] = macro.answer ?? '';
+      });
+    } else {
+      defaultMacros.forEach((macro) => {
+        initialAnswers[macro.questionType] = '';
+      });
+    }
+
+    setMacroAnswers(initialAnswers);
+    initializedMacroKeyRef.current = editMacroKey;
+  }, [categoryId, defaultMacros, isEditMode, macroData, macroLoading, streamData, streamId]);
 
   const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setThumbnailUrl(url);
-      setThumbnailFile(file);
+    if (!file) {
+      return;
     }
+
+    const url = URL.createObjectURL(file);
+    setThumbnailUrl(url);
+    setThumbnailFile(file);
   };
 
   const toggleItem = (item: Product) => {
     setSelectedItems((prev) =>
-      prev.some((i) => i.id === item.id) ? prev.filter((i) => i.id !== item.id) : [...prev, item],
+      prev.some((selectedItem) => selectedItem.id === item.id)
+        ? prev.filter((selectedItem) => selectedItem.id !== item.id)
+        : [...prev, item],
     );
   };
 
   const handleSchedule = () => {
     if (!title.trim()) {
-      alert('방송 제목을 입력해주세요.');
+      showToast({ message: '방송 제목을 입력해주세요.' });
       return;
     }
+
     setShowScheduleModal(true);
   };
 
-  const handleStart = () => {
+  const handleEnter = () => {
     if (!title.trim()) {
-      alert('방송 제목을 입력해주세요.');
+      showToast({ message: '방송 제목을 입력해주세요.' });
       return;
     }
-    setShowStartConfirm(true);
+
+    void submitReadyEntry();
   };
 
   const postStream = usePostStream();
   const postStartStream = usePostStartStream();
+  const patchStream = usePatchStream(streamId);
   const postMacros = usePostStreamMacros();
 
-  const submitStream = async (startType: 'SCHEDULED' | 'IMMEDIATE', scheduledAtValue?: string) => {
+  const buildMacrosPayload = () =>
+    macroFields.map((macro) => ({
+      questionType: macro.questionType,
+      answer: macroAnswers[macro.questionType] ?? '',
+    }));
+
+  const validateStreamForm = () => {
+    if (!title.trim()) {
+      showToast({ message: '방송 제목을 입력해주세요.' });
+      return false;
+    }
+
+    if (selectedItems.length === 0) {
+      showToast({ message: '방송에 등록할 물품을 선택해주세요.' });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSaveMacros = () => {
+    if (!isEditMode) {
+      showToast({ message: '매크로는 방송 예약 또는 시작 시 함께 저장됩니다.' });
+      return;
+    }
+
+    postMacros.mutate(
+      { streamId, body: { macros: buildMacrosPayload() } },
+      {
+        onSuccess: () => showToast({ message: '매크로가 저장되었습니다.' }),
+        onError: () => showToast({ message: '매크로 저장에 실패하였습니다.' }),
+      },
+    );
+  };
+
+  const buildStreamRequest = (startType: 'SCHEDULED' | 'IMMEDIATE', scheduledAtValue?: string): StreamRequest => {
+    const resolvedScheduledAt = (scheduledAtValue ?? scheduledAt) || undefined;
+
+    return {
+      title,
+      category: categoryId,
+      itemIds: selectedItems.map((item) => item.id),
+      startType,
+      notice: notice || undefined,
+      scheduledAt: startType === 'SCHEDULED' ? resolvedScheduledAt : undefined,
+    };
+  };
+
+  const submitReadyEntry = async () => {
+    if (!categoryId || !validateStreamForm()) {
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const payload: StartStreamRequest = {
-        title,
-        category: initialCategoryId,
-        itemIds: selectedItems.map((i) => i.id),
-        startType,
-        notice: notice || undefined,
-        scheduledAt: startType === 'SCHEDULED' ? (scheduledAtValue ?? scheduledAt) : undefined,
+      const payload = {
+        request: buildStreamRequest('SCHEDULED'),
+        thumbnail: thumbnailFile ?? undefined,
       };
 
-      const res = await postStream.mutateAsync({
-        request: payload,
+      const targetStreamId = isEditMode
+        ? streamId
+        : (
+            await postStream.mutateAsync({
+              ...payload,
+            })
+          ).streamId;
+
+      if (isEditMode) {
+        await patchStream.mutateAsync(payload);
+      }
+
+      await postMacros.mutateAsync({
+        streamId: targetStreamId,
+        body: { macros: buildMacrosPayload() },
+      });
+
+      navigate(`/live/${targetStreamId}`, {
+        state: { autoOpenStartModal: true },
+      });
+    } catch {
+      showToast({ message: isEditMode ? '방송 수정에 실패했습니다.' : '방송 등록에 실패했습니다.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const submitStream = async (startType: 'SCHEDULED' | 'IMMEDIATE', scheduledAtValue?: string) => {
+    if (!categoryId || !validateStreamForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const request = buildStreamRequest(startType, scheduledAtValue);
+      const payload = {
+        request,
         thumbnail: thumbnailFile ?? undefined,
+      };
+
+      if (isEditMode) {
+        await patchStream.mutateAsync(payload);
+
+        await postMacros.mutateAsync({
+          streamId,
+          body: { macros: buildMacrosPayload() },
+        });
+
+        if (startType === 'IMMEDIATE') {
+          navigate(`/live/${streamId}`);
+        } else {
+          showToast({ message: '방송을 수정했습니다.' });
+          navigate('/lives');
+        }
+
+        return;
+      }
+
+      const res = await postStream.mutateAsync({
+        ...payload,
       });
       const newStreamId = res.streamId;
 
       if (startType === 'IMMEDIATE') {
         const startRes = await postStartStream.mutateAsync({
           streamId: newStreamId,
-          body: payload,
+          ...payload,
         });
-        const token = startRes.data?.openviduToken;
-        console.log('[Stream Start] openviduToken:', token);
-        alert(`방송이 시작되었습니다! (ID: ${newStreamId})`);
+        console.log('[Stream Start] openviduToken:', startRes.data?.openviduToken);
+        showToast({ message: '방송이 시작되었습니다!' });
       } else {
-        alert(`방송이 예약되었습니다! (ID: ${newStreamId})`);
+        showToast({ message: '방송이 예약되었습니다!' });
       }
 
-      const macros = defaultMacros.map((m) => ({
-        questionType: m.questionType,
-        answer: macroAnswers[m.questionType] ?? '',
-      }));
       await postMacros.mutateAsync({
         streamId: newStreamId,
-        body: { macros },
+        body: { macros: buildMacrosPayload() },
       });
 
       if (startType === 'IMMEDIATE') {
         navigate(`/live/${newStreamId}`);
       } else {
-        navigate('/live/new');
+        navigate('/lives');
       }
     } catch {
-      alert('방송 등록에 실패했습니다.');
+      showToast({ message: '방송 등록에 실패했습니다.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const currentItem = selectedItems[0] ?? null;
+  const sellerEntryButtonLabel = isEditMode ? '방송 입장' : '방송 준비';
+  const pageTitle = isEditMode ? '라이브 방송 수정' : '라이브 방송 등록';
+  const scheduleButtonLabel = isEditMode ? '예약 수정' : '방송 예약';
+  const liveButtonLabel = isEditMode ? '즉시 시작' : '방송 시작';
+
+  if (isEditMode && streamLoading) {
+    return (
+      <div className="w-full max-w-[1400px] mx-auto px-4 py-12 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#333] border-t-[#d9b36d] rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (isEditMode && !streamLoading && !streamData) {
+    return (
+      <div className="w-full max-w-[1400px] mx-auto px-4 py-12">
+        <div className="rounded-2xl border border-white/10 bg-[#111] px-6 py-10 text-center text-white/70">
+          라이브 정보를 불러오지 못했습니다.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-[1400px] mx-auto px-4 py-6 flex flex-col gap-4">
@@ -147,19 +390,15 @@ export default function LiveRegisterPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => navigate('/live/new')}
+            onClick={() => navigate('/lives')}
             className="text-white/60 hover:text-white transition-colors"
           >
             <FaArrowLeft size={16} />
           </button>
-          <div>
-            <div className="flex items-center gap-2">
-              <FaCircle className="text-[#e74c3c] text-sm" />
-              <h1 className="text-xl font-bold text-white">라이브 방송 등록</h1>
-            </div>
-            <p className="text-[#888] text-sm mt-0.5">
-              경매 방송을 기획하세요. · 카테고리: <span className="text-[#d9b36d] font-semibold">{categoryLabel}</span>
-            </p>
+          <div className="flex items-center gap-2">
+            <FaCircle className="text-[#e74c3c] text-sm" />
+            <h1 className="text-xl font-bold text-white">{pageTitle}</h1>{' '}
+            <span className="text-[#d9b36d] font-semibold">[{categoryLabel}]</span>
           </div>
         </div>
 
@@ -171,7 +410,7 @@ export default function LiveRegisterPage() {
             className="flex items-center gap-2 px-5 py-2 bg-transparent border border-white/50 text-white text-sm rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50"
           >
             <FaCalendarAlt size={14} />
-            방송 예약
+            {scheduleButtonLabel}
             {scheduledAt && (
               <span className="text-[#d9b36d] text-xs font-medium ml-1">
                 {new Date(scheduledAt).toLocaleDateString('ko-KR', {
@@ -185,12 +424,12 @@ export default function LiveRegisterPage() {
           </button>
           <button
             type="button"
-            onClick={handleStart}
+            onClick={handleEnter}
             disabled={isSubmitting}
             className="flex items-center gap-2 px-5 py-2 bg-[#e74c3c] text-white text-sm font-semibold rounded-lg hover:bg-[#c0392b] transition-colors disabled:opacity-50"
           >
             <MdLiveTv size={16} />
-            방송 시작
+            {sellerEntryButtonLabel || liveButtonLabel}
           </button>
         </div>
       </div>
@@ -202,7 +441,7 @@ export default function LiveRegisterPage() {
               <FaList className="text-[#e74c3c] text-sm" />
               <h2 className="text-white font-bold text-base">경매 물품 리스트</h2>
             </div>
-            <p className="text-[#888] text-xs leading-relaxed">방송 중 아래 순서대로 화면에 표시 됩니다.</p>
+            <p className="text-[#888] text-xs leading-relaxed">방송 중 순서대로 표시됩니다.</p>
           </div>
 
           <div className="flex flex-col gap-2 flex-1">
@@ -288,7 +527,7 @@ export default function LiveRegisterPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[#888] text-xs">방송제목</label>
+            <label className="text-[#888] text-xs">방송 제목</label>
             <input
               type="text"
               value={title}
@@ -314,7 +553,7 @@ export default function LiveRegisterPage() {
               <label className="text-[#888] text-xs">카테고리 매크로</label>
               <button
                 type="button"
-                onClick={() => alert('매크로가 저장되었습니다. 방송 시작/예약 시 반영됩니다.')}
+                onClick={handleSaveMacros}
                 className="flex items-center gap-1 text-[#d9b36d] text-xs hover:text-[#f0e6c8] transition-colors"
               >
                 <FaSave size={11} />
@@ -322,13 +561,8 @@ export default function LiveRegisterPage() {
               </button>
             </div>
             <div className="flex flex-col gap-2">
-              {defaultMacros.map((macro) => {
-                const cleanCmd = macro.question
-                  .replace('?', '')
-                  .replace('은', '')
-                  .replace('는', '')
-                  .replace('가', '')
-                  .trim();
+              {macroFields.map((macro) => {
+                const command = macro.question.trim();
 
                 return (
                   <div key={macro.questionType} className="flex items-center gap-2">
@@ -340,12 +574,12 @@ export default function LiveRegisterPage() {
                           : 'border-white/15 text-white/25 hover:bg-white/5'
                       }`}
                       onClick={() => {
-                        const cmd = '!' + cleanCmd;
+                        const cmd = '!' + command;
                         navigator.clipboard?.writeText(cmd).catch(() => {});
                       }}
                       title="클릭하면 커맨드 복사"
                     >
-                      !{cleanCmd}
+                      !{command}
                     </button>
                     <input
                       type="text"
@@ -357,7 +591,7 @@ export default function LiveRegisterPage() {
                   </div>
                 );
               })}
-              {!defaultMacros.length && <p className="text-[#888] text-xs">해당 카테고리의 매크로가 없습니다.</p>}
+              {!macroFields.length && <p className="text-[#888] text-xs">해당 카테고리의 매크로가 없습니다.</p>}
             </div>
           </div>
         </aside>
@@ -384,65 +618,6 @@ export default function LiveRegisterPage() {
           }}
           onClose={() => setShowScheduleModal(false)}
         />
-      )}
-
-      {showStartConfirm && (
-        <>
-          <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={() => setShowStartConfirm(false)} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div className="w-full max-w-[400px] bg-[#0f0f13] rounded-2xl p-8 shadow-2xl border border-white/10 flex flex-col gap-6">
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-16 h-16 rounded-full bg-[#e74c3c]/15 flex items-center justify-center">
-                  <MdLiveTv size={32} className="text-[#e74c3c]" />
-                </div>
-                <h2 className="text-white text-xl font-bold">방송을 시작할까요?</h2>
-                <p className="text-[#888] text-sm leading-relaxed">
-                  지금 바로 라이브 방송을 시작합니다.
-                  <br />
-                  시작 후에는 취소할 수 없습니다.
-                </p>
-              </div>
-
-              <div className="bg-white/5 rounded-xl px-4 py-3 flex flex-col gap-1.5">
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#888]">방송 제목</span>
-                  <span className="text-white font-medium truncate max-w-[180px]">{title || '(제목 없음)'}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#888]">카테고리</span>
-                  <span className="text-[#d9b36d] font-medium">{categoryLabel}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#888]">경매 물품</span>
-                  <span className="text-white font-medium">{selectedItems.length}개</span>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowStartConfirm(false)}
-                  disabled={isSubmitting}
-                  className="flex-1 py-3.5 rounded-xl border border-white/20 text-white font-semibold hover:bg-white/10 transition-colors disabled:opacity-50"
-                >
-                  취소
-                </button>
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={async () => {
-                    setShowStartConfirm(false);
-                    await submitStream('IMMEDIATE');
-                  }}
-                  className="flex-1 py-3.5 rounded-xl bg-[#e74c3c] text-white font-bold hover:bg-[#c0392b] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  <MdLiveTv size={18} />
-                  방송 시작
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
       )}
     </div>
   );
