@@ -1,5 +1,6 @@
 package com.ssafy.be.domain.seller.controller;
 
+import com.ssafy.be.domain.escrow.dto.response.EscrowListResponse;
 import com.ssafy.be.domain.seller.controller.api.SellerApi;
 import com.ssafy.be.domain.seller.dto.request.SellerProfileUpdateRequest;
 import com.ssafy.be.domain.seller.dto.request.SellerRegisterRequest;
@@ -15,6 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/sellers")
@@ -53,5 +56,12 @@ public class SellerController implements SellerApi {
             @Parameter(description = "사업자 구분 (1: 개인, 2: 법인)")
             @RequestParam(defaultValue = "1") int gb) {
         return ResponseEntity.ok(sellerService.verifyBizno(bizno, gb));
+    }
+
+    @GetMapping("/{sellerId}/sold-auctions")
+    public ResponseEntity<List<EscrowListResponse>> getAllSoldAuctions(
+            @PathVariable Long sellerId
+    ) {
+        return ResponseEntity.ok(sellerService.getAllSoldAuctions(sellerId));
     }
 }

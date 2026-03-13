@@ -1,5 +1,6 @@
 package com.ssafy.be.domain.seller.controller.api;
 
+import com.ssafy.be.domain.escrow.dto.response.EscrowListResponse;
 import com.ssafy.be.domain.seller.dto.request.SellerProfileUpdateRequest;
 import com.ssafy.be.domain.seller.dto.request.SellerRegisterRequest;
 import com.ssafy.be.domain.seller.dto.response.BiznoVerifyResponse;
@@ -15,6 +16,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "Seller", description = "판매자 API")
 public interface SellerApi {
@@ -52,4 +55,9 @@ public interface SellerApi {
             @RequestParam String bizno,
             @Parameter(description = "사업자 구분 (1: 개인, 2: 법인)")
             @RequestParam(defaultValue = "1") int gb);
+
+    @Operation(summary = "판매자 낙찰 이력 조회", description = "특정 판매자의 낙찰된 경매 목록을 조회합니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
+    @GetMapping("/{sellerId}/sold-auctions")
+    ResponseEntity<List<EscrowListResponse>> getAllSoldAuctions(@PathVariable Long sellerId);
 }

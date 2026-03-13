@@ -87,18 +87,17 @@ public class EscrowService {
     public List<EscrowListResponse> getAllEscrows(Long userId) {
         return escrowRepository.findAllBySellerUserId(userId).stream()
                 .map(escrow -> {
-                            Item item = escrow.getAuction().getItem();
+                    Item item = escrow.getAuction().getItem();
 
-                            return EscrowListResponse.builder()
-                                    .escrowId(escrow.getId())
-                                    .image(item.getImage1())
-                                    .itemName(item.getName())
-                                    .amount(escrow.getWinningPrice())
-                                    .escrowStatus(escrow.getEscrowStatus())
-                                    .createdAt(escrow.getCreatedAt())
-                                    .build();
-                        }
-                ).toList();
+                    return EscrowListResponse.builder()
+                            .escrowId(escrow.getId())
+                            .image(item.getImage1())
+                            .itemName(item.getName())
+                            .amount(escrow.getWinningPrice())
+                            .escrowStatus(escrow.getEscrowStatus())
+                            .createdAt(escrow.getCreatedAt())
+                            .build();
+                }).toList();
     }
 
     @Transactional(readOnly = true)

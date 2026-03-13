@@ -1,5 +1,7 @@
 package com.ssafy.be.domain.seller.service;
 
+import com.ssafy.be.domain.escrow.dto.response.EscrowListResponse;
+import com.ssafy.be.domain.escrow.repository.EscrowRepository;
 import com.ssafy.be.domain.follow.repository.FollowRepository;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.repository.ItemRepository;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestClient;
+
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,6 +38,7 @@ public class SellerService {
     private final FollowRepository followRepository;
     private final ItemRepository itemRepository;
     private final StreamRepository streamRepository;
+    private final EscrowRepository escrowRepository;
     private final BiznoClient biznoClient;
 
     @Value("${bizno.api.key}")
@@ -154,5 +158,21 @@ public class SellerService {
                 .orElse(false);
 
         return new BiznoVerifyResponse(valid);
+    }
+
+    public List<EscrowListResponse> getAllSoldAuctions(Long sellerId) {
+        return escrowRepository.findBySellerId(sellerId).stream()
+                .map(escrow -> {
+                    Item item = escrow.getAuction().getItem();
+
+                    return EscrowListResponse.builder()
+                            .escrowId(escrow.getId())
+                            .image(item.getImage1())
+                            .itemName(item.getName())
+                            .amount(escrow.getWinningPrice())
+                            .escrowStatus(escrow.getEscrowStatus())
+                            .createdAt(escrow.getCreatedAt())
+                            .build();
+                }).toList();
     }
 }
