@@ -68,7 +68,7 @@ export default function RightPanel({ isSeller, auctionStatistics, streamEnter }:
           <div className="min-w-0 truncate text-xs font-bold text-white">{sellerNickname}</div>
         </div>
 
-        {sellerId > 0 && !isOwnStore && (
+        {sellerId > 0 && !isSeller && !isOwnStore && (
           <button
             type="button"
             onClick={handleFollowToggle}
