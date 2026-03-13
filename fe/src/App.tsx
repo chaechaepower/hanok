@@ -7,13 +7,13 @@ import LivePage from './pages/Live';
 import LiveTestPage from './pages/LiveTest';
 import LiveCreatePage from './pages/LiveCreate';
 import LiveRegisterPage from './pages/LiveCreate/components/LiveRegisterPage';
-import LiveEditPage from './pages/LiveCreate/components/LiveEditPage';
 import ProductListPage from './pages/ProductList';
 import SignUpPage from './pages/SignUp';
 import LoginPage from './pages/Login';
 import WalletPage from './pages/Wallet';
 import SettingsPage from './pages/Settings';
 import MainLayout from '@/components/common/layouts/MainLayout';
+import SellerOnlyRoute from '@/components/common/layouts/SellerOnlyRoute';
 
 function App() {
   return (
@@ -24,17 +24,19 @@ function App() {
 
       <Route path="/" element={<MainLayout />}>
         <Route index element={<MainPage />} />
-        <Route path="tracking" element={<TrakingInputPage />} />
         <Route path="profile/:id" element={<ProfilePage />} />
         <Route path="seller/register" element={<SellerOnboardingPage />} />
-        <Route path="live/new" element={<LiveCreatePage />} />
-        <Route path="live/register" element={<LiveRegisterPage />} />
-        <Route path="live/edit/:id" element={<LiveEditPage />} />
-        <Route path="products" element={<ProductListPage />} />
         <Route path="signup" element={<SignUpPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="wallet" element={<WalletPage />} />
         <Route path="settings" element={<SettingsPage />} />
+
+        <Route element={<SellerOnlyRoute />}>
+          <Route path="tracking" element={<TrakingInputPage />} />
+          <Route path="lives" element={<LiveCreatePage />} />
+          <Route path="live/register" element={<LiveRegisterPage />} />
+          <Route path="products" element={<ProductListPage />} />
+        </Route>
       </Route>
     </Routes>
   );

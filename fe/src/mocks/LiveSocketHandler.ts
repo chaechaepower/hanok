@@ -3,6 +3,7 @@ import { ws, type WebSocketData } from 'msw';
 import type { AuctionStatisticsPayload, BidSyncPayload, ItemSyncPayload } from '@/types';
 import { getStreamSocketConnectUrl } from '@/websocket/socket';
 
+import { getInitialItemSyncPayloadForStream } from './LiveCreateHandler';
 import { getCurrentMockUser } from './mockState';
 
 type StompFrame = {
@@ -225,6 +226,9 @@ const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
   ],
 });
 
+const getInitialItemSyncPayload = (streamId: string) =>
+  getInitialItemSyncPayloadForStream(Number(streamId)) ?? createDefaultItemSyncPayload();
+
 const getStreamIdFromDestination = (destination: string) => destination.split('/').pop() ?? '';
 
 const getRemainingSeconds = (state: MockTimerState, nowMs: number) => {
@@ -244,7 +248,7 @@ const clearWinnerAnnouncement = (streamId: string) => {
 };
 
 const activateNextReadyItem = (streamId: string, targetAuctionId?: number) => {
-  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? createDefaultItemSyncPayload();
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
 
   if (itemSyncPayload.items.some((item) => item.auctionStatus === 'LIVE')) {
     streamItemSyncStates.set(streamId, itemSyncPayload);
@@ -283,7 +287,7 @@ const activateNextReadyItem = (streamId: string, targetAuctionId?: number) => {
 };
 
 const introduceAuctionItem = (streamId: string, auctionId: number) => {
-  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? createDefaultItemSyncPayload();
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
 
   const nextPayload: ItemSyncPayload = {
     items: itemSyncPayload.items.map((item) => {
@@ -307,7 +311,7 @@ const introduceAuctionItem = (streamId: string, auctionId: number) => {
 };
 
 const completeLiveItem = (streamId: string, finalPrice: number) => {
-  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? createDefaultItemSyncPayload();
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
   let completed = false;
 
   const nextPayload: ItemSyncPayload = {
@@ -367,7 +371,7 @@ const broadcastBidSync = (streamId: string) => {
 };
 
 const broadcastItemSync = (streamId: string) => {
-  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? createDefaultItemSyncPayload();
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
 
   streamItemSyncStates.set(streamId, itemSyncPayload);
   broadcastToDestination(`/broadcast/streams/${streamId}`, {
@@ -397,7 +401,7 @@ const sendItemSyncToClient = (
   destination: string,
 ) => {
   const streamId = getStreamIdFromDestination(destination);
-  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? createDefaultItemSyncPayload();
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
 
   streamItemSyncStates.set(streamId, itemSyncPayload);
   client.send(

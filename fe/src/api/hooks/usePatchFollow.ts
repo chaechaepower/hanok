@@ -16,6 +16,7 @@ export const usePatchFollow = () => {
     mutationFn: patchFollow,
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['sellerReputation', variables.userId] });
+      queryClient.invalidateQueries({ queryKey: ['liveCards'] });
       if (data.following) {
         queryClient.invalidateQueries({ queryKey: ['followedStores'] });
       }

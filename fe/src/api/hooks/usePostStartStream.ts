@@ -1,15 +1,25 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFetchInstance } from '@/api/instance';
-import type { StartStreamRequest, StartStreamResponse } from '@/types';
+import type { StartStreamResponse, StreamMultipartPayload } from '@/types';
+import { buildStreamFormData } from './buildStreamFormData';
 
 export const usePostStartStream = () => {
-  return useMutation<StartStreamResponse, Error, { streamId: number; body: StartStreamRequest }>({
-    mutationFn: async ({ streamId, body }) => {
+  const queryClient = useQueryClient();
+
+  return useMutation<StartStreamResponse, Error, { streamId: number } & StreamMultipartPayload>({
+    mutationFn: async ({ streamId, ...payload }) => {
+      const formData = buildStreamFormData(payload);
       const res = await getFetchInstance().post<StartStreamResponse>(
         `/v1/streams/${streamId}/start`,
-        body,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
       );
       return res.data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['stream', variables.streamId] });
+      queryClient.invalidateQueries({ queryKey: ['scheduled-streams'] });
+      queryClient.invalidateQueries({ queryKey: ['liveCards'] });
     },
   });
 };
