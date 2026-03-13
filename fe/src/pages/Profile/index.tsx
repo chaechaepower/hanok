@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { getUserIdFromToken } from '@/utils/getUserIdFromToken';
 import { useGetSellerProfile } from '@/api/hooks/useGetSellerProfile';
 import { useGetSellerNotice } from '@/api/hooks/useGetSellerNotice';
 import { usePostSellerNotice } from '@/api/hooks/usePostSellerNotice';
@@ -111,7 +110,7 @@ export default function ProfilePage() {
 
   const [isFollowing, setIsFollowing] = useState(false);
 
-  const myUserId = getUserIdFromToken();
+  const myUserId = localStorage.getItem('userId');
   const isMyProfile = myUserId !== null && Number(myUserId) === sellerId;
   const isOwner = mySellerStatus?.isSeller || true;
 
