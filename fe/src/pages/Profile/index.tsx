@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useToast } from '@/components/common/Toast';
 import { useGetSellerProfile } from '@/api/hooks/useGetSellerProfile';
 import { useGetSellerNotice } from '@/api/hooks/useGetSellerNotice';
 import { usePostSellerNotice } from '@/api/hooks/usePostSellerNotice';
@@ -108,6 +109,7 @@ export default function ProfilePage() {
   const { mutate: patchFollow, isPending: isFollowPending } = usePatchFollow();
   const { mutate: deleteFollow, isPending: isUnfollowPending } = useDeleteFollow();
 
+  const { showToast } = useToast();
   const [isFollowing, setIsFollowing] = useState(false);
 
   const myUserId = localStorage.getItem('userId');
@@ -155,7 +157,7 @@ export default function ProfilePage() {
 
   const handleSubmitNotice = () => {
     if (!noticeTitle.trim() || !noticeContent.trim()) {
-      alert('제목과 내용을 모두 입력해주세요.');
+      showToast({ message: '제목과 내용을 모두 입력해주세요.' });
       return;
     }
     if (modalMode === 'create') {

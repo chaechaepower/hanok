@@ -3,6 +3,7 @@ import { FaTruck, FaBox, FaBroadcastTower } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
 import { BsBox } from 'react-icons/bs';
 import type { SideBarItem } from '@/types';
+import { useToast } from '@/components/common/Toast';
 import SideBar from '@/components/common/layouts/SideBar';
 
 const sidebarItems: SideBarItem[] = [
@@ -126,6 +127,7 @@ export default function TrackingInput() {
 
   const { mutate: submitTracking } = usePostTrackingInfo();
   const { mutate: cancelEscrow } = usePostCancelEscrow();
+  const { showToast } = useToast();
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -157,12 +159,12 @@ export default function TrackingInput() {
     cancelEscrow(selectedItemId, {
       onSuccess: () => {
         setShowCancelModal(false);
-        alert('거래가 취소되었습니다.');
+        showToast({ message: '거래가 취소되었습니다.' });
         setSelectedItemId(null);
       },
       onError: () => {
         setShowCancelModal(false);
-        alert('거래 취소에 실패했습니다. 다시 시도해주세요.');
+        showToast({ message: '거래 취소에 실패했습니다. 다시 시도해주세요.' });
       },
     });
   };
@@ -405,14 +407,14 @@ export default function TrackingInput() {
                     <button
                       onClick={() => {
                         if (!courier || !trackingNumber || !selectedItemId) {
-                          alert('택배사와 송장 번호를 모두 입력해주세요.');
+                          showToast({ message: '택배사와 송장 번호를 모두 입력해주세요.' });
                           return;
                         }
                         submitTracking(
                           { escrowId: selectedItemId, carrierName: courier, trackingNumber },
                           {
-                            onSuccess: () => { alert('운송장 번호가 성공적으로 등록되었습니다.'); },
-                            onError: () => { alert('운송장 번호 등록에 실패했습니다. 다시 시도해주세요.'); }
+                            onSuccess: () => { showToast({ message: '운송장 번호가 성공적으로 등록되었습니다.' }); },
+                            onError: () => { showToast({ message: '운송장 번호 등록에 실패했습니다. 다시 시도해주세요.' }); }
                           }
                         );
                       }}

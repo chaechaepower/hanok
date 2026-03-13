@@ -12,6 +12,7 @@ import { usePatchStream } from '@/api/hooks/usePatchStream';
 import type { Product, UpdateStreamRequest } from '@/types';
 import InventorySelectModal from '../InventorySelectModal';
 import ScheduleModal from '../ScheduleModal';
+import { useToast } from '@/components/common/Toast';
 
 
 export default function LiveEditPage() {
@@ -23,6 +24,7 @@ export default function LiveEditPage() {
 
   const { data: streamData } = useGetStream(streamId);
   const { mutateAsync: patchStream } = usePatchStream(streamId);
+  const { showToast } = useToast();
 
   const initialCategoryId: string = 
     streamData?.category ?? 
@@ -88,12 +90,12 @@ export default function LiveEditPage() {
   };
 
   const handleSchedule = () => {
-    if (!title.trim()) { alert('방송 제목을 입력해주세요.'); return; }
+    if (!title.trim()) { showToast({ message: '방송 제목을 입력해주세요.' }); return; }
     setShowScheduleModal(true);
   };
 
   const handleStart = () => {
-    if (!title.trim()) { alert('방송 제목을 입력해주세요.'); return; }
+    if (!title.trim()) { showToast({ message: '방송 제목을 입력해주세요.' }); return; }
     setShowStartConfirm(true);
   };
 
@@ -116,14 +118,14 @@ export default function LiveEditPage() {
       }));
       await postMacros.mutateAsync({ streamId, body: { macros } });
 
-      alert('방송 및 매크로가 성공적으로 수정되었습니다.');
+      showToast({ message: '방송 및 매크로가 성공적으로 수정되었습니다.' });
       if (startType === 'IMMEDIATE') {
         navigate(`/live/${streamId}`);
       } else {
         navigate('/live/new');
       }
     } catch {
-      alert('방송 수정에 실패했습니다.');
+      showToast({ message: '방송 수정에 실패했습니다.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -310,7 +312,7 @@ export default function LiveEditPage() {
                     answer: macroAnswers[m.questionType] ?? '',
                   }));
                   postMacros.mutate({ streamId, body: { macros } }, {
-                    onSuccess: () => alert('매크로가 저장되었습니다.'),
+                    onSuccess: () => showToast({ message: '매크로가 저장되었습니다.' }),
                   });
                 }}
                 className="flex items-center gap-1 text-[#d9b36d] text-xs hover:text-[#f0e6c8] transition-colors"

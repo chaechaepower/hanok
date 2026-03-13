@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { FaBox, FaBroadcastTower, FaTruck, FaPlus } from 'react-icons/fa';
+import { useToast } from '@/components/common/Toast';
 import CategorySelectModal from './components/CategorySelectModal';
 import { useDeleteStream } from '@/api/hooks/useDeleteStream';
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
@@ -31,6 +32,7 @@ export default function LiveCreatePage() {
   const streams = data?.streams ?? [];
   const deleteMutation = useDeleteStream();
   const [showModal, setShowModal] = useState(false);
+  const { showToast } = useToast();
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
@@ -38,7 +40,7 @@ export default function LiveCreatePage() {
       await deleteMutation.mutateAsync(id);
     } catch (err) {
       console.error(err);
-      alert('삭제에 실패했습니다. 다시 시도해주세요.');
+      showToast({ message: '삭제에 실패했습니다. 다시 시도해주세요.' });
     }
   };
 

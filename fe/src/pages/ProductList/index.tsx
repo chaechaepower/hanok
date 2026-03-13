@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FaBox, FaBroadcastTower, FaTruck, FaPlus } from 'react-icons/fa';
 import type { Product, SideBarItem } from '@/types';
+import { useToast } from '@/components/common/Toast';
 import ProductCard from './components/ProductCard';
 import ProductRegistrationModal from './components/ProductRegistrationModal';
 import { useDeleteItem } from '@/api/hooks/useDeleteItem';
@@ -24,16 +25,17 @@ export default function ProductListPage() {
   const products = fetchedProducts || [];
 
   const { mutateAsync: deleteItem } = useDeleteItem();
+  const { showToast } = useToast();
 
   const handleDelete = async (id: number) => {
     if (confirm('품목을 정말 삭제하시겠습니까?')) {
       try {
         await deleteItem(id);
-        alert('삭제되었습니다.');
+        showToast({ message: '삭제되었습니다.' });
         // TODO: Refetch product list
       } catch (err) {
         console.error(err);
-        alert('삭제 실패');
+        showToast({ message: '삭제에 실패했습니다.' });
       }
     }
   };

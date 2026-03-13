@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUserAlt, FaHeart, FaMapMarkerAlt, FaCreditCard } from 'react-icons/fa';
+import { useToast } from '@/components/common/Toast';
 import { useGetMe } from '@/api/hooks/useGetMe';
 import { useGetNotification } from '@/api/hooks/useGetNotification';
 import { useGetWallet } from '@/api/hooks/useGetWallet';
@@ -18,6 +19,7 @@ export default function SettingsPage() {
   const { isLoading: isNotiLoading } = useGetNotification();
   const { data: walletData, isLoading: isWalletLoading } = useGetWallet();
   const { mutate: logout, isPending: isLogoutPending } = useLogout();
+  const { showToast } = useToast();
 
   const handleLogout = () => {
     logout(undefined, {
@@ -26,7 +28,7 @@ export default function SettingsPage() {
       },
       onError: (error) => {
         console.error('Logout failed:', error);
-        alert('로그아웃에 실패했습니다.');
+        showToast({ message: '로그아웃에 실패했습니다.' });
       },
     });
   };

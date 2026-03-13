@@ -20,6 +20,7 @@ import { usePostStreamMacros } from '@/api/hooks/usePostStreamMacros';
 import type { Product, StartStreamRequest } from '@/types';
 import InventorySelectModal from './InventorySelectModal';
 import ScheduleModal from './ScheduleModal';
+import { useToast } from '@/components/common/Toast';
 
 export default function LiveRegisterPage() {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ export default function LiveRegisterPage() {
   const [scheduledAt, setScheduledAt] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { showToast } = useToast();
   const defaultMacros = useMemo(() => CATEGORY_MACROS[categoryLabel] ?? [], [categoryLabel]);
   const [macroAnswers, setMacroAnswers] = useState<Record<string, string>>({});
 
@@ -70,7 +72,7 @@ export default function LiveRegisterPage() {
 
   const handleSchedule = () => {
     if (!title.trim()) {
-      alert('방송 제목을 입력해주세요.');
+      showToast({ message: '방송 제목을 입력해주세요.' });
       return;
     }
     setShowScheduleModal(true);
@@ -78,7 +80,7 @@ export default function LiveRegisterPage() {
 
   const handleStart = () => {
     if (!title.trim()) {
-      alert('방송 제목을 입력해주세요.');
+      showToast({ message: '방송 제목을 입력해주세요.' });
       return;
     }
     setShowStartConfirm(true);
@@ -113,9 +115,9 @@ export default function LiveRegisterPage() {
         });
         const token = startRes.data?.openviduToken;
         console.log('[Stream Start] openviduToken:', token);
-        alert(`방송이 시작되었습니다! (ID: ${newStreamId})`);
+        showToast({ message: '방송이 시작되었습니다!' });
       } else {
-        alert(`방송이 예약되었습니다! (ID: ${newStreamId})`);
+        showToast({ message: '방송이 예약되었습니다!' });
       }
 
       const macros = defaultMacros.map((m) => ({
@@ -133,7 +135,7 @@ export default function LiveRegisterPage() {
         navigate('/live/new');
       }
     } catch {
-      alert('방송 등록에 실패했습니다.');
+      showToast({ message: '방송 등록에 실패했습니다.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -314,7 +316,7 @@ export default function LiveRegisterPage() {
               <label className="text-[#888] text-xs">카테고리 매크로</label>
               <button
                 type="button"
-                onClick={() => alert('매크로가 저장되었습니다. 방송 시작/예약 시 반영됩니다.')}
+                onClick={() => showToast({ message: '매크로가 저장되었습니다.' })}
                 className="flex items-center gap-1 text-[#d9b36d] text-xs hover:text-[#f0e6c8] transition-colors"
               >
                 <FaSave size={11} />
