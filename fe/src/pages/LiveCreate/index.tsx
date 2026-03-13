@@ -28,7 +28,11 @@ export default function LiveCreatePage() {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('live');
   const { data, isLoading } = useGetScheduledStreams();
-  const streams = data?.streams ?? [];
+  const streams = [...(data?.streams ?? [])].sort((a, b) => {
+    if (a.state === 'LIVE' && b.state !== 'LIVE') return -1;
+    if (a.state !== 'LIVE' && b.state === 'LIVE') return 1;
+    return 0;
+  });
   const deleteMutation = useDeleteStream();
   const [showModal, setShowModal] = useState(false);
 

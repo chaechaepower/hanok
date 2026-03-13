@@ -142,11 +142,13 @@ export const settingsHandlers = [
   }),
 
   // GET /v1/users/me/account
+  // 계좌 없는 상태로 테스트: bankName, accountNumber를 빈 값으로 설정
+  // 계좌 있는 상태로 테스트하려면 아래 값을 채우세요
   http.get(`${BASE_URL}/v1/users/me/account`, () => {
     return HttpResponse.json(
       {
-        bankName: '국민',
-        accountNumber: '921381203',
+        bankName: '',
+        accountNumber: '',
       },
       { status: 200 }
     );

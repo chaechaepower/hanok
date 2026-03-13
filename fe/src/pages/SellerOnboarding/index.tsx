@@ -2,18 +2,27 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { BusinessType } from '@/types';
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
+import { useGetAccount } from '@/api/hooks/useGetAccount';
 import Step1 from '@/components/SellerOnboarding/Step1';
 import StepIndicator from '@/components/SellerOnboarding/StepIndicator';
 import Step2 from '@/components/SellerOnboarding/Step2';
 import Step3 from '@/components/SellerOnboarding/Step3';
 import Step4 from '@/components/SellerOnboarding/Step4';
 
+export type AccountData = {
+  bankCode: string;
+  accountNum: string;
+  accountName: string;
+};
+
 export default function SellerOnboardingPage() {
   const navigate = useNavigate();
   const { data: sellerStatus, isLoading } = useGetSellerStatus();
+  const { data: accountData, isLoading: isAccountLoading } = useGetAccount();
   const [currentStep, setCurrentStep] = useState(1);
-  const [businessType, setBusinessType] = useState<BusinessType>('individual');
+  const [businessType, setBusinessType] = useState<BusinessType>('INDIVIDUAL');
   const [businessNumber, setBusinessNumber] = useState<string | null>(null);
+  const [account, setAccount] = useState<AccountData | null>(null);
 
   useEffect(() => {
     if (sellerStatus?.isSeller) {
@@ -22,7 +31,9 @@ export default function SellerOnboardingPage() {
     }
   }, [sellerStatus, navigate]);
 
-  if (isLoading) {
+  const hasExistingAccount = !!(accountData?.bankName && accountData?.accountNumber);
+
+  if (isLoading || isAccountLoading) {
     return (
       <div
         style={{
@@ -72,12 +83,31 @@ export default function SellerOnboardingPage() {
           />
         )}
 
-        {currentStep === 2 && <Step2 onPrev={() => setCurrentStep(1)} onNext={() => setCurrentStep(3)} />}
+        {currentStep === 2 && (
+          <Step2
+            onPrev={() => setCurrentStep(1)}
+            onNext={() => setCurrentStep(hasExistingAccount ? 4 : 3)}
+          />
+        )}
 
-        {currentStep === 3 && <Step3 onPrev={() => setCurrentStep(2)} onNext={() => setCurrentStep(4)} />}
+        {currentStep === 3 && (
+          <Step3
+            onPrev={() => setCurrentStep(2)}
+            onNext={(data) => {
+              setAccount(data);
+              setCurrentStep(4);
+            }}
+            hasExistingAccount={hasExistingAccount}
+          />
+        )}
 
         {currentStep === 4 && (
-          <Step4 onPrev={() => setCurrentStep(3)} businessType={businessType} businessNumber={businessNumber} />
+          <Step4
+            onPrev={() => setCurrentStep(hasExistingAccount ? 2 : 3)}
+            businessType={businessType}
+            businessNumber={businessNumber}
+            account={account}
+          />
         )}
       </div>
     </div>

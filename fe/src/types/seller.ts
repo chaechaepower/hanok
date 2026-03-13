@@ -12,7 +12,7 @@ export type SellerReputationResponse = {
   data: SellerReputationData;
 };
 
-export type BusinessType = 'individual' | 'corporate';
+export type BusinessType = 'INDIVIDUAL' | 'BUSINESS';
 
 export type RegisterAccountPayload = {
   bankCode: string;
@@ -28,9 +28,12 @@ export type RegisterSellerPayload = {
   businessNumber: string | null;
   nickname: string;
   intro: string;
-  youtube_link: string;
-  insta_link: string;
-  tictok_link: string;
+  youtubeUrl: string;
+  instaUrl: string;
+  tiktokUrl: string;
+  bankCode: string;
+  accountNum: string;
+  accountName: string;
 };
 
 export type RegisterSellerResponse = {

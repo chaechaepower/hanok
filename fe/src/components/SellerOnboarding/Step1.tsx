@@ -35,7 +35,7 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
   const [isVerifying, setIsVerifying] = useState(false);
 
   const formatBizNumber = (value: string, type: BusinessType) => {
-    if (type === 'corporate') {
+    if (type === 'BUSINESS') {
       const digits = value.replace(/\D/g, '').slice(0, 13);
       if (digits.length <= 6) return digits;
       return `${digits.slice(0, 6)}-${digits.slice(6)}`;
@@ -58,8 +58,8 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
   const handleVerify = async () => {
     const currentBizNum = bizNumber || '';
     const digits = currentBizNum.replace(/\D/g, '');
-    const requiredLength = businessType === 'corporate' ? 13 : 10;
-    const label = businessType === 'corporate' ? '법인등록번호' : '사업자등록번호';
+    const requiredLength = businessType === 'BUSINESS' ? 13 : 10;
+    const label = businessType === 'BUSINESS' ? '법인등록번호' : '사업자등록번호';
 
     if (digits.length !== requiredLength) {
       setVerifyError(`${label} ${requiredLength}자리를 입력해주세요.`);
@@ -98,9 +98,9 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
       <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
         <BusinessTypeCard
           label="개인 사업자"
-          selected={businessType === 'individual'}
+          selected={businessType === 'INDIVIDUAL'}
           onClick={() => {
-            setBusinessType('individual');
+            setBusinessType('INDIVIDUAL');
             setBizNumber('');
             setIsVerified(false);
             setVerifyError('');
@@ -108,9 +108,9 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
         />
         <BusinessTypeCard
           label="법인 사업자"
-          selected={businessType === 'corporate'}
+          selected={businessType === 'BUSINESS'}
           onClick={() => {
-            setBusinessType('corporate');
+            setBusinessType('BUSINESS');
             setBizNumber('');
             setIsVerified(false);
             setVerifyError('');
@@ -125,7 +125,7 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
           value={bizNumber || ''}
           onChange={handleBizNumberChange}
           placeholder={
-            businessType === 'corporate' ? '법인등록번호 -없이 숫자만 입력' : '사업자등록번호 -없이 숫자만 입력'
+            businessType === 'BUSINESS' ? '법인등록번호 -없이 숫자만 입력' : '사업자등록번호 -없이 숫자만 입력'
           }
           disabled={isVerified}
           style={{
@@ -144,7 +144,7 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
         <Button
           variant={isVerified ? 'yellowOutline' : 'yellow'}
           onClick={handleVerify}
-          disabled={isVerifying || isVerified}
+          disabled={isVerifying || isVerified || (bizNumber || '').replace(/\D/g, '').length !== (businessType === 'BUSINESS' ? 13 : 10)}
           className="h-12! w-auto! px-6"
         >
           {isVerifying ? '인증 중...' : isVerified ? '인증 완료' : '인증 하기'}

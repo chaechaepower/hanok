@@ -13,7 +13,7 @@ export const checkBusinessStatus = async (businessNumber: string, businessType: 
   const response = await getFetchInstance().get<BiznoVerifyResponse>(getCheckBusinessPath(), {
     params: {
       bizno: businessNumber,
-      gb: businessType === 'corporate' ? 2 : 1,
+      gb: businessType === 'BUSINESS' ? 2 : 1,
     },
   });
 

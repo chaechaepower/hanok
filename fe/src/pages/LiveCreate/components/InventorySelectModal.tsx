@@ -20,7 +20,7 @@ export default function InventorySelectModal({
   onConfirm,
   onClose,
 }: Props) {
-  const isSelected = (item: Product) => selectedItems.some((s) => s.id === item.id);
+  const isSelected = (item: Product) => selectedItems.some((s) => s.itemId === item.itemId);
 
   return (
     <>
@@ -56,7 +56,7 @@ export default function InventorySelectModal({
                 const selected = isSelected(item);
                 return (
                   <button
-                    key={item.id}
+                    key={item.itemId}
                     type="button"
                     onClick={() => onToggle(item)}
                     className={`flex items-center gap-4 w-full text-left p-4 rounded-2xl border transition-all ${
@@ -66,10 +66,10 @@ export default function InventorySelectModal({
                     }`}
                   >
                     <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-[#222]">
-                      {item.imageUrls?.[0] ? (
+                      {item.image1 ? (
                         <img
-                          src={item.imageUrls[0]}
-                          alt={item.title}
+                          src={item.image1}
+                          alt={item.name}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -80,7 +80,7 @@ export default function InventorySelectModal({
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-white font-semibold text-base truncate">{item.title}</p>
+                      <p className="text-white font-semibold text-base truncate">{item.name}</p>
                       <p className="text-white/50 text-sm truncate mt-0.5">{item.description}</p>
                     </div>
 

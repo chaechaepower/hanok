@@ -21,19 +21,16 @@ export const sellerHandlers = [
         nickname: 'Mock Seller',
         grade: 'A',
       },
-      { status: 200 },
+      { status: 201 },
     );
   }),
 
-  http.post(`${BASE_URL}/v1/sellers/account`, async () => {
-    return new HttpResponse(null, { status: 200 });
-  }),
 
   http.get(`${BASE_URL}/v1/sellers/verify-bizno`, async ({ request }) => {
     const url = new URL(request.url);
     const bizno = url.searchParams.get('bizno');
 
-    if (!bizno || bizno.length !== 10) {
+    if (!bizno || (bizno.length !== 10 && bizno.length !== 13)) {
       return HttpResponse.json({ valid: false }, { status: 200 });
     }
 

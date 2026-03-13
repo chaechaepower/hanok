@@ -52,7 +52,7 @@ export default function LiveEditPage() {
 
       if (streamData.items && filteredInventory.length > 0) {
         const matched = streamData.items
-          .map((item) => filteredInventory.find((inventoryItem) => inventoryItem.id === item.itemId))
+          .map((item) => filteredInventory.find((inventoryItem) => inventoryItem.itemId === item.itemId))
           .filter(Boolean) as Product[];
         setSelectedItems(matched);
       }
@@ -81,8 +81,8 @@ export default function LiveEditPage() {
 
   const toggleItem = (item: Product) => {
     setSelectedItems((prev) =>
-      prev.some((i) => i.id === item.id)
-        ? prev.filter((i) => i.id !== item.id)
+      prev.some((i) => i.itemId === item.itemId)
+        ? prev.filter((i) => i.itemId !== item.itemId)
         : [...prev, item],
     );
   };
@@ -193,14 +193,14 @@ export default function LiveEditPage() {
           <div className="flex flex-col gap-2 flex-1">
             {selectedItems.map((item, idx) => (
               <div
-                key={item.id}
+                key={item.itemId}
                 className="flex items-center gap-2 border border-white/10 rounded-lg p-2 bg-[#111]"
               >
                 <span className="text-[#888] text-xs w-4">{idx + 1}</span>
                 <div className="w-8 h-8 rounded bg-[#222] flex items-center justify-center shrink-0">
                   <FaBroadcastTower size={12} className="text-white/30" />
                 </div>
-                <span className="text-white text-xs truncate flex-1">{item.title}</span>
+                <span className="text-white text-xs truncate flex-1">{item.name}</span>
                 <button
                   type="button"
                   onClick={() => toggleItem(item)}
@@ -239,7 +239,7 @@ export default function LiveEditPage() {
                 <FaBroadcastTower size={24} className="text-white/30" />
               </div>
               <div className="flex-1">
-                <p className="text-white font-bold text-base">{currentItem.title}</p>
+                <p className="text-white font-bold text-base">{currentItem.name}</p>
                 <p className="text-white/60 text-sm">{currentItem.description}</p>
               </div>
               <p className="text-white font-bold text-lg">

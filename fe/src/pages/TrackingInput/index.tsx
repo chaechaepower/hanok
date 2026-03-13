@@ -200,27 +200,25 @@ export default function TrackingInput() {
                   <div
                     key={item.escrowId || item.itemName}
                     onClick={() => handleSelectItem(item.escrowId)}
-                    style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '16px',
-                      backgroundColor: selectedItemId === String(item.escrowId) ? '#1C1C1E' : 'transparent',
-                      border: selectedItemId === String(item.escrowId) ? '1px solid #3A3A3C' : '1px solid transparent',
-                      borderRadius: '16px', cursor: 'pointer', transition: 'background-color 0.2s',
-                    }}
+                    className={`flex justify-between items-center p-4 rounded-2xl cursor-pointer transition-colors ${
+                      selectedItemId === String(item.escrowId)
+                        ? 'bg-[#1C1C1E] border border-[#3A3A3C]'
+                        : 'bg-transparent border border-transparent hover:bg-[#1C1C1E]/60'
+                    }`}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                      <div style={{ width: '80px', height: '80px', backgroundColor: '#2C2C2E', borderRadius: '12px', overflow: 'hidden', flexShrink: 0 }}>
+                    <div className="flex items-center gap-5">
+                      <div className="w-[80px] h-[80px] bg-[#2C2C2E] rounded-xl overflow-hidden shrink-0">
                         {item.imageUrl
-                          ? <img src={item.imageUrl} alt={item.itemName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8E8E93', fontSize: '12px' }}>이미지 준비중</div>
+                          ? <img src={item.imageUrl} alt={item.itemName} className="w-full h-full object-cover" />
+                          : <div className="w-full h-full flex items-center justify-center text-[#8E8E93] text-xs">이미지 준비중</div>
                         }
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ fontSize: '18px', fontWeight: '700' }}>{item.itemName}</span>
-                        <span style={{ color: '#AEAEB2', fontSize: '13px' }}>{item.createdAt}</span>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-lg font-bold">{item.itemName}</span>
+                        <span className="text-[#AEAEB2] text-[13px]">{item.createdAt}</span>
                       </div>
                     </div>
-                    <div style={{ fontSize: '18px', fontWeight: '700' }}>{formatPrice(item.amount)}</div>
+                    <div className="text-lg font-bold">{formatPrice(item.amount)}</div>
                   </div>
                 ))
               ) : (
@@ -243,30 +241,28 @@ export default function TrackingInput() {
                   <div
                     key={item.escrowId || item.itemName}
                     onClick={() => handleSelectItem(item.escrowId)}
-                    style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '16px',
-                      backgroundColor: selectedItemId === String(item.escrowId) ? '#1C1C1E' : 'transparent',
-                      border: selectedItemId === String(item.escrowId) ? '1px solid #3A3A3C' : '1px solid transparent',
-                      borderRadius: '16px', cursor: 'pointer', transition: 'background-color 0.2s',
-                    }}
+                    className={`flex justify-between items-center p-4 rounded-2xl cursor-pointer transition-colors ${
+                      selectedItemId === String(item.escrowId)
+                        ? 'bg-[#1C1C1E] border border-[#3A3A3C]'
+                        : 'bg-transparent border border-transparent hover:bg-[#1C1C1E]/60'
+                    }`}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                      <div style={{ width: '80px', height: '80px', backgroundColor: '#2C2C2E', borderRadius: '12px', overflow: 'hidden', flexShrink: 0 }}>
+                    <div className="flex items-center gap-5">
+                      <div className="w-[80px] h-[80px] bg-[#2C2C2E] rounded-xl overflow-hidden shrink-0">
                         {item.imageUrl
-                          ? <img src={item.imageUrl} alt={item.itemName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8E8E93', fontSize: '12px' }}>이미지 준비중</div>
+                          ? <img src={item.imageUrl} alt={item.itemName} className="w-full h-full object-cover" />
+                          : <div className="w-full h-full flex items-center justify-center text-[#8E8E93] text-xs">이미지 준비중</div>
                         }
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ color: '#CEAF82', fontSize: '12px', fontWeight: 'bold' }}>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[#CEAF82] text-xs font-bold">
                           {item.escrowState === 'INVOICE_SUBMITTED' ? '배송중' : item.escrowState === 'COMPLETED' ? '배송 완료' : item.escrowState}
                         </span>
-                        <span style={{ fontSize: '18px', fontWeight: '700' }}>{item.itemName}</span>
-                        <span style={{ color: '#AEAEB2', fontSize: '13px' }}>{item.createdAt}</span>
+                        <span className="text-lg font-bold">{item.itemName}</span>
+                        <span className="text-[#AEAEB2] text-[13px]">{item.createdAt}</span>
                       </div>
                     </div>
-                    <div style={{ fontSize: '18px', fontWeight: '700' }}>{formatPrice(item.amount)}</div>
+                    <div className="text-lg font-bold">{formatPrice(item.amount)}</div>
                   </div>
                 ))
               ) : (

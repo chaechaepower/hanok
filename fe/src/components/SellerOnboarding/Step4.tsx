@@ -2,15 +2,20 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRegisterSeller } from '@/api/hooks/usePostRegisterSeller';
 import Button from '@/components/common/Button';
+import type { AccountData } from '../../pages/SellerOnboarding';
+import type { BusinessType } from '@/types';
+import axios from 'axios';
 
 export default function Step4({
   onPrev,
   businessType,
   businessNumber,
+  account,
 }: {
   onPrev: () => void;
-  businessType: 'individual' | 'corporate';
+  businessType: BusinessType;
   businessNumber: string | null;
+  account: AccountData | null;
 }) {
   const navigate = useNavigate();
   const { mutateAsync: registerSeller, isPending } = useRegisterSeller();
@@ -55,12 +60,20 @@ export default function Step4({
         businessNumber: businessNumber,
         nickname: nickname.trim(),
         intro: intro.trim(),
-        youtube_link: youtubeLink.trim(),
-        insta_link: instaLink.trim(),
-        tictok_link: tictokLink.trim(),
+        youtubeUrl: youtubeLink.trim(),
+        instaUrl: instaLink.trim(),
+        tiktokUrl: tictokLink.trim(),
+        bankCode: account?.bankCode ?? '',
+        accountNum: account?.accountNum ?? '',
+        accountName: account?.accountName ?? '',
       });
       navigate('/');
-    } catch {
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        alert('이미 판매자로 등록된 사용자입니다.');
+        navigate('/');
+        return;
+      }
       setError('판매자 등록에 실패했습니다. 다시 시도해주세요.');
     }
   };

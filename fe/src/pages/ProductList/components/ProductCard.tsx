@@ -1,6 +1,19 @@
-import { useState } from 'react';
-import { FaChevronLeft, FaChevronRight, FaImage } from 'react-icons/fa';
+import { FaImage } from 'react-icons/fa';
 import type { Product } from '@/types';
+import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
+
+const conditionLabels: Record<string, string> = {
+  BRAND_NEW: '미개봉 새제품',
+  OPEN_BOX: '개봉된 새상품',
+  REFURBISHED: '리퍼비시',
+  USED: '중고',
+};
+
+const statusClassMap: Record<string, { label: string; bg: string }> = {
+  READY: { label: '대기', bg: 'bg-[#1C1C1E]' },
+  PENDING: { label: '경매중', bg: 'bg-[#FF3B30]' },
+  SOLD: { label: '판매완료', bg: 'bg-[#34C759]' },
+};
 
 interface ProductCardProps {
   product: Product;
@@ -9,159 +22,64 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
-  const statusConfig = {
-    WAITING: { label: '대기', color: '#1C1C1E', textColor: 'white' },
-    AUCTION: { label: '경매중', color: '#FF3B30', textColor: 'white' },
-    SOLD: { label: '판매완료', color: '#34C759', textColor: 'white' },
-  };
-
-  const currentStatus = statusConfig[product.status as keyof typeof statusConfig] || { label: '알 수 없음', color: '#555', textColor: 'white' };
-
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  const handlePrevImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (product.imageUrls && product.imageUrls.length > 0) {
-      setCurrentImageIndex(prev => (prev === 0 ? product.imageUrls.length - 1 : prev - 1));
-    }
-  };
-
-  const handleNextImage = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (product.imageUrls && product.imageUrls.length > 0) {
-      setCurrentImageIndex(prev => (prev === product.imageUrls.length - 1 ? 0 : prev + 1));
-    }
-  };
+  const currentStatus = statusClassMap[product.status] || { label: product.status, bg: 'bg-[#555]' };
 
   return (
-    <div style={{
-      display: 'flex',
-      backgroundColor: '#1C1C1E',
-      borderRadius: '16px',
-      padding: '24px',
-      gap: '24px',
-      marginBottom: '16px',
-      border: '1px solid #2C2C2E'
-    }}>
-      <div style={{
-        position: 'relative',
-        width: '160px',
-        height: '160px',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        flexShrink: 0,
-        backgroundColor: '#FFFFFF',
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: '12px',
-          left: '12px',
-          backgroundColor: currentStatus.color,
-          color: currentStatus.textColor,
-          padding: '4px 12px',
-          borderRadius: '20px',
-          fontSize: '12px',
-          fontWeight: '600',
-          zIndex: 10,
-        }}>
+    <div className="flex bg-[#1C1C1E] rounded-2xl p-6 gap-6 mb-4 border border-[#2C2C2E] hover:bg-[#242426] transition-colors">
+      <div className="relative w-[160px] h-[160px] rounded-xl overflow-hidden shrink-0 bg-white">
+        <div className={`absolute top-3 left-3 ${currentStatus.bg} text-white px-3 py-1 rounded-full text-xs font-semibold z-10`}>
           {currentStatus.label}
         </div>
-        
-        {product.imageUrls && product.imageUrls.length > 1 && (
-          <>
-            <button
-              onClick={handlePrevImage}
-              style={{
-                position: 'absolute', top: '50%', left: '8px', transform: 'translateY(-50%)',
-                background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', borderRadius: '50%',
-                width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', zIndex: 10
-              }}
-            >
-              <FaChevronLeft size={10} />
-            </button>
-            <button
-              onClick={handleNextImage}
-              style={{
-                position: 'absolute', top: '50%', right: '8px', transform: 'translateY(-50%)',
-                background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', borderRadius: '50%',
-                width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', zIndex: 10
-              }}
-            >
-              <FaChevronRight size={10} />
-            </button>
-            <div style={{
-              position: 'absolute', bottom: '8px', left: '0', right: '0',
-              display: 'flex', justifyContent: 'center', gap: '4px', zIndex: 10
-            }}>
-              {product.imageUrls.map((_, idx) => (
-                <div key={idx} style={{
-                  width: '6px', height: '6px', borderRadius: '50%',
-                  backgroundColor: idx === currentImageIndex ? 'white' : 'rgba(255,255,255,0.4)',
-                  transition: 'background-color 0.2s',
-                }} />
-              ))}
-            </div>
-          </>
-        )}
-        {product.imageUrls && product.imageUrls.length > 0 ? (
+
+        {product.image1 ? (
           <img
-            src={product.imageUrls[currentImageIndex]}
-            alt={product.title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            src={product.image1}
+            alt={product.name}
+            className="w-full h-full object-cover"
           />
         ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#2C2C2E', color: '#8E8E93', fontSize: '13px' }}>
-            <FaImage size={28} style={{ opacity: 0.5, marginBottom: '8px' }} />
+          <div className="w-full h-full flex flex-col items-center justify-center bg-[#2C2C2E] text-[#8E8E93] text-[13px]">
+            <FaImage size={28} className="opacity-50 mb-2" />
             이미지 없음
           </div>
         )}
       </div>
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-          <div style={{ color: '#8E8E93', fontSize: '13px' }}>
+      <div className="flex-1 flex flex-col">
+        <div className="flex justify-between mb-2">
+          <div className="text-[#8E8E93] text-[13px]">
             {product.tags.map(tag => `#${tag}`).join(' ')}
           </div>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className="flex gap-3">
             <button
-              onClick={() => onEdit(product.id)}
-              style={{ background: 'none', border: 'none', color: '#C8C8C8', fontSize: '13px', cursor: 'pointer' }}
+              onClick={() => onEdit(product.itemId)}
+              className="bg-transparent border-none text-[#C8C8C8] text-[13px] cursor-pointer"
             >
               수정
             </button>
             <button
-              onClick={() => onDelete(product.id)}
-              style={{ background: 'none', border: 'none', color: '#C8C8C8', fontSize: '13px', cursor: 'pointer' }}
+              onClick={() => onDelete(product.itemId)}
+              className="bg-transparent border-none text-[#C8C8C8] text-[13px] cursor-pointer"
             >
               삭제
             </button>
           </div>
         </div>
 
-        <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '700', margin: '0 0 6px 0' }}>
-          {product.title}
+        <h3 className="text-white text-lg font-bold m-0 mb-1.5">
+          {product.name}
         </h3>
-        <p style={{ color: '#8E8E93', fontSize: '14px', margin: '0 0 24px 0', lineHeight: '1.4' }}>
+        <p className="text-[#8E8E93] text-sm m-0 mb-6 leading-relaxed">
           {product.description}
         </p>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(6, 1fr)',
-          border: '1px solid #3A3A3C',
-          borderRadius: '12px',
-          backgroundColor: '#2C2C2E',
-          marginTop: 'auto',
-          overflow: 'hidden',
-        }}>
+        <div className="grid grid-cols-6 border border-[#3A3A3C] rounded-xl bg-[#2C2C2E] mt-auto overflow-hidden">
           <MetricBox label="시작가격" value={`${product.startPrice.toLocaleString()} 원`} />
-          <MetricBox label="최소 입찰단위" value={`${product.bidUnit.toLocaleString()} 냥`} />
-          <MetricBox label="경매 시간" value={`${product.auctionTime} 초`} />
-          <MetricBox label="물품 상태" value={product.condition} />
-          <MetricBox label="카테고리" value={product.category} />
-          <MetricBox label="경매 방식" value={`${product.auctionMethod} ↑`} isLast />
+          <MetricBox label="최소 입찰단위" value={`${product.bidUnit.toLocaleString()} 원`} />
+          <MetricBox label="경매 시간" value={`${product.auctionDuration} 초`} />
+          <MetricBox label="물품 상태" value={conditionLabels[product.itemCondition] || product.itemCondition} />
+          <MetricBox label="카테고리" value={MAIN_CATEGORY_ITEMS.find(c => c.id === product.category)?.label || product.category} />
+          <MetricBox label="경매 방식" value={`${product.auctionType} ↑`} isLast />
         </div>
       </div>
     </div>
@@ -170,15 +88,9 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
 
 function MetricBox({ label, value, isLast = false }: { label: string, value: string, isLast?: boolean }) {
   return (
-    <div style={{
-      padding: '12px 16px',
-      borderRight: isLast ? 'none' : '1px solid #3A3A3C',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-    }}>
-      <div style={{ color: '#A1A1A6', fontSize: '12px', marginBottom: '4px' }}>{label}</div>
-      <div style={{ color: 'white', fontSize: '15px', fontWeight: '600' }}>{value}</div>
+    <div className={`px-4 py-3 flex flex-col justify-center ${isLast ? '' : 'border-r border-[#3A3A3C]'}`}>
+      <div className="text-[#A1A1A6] text-xs mb-1">{label}</div>
+      <div className="text-white text-[15px] font-semibold">{value}</div>
     </div>
   );
 }
