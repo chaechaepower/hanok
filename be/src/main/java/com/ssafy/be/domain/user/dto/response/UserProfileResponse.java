@@ -9,17 +9,4 @@ public record UserProfileResponse(
         String phone,
         Long balance,
         Long depositedBalance
-) {
-    public static UserProfileResponse fromEntity(User user) {
-        return new UserProfileResponse(
-                user.getEmail(),
-                user.getNickname(),
-                user.getProfileImage(),
-                user.getPhone(),
-                user.getBalance(),
-                user.getDepositedBidBalance()
-                        + user.getDepositedEscrowBalance()
-                        + user.getDepositedWithdrawBalance()
-        );
-    }
-}
+) {}
