@@ -3,6 +3,7 @@ package com.ssafy.be.domain.seller.service;
 import com.ssafy.be.domain.follow.repository.FollowRepository;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.repository.ItemRepository;
+import com.ssafy.be.domain.seller.client.BiznoClient;
 import com.ssafy.be.domain.seller.dto.request.SellerProfileUpdateRequest;
 import com.ssafy.be.domain.seller.dto.request.SellerRegisterRequest;
 import com.ssafy.be.domain.seller.dto.response.*;
@@ -34,6 +35,8 @@ public class SellerService {
     private final FollowRepository followRepository;
     private final ItemRepository itemRepository;
     private final StreamRepository streamRepository;
+    private final BiznoClient biznoClient;
+
     @Value("${bizno.api.key}")
     private String biznoApiKey;
 
@@ -138,20 +141,8 @@ public class SellerService {
         seller.getUser().updateProfile(request.nickname(), request.profileImage());
     }
 
-    @Transactional(readOnly = true)
     public BiznoVerifyResponse verifyBizno(String bizno, int gb) {
-        BiznoApiResponse response = restClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .scheme("https")
-                        .host("bizno.net")
-                        .path("/api/fapi")
-                        .queryParam("key", biznoApiKey)
-                        .queryParam("gb", gb)
-                        .queryParam("q", bizno)
-                        .queryParam("type", "json")
-                        .build())
-                .retrieve()
-                .body(BiznoApiResponse.class);
+        BiznoApiResponse response = biznoClient.verify(bizno, gb);
 
         if (response == null || response.resultCode() != 0 || response.totalCount() == 0) {
             return new BiznoVerifyResponse(false);

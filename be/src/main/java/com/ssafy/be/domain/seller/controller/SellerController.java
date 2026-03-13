@@ -8,6 +8,7 @@ import com.ssafy.be.domain.seller.dto.response.SellerProfileResponse;
 import com.ssafy.be.domain.seller.dto.response.SellerRegisterResponse;
 import com.ssafy.be.domain.seller.service.SellerService;
 import com.ssafy.be.global.common.response.ApiResponse;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -49,6 +50,7 @@ public class SellerController implements SellerApi {
     @GetMapping("/verify-bizno")
     public ResponseEntity<BiznoVerifyResponse> verifyBizno(
             @RequestParam String bizno,
+            @Parameter(description = "사업자 구분 (1: 개인, 2: 법인)")
             @RequestParam(defaultValue = "1") int gb) {
         return ResponseEntity.ok(sellerService.verifyBizno(bizno, gb));
     }

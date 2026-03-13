@@ -8,6 +8,7 @@ import com.ssafy.be.domain.seller.dto.response.SellerRegisterResponse;
 import com.ssafy.be.global.common.response.ApiResponse;
 import com.ssafy.be.global.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,5 +50,6 @@ public interface SellerApi {
     @GetMapping("/verify-bizno")
     ResponseEntity<BiznoVerifyResponse> verifyBizno(
             @RequestParam String bizno,
+            @Parameter(description = "사업자 구분 (1: 개인, 2: 법인)")
             @RequestParam(defaultValue = "1") int gb);
 }
