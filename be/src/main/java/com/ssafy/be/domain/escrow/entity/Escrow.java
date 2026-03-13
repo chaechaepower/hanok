@@ -92,8 +92,8 @@ public class Escrow {
         this.modifiedAt = modifiedAt;
     }
 
-    public void registerTrackingNumber(String carrierName, String trackingNumber, LocalDateTime submittedAt) {
-        if (!isAvailableRegisterTrackingNumber()) {
+    public void registerShipment(String carrierName, String trackingNumber, LocalDateTime submittedAt) {
+        if (!isAvailableRegisterShipment()) {
             throw new IllegalArgumentException("운송장 번호를 등록할 수 있는 에스크로 상태가 아닙니다.");
         }
 
@@ -107,13 +107,22 @@ public class Escrow {
         this.escrowStatus = COMPLETED;
     }
 
-    public void cancelEscrow(String cancelReason) {
-        if (!isAvailableCancelEscrow()) {
+    public void manualCancelEscrow(String cancelReason) {
+        if (!isAvailableManualCancelEscrow()) {
             throw new IllegalArgumentException("취소할 수 있는 에스크로 상태가 아닙니다.");
         }
 
         this.escrowStatus = CANCELLED;
         this.cancelReason = cancelReason;
+    }
+
+    public void autoCancelEscrow() {
+        if (!isDeposited()) {
+            throw new IllegalArgumentException("취소할 수 있는 에스크로 상태가 아닙니다.");
+        }
+
+        this.escrowStatus = CANCELLED;
+        this.cancelReason = "판매자가 운송장번호를 72시간 내에 등록하지 않아 자동 취소됐습니다.";
     }
 
     public boolean isSeller(Long userId) {
@@ -124,15 +133,19 @@ public class Escrow {
         return Objects.equals(this.buyer.getId(), userId);
     }
 
-    public boolean isAvailableRegisterTrackingNumber() {
+    public boolean isAvailableRegisterShipment() {
         return this.escrowStatus == DEPOSITED;
     }
 
-    public boolean isAvailableCancelEscrow() {
+    public boolean isAvailableManualCancelEscrow() {
         return this.escrowStatus == DEPOSITED;
     }
 
     public boolean isAvailableCompleteEscrow() {
         return this.escrowStatus == SHIPPED;
+    }
+
+    public boolean isDeposited() {
+        return this.escrowStatus == DEPOSITED;
     }
 }

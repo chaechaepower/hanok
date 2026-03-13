@@ -3,12 +3,13 @@ package com.ssafy.be.domain.escrow.service;
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.model.Bid;
 import com.ssafy.be.domain.escrow.dto.request.EscrowCancelRequest;
-import com.ssafy.be.domain.escrow.dto.request.TrackingNumberRegisterRequest;
+import com.ssafy.be.domain.escrow.dto.request.ShipmentRegisterRequest;
 import com.ssafy.be.domain.escrow.dto.response.EscrowDetailResponse;
 import com.ssafy.be.domain.escrow.dto.response.EscrowListResponse;
 import com.ssafy.be.domain.escrow.entity.Escrow;
 import com.ssafy.be.domain.escrow.exception.EscorwErrorCode;
 import com.ssafy.be.domain.escrow.repository.EscrowRepository;
+import com.ssafy.be.domain.escrow.scheduler.EscrowShipmentScheduler;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
 import com.ssafy.be.domain.tradereport.entity.TradeReport;
@@ -35,6 +36,7 @@ public class EscrowService {
     private final EscrowRepository escrowRepository;
     private final TradeReportRepository tradeReportRepository;
     private final UserRepository userRepository;
+    private final EscrowShipmentScheduler escrowShipmentScheduler;
 
     @Transactional
     public void startEscrow(Bid topBid, Auction auction, ShippingAddress shippingAddress) {
@@ -54,25 +56,31 @@ public class EscrowService {
                 .build();
 
         escrowRepository.save(escrow);
+
+        // 운송장번호 등록 72시간 타임아웃 스케줄러 예약
+        escrowShipmentScheduler.scheduleEscrow(escrow.getId());
     }
 
     @Transactional
-    public void registerTrackingNumber(TrackingNumberRegisterRequest request, Long escrowId, Long userId) {
+    public void registerShipment(ShipmentRegisterRequest request, Long escrowId, Long userId) {
         Escrow escrow = escrowRepository.findById(escrowId)
                 .orElseThrow(() -> new GlobalException(EscorwErrorCode.ESCROW_NOT_FOUND));
 
         // 판매자인지 확인
         validateSeller(escrow, userId);
 
-        // 운송장번호 등로 가능한 에스크로 상태인지 확인
-        validateAvailableRegisterTrackingNumber(escrow);
+        // 운송장번호 등록 가능한 에스크로 상태인지 확인
+        validateAvailableRegisterShipment(escrow);
 
         // 운송장번호 등록
-        escrow.registerTrackingNumber(request.carrierName(), request.trackingNumber(), LocalDateTime.now());
+        escrow.registerShipment(request.carrierName(), request.trackingNumber(), LocalDateTime.now());
+
+        // 운송장번호 등록 72시간 타임아웃 스케줄러 예약 취소
+        escrowShipmentScheduler.cancelScheduledEscrow(escrowId);
     }
 
     @Transactional
-    public void cancelEscrow(EscrowCancelRequest request, Long escrowId, Long userId) {
+    public void manualCancelEscrow(EscrowCancelRequest request, Long escrowId, Long userId) {
         Escrow escrow = escrowRepository.findById(escrowId)
                 .orElseThrow(() -> new GlobalException(EscorwErrorCode.ESCROW_NOT_FOUND));
 
@@ -83,8 +91,11 @@ public class EscrowService {
         validateAvailableCancelEscrow(escrow);
 
         // 취소
-        escrow.cancelEscrow(request.cancelReason());
+        escrow.manualCancelEscrow(request.cancelReason());
         escrow.getBuyer().cancelDepositedEscrowBalance(escrow.getWinningPrice());
+
+        // 운송장번호 등록 72시간 타임아웃 스케줄러 예약 취소
+        escrowShipmentScheduler.cancelScheduledEscrow(escrowId);
     }
 
     @Transactional
@@ -111,14 +122,34 @@ public class EscrowService {
         seller.increaseBalance(settlementAmount);
 
         // 6. 거래 내역 생성
-        TradeReport tradeReport = TradeReport.builder()
+        TradeReport sellerTradeReport = TradeReport.builder()
                 .amount(settlementAmount)
                 .tradeType(TradeType.SETTLEMENT)
                 .user(seller)
                 .escrow(escrow)
                 .build();
 
-        tradeReportRepository.save(tradeReport);
+        TradeReport buyerTradeReport = TradeReport.builder()
+                .amount(-escrow.getWinningPrice())
+                .tradeType(TradeType.SETTLEMENT)
+                .user(buyer)
+                .escrow(escrow)
+                .build();
+
+        tradeReportRepository.saveAll(List.of(sellerTradeReport, buyerTradeReport));
+    }
+
+
+    @Transactional
+    public void autoCancelEscrow(Long escrowId) {
+        Escrow escrow = escrowRepository.findById(escrowId)
+                .orElseThrow(() -> new GlobalException(EscorwErrorCode.ESCROW_NOT_FOUND));
+
+        // DEPOSITED 상태인지
+        validateEscrowStatusDeposited(escrow);
+
+        escrow.autoCancelEscrow();
+        escrow.getBuyer().cancelDepositedEscrowBalance(escrow.getWinningPrice());
     }
 
     @Transactional(readOnly = true)
@@ -166,20 +197,26 @@ public class EscrowService {
         }
     }
 
-    private void validateAvailableRegisterTrackingNumber(Escrow escrow) {
-        if (!escrow.isAvailableRegisterTrackingNumber()) {
+    private void validateAvailableRegisterShipment(Escrow escrow) {
+        if (!escrow.isAvailableRegisterShipment()) {
             throw new GlobalException(EscorwErrorCode.ESCROW_INVALID_STATUS);
         }
     }
 
     private void validateAvailableCancelEscrow(Escrow escrow) {
-        if (!escrow.isAvailableCancelEscrow()) {
+        if (!escrow.isAvailableManualCancelEscrow()) {
             throw new GlobalException(EscorwErrorCode.ESCROW_INVALID_STATUS);
         }
     }
 
     private void validateAvailableCompleteEscrow(Escrow escrow) {
         if (!escrow.isAvailableCompleteEscrow()) {
+            throw new GlobalException(EscorwErrorCode.ESCROW_INVALID_STATUS);
+        }
+    }
+
+    private void validateEscrowStatusDeposited(Escrow escrow) {
+        if (!escrow.isDeposited()) {
             throw new GlobalException(EscorwErrorCode.ESCROW_INVALID_STATUS);
         }
     }

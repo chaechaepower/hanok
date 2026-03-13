@@ -2,7 +2,7 @@ package com.ssafy.be.domain.escrow.controller;
 
 import com.ssafy.be.domain.escrow.api.EscrowApi;
 import com.ssafy.be.domain.escrow.dto.request.EscrowCancelRequest;
-import com.ssafy.be.domain.escrow.dto.request.TrackingNumberRegisterRequest;
+import com.ssafy.be.domain.escrow.dto.request.ShipmentRegisterRequest;
 import com.ssafy.be.domain.escrow.dto.response.EscrowDetailResponse;
 import com.ssafy.be.domain.escrow.dto.response.EscrowListResponse;
 import com.ssafy.be.domain.escrow.service.EscrowService;
@@ -22,22 +22,22 @@ public class EscrowController implements EscrowApi {
     private final EscrowService escrowService;
 
     @PostMapping("/{escrowId}/tracking")
-    public ResponseEntity<?> registerTrackingNumber(
-            @RequestBody @Valid TrackingNumberRegisterRequest request,
+    public ResponseEntity<?> registerShipment(
+            @RequestBody @Valid ShipmentRegisterRequest request,
             @PathVariable Long escrowId,
             @AuthenticationPrincipal String principal
     ) {
-        escrowService.registerTrackingNumber(request, escrowId, getUserId(principal));
+        escrowService.registerShipment(request, escrowId, getUserId(principal));
         return ResponseEntity.ok(ApiResponse.success());
     }
 
     @PostMapping("/{escrowId}/cancel")
-    public ResponseEntity<?> cancelEscrow(
+    public ResponseEntity<?> manualCancelEscrow(
             @RequestBody @Valid EscrowCancelRequest request,
             @PathVariable Long escrowId,
             @AuthenticationPrincipal String principal
     ) {
-        escrowService.cancelEscrow(request, escrowId, getUserId(principal));
+        escrowService.manualCancelEscrow(request, escrowId, getUserId(principal));
         return ResponseEntity.ok(ApiResponse.success());
     }
 
