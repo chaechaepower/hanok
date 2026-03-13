@@ -22,7 +22,7 @@ export default function SellerOnboardingPage() {
       showToast({ message: '이미 판매자로 등록되어 있습니다.' });
       navigate('/'); // Redirect to home or inventory
     }
-  }, [sellerStatus, navigate]);
+  }, [sellerStatus, navigate, showToast]);
 
   if (isLoading) {
     return (
