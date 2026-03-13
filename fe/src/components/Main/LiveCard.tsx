@@ -43,9 +43,13 @@ export default function LiveCard({ stream, className = '' }: LiveCardProps) {
   const isScheduledCard = stream.scheduledAt !== null;
   const scheduledAtLabel = formatScheduledAt(stream.scheduledAt);
   const canNavigate = stream.isLive && !isScheduledCard;
-  const containerClassName = `group w-full max-w-[230px] ${canNavigate ? 'cursor-pointer' : ''} ${className}`.trim();
+  const canNavigateToProfile = stream.seller.sellerId > 0;
+  const containerClassName = `group w-full max-w-[230px] ${className}`.trim();
+  const livePreviewClassName = `relative aspect-3/4 w-full overflow-hidden rounded-2xl bg-[#111827] ${
+    canNavigate ? 'cursor-pointer' : ''
+  }`.trim();
 
-  const handleClick = () => {
+  const handleLiveClick = () => {
     if (!canNavigate) {
       return;
     }
@@ -53,7 +57,7 @@ export default function LiveCard({ stream, className = '' }: LiveCardProps) {
     navigate(`/live/${stream.streamId}`);
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+  const handleLiveKeyDown = (event: React.KeyboardEvent<HTMLElement>) => {
     if (!canNavigate) {
       return;
     }
@@ -64,15 +68,23 @@ export default function LiveCard({ stream, className = '' }: LiveCardProps) {
     }
   };
 
+  const handleSellerClick = () => {
+    if (!canNavigateToProfile) {
+      return;
+    }
+
+    navigate(`/profile/${stream.seller.sellerId}`);
+  };
+
   return (
-    <article
-      className={containerClassName}
-      onClick={canNavigate ? handleClick : undefined}
-      onKeyDown={canNavigate ? handleKeyDown : undefined}
-      role={canNavigate ? 'link' : undefined}
-      tabIndex={canNavigate ? 0 : undefined}
-    >
-      <div className="relative aspect-3/4 w-full overflow-hidden rounded-2xl bg-[#111827]">
+    <article className={containerClassName}>
+      <div
+        className={livePreviewClassName}
+        onClick={canNavigate ? handleLiveClick : undefined}
+        onKeyDown={canNavigate ? handleLiveKeyDown : undefined}
+        role={canNavigate ? 'link' : undefined}
+        tabIndex={canNavigate ? 0 : undefined}
+      >
         {stream.thumbnailUri ? (
           <img
             src={stream.thumbnailUri}
@@ -105,7 +117,14 @@ export default function LiveCard({ stream, className = '' }: LiveCardProps) {
         )}
       </div>
 
-      <div className="mt-5 flex items-start gap-3">
+      <button
+        type="button"
+        onClick={handleSellerClick}
+        disabled={!canNavigateToProfile}
+        className={`mt-5 flex w-full items-start gap-3 text-left ${
+          canNavigateToProfile ? 'cursor-pointer' : 'cursor-default'
+        } disabled:pointer-events-none`}
+      >
         {stream.seller.profileImageUri ? (
           <img
             src={stream.seller.profileImageUri}
@@ -128,7 +147,7 @@ export default function LiveCard({ stream, className = '' }: LiveCardProps) {
             <span className="text-gold">{categoryLabel}</span>
           </p>
         </div>
-      </div>
+      </button>
     </article>
   );
 }
