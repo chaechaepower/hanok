@@ -13,6 +13,7 @@ import LoginPage from './pages/Login';
 import WalletPage from './pages/Wallet';
 import SettingsPage from './pages/Settings';
 import MainLayout from '@/components/common/layouts/MainLayout';
+import SellerOnlyRoute from '@/components/common/layouts/SellerOnlyRoute';
 
 function App() {
   return (
@@ -23,16 +24,19 @@ function App() {
 
       <Route path="/" element={<MainLayout />}>
         <Route index element={<MainPage />} />
-        <Route path="tracking" element={<TrakingInputPage />} />
         <Route path="profile/:id" element={<ProfilePage />} />
         <Route path="seller/register" element={<SellerOnboardingPage />} />
-        <Route path="lives" element={<LiveCreatePage />} />
-        <Route path="live/register" element={<LiveRegisterPage />} />
-        <Route path="products" element={<ProductListPage />} />
         <Route path="signup" element={<SignUpPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="wallet" element={<WalletPage />} />
         <Route path="settings" element={<SettingsPage />} />
+
+        <Route element={<SellerOnlyRoute />}>
+          <Route path="tracking" element={<TrakingInputPage />} />
+          <Route path="lives" element={<LiveCreatePage />} />
+          <Route path="live/register" element={<LiveRegisterPage />} />
+          <Route path="products" element={<ProductListPage />} />
+        </Route>
       </Route>
     </Routes>
   );
