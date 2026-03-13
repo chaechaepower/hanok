@@ -19,10 +19,14 @@ export default function RightPanel({ isSeller, auctionStatistics, streamEnter }:
   const [followStateOverride, setFollowStateOverride] = useState<{ sellerId: number; value: boolean } | null>(null);
   const { mutate: patchFollow, isPending: isFollowPending } = usePatchFollow();
   const { mutate: deleteFollow, isPending: isUnfollowPending } = useDeleteFollow();
+  const storedUserId =
+    typeof window === 'undefined' ? 0 : Number.parseInt(window.localStorage.getItem('userId') ?? '0', 10);
 
   const sellerId = streamEnter?.seller.sellerId ?? 0;
   const sellerNickname = streamEnter?.seller.nickname ?? 'seller';
   const sellerProfileImage = streamEnter?.seller.profileImage ?? null;
+  const currentUserId = Number.isFinite(storedUserId) ? storedUserId : 0;
+  const isOwnStore = sellerId > 0 && sellerId === currentUserId;
   const isFollowActionPending = isFollowPending || isUnfollowPending;
   const isFollowing =
     followStateOverride?.sellerId === sellerId ? followStateOverride.value : (streamEnter?.isFollowing ?? false);
@@ -64,7 +68,7 @@ export default function RightPanel({ isSeller, auctionStatistics, streamEnter }:
           <div className="min-w-0 truncate text-xs font-bold text-white">{sellerNickname}</div>
         </div>
 
-        {sellerId > 0 && (
+        {sellerId > 0 && !isOwnStore && (
           <button
             type="button"
             onClick={handleFollowToggle}
