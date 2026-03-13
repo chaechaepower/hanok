@@ -1,7 +1,6 @@
 package com.ssafy.be.domain.escrow.entity;
 
 import com.ssafy.be.domain.auction.entity.Auction;
-import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
 import com.ssafy.be.domain.user.entity.User;
@@ -104,6 +103,10 @@ public class Escrow {
         this.submittedAt = submittedAt;
     }
 
+    public void completeEscrow() {
+        this.escrowStatus = COMPLETED;
+    }
+
     public void cancelEscrow(String cancelReason) {
         if (!isAvailableCancelEscrow()) {
             throw new IllegalArgumentException("취소할 수 있는 에스크로 상태가 아닙니다.");
@@ -113,8 +116,12 @@ public class Escrow {
         this.cancelReason = cancelReason;
     }
 
-    public boolean isEscrowSeller(Long userId) {
+    public boolean isSeller(Long userId) {
         return Objects.equals(this.seller.getUser().getId(), userId);
+    }
+
+    public boolean isBuyer(Long userId) {
+        return Objects.equals(this.buyer.getId(), userId);
     }
 
     public boolean isAvailableRegisterTrackingNumber() {
@@ -123,5 +130,9 @@ public class Escrow {
 
     public boolean isAvailableCancelEscrow() {
         return this.escrowStatus == DEPOSITED;
+    }
+
+    public boolean isAvailableCompleteEscrow() {
+        return this.escrowStatus == SHIPPED;
     }
 }

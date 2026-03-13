@@ -22,6 +22,12 @@ public interface EscrowApi {
     @ApiResponse(responseCode = "404", description = "에스크로 없음")
     ResponseEntity<?> cancelEscrow(EscrowCancelRequest request, Long escrowId, String principal);
 
+    @Operation(summary = "구매 확정", description = "구매자 전용 - 상품을 수령한 후 거래를 확정합니다. 판매자에게 대금이 정산됩니다.")
+    @ApiResponse(responseCode = "200", description = "구매 확정 성공")
+    @ApiResponse(responseCode = "403", description = "해당 에스크로의 구매자가 아님")
+    @ApiResponse(responseCode = "404", description = "에스크로 없음")
+    ResponseEntity<?> completeEscrow(Long escrowId, String principal);
+
     @Operation(summary = "에스크로 목록 조회(배송 이력 조회)", description = "판매자 전용 - 본인의 에스크로 거래 목록을 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")
     ResponseEntity<?> getAllEscrows(String principal);

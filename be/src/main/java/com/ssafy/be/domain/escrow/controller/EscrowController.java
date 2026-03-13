@@ -41,6 +41,15 @@ public class EscrowController implements EscrowApi {
         return ResponseEntity.ok(ApiResponse.success());
     }
 
+    @PostMapping("/{escrowId}/complete")
+    public ResponseEntity<?> completeEscrow(
+            @PathVariable Long escrowId,
+            @AuthenticationPrincipal String principal
+    ) {
+        escrowService.completeEscrow(escrowId, getUserId(principal));
+        return ResponseEntity.ok(ApiResponse.success());
+    }
+
     @GetMapping
     public ResponseEntity<?> getAllEscrows(
             @AuthenticationPrincipal String principal

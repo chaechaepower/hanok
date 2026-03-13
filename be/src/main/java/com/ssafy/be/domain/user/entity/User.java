@@ -183,7 +183,7 @@ public class User {
         this.depositedBidBalance -= amount;
     }
 
-    private void decreaseDepositedEscrowBalance(Long amount) {
+    public void decreaseDepositedEscrowBalance(Long amount) {
         if (!hasSufficientDepositedEscrowBalance(amount)) {
             throw new IllegalArgumentException("잔액이 부족합니다.");
         }

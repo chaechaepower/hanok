@@ -11,6 +11,9 @@ import com.ssafy.be.domain.escrow.exception.EscorwErrorCode;
 import com.ssafy.be.domain.escrow.repository.EscrowRepository;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
+import com.ssafy.be.domain.tradereport.entity.TradeReport;
+import com.ssafy.be.domain.tradereport.entity.TradeType;
+import com.ssafy.be.domain.tradereport.repository.TradeReportRepository;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.exception.UserErrorCode;
 import com.ssafy.be.domain.user.repository.UserRepository;
@@ -30,6 +33,7 @@ import static com.ssafy.be.domain.escrow.entity.EscrowStatus.DEPOSITED;
 public class EscrowService {
     public static final double FEE_RATE = 0.05;
     private final EscrowRepository escrowRepository;
+    private final TradeReportRepository tradeReportRepository;
     private final UserRepository userRepository;
 
     @Transactional
@@ -83,6 +87,40 @@ public class EscrowService {
         escrow.getBuyer().cancelDepositedEscrowBalance(escrow.getWinningPrice());
     }
 
+    @Transactional
+    public void completeEscrow(Long escrowId, Long userId) {
+        Escrow escrow = escrowRepository.findById(escrowId)
+                .orElseThrow(() -> new GlobalException(EscorwErrorCode.ESCROW_NOT_FOUND));
+
+        // 1. 구매자인지 검증
+        validateBuyer(userId, escrow);
+
+        // 2. 거래 확정 가능한 상태인지 검증
+        validateAvailableCompleteEscrow(escrow);
+
+        // 3. 에스크로 구매 확정
+        escrow.completeEscrow();
+
+        // 4. 구매자 에스크로 예치 금액 감소
+        User buyer = escrow.getBuyer();
+        buyer.decreaseDepositedEscrowBalance(escrow.getWinningPrice());
+
+        // 5. 판매자 정산
+        User seller = escrow.getSeller().getUser();
+        long settlementAmount = escrow.getWinningPrice() - escrow.getFeeAmount();
+        seller.increaseBalance(settlementAmount);
+
+        // 6. 거래 내역 생성
+        TradeReport tradeReport = TradeReport.builder()
+                .amount(settlementAmount)
+                .tradeType(TradeType.SETTLEMENT)
+                .user(seller)
+                .escrow(escrow)
+                .build();
+
+        tradeReportRepository.save(tradeReport);
+    }
+
     @Transactional(readOnly = true)
     public List<EscrowListResponse> getAllEscrows(Long userId) {
         return escrowRepository.findAllBySellerUserId(userId).stream()
@@ -105,22 +143,11 @@ public class EscrowService {
         Escrow escrow = escrowRepository.findByIdAndSellerUserId(escrowId, userId)
                 .orElseThrow(() -> new GlobalException(EscorwErrorCode.ESCROW_NOT_FOUND));
 
-        EscrowDetailResponse.WinningDto winningInfo = buildWinningInfo(escrow);
-        EscrowDetailResponse.ShippingAddressDto shippingAddress = buildShippingAddress(escrow.getShippingAddress());
-        EscrowDetailResponse.DeliveryDto delivery = buildDelivery(escrow);
-
         return buildEscrowDetailResponse(
-                winningInfo,
-                shippingAddress,
-                delivery);
-    }
-
-    private static EscrowDetailResponse buildEscrowDetailResponse(EscrowDetailResponse.WinningDto winningInfo, EscrowDetailResponse.ShippingAddressDto shippingAddress, EscrowDetailResponse.DeliveryDto delivery) {
-        return EscrowDetailResponse.builder()
-                .winningInfo(winningInfo)
-                .shippingAddress(shippingAddress)
-                .delivery(delivery)
-                .build();
+                buildWinningInfo(escrow),
+                buildShippingAddress(escrow.getShippingAddress()),
+                buildDelivery(escrow)
+        );
     }
 
     private static long calculateFeeAmount(Bid topBid) {
@@ -128,8 +155,14 @@ public class EscrowService {
     }
 
     private void validateSeller(Escrow escrow, Long userId) {
-        if (!escrow.isEscrowSeller(userId)) {
+        if (!escrow.isSeller(userId)) {
             throw new GlobalException(EscorwErrorCode.ESCROW_NOT_SELLER);
+        }
+    }
+
+    private static void validateBuyer(Long userId, Escrow escrow) {
+        if (!escrow.isBuyer(userId)) {
+            throw new GlobalException(EscorwErrorCode.ESCROW_NOT_BUYER);
         }
     }
 
@@ -141,6 +174,12 @@ public class EscrowService {
 
     private void validateAvailableCancelEscrow(Escrow escrow) {
         if (!escrow.isAvailableCancelEscrow()) {
+            throw new GlobalException(EscorwErrorCode.ESCROW_INVALID_STATUS);
+        }
+    }
+
+    private void validateAvailableCompleteEscrow(Escrow escrow) {
+        if (!escrow.isAvailableCompleteEscrow()) {
             throw new GlobalException(EscorwErrorCode.ESCROW_INVALID_STATUS);
         }
     }
@@ -170,6 +209,14 @@ public class EscrowService {
         return EscrowDetailResponse.DeliveryDto.builder()
                 .courierName(escrow.getCourierName())
                 .trackingNumber(escrow.getTrackingNumber())
+                .build();
+    }
+
+    private static EscrowDetailResponse buildEscrowDetailResponse(EscrowDetailResponse.WinningDto winningInfo, EscrowDetailResponse.ShippingAddressDto shippingAddress, EscrowDetailResponse.DeliveryDto delivery) {
+        return EscrowDetailResponse.builder()
+                .winningInfo(winningInfo)
+                .shippingAddress(shippingAddress)
+                .delivery(delivery)
                 .build();
     }
 }
