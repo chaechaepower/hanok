@@ -43,7 +43,7 @@ class SellerServiceTest {
         given(sellerRepository.existsByUserId(1L)).willReturn(true);
 
         SellerRegisterRequest request = new SellerRegisterRequest(
-                SellerType.INDIVIDUAL, null, "안녕하세요!", "", "", ""
+                SellerType.INDIVIDUAL, null, "경매왕", "안녕하세요!", "", "", "", null, null, null
         );
 
         // when & then
@@ -63,7 +63,7 @@ class SellerServiceTest {
         given(userRepository.findById(1L)).willReturn(Optional.empty());
 
         SellerRegisterRequest request = new SellerRegisterRequest(
-                SellerType.INDIVIDUAL, null, "안녕하세요!", "", "", ""
+                SellerType.INDIVIDUAL, null, "경매왕", "안녕하세요!", "", "", "", null, null, null
         );
 
         // when & then
@@ -92,7 +92,7 @@ class SellerServiceTest {
         given(sellerRepository.save(any(Seller.class))).willReturn(mockSeller);
 
         SellerRegisterRequest request = new SellerRegisterRequest(
-                SellerType.INDIVIDUAL, null, "안녕하세요!", "", "", ""
+                SellerType.INDIVIDUAL, null, "경매왕", "안녕하세요!", "", "", "", null, null, null
         );
 
         // when
