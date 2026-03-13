@@ -2,13 +2,22 @@ import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
 import type { LiveCardData, PageResponse } from '@/types';
+
 import { getRegisteredLiveById, getRegisteredLiveCards } from './LiveCreateHandler';
-import { getCurrentMockUser } from './mockState';
+import { getCurrentMockUser, isSellerFollowed } from './mockState';
 
 const CATEGORY_CODES = [
-  'SNEAKERS_SHOES', 'CLOTHING', 'WATCHES', 'BAGS_FASHION_ACCESSORIES',
-  'JEWELRY', 'TRADING_CARDS', 'FIGURES_PLASTIC_MODELS', 'ELECTRONICS',
-  'ART', 'ANTIQUES_VINTAGE', 'ETC',
+  'SNEAKERS_SHOES',
+  'CLOTHING',
+  'WATCHES',
+  'BAGS_FASHION_ACCESSORIES',
+  'JEWELRY',
+  'TRADING_CARDS',
+  'FIGURES_PLASTIC_MODELS',
+  'ELECTRONICS',
+  'ART',
+  'ANTIQUES_VINTAGE',
+  'ETC',
 ];
 
 const SELLERS = [
@@ -20,13 +29,10 @@ const SELLERS = [
   { sellerId: 15, nickname: 'bag_corner' },
 ];
 
-const FOLLOWING_SELLER_IDS = new Set<number>([10, 12, 14]);
-
 const MAIN_LIVE_STREAMS: LiveCardData[] = Array.from({ length: 60 }, (_, index) => {
   const id = index + 1;
   const seller = SELLERS[index % SELLERS.length];
   const category = CATEGORY_CODES[index % CATEGORY_CODES.length];
-
   const isLive = index % 8 !== 0;
   const startedAt = isLive ? new Date(Date.now() - index * 12 * 60 * 1000).toISOString() : null;
   const scheduledAt = isLive ? null : new Date(Date.now() + (index + 1) * 30 * 60 * 1000).toISOString();
@@ -49,7 +55,10 @@ const MAIN_LIVE_STREAMS: LiveCardData[] = Array.from({ length: 60 }, (_, index) 
 });
 
 const toNumber = (value: string | null, fallback: number) => {
-  if (value === null) return fallback;
+  if (value === null) {
+    return fallback;
+  }
+
   const parsed = Number(value);
   return Number.isNaN(parsed) ? fallback : parsed;
 };
@@ -57,10 +66,11 @@ const toNumber = (value: string | null, fallback: number) => {
 export const mainHandlers = [
   http.get(`${BASE_URL}/v1/streams/:streamId/enter`, ({ params }) => {
     const streamId = Number(params.streamId);
+    const currentUser = getCurrentMockUser();
     const registeredLive = getRegisteredLiveById(streamId);
 
     if (registeredLive) {
-      const currentUser = getCurrentMockUser();
+      const sellerId = currentUser?.userId ?? 1;
 
       return HttpResponse.json({
         streamId: registeredLive.streamId,
@@ -69,41 +79,46 @@ export const mainHandlers = [
         status: registeredLive.isLive ? 'LIVE' : 'SCHEDULED',
         notice: registeredLive.notice ?? null,
         seller: {
-          sellerId: currentUser?.userId ?? 1,
-          nickname: currentUser?.nickname ?? '판매자명',
+          sellerId,
+          nickname: currentUser?.nickname ?? 'seller',
           profileImage: currentUser?.profileImage ?? null,
-          grade: 'GENERAL',
         },
         viewerCount: 0,
         topBidders: [],
+        token: `mock-stream-token-${registeredLive.streamId}`,
+        identity: `user-${sellerId}`,
+        isFollowing: isSellerFollowed(sellerId),
       });
     }
 
     const stream = MAIN_LIVE_STREAMS.find((item) => item.streamId === streamId) ?? MAIN_LIVE_STREAMS[0];
+    const sellerId = stream?.seller.sellerId ?? 1;
 
     return HttpResponse.json({
       streamId: stream?.streamId ?? streamId,
-      title: stream?.title ?? '방송 제목',
+      title: stream?.title ?? 'Broadcast title',
       category: stream?.category ?? 'ELECTRONICS',
       status: 'LIVE',
-      notice: '공지는 어쩌구입니다. 배송은 2일 내로 일괄 배송됩니다.',
+      notice: 'Welcome to the live auction.',
       seller: {
-        sellerId: stream?.seller.sellerId ?? 1,
-        nickname: stream?.seller.nickname ?? '판매자명',
+        sellerId,
+        nickname: stream?.seller.nickname ?? 'seller',
         profileImage: stream?.seller.profileImageUri ?? null,
-        grade: 'GENERAL',
       },
       viewerCount: stream?.viewerCount ?? 100,
       topBidders: [
-        { rank: 1, nickname: '고미술애호가', amount: 685000 },
-        { rank: 2, nickname: '전통수집광', amount: 650000 },
-        { rank: 3, nickname: 'Heritage_K', amount: 620000 },
+        { rank: 1, nickname: 'top_bidder_1', amount: 685000 },
+        { rank: 2, nickname: 'top_bidder_2', amount: 650000 },
+        { rank: 3, nickname: 'top_bidder_3', amount: 620000 },
       ],
+      token: `mock-stream-token-${stream?.streamId ?? streamId}`,
+      identity: `user-${currentUser?.userId ?? 0}`,
+      isFollowing: isSellerFollowed(sellerId),
     });
   }),
+
   http.get(`${BASE_URL}/v1/streams`, ({ request }) => {
     const url = new URL(request.url);
-
     const type = (url.searchParams.get('type') ?? 'ALL').toUpperCase();
     const status = (url.searchParams.get('status') ?? 'LIVE').toUpperCase();
     const sort = (url.searchParams.get('sort') ?? 'LATEST').toUpperCase();
@@ -116,7 +131,7 @@ export const mainHandlers = [
     let streams = [...registeredLiveCards, ...MAIN_LIVE_STREAMS.filter((stream) => !registeredIds.has(stream.streamId))];
 
     if (type === 'FOLLOWING') {
-      streams = streams.filter((stream) => FOLLOWING_SELLER_IDS.has(stream.seller.sellerId));
+      streams = streams.filter((stream) => isSellerFollowed(stream.seller.sellerId));
     }
 
     if (category) {

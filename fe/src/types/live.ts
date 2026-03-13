@@ -10,7 +10,6 @@ export type StreamEnterSeller = {
   sellerId: number;
   nickname: string;
   profileImage: string | null;
-  grade: string;
 };
 
 export type StreamEnterTopBidder = {
@@ -28,6 +27,9 @@ export type StreamEnterResponse = {
   seller: StreamEnterSeller;
   viewerCount: number;
   topBidders: StreamEnterTopBidder[];
+  token: string;
+  identity: string;
+  isFollowing: boolean;
 };
 
 export type LiveCardData = {

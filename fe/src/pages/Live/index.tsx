@@ -138,6 +138,9 @@ export default function LivePage() {
   const navigate = useNavigate();
   const { id: streamId } = useParams<{ id: string }>();
   const numericStreamId = Number(streamId);
+  const storedUserId =
+    typeof window === 'undefined' ? 0 : Number.parseInt(window.localStorage.getItem('userId') ?? '0', 10);
+  const sellerUserId = Number.isFinite(storedUserId) ? storedUserId : 0;
   const [isSeller, setIsSeller] = useState(true);
   const { data: streamData } = useGetStream(numericStreamId);
   const { data: meData } = useGetMe();
@@ -177,13 +180,15 @@ export default function LivePage() {
         status: streamData?.isLive ? 'LIVE' : 'SCHEDULED',
         notice: streamData?.notice ?? null,
         seller: {
-          sellerId: 0,
+          sellerId: sellerUserId,
           nickname: meData?.nickname ?? '판매자명',
           profileImage: meData?.profileImage ?? null,
-          grade: 'GENERAL',
         },
         viewerCount: 0,
         topBidders: [],
+        token: '',
+        identity: `user-${sellerUserId}`,
+        isFollowing: false,
       }
     : (streamEnter ?? null);
   const startRequest: StreamRequest | null = streamData

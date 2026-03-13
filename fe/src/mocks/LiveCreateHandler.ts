@@ -11,12 +11,19 @@ import type {
   StreamRequest,
   UpdateStreamResponse,
 } from '@/types';
+
 import { getCurrentMockUser } from './mockState';
+
+type RegisteredLive = Live & {
+  sellerId: number;
+  sellerNickname: string;
+  sellerProfileImage: string | null;
+};
 
 const createStreamItems = (itemIds: number[], category: string, thumbnail: string | null): LiveStreamItem[] =>
   itemIds.map((itemId, index) => ({
     itemId,
-    name: `상품 ${itemId}`,
+    name: `Mock item ${itemId}`,
     category,
     startPrice: 10000 * (index + 1),
     status: 'READY',
@@ -24,6 +31,16 @@ const createStreamItems = (itemIds: number[], category: string, thumbnail: strin
     image1: thumbnail,
     createdAt: new Date(Date.now() - index * 60000).toISOString(),
   }));
+
+const getCurrentSellerSnapshot = () => {
+  const currentUser = getCurrentMockUser();
+
+  return {
+    sellerId: currentUser?.userId ?? 2,
+    sellerNickname: currentUser?.nickname ?? 'seller',
+    sellerProfileImage: currentUser?.profileImage ?? null,
+  };
+};
 
 export const getRegisteredLiveById = (streamId: number) => registeredLives.find((item) => item.streamId === streamId);
 
@@ -47,10 +64,8 @@ export const getInitialItemSyncPayloadForStream = (streamId: number): ItemSyncPa
   };
 };
 
-export const getRegisteredLiveCards = (): LiveCardData[] => {
-  const currentUser = getCurrentMockUser();
-
-  return registeredLives.map((live) => ({
+export const getRegisteredLiveCards = (): LiveCardData[] =>
+  registeredLives.map((live) => ({
     streamId: live.streamId,
     title: live.title,
     category: live.category,
@@ -60,49 +75,57 @@ export const getRegisteredLiveCards = (): LiveCardData[] => {
     scheduledAt: live.isLive ? null : live.scheduledAt,
     startedAt: live.isLive ? live.createdAt : null,
     seller: {
-      sellerId: currentUser?.userId ?? 1,
-      nickname: currentUser?.nickname ?? 'seller',
-      profileImageUri: currentUser?.profileImage ?? null,
+      sellerId: live.sellerId,
+      nickname: live.sellerNickname,
+      profileImageUri: live.sellerProfileImage,
     },
   }));
-};
 
-const registeredLives: Live[] = [
+const registeredLives: RegisteredLive[] = [
   {
     streamId: 1,
-    title: '명품 가방 경매 시작합니다',
+    title: 'Luxury bag showcase',
     category: 'BAGS_FASHION_ACCESSORIES',
     thumbnail: Logo,
     scheduledAt: new Date(Date.now() + 86400000).toISOString(),
     startType: 'SCHEDULED',
-    notice: '정품 인증서 포함, 경매 시작가 50만원부터',
+    notice: 'Limited quantity lots open first.',
     isLive: false,
     createdAt: new Date(Date.now() - 3600000).toISOString(),
     items: createStreamItems([101, 102, 103], 'BAGS_FASHION_ACCESSORIES', Logo),
+    sellerId: 10,
+    sellerNickname: 'vintage_hub',
+    sellerProfileImage: 'https://picsum.photos/seed/seller-10/120/120',
   },
   {
     streamId: 2,
-    title: '나이키 한정판 스니커즈 라이브',
+    title: 'Sneaker drop live',
     category: 'SNEAKERS_SHOES',
     thumbnail: Logo,
     scheduledAt: null,
     startType: 'IMMEDIATE',
-    notice: '한정 수량 3족, 선착순 입찰',
+    notice: 'Top three pairs start first.',
     isLive: true,
     createdAt: new Date(Date.now() - 7200000).toISOString(),
     items: createStreamItems([201, 202], 'SNEAKERS_SHOES', Logo),
+    sellerId: 12,
+    sellerNickname: 'sneaker_room',
+    sellerProfileImage: 'https://picsum.photos/seed/seller-12/120/120',
   },
   {
     streamId: 3,
-    title: '롤렉스 서브마리너 단독 1점',
+    title: 'Watch archive session',
     category: 'WATCHES',
     thumbnail: Logo,
     scheduledAt: new Date(Date.now() + 172800000).toISOString(),
     startType: 'SCHEDULED',
-    notice: '2023년 구매, 풀박스 보증서 포함',
+    notice: 'Vintage lots only.',
     isLive: false,
     createdAt: new Date(Date.now() - 172800000).toISOString(),
     items: createStreamItems([301], 'WATCHES', Logo),
+    sellerId: 11,
+    sellerNickname: 'watch_studio',
+    sellerProfileImage: 'https://picsum.photos/seed/seller-11/120/120',
   },
 ];
 
@@ -144,25 +167,23 @@ export const LiveCreateHandlers = [
     const page = Math.max(0, Number(url.searchParams.get('page') ?? '0'));
     const size = Math.max(1, Number(url.searchParams.get('size') ?? '8'));
 
-    const scheduled = registeredLives.map((live) => ({
-        streamId: live.streamId,
-        title: live.title,
-        category: live.category,
-        thumbnail: live.thumbnail,
-        scheduledAt: live.scheduledAt,
-        state: live.isLive ? ('LIVE' as const) : ('SCHEDULED' as const),
-      }));
+    const streams = registeredLives.map((live) => ({
+      streamId: live.streamId,
+      title: live.title,
+      category: live.category,
+      thumbnail: live.thumbnail,
+      scheduledAt: live.scheduledAt,
+      state: live.isLive ? ('LIVE' as const) : ('SCHEDULED' as const),
+    }));
 
     const start = page * size;
     const end = start + size;
-    const paged = scheduled.slice(start, end);
-
-    return HttpResponse.json({ streams: paged, hasNext: end < scheduled.length });
+    return HttpResponse.json({ streams: streams.slice(start, end), hasNext: end < streams.length });
   }),
 
   http.get(`${BASE_URL}/v1/streams/:streamId`, ({ params }) => {
     const streamId = Number(params.streamId);
-    const live = registeredLives.find((item) => item.streamId === streamId);
+    const live = getRegisteredLiveById(streamId);
 
     if (!live) {
       return HttpResponse.json({ message: 'Stream not found' }, { status: 404 });
@@ -173,9 +194,9 @@ export const LiveCreateHandlers = [
 
   http.post(`${BASE_URL}/v1/streams`, async ({ request }) => {
     const { body, thumbnailUrl } = await parseStreamRequest(request);
-
+    const sellerSnapshot = getCurrentSellerSnapshot();
     const newId = nextLiveId++;
-    const newLive: Live = {
+    const newLive: RegisteredLive = {
       streamId: newId,
       title: body.title,
       category: body.category,
@@ -186,10 +207,10 @@ export const LiveCreateHandlers = [
       isLive: false,
       createdAt: new Date().toISOString(),
       items: createStreamItems(body.itemIds, body.category, thumbnailUrl),
+      ...sellerSnapshot,
     };
 
     registeredLives.push(newLive);
-    console.log('[Mock] 방송 등록:', newLive);
 
     return HttpResponse.json(
       {
@@ -204,10 +225,18 @@ export const LiveCreateHandlers = [
   http.post(`${BASE_URL}/v1/streams/:streamId/start`, async ({ params, request }) => {
     const streamId = Number(params.streamId);
     const { body, thumbnailUrl } = await parseStreamRequest(request);
-    const resolvedThumbnail = thumbnailUrl ?? registeredLives.find((live) => live.streamId === streamId)?.thumbnail ?? null;
+    const existingLive = getRegisteredLiveById(streamId);
+    const sellerSnapshot = existingLive
+      ? {
+          sellerId: existingLive.sellerId,
+          sellerNickname: existingLive.sellerNickname,
+          sellerProfileImage: existingLive.sellerProfileImage,
+        }
+      : getCurrentSellerSnapshot();
+    const resolvedThumbnail = thumbnailUrl ?? existingLive?.thumbnail ?? null;
 
-    if (!registeredLives.find((live) => live.streamId === streamId)) {
-      const newLive: Live = {
+    if (!existingLive) {
+      registeredLives.push({
         streamId,
         title: body.title,
         category: body.category,
@@ -218,8 +247,8 @@ export const LiveCreateHandlers = [
         isLive: true,
         createdAt: new Date().toISOString(),
         items: createStreamItems(body.itemIds, body.category, resolvedThumbnail),
-      };
-      registeredLives.push(newLive);
+        ...sellerSnapshot,
+      });
     } else {
       const liveIndex = registeredLives.findIndex((item) => item.streamId === streamId);
 
@@ -238,12 +267,10 @@ export const LiveCreateHandlers = [
       }
     }
 
-    console.log('[Mock] POST /api/v1/streams/:streamId/start, streamId:', streamId, body);
-
     return HttpResponse.json(
       {
         status: 'SUCCESS',
-        message: '요청이 성공적으로 처리되었습니다.',
+        message: 'Stream started successfully.',
         data: {
           status: 'live',
           rtcConfig: {
@@ -260,7 +287,6 @@ export const LiveCreateHandlers = [
   http.patch(`${BASE_URL}/v1/streams/:streamId`, async ({ params, request }) => {
     const streamId = Number(params.streamId);
     const { body, thumbnailUrl } = await parseStreamRequest(request);
-
     const liveIndex = registeredLives.findIndex((item) => item.streamId === streamId);
 
     if (liveIndex !== -1) {
@@ -283,13 +309,11 @@ export const LiveCreateHandlers = [
       status: liveIndex !== -1 && registeredLives[liveIndex].isLive ? 'LIVE' : 'SCHEDULED',
     };
 
-    console.log('[Mock] 방송 수정:', response);
     return HttpResponse.json(response, { status: 200 });
   }),
 
   http.delete(`${BASE_URL}/v1/streams/:streamId`, ({ params }) => {
     const streamId = Number(params.streamId);
-
     const liveIndex = registeredLives.findIndex((item) => item.streamId === streamId);
 
     if (liveIndex !== -1) {
@@ -301,7 +325,6 @@ export const LiveCreateHandlers = [
       status: 'cancelled',
     };
 
-    console.log('[Mock] 방송 삭제(취소):', response);
     return HttpResponse.json(response, { status: 200 });
   }),
 ];
