@@ -3,12 +3,12 @@ package com.ssafy.be.domain.uniqueaction.dto.response;
 import lombok.Builder;
 
 @Builder
-public record UniqueBidStartResponse(
+public record UniqueBidSyncResponse(
         Long minPrice,
         Long maxPrice,
         Long bidUnit,
         int durationSeconds,
         String serverNow,
-        String serverStartedAt
-) {
-}
+        String serverStartedAt,
+        long participantCount
+) {}

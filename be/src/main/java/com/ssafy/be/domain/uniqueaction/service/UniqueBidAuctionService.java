@@ -9,7 +9,9 @@ import com.ssafy.be.domain.uniqueaction.dto.request.UniqueBidCalculateRequest;
 import com.ssafy.be.domain.uniqueaction.dto.request.UniqueBidPlaceRequest;
 import com.ssafy.be.domain.uniqueaction.dto.request.UniqueBidStartRequest;
 import com.ssafy.be.domain.uniqueaction.dto.response.UniqueBidStartResponse;
+import com.ssafy.be.domain.uniqueaction.dto.response.UniqueBidSyncResponse;
 import com.ssafy.be.domain.uniqueaction.entity.UniqueBidAuction;
+import com.ssafy.be.domain.uniqueaction.entity.UniqueBidStatus;
 import com.ssafy.be.domain.uniqueaction.exception.UniqueBidAuctionErrorCode;
 import com.ssafy.be.domain.uniqueaction.repository.UniqueBidAuctionRepository;
 import com.ssafy.be.domain.uniqueaction.repository.UniqueBidRepository;
@@ -18,9 +20,9 @@ import com.ssafy.be.domain.user.exception.UserErrorCode;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.common.util.TimeUtils;
 import com.ssafy.be.global.websocket.exception.StompException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -41,22 +43,16 @@ public class UniqueBidAuctionService {
     public UniqueBidStartResponse startAuction(UniqueBidStartRequest request, Long userId) {
         UniqueBidAuction uniqueAuction = findByAuctionId(request.auctionId());
 
-
         //판매자만 시작 가능
         if (!uniqueAuction.isSeller(userId))
             throw new StompException(UniqueBidAuctionErrorCode.UNAUTHORIZED);
 
         //Live로 상태 변경
-        uniqueAuction.start(TimeUtils.nowAsString());
+        String serverNow = TimeUtils.nowAsString();
+        uniqueAuction.start(serverNow);
 
-        auctionTimerRepository.save(uniqueAuction.getAuctionId(), uniqueAuction.getDuration());
 
-        return UniqueBidStartResponse.builder()
-                .minPrice(uniqueAuction.getMinPrice())
-                .maxPrice(uniqueAuction.getMaxPrice())
-                .bidUnit(uniqueAuction.getAuction().getItem().getBidUnit())
-                .durationSeconds(uniqueAuction.getDuration())
-                .build();
+        return buildStartResponse(uniqueAuction, serverNow);
     }
 
     @Transactional
@@ -82,32 +78,36 @@ public class UniqueBidAuctionService {
         // 잔액 즉시 차감
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new StompException(UserErrorCode.USER_NOT_FOUND));
-        user.deductBalance(request.amount());
+        user.depositBidBalance(request.amount());
 
         return uniqueBidRepository.countParticipants(uniqueAuction.getAuctionId());
     }
 
     @Transactional
     public UniqueAuctionResult aggregate(UniqueBidCalculateRequest request) {
-        UniqueBidAuction uniqueAuction = findByAuctionId(request.auctionId());
+
+        Long auctionId = request.auctionId();
+        UniqueBidAuction uniqueAuction = findByAuctionId(auctionId );
 
         if (!uniqueAuction.isLive())
             throw new StompException(UniqueBidAuctionErrorCode.INVALID_STATUS);
 
-        // LIVE → CALCULATING (이후 placeBid 자동 차단)
+        // LIVE → CALCULATING
+        // placebid 방지 필요
         uniqueAuction.startCalculating();
 
-        Long auctionId = uniqueAuction.getAuctionId();
-        Optional<Long> winnerPrice = uniqueBidRepository.findHighestUniqueBid(auctionId);
+        // 유일 최고가
+        Optional<Long> winnerPrice = uniqueBidRepository.findHighestUniqueBid(auctionId );
+
         // TODO : top 개수 및 기준 변경 필요
-        List<DuplicatePriceInfo> topDuplicates = uniqueBidRepository.findTopPriceDuplicate(auctionId, 3);
+        List<DuplicatePriceInfo> topDuplicates = uniqueBidRepository.findTopPriceDuplicate(auctionId , 3);
 
         // 유찰
         if (winnerPrice.isEmpty()) {
             uniqueAuction.unsold();
             refundAll(auctionId);
             uniqueBidRepository.deleteAll(auctionId);
-            return UniqueAuctionResult.unsold(topDuplicates);
+            return buildUnsoldResult(topDuplicates);
         }
 
         // 낙찰
@@ -115,8 +115,19 @@ public class UniqueBidAuctionService {
                 .findUserIdByAmount(auctionId, winnerPrice.get())
                 .orElseThrow();
 
+        // 옥션 상태 변경
         uniqueAuction.sold();
-        refundAllExcept(auctionId, winnerId); // 탈락자 환불
+
+        // 낙찰자 찾기
+        User winner = userRepository.findById(winnerId)
+                .orElseThrow(() -> new StompException(UserErrorCode.USER_NOT_FOUND));
+
+
+        // 낙찰자 에스크로
+        winner.depositEscrowBalance(winnerPrice.get());
+
+        // 나머지 환불
+        refundAllExcept(auctionId, winnerId);
         uniqueBidRepository.deleteAll(auctionId);
 
         ShippingAddress shipping = shippingAddressRepository
@@ -124,26 +135,38 @@ public class UniqueBidAuctionService {
                 .orElseThrow(() -> new StompException(
                         ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
 
-        return UniqueAuctionResult.won(winnerId, winnerPrice.get(), topDuplicates, shipping);
+        return buildWonResult(winnerId, winnerPrice.get(), topDuplicates, shipping);
     }
+
+    @Transactional(readOnly = true)
+    public UniqueBidSyncResponse syncAuction(Long streamId) {
+        UniqueBidAuction uniqueAuction = uniqueBidAuctionRepository
+                .findByAuction_Stream_IdAndStatus(streamId, UniqueBidStatus.LIVE)
+                .orElseThrow(() -> new StompException(UniqueBidAuctionErrorCode.NOT_LIVE));
+
+        return buildSyncResponse(uniqueAuction);
+    }
+
 
     public Long getStreamIdByAuctionId(Long auctionId) {
         return findByAuctionId(auctionId).getStreamId();
     }
 
+    // 유찰되어 전부 환불
     private void refundAll(Long auctionId) {
         uniqueBidRepository.getAllBids(auctionId).forEach((uid, amt) -> {
             User user = userRepository.findById(Long.parseLong(uid.toString())).orElseThrow();
-            user.refundBalance(Long.parseLong(amt.toString()));
+            user.cancelDepositedBidBalance(Long.parseLong(amt.toString()));
         });
     }
 
+    // 낙찰자 제외 환불
     private void refundAllExcept(Long auctionId, Long winnerId) {
         uniqueBidRepository.getAllBids(auctionId).forEach((uid, amt) -> {
             Long userId = Long.parseLong(uid.toString());
             if (!userId.equals(winnerId)) {
                 User user = userRepository.findById(userId).orElseThrow();
-                user.refundBalance(Long.parseLong(amt.toString()));
+                user.cancelDepositedBidBalance(Long.parseLong(amt.toString()));
             }
         });
     }
@@ -153,4 +176,46 @@ public class UniqueBidAuctionService {
                 .orElseThrow(() -> new StompException(UniqueBidAuctionErrorCode.NOT_FOUND));
     }
 
+
+    private UniqueAuctionResult buildUnsoldResult(List<DuplicatePriceInfo> topDuplicates) {
+        return UniqueAuctionResult.builder()
+                .isWon(false)
+                .topDuplicates(topDuplicates)
+                .build();
+    }
+
+    private UniqueAuctionResult buildWonResult(Long winnerId, Long winnerPrice,
+                                               List<DuplicatePriceInfo> topDuplicates,
+                                               ShippingAddress shipping) {
+        return UniqueAuctionResult.builder()
+                .isWon(true)
+                .winnerId(winnerId)
+                .winnerPrice(winnerPrice)
+                .topDuplicates(topDuplicates)
+                .shippingAddress(shipping)
+                .build();
+    }
+
+    private UniqueBidStartResponse buildStartResponse(UniqueBidAuction uniqueAuction, String serverNow) {
+        return UniqueBidStartResponse.builder()
+                .minPrice(uniqueAuction.getMinPrice())
+                .maxPrice(uniqueAuction.getMaxPrice())
+                .bidUnit(uniqueAuction.getAuction().getItem().getBidUnit())
+                .durationSeconds(uniqueAuction.getDuration())
+                .serverNow(serverNow)
+                .serverStartedAt(uniqueAuction.getStartedAt())
+                .build();
+    }
+
+    private UniqueBidSyncResponse buildSyncResponse(UniqueBidAuction uniqueAuction) {
+        return UniqueBidSyncResponse.builder()
+                .minPrice(uniqueAuction.getMinPrice())
+                .maxPrice(uniqueAuction.getMaxPrice())
+                .bidUnit(uniqueAuction.getAuction().getItem().getBidUnit())
+                .durationSeconds(uniqueAuction.getDuration())
+                .serverNow(TimeUtils.nowAsString())
+                .serverStartedAt(uniqueAuction.getStartedAt())
+                .participantCount(uniqueBidRepository.countParticipants(uniqueAuction.getAuctionId()))
+                .build();
+    }
 }
