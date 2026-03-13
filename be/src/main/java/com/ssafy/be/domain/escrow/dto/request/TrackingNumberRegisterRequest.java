@@ -1,4 +1,4 @@
-package com.ssafy.be.domain.escrow.dto;
+package com.ssafy.be.domain.escrow.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;

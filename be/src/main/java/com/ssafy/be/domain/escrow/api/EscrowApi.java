@@ -1,7 +1,7 @@
 package com.ssafy.be.domain.escrow.api;
 
-import com.ssafy.be.domain.escrow.dto.EscrowCancelRequest;
-import com.ssafy.be.domain.escrow.dto.TrackingNumberRegisterRequest;
+import com.ssafy.be.domain.escrow.dto.request.EscrowCancelRequest;
+import com.ssafy.be.domain.escrow.dto.request.TrackingNumberRegisterRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;

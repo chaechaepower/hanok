@@ -2,11 +2,13 @@ package com.ssafy.be.domain.escrow.service;
 
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.model.Bid;
-import com.ssafy.be.domain.escrow.dto.EscrowCancelRequest;
-import com.ssafy.be.domain.escrow.dto.TrackingNumberRegisterRequest;
+import com.ssafy.be.domain.escrow.dto.request.EscrowCancelRequest;
+import com.ssafy.be.domain.escrow.dto.request.TrackingNumberRegisterRequest;
+import com.ssafy.be.domain.escrow.dto.response.EscrowListResponse;
 import com.ssafy.be.domain.escrow.entity.Escrow;
 import com.ssafy.be.domain.escrow.exception.EscorwErrorCode;
 import com.ssafy.be.domain.escrow.repository.EscrowRepository;
+import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.exception.UserErrorCode;
@@ -18,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static com.ssafy.be.domain.escrow.entity.EscrowStatus.DEPOSITED;
 
@@ -46,8 +49,6 @@ public class EscrowService {
                 .build();
 
         escrowRepository.save(escrow);
-
-        // TODO: 거래내역 생성
     }
 
     @Transactional
@@ -79,6 +80,24 @@ public class EscrowService {
         // 취소
         escrow.cancelEscrow(request.cancelReason());
         escrow.getBuyer().cancelDepositedEscrowBalance(escrow.getWinningPrice());
+    }
+
+    @Transactional(readOnly = true)
+    public List<EscrowListResponse> getAllEscrows(Long userId) {
+        return escrowRepository.findAllBySellerUserId(userId).stream()
+                .map(escrow -> {
+                    Item item = escrow.getAuction().getItem();
+
+                    return EscrowListResponse.builder()
+                            .escrowId(escrow.getId())
+                            .image(item.getImage1())
+                            .itemName(item.getName())
+                            .amount(escrow.getWinningPrice())
+                            .escrowStatus(escrow.getEscrowStatus())
+                            .createdAt(escrow.getCreatedAt())
+                            .build();
+                }
+                ).toList();
     }
 
     private static long calculateFeeAmount(Bid topBid) {

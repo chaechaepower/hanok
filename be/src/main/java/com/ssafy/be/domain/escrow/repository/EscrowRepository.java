@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface EscrowRepository extends JpaRepository<Escrow, Long> {
 
@@ -16,5 +18,13 @@ public interface EscrowRepository extends JpaRepository<Escrow, Long> {
                 and e.seller.user.id=:userId
             """)
     boolean existsEscrowSeller(@Param("escrowId") Long escrowId, @Param("userId") Long userId);
+
+    @Query("""
+            select e from Escrow e
+            join fetch e.auction a
+            join fetch a.item
+            where e.seller.user.id = :userId
+            """)
+    List<Escrow> findAllBySellerUserId(@Param("userId") Long userId);
 }
 
