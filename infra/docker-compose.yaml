@@ -104,6 +104,7 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       GCS_CREDENTIALS_PATH: ${GCS_CREDENTIALS_PATH}
+      GOOGLE_APPLICATION_CREDENTIALS: /app/gcs-key.json
 
   # =============================================
   # LiveKit
