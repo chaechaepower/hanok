@@ -18,7 +18,6 @@ export const usePostStartStream = () => {
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['stream', variables.streamId] });
-      queryClient.invalidateQueries({ queryKey: ['streamEnter', variables.streamId] });
       queryClient.invalidateQueries({ queryKey: ['scheduled-streams'] });
       queryClient.invalidateQueries({ queryKey: ['liveCards'] });
     },

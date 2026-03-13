@@ -67,7 +67,6 @@ export default function LiveRegisterPage() {
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [selectedItems, setSelectedItems] = useState<Product[]>([]);
   const [showInventoryModal, setShowInventoryModal] = useState(false);
-  const [showStartConfirm, setShowStartConfirm] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -199,9 +198,8 @@ export default function LiveRegisterPage() {
       return;
     }
 
-    setShowStartConfirm(true);
+    void submitReadyEntry();
   };
-  const handleStart = handleEnter;
 
   const postStream = usePostStream();
   const postStartStream = usePostStartStream();
@@ -271,9 +269,11 @@ export default function LiveRegisterPage() {
         body: { macros: buildMacrosPayload() },
       });
 
-      navigate(`/live/${targetStreamId}`);
+      navigate(`/live/${targetStreamId}`, {
+        state: { autoOpenStartModal: true },
+      });
     } catch {
-      alert(isEditMode ? 'è«›â‘¹ë„š ?ì„ì ™???ã…½ë™£?ë‰ë’¿?ëˆë–Ž.' : 'è«›â‘¹ë„š ?ê¹…ì¤‰???ã…½ë™£?ë‰ë’¿?ëˆë–Ž.');
+      alert(isEditMode ? '방송 수정에 실패했습니다.' : '방송 등록에 실패했습니다.');
     } finally {
       setIsSubmitting(false);
     }
@@ -411,7 +411,7 @@ export default function LiveRegisterPage() {
           </button>
           <button
             type="button"
-            onClick={handleStart}
+            onClick={handleEnter}
             disabled={isSubmitting}
             className="flex items-center gap-2 px-5 py-2 bg-[#e74c3c] text-white text-sm font-semibold rounded-lg hover:bg-[#c0392b] transition-colors disabled:opacity-50"
           >
@@ -428,7 +428,7 @@ export default function LiveRegisterPage() {
               <FaList className="text-[#e74c3c] text-sm" />
               <h2 className="text-white font-bold text-base">경매 물품 리스트</h2>
             </div>
-            <p className="text-[#888] text-xs leading-relaxed">방송 중 아래 순서대로 화면에 표시 됩니다.</p>
+            <p className="text-[#888] text-xs leading-relaxed">방송 중 아래 순서대로 화면에 표시됩니다.</p>
           </div>
 
           <div className="flex flex-col gap-2 flex-1">
@@ -514,7 +514,7 @@ export default function LiveRegisterPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[#888] text-xs">방송제목</label>
+            <label className="text-[#888] text-xs">방송 제목</label>
             <input
               type="text"
               value={title}
@@ -549,12 +549,7 @@ export default function LiveRegisterPage() {
             </div>
             <div className="flex flex-col gap-2">
               {macroFields.map((macro) => {
-                const cleanCmd = macro.question
-                  .replace('?', '')
-                  .replace('은', '')
-                  .replace('는', '')
-                  .replace('가', '')
-                  .trim();
+                const command = macro.question.trim();
 
                 return (
                   <div key={macro.questionType} className="flex items-center gap-2">
@@ -566,12 +561,12 @@ export default function LiveRegisterPage() {
                           : 'border-white/15 text-white/25 hover:bg-white/5'
                       }`}
                       onClick={() => {
-                        const cmd = '!' + cleanCmd;
+                        const cmd = '!' + command;
                         navigator.clipboard?.writeText(cmd).catch(() => {});
                       }}
                       title="클릭하면 커맨드 복사"
                     >
-                      !{cleanCmd}
+                      !{command}
                     </button>
                     <input
                       type="text"
@@ -610,65 +605,6 @@ export default function LiveRegisterPage() {
           }}
           onClose={() => setShowScheduleModal(false)}
         />
-      )}
-
-      {showStartConfirm && (
-        <>
-          <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={() => setShowStartConfirm(false)} />
-          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-            <div className="w-full max-w-[400px] bg-[#0f0f13] rounded-2xl p-8 shadow-2xl border border-white/10 flex flex-col gap-6">
-              <div className="flex flex-col items-center gap-3 text-center">
-                <div className="w-16 h-16 rounded-full bg-[#e74c3c]/15 flex items-center justify-center">
-                  <MdLiveTv size={32} className="text-[#e74c3c]" />
-                </div>
-                <h2 className="text-white text-xl font-bold">방송을 시작할까요?</h2>
-                <p className="text-[#888] text-sm leading-relaxed">
-                  지금 바로 라이브 방송을 시작합니다.
-                  <br />
-                  시작 후에는 취소할 수 없습니다.
-                </p>
-              </div>
-
-              <div className="bg-white/5 rounded-xl px-4 py-3 flex flex-col gap-1.5">
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#888]">방송 제목</span>
-                  <span className="text-white font-medium truncate max-w-[180px]">{title || '(제목 없음)'}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#888]">카테고리</span>
-                  <span className="text-[#d9b36d] font-medium">{categoryLabel}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-[#888]">경매 물품</span>
-                  <span className="text-white font-medium">{selectedItems.length}개</span>
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowStartConfirm(false)}
-                  disabled={isSubmitting}
-                  className="flex-1 py-3.5 rounded-xl border border-white/20 text-white font-semibold hover:bg-white/10 transition-colors disabled:opacity-50"
-                >
-                  취소
-                </button>
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={async () => {
-                    setShowStartConfirm(false);
-                    await submitReadyEntry();
-                  }}
-                  className="flex-1 py-3.5 rounded-xl bg-[#e74c3c] text-white font-bold hover:bg-[#c0392b] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  <MdLiveTv size={18} />
-                  방송 시작
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
       )}
     </div>
   );

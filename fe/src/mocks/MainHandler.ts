@@ -70,23 +70,29 @@ export const mainHandlers = [
     const registeredLive = getRegisteredLiveById(streamId);
 
     if (registeredLive) {
-      const sellerId = currentUser?.userId ?? 1;
+      const sellerId = registeredLive.sellerId;
 
       return HttpResponse.json({
         streamId: registeredLive.streamId,
         title: registeredLive.title,
         category: registeredLive.category,
+        thumbnail: registeredLive.thumbnail,
+        scheduledAt: registeredLive.scheduledAt,
+        startType: registeredLive.startType,
         status: registeredLive.isLive ? 'LIVE' : 'SCHEDULED',
         notice: registeredLive.notice ?? null,
+        isLive: registeredLive.isLive,
+        createdAt: registeredLive.createdAt,
+        items: registeredLive.items,
         seller: {
           sellerId,
-          nickname: currentUser?.nickname ?? 'seller',
-          profileImage: currentUser?.profileImage ?? null,
+          nickname: registeredLive.sellerNickname,
+          profileImage: registeredLive.sellerProfileImage,
         },
         viewerCount: 0,
         topBidders: [],
         token: `mock-stream-token-${registeredLive.streamId}`,
-        identity: `user-${sellerId}`,
+        identity: `user-${currentUser?.userId ?? 0}`,
         isFollowing: isSellerFollowed(sellerId),
       });
     }
@@ -98,8 +104,14 @@ export const mainHandlers = [
       streamId: stream?.streamId ?? streamId,
       title: stream?.title ?? 'Broadcast title',
       category: stream?.category ?? 'ELECTRONICS',
-      status: 'LIVE',
+      thumbnail: stream?.thumbnailUri ?? null,
+      scheduledAt: stream?.scheduledAt ?? null,
+      startType: stream?.isLive ? 'IMMEDIATE' : 'SCHEDULED',
+      status: stream?.isLive ? 'LIVE' : 'SCHEDULED',
       notice: 'Welcome to the live auction.',
+      isLive: stream?.isLive ?? true,
+      createdAt: stream?.startedAt ?? new Date().toISOString(),
+      items: [],
       seller: {
         sellerId,
         nickname: stream?.seller.nickname ?? 'seller',

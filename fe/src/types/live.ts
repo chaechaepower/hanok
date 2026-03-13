@@ -22,8 +22,14 @@ export type StreamEnterResponse = {
   streamId: number;
   title: string;
   category: string;
+  thumbnail: string | null;
+  scheduledAt: string | null;
+  startType: 'SCHEDULED' | 'IMMEDIATE';
   status: string;
   notice: string | null;
+  isLive: boolean;
+  createdAt: string;
+  items: LiveStreamItem[];
   seller: StreamEnterSeller;
   viewerCount: number;
   topBidders: StreamEnterTopBidder[];
