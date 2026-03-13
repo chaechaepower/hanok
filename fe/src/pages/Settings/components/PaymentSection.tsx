@@ -3,6 +3,10 @@ import { FaCreditCard } from 'react-icons/fa';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetAccount } from '@/api/hooks/useGetAccount';
 import { usePostUserAccount } from '@/api/hooks/usePostUserAccount';
+import { BANKS } from '@/pages/SellerOnboarding/constants';
+
+const BANK_LIST = BANKS.filter((b) => Number(b.code) < 200);
+const STOCK_LIST = BANKS.filter((b) => Number(b.code) >= 200);
 
 export default function PaymentSection() {
   const queryClient = useQueryClient();
@@ -15,32 +19,9 @@ export default function PaymentSection() {
     accountNum: '',
     accountName: '',
   });
-
-  const BANKS = [
-    { code: '088', name: '신한' },
-    { code: '035', name: '제주' },
-    { code: '004', name: '국민' },
-    { code: '003', name: '기업' },
-    { code: '011', name: '농협' },
-    { code: '002', name: '산업' },
-    { code: '007', name: '수협' },
-    { code: '048', name: '신협' },
-    { code: '020', name: '우리' },
-    { code: '081', name: '하나' },
-    { code: '027', name: '한국씨티' },
-    { code: '090', name: '카카오뱅크' },
-    { code: '089', name: '케이뱅크' },
-    { code: '092', name: '토스뱅크' },
-    { code: '039', name: '경남' },
-    { code: '034', name: '광주' },
-    { code: '031', name: '대구' },
-    { code: '032', name: '부산' },
-    { code: '037', name: '전북' },
-    { code: '045', name: '새마을' },
-    { code: '071', name: '우체국' },
-    { code: '050', name: '저축은행' },
-    { code: '012', name: '지역농.축협' },
-  ];
+  const [showBankModal, setShowBankModal] = useState(false);
+  const [bankTab, setBankTab] = useState<'bank' | 'stock'>('bank');
+  const [showForm, setShowForm] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +33,7 @@ export default function PaymentSection() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ['account'] });
           setForm({ bankCode: '', bankName: '', accountNum: '', accountName: '' });
+          setShowForm(false);
           alert('계좌가 등록/변경되었습니다.');
         },
         onError: () => {
@@ -95,64 +77,28 @@ export default function PaymentSection() {
             </div>
           )}
         </div>
-        {!hasAccount ? (
-          <button
-            className="px-6 py-2 bg-white text-black text-[14px] font-semibold rounded-full hover:bg-gray-200 transition-colors"
-            onClick={() => {
-              const formElement = document.getElementById('account-registration-form');
-              if (formElement) {
-                formElement.scrollIntoView({ behavior: 'smooth' });
-                const inputs = formElement.querySelectorAll('input');
-                if (inputs.length > 0) {
-                  (inputs[0] as HTMLElement).focus();
-                }
-              }
-            }}
-          >
-            계좌 등록
-          </button>
-        ) : (
-          <button
-            className="px-6 py-2 bg-white text-black text-[14px] font-semibold rounded-full hover:bg-gray-200 transition-colors"
-            onClick={() => {
-              const formElement = document.getElementById('account-registration-form');
-              if (formElement) {
-                formElement.scrollIntoView({ behavior: 'smooth' });
-                const inputs = formElement.querySelectorAll('input');
-                if (inputs.length > 0) {
-                  (inputs[0] as HTMLElement).focus();
-                }
-              }
-            }}
-          >
-            계좌 변경
-          </button>
-        )}
+        <button
+          className="px-6 py-2 bg-white text-black text-[14px] font-semibold rounded-full hover:bg-gray-200 transition-colors"
+          onClick={() => setShowForm((prev) => !prev)}
+        >
+          {hasAccount ? '계좌 변경' : '계좌 등록'}
+        </button>
       </div>
 
+      {showForm && (
       <div id="account-registration-form">
         <h3 className="text-[17px] font-bold text-white mb-5">계좌 정보 입력</h3>
         <form onSubmit={handleSubmit} className="flex gap-4 items-center">
-          <div className="relative">
-            <select
-              value={form.bankCode}
-              onChange={(e) => {
-                const selected = BANKS.find((b) => b.code === e.target.value);
-                setForm({ ...form, bankCode: e.target.value, bankName: selected?.name ?? '' });
-              }}
-              className="w-[180px] h-[52px] bg-transparent border border-[#2e2e40] rounded-lg px-4 text-[#aaa] outline-none focus:border-[#d9b36d] transition-colors appearance-none cursor-pointer"
-            >
-              <option value="" disabled>
-                은행 선택
-              </option>
-              {BANKS.map((bank) => (
-                <option key={bank.code} value={bank.code}>
-                  {bank.name}
-                </option>
-              ))}
-            </select>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#555] text-xs">▼</div>
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowBankModal(true)}
+            className="w-[180px] h-[52px] bg-transparent border border-[#2e2e40] rounded-lg px-4 text-left outline-none cursor-pointer flex items-center justify-between hover:border-[#d9b36d] transition-colors"
+          >
+            <span className={form.bankCode ? 'text-white' : 'text-[#aaa]'}>
+              {form.bankCode ? form.bankName : '은행 선택'}
+            </span>
+            <span className="text-[#555] text-xs">▼</span>
+          </button>
 
           <input
             type="text"
@@ -179,6 +125,71 @@ export default function PaymentSection() {
           </button>
         </form>
       </div>
+      )}
+
+      {/* 은행 선택 모달 */}
+      {showBankModal && (
+        <div
+          className="fixed inset-0 z-[1000] flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setShowBankModal(false)}
+        >
+          <div
+            className="w-full max-w-[430px] max-h-[70vh] bg-[#1C1C1E] rounded-2xl flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 pt-4 shrink-0">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-[17px] font-bold text-white">은행/증권사 선택</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowBankModal(false)}
+                  className="bg-transparent border-none text-[#8E8E93] text-2xl cursor-pointer p-0"
+                >
+                  &times;
+                </button>
+              </div>
+              <div className="flex border-b border-[#2C2C2E]">
+                {(['bank', 'stock'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setBankTab(tab)}
+                    className={`flex-1 py-2.5 bg-transparent border-none text-sm font-semibold cursor-pointer ${
+                      bankTab === tab
+                        ? 'text-[#CEAF82] border-b-2 border-[#CEAF82]'
+                        : 'text-[#8E8E93] border-b-2 border-transparent'
+                    }`}
+                  >
+                    {tab === 'bank' ? '은행' : '증권사'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="overflow-y-auto px-5 pt-2 pb-5">
+              <div className="grid grid-cols-3 gap-2">
+                {(bankTab === 'bank' ? BANK_LIST : STOCK_LIST).map((b) => (
+                  <button
+                    key={b.code}
+                    type="button"
+                    onClick={() => {
+                      setForm({ ...form, bankCode: b.code, bankName: b.name });
+                      setShowBankModal(false);
+                    }}
+                    className={`py-3 px-1 border-none rounded-lg text-[13px] cursor-pointer text-center whitespace-nowrap overflow-hidden text-ellipsis ${
+                      form.bankCode === b.code
+                        ? 'bg-[#CEAF82] text-[#0B0C10] font-bold'
+                        : 'bg-[#2C2C2E] text-[#E5E5EA] font-normal'
+                    }`}
+                  >
+                    {b.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
