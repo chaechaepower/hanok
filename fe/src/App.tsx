@@ -27,7 +27,7 @@ function App() {
         <Route path="tracking" element={<TrakingInputPage />} />
         <Route path="profile/:id" element={<ProfilePage />} />
         <Route path="seller/register" element={<SellerOnboardingPage />} />
-        <Route path="live/new" element={<LiveCreatePage />} />
+        <Route path="lives" element={<LiveCreatePage />} />
         <Route path="live/register" element={<LiveRegisterPage />} />
         <Route path="live/edit/:id" element={<LiveEditPage />} />
         <Route path="products" element={<ProductListPage />} />

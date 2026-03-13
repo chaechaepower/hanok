@@ -130,7 +130,7 @@ export default function LiveRegisterPage() {
       if (startType === 'IMMEDIATE') {
         navigate(`/live/${newStreamId}`);
       } else {
-        navigate('/live/new');
+        navigate('/lives');
       }
     } catch {
       alert('방송 등록에 실패했습니다.');
@@ -147,7 +147,7 @@ export default function LiveRegisterPage() {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => navigate('/live/new')}
+            onClick={() => navigate('/lives')}
             className="text-white/60 hover:text-white transition-colors"
           >
             <FaArrowLeft size={16} />

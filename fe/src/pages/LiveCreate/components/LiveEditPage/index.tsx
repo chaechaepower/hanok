@@ -1,6 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
-import { FaArrowLeft, FaBroadcastTower, FaCalendarAlt, FaCamera, FaSave, FaCircle, FaList, FaTimes } from 'react-icons/fa';
+import {
+  FaArrowLeft,
+  FaBroadcastTower,
+  FaCalendarAlt,
+  FaCamera,
+  FaSave,
+  FaCircle,
+  FaList,
+  FaTimes,
+} from 'react-icons/fa';
 import { MdLiveTv } from 'react-icons/md';
 import { CATEGORY_MACROS } from '@/constants/macro';
 import { CATEGORIES } from '../categories';
@@ -13,7 +22,6 @@ import type { Product, UpdateStreamRequest } from '@/types';
 import InventorySelectModal from '../InventorySelectModal';
 import ScheduleModal from '../ScheduleModal';
 
-
 export default function LiveEditPage() {
   const { id } = useParams<{ id: string }>();
   const streamId = Number(id);
@@ -24,10 +32,8 @@ export default function LiveEditPage() {
   const { data: streamData } = useGetStream(streamId);
   const { mutateAsync: patchStream } = usePatchStream(streamId);
 
-  const initialCategoryId: string = 
-    streamData?.category ?? 
-    (location.state as { categoryId?: string })?.categoryId ?? 
-    CATEGORIES[0]?.id ?? '';
+  const initialCategoryId: string =
+    streamData?.category ?? (location.state as { categoryId?: string })?.categoryId ?? CATEGORIES[0]?.id ?? '';
 
   const categoryLabel = CATEGORIES.find((c) => c.id === initialCategoryId)?.label ?? streamData?.category ?? '';
 
@@ -57,7 +63,7 @@ export default function LiveEditPage() {
         setSelectedItems(matched);
       }
     }
-  }, [streamData]);
+  }, [filteredInventory, streamData]);
 
   const { data: macroData } = useGetStreamMacros(streamId, initialCategoryId);
   const postMacros = usePostStreamMacros();
@@ -66,7 +72,9 @@ export default function LiveEditPage() {
   useEffect(() => {
     if (macroData?.macros) {
       const initial: Record<string, string> = {};
-      macroData.macros.forEach((m) => { initial[m.questionType] = m.answer; });
+      macroData.macros.forEach((m) => {
+        initial[m.questionType] = m.answer;
+      });
       setMacroAnswers(initial);
     }
   }, [macroData]);
@@ -81,19 +89,23 @@ export default function LiveEditPage() {
 
   const toggleItem = (item: Product) => {
     setSelectedItems((prev) =>
-      prev.some((i) => i.id === item.id)
-        ? prev.filter((i) => i.id !== item.id)
-        : [...prev, item],
+      prev.some((i) => i.id === item.id) ? prev.filter((i) => i.id !== item.id) : [...prev, item],
     );
   };
 
   const handleSchedule = () => {
-    if (!title.trim()) { alert('방송 제목을 입력해주세요.'); return; }
+    if (!title.trim()) {
+      alert('방송 제목을 입력해주세요.');
+      return;
+    }
     setShowScheduleModal(true);
   };
 
   const handleStart = () => {
-    if (!title.trim()) { alert('방송 제목을 입력해주세요.'); return; }
+    if (!title.trim()) {
+      alert('방송 제목을 입력해주세요.');
+      return;
+    }
     setShowStartConfirm(true);
   };
 
@@ -120,7 +132,7 @@ export default function LiveEditPage() {
       if (startType === 'IMMEDIATE') {
         navigate(`/live/${streamId}`);
       } else {
-        navigate('/live/new');
+        navigate('/lives');
       }
     } catch {
       alert('방송 수정에 실패했습니다.');
@@ -132,12 +144,12 @@ export default function LiveEditPage() {
   const currentItem = selectedItems[0] ?? null;
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto px-4 py-6 flex flex-col gap-4">
+    <div className="w-full max-w-350 mx-auto px-4 py-6 flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={() => navigate('/live/new')}
+            onClick={() => navigate('/lives')}
             className="text-white/60 hover:text-white transition-colors"
           >
             <FaArrowLeft size={16} />
@@ -147,7 +159,9 @@ export default function LiveEditPage() {
               <FaCircle className="text-[#e74c3c] text-sm" />
               <h1 className="text-xl font-bold text-white">라이브 방송 수정</h1>
             </div>
-            <p className="text-[#888] text-sm mt-0.5">경매 방송을 기획하세요. · 카테고리: <span className="text-[#d9b36d] font-semibold">{categoryLabel}</span></p>
+            <p className="text-[#888] text-sm mt-0.5">
+              경매 방송을 기획하세요. · 카테고리: <span className="text-[#d9b36d] font-semibold">{categoryLabel}</span>
+            </p>
           </div>
         </div>
 
@@ -162,7 +176,12 @@ export default function LiveEditPage() {
             예약 수정
             {scheduledAt && (
               <span className="text-[#d9b36d] text-xs font-medium ml-1">
-                {new Date(scheduledAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                {new Date(scheduledAt).toLocaleDateString('ko-KR', {
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
               </span>
             )}
           </button>
@@ -185,17 +204,12 @@ export default function LiveEditPage() {
               <FaList className="text-[#e74c3c] text-sm" />
               <h2 className="text-white font-bold text-base">경매 물품 리스트</h2>
             </div>
-            <p className="text-[#888] text-xs leading-relaxed">
-              방송 중 아래 순서대로 화면에 표시 됩니다.
-            </p>
+            <p className="text-[#888] text-xs leading-relaxed">방송 중 아래 순서대로 화면에 표시 됩니다.</p>
           </div>
 
           <div className="flex flex-col gap-2 flex-1">
             {selectedItems.map((item, idx) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-2 border border-white/10 rounded-lg p-2 bg-[#111]"
-              >
+              <div key={item.id} className="flex items-center gap-2 border border-white/10 rounded-lg p-2 bg-[#111]">
                 <span className="text-[#888] text-xs w-4">{idx + 1}</span>
                 <div className="w-8 h-8 rounded bg-[#222] flex items-center justify-center shrink-0">
                   <FaBroadcastTower size={12} className="text-white/30" />
@@ -242,9 +256,7 @@ export default function LiveEditPage() {
                 <p className="text-white font-bold text-base">{currentItem.title}</p>
                 <p className="text-white/60 text-sm">{currentItem.description}</p>
               </div>
-              <p className="text-white font-bold text-lg">
-                {currentItem.startPrice.toLocaleString()}원
-              </p>
+              <p className="text-white font-bold text-lg">{currentItem.startPrice.toLocaleString()}원</p>
             </div>
           )}
         </div>
@@ -309,9 +321,12 @@ export default function LiveEditPage() {
                     questionType: m.questionType,
                     answer: macroAnswers[m.questionType] ?? '',
                   }));
-                  postMacros.mutate({ streamId, body: { macros } }, {
-                    onSuccess: () => alert('매크로가 저장되었습니다.'),
-                  });
+                  postMacros.mutate(
+                    { streamId, body: { macros } },
+                    {
+                      onSuccess: () => alert('매크로가 저장되었습니다.'),
+                    },
+                  );
                 }}
                 className="flex items-center gap-1 text-[#d9b36d] text-xs hover:text-[#f0e6c8] transition-colors"
               >
@@ -321,8 +336,15 @@ export default function LiveEditPage() {
             </div>
             <div className="flex flex-col gap-2">
               {(macroData?.macros ?? []).map((macro) => {
-                const questionStr = CATEGORY_MACROS[categoryLabel]?.find(t => t.questionType === macro.questionType)?.question ?? macro.questionType;
-                const cleanCmd = questionStr.replace('?', '').replace('은', '').replace('는', '').replace('가', '').trim();
+                const questionStr =
+                  CATEGORY_MACROS[categoryLabel]?.find((t) => t.questionType === macro.questionType)?.question ??
+                  macro.questionType;
+                const cleanCmd = questionStr
+                  .replace('?', '')
+                  .replace('은', '')
+                  .replace('는', '')
+                  .replace('가', '')
+                  .trim();
 
                 return (
                   <div key={macro.questionType} className="flex items-center gap-2">
@@ -341,21 +363,17 @@ export default function LiveEditPage() {
                     >
                       !{cleanCmd}
                     </button>
-                  <input
-                    type="text"
-                    value={macroAnswers[macro.questionType] ?? ''}
-                    onChange={(e) =>
-                      setMacroAnswers((prev) => ({ ...prev, [macro.questionType]: e.target.value }))
-                    }
-                    placeholder="응답을 입력해주세요."
-                    className="flex-1 min-w-0 bg-transparent border border-white/15 rounded-lg px-2 py-1.5 text-white text-xs placeholder:text-white/25 outline-none focus:border-white/40"
-                  />
+                    <input
+                      type="text"
+                      value={macroAnswers[macro.questionType] ?? ''}
+                      onChange={(e) => setMacroAnswers((prev) => ({ ...prev, [macro.questionType]: e.target.value }))}
+                      placeholder="응답을 입력해주세요."
+                      className="flex-1 min-w-0 bg-transparent border border-white/15 rounded-lg px-2 py-1.5 text-white text-xs placeholder:text-white/25 outline-none focus:border-white/40"
+                    />
                   </div>
                 );
               })}
-              {!macroData?.macros?.length && (
-                <p className="text-[#888] text-xs">해당 카테고리의 매크로가 없습니다.</p>
-              )}
+              {!macroData?.macros?.length && <p className="text-[#888] text-xs">해당 카테고리의 매크로가 없습니다.</p>}
             </div>
           </div>
         </aside>
@@ -395,7 +413,8 @@ export default function LiveEditPage() {
                 </div>
                 <h2 className="text-white text-xl font-bold">방송을 시작할까요?</h2>
                 <p className="text-[#888] text-sm leading-relaxed">
-                  지금 바로 라이브 방송을 시작합니다.<br />
+                  지금 바로 라이브 방송을 시작합니다.
+                  <br />
                   시작 후에는 취소할 수 없습니다.
                 </p>
               </div>

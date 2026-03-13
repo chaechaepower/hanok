@@ -10,7 +10,7 @@ import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
 
 const sidebarItems: SideBarItem[] = [
   { id: 'inventory', label: '내 인벤토리', icon: <FaBox size={18} />, path: '/products' },
-  { id: 'live', label: '라이브 방송 관리', icon: <FaBroadcastTower size={18} />, path: '/live/new' },
+  { id: 'live', label: '라이브 방송 관리', icon: <FaBroadcastTower size={18} />, path: '/lives' },
   { id: 'delivery', label: '배송 관리', icon: <FaTruck size={18} />, path: '/tracking' },
 ];
 
@@ -63,11 +63,7 @@ export default function LiveCreatePage() {
       >
         <div className="relative w-[130px] h-[100px] rounded-xl overflow-hidden shrink-0 bg-[#1a1a1a]">
           {stream.thumbnail ? (
-            <img
-              src={stream.thumbnail}
-              alt={stream.title}
-              className="w-full h-full object-cover"
-            />
+            <img src={stream.thumbnail} alt={stream.title} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-[#222]">
               <FaBroadcastTower size={32} className="text-white/20" />
@@ -86,15 +82,9 @@ export default function LiveCreatePage() {
         </div>
 
         <div className="flex-1 flex flex-col gap-1.5">
-          <p className="text-[#888] text-sm">
-            {formatScheduledAt(stream.scheduledAt)}
-          </p>
-          <p className="text-white text-base font-semibold">
-            방송 제목 : {stream.title}
-          </p>
-          <p className="text-[#888] text-sm">
-            방송 카테고리 : {getCategoryLabel(stream.category)}
-          </p>
+          <p className="text-[#888] text-sm">{formatScheduledAt(stream.scheduledAt)}</p>
+          <p className="text-white text-base font-semibold">방송 제목 : {stream.title}</p>
+          <p className="text-[#888] text-sm">방송 카테고리 : {getCategoryLabel(stream.category)}</p>
         </div>
 
         <div className="flex items-center gap-4 shrink-0 pr-2">
@@ -145,12 +135,7 @@ export default function LiveCreatePage() {
         <div className="flex flex-col gap-4">{content}</div>
       </main>
 
-      {showModal && (
-        <CategorySelectModal
-          onConfirm={handleConfirmCategory}
-          onClose={() => setShowModal(false)}
-        />
-      )}
+      {showModal && <CategorySelectModal onConfirm={handleConfirmCategory} onClose={() => setShowModal(false)} />}
     </div>
   );
 }
