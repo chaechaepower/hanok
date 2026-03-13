@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface ToastData {
   id: string;
@@ -13,16 +13,29 @@ interface ToastProps extends ToastData {
 
 export default function Toast({ id, title, message, duration = 4000, onClose }: ToastProps) {
   const [isExiting, setIsExiting] = useState(false);
+  const closeTimerRef = useRef<number | null>(null);
+  const isDismissingRef = useRef(false);
 
   const dismiss = useCallback(() => {
+    if (isDismissingRef.current) {
+      return;
+    }
+
+    isDismissingRef.current = true;
     setIsExiting(true);
-    setTimeout(() => onClose(id), 300);
+    closeTimerRef.current = window.setTimeout(() => onClose(id), 300);
   }, [id, onClose]);
 
   useEffect(() => {
-    setIsExiting(false);
-    const timer = setTimeout(dismiss, duration);
-    return () => clearTimeout(timer);
+    const timer = window.setTimeout(dismiss, duration);
+
+    return () => {
+      window.clearTimeout(timer);
+
+      if (closeTimerRef.current !== null) {
+        window.clearTimeout(closeTimerRef.current);
+      }
+    };
   }, [duration, dismiss]);
 
   return (
