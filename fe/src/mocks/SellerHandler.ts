@@ -29,6 +29,17 @@ export const sellerHandlers = [
     return new HttpResponse(null, { status: 200 });
   }),
 
+  http.get(`${BASE_URL}/v1/sellers/verify-bizno`, async ({ request }) => {
+    const url = new URL(request.url);
+    const bizno = url.searchParams.get('bizno');
+
+    if (!bizno || bizno.length !== 10) {
+      return HttpResponse.json({ valid: false }, { status: 200 });
+    }
+
+    return HttpResponse.json({ valid: true }, { status: 200 });
+  }),
+
   http.get(`${BASE_URL}/v1/users/me/seller-status`, async () => {
     return HttpResponse.json({
       isSeller: getCurrentMockUser()?.isSeller ?? false,

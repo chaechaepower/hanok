@@ -34,6 +34,7 @@ const CalendarIcon = () => <FiCalendar size={16} color="#888" />;
 const HistoryIcon = () => <FiClock size={18} color="currentColor" />;
 const GiftIcon = () => <FiGift size={32} color="#D9B36D" />;
 const TruckIcon = () => <FiTruck size={24} color="#D9B36D" />;
+import ReportModal from './components/ReportModal';
 import { useGetEscrows } from '@/api/hooks/useGetEscrows';
 import { useGetEscrowDetail } from '@/api/hooks/useGetEscrowDetail';
 import type { EscrowState } from '@/types';
@@ -88,6 +89,7 @@ export default function ProfilePage() {
   const [noticeContent, setNoticeContent] = useState('');
   const [noticePage] = useState(1);
 
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [selectedEscrowId, setSelectedEscrowId] = useState<string | number | null>(null);
 
   const { data: escrowsData } = useGetEscrows();
@@ -108,6 +110,8 @@ export default function ProfilePage() {
 
   const [isFollowing, setIsFollowing] = useState(false);
 
+  const myUserId = localStorage.getItem('userId');
+  const isMyProfile = myUserId !== null && Number(myUserId) === sellerId;
   const isOwner = mySellerStatus?.isSeller || true;
 
   const handleFollowToggle = () => {
@@ -215,17 +219,19 @@ export default function ProfilePage() {
           <div className="flex-1 flex flex-col gap-3">
             <div className="flex items-center gap-4">
               <h1 className="m-0 text-[26px] font-bold text-white">{nickname}상점</h1>
-              <button
-                className={`py-2 px-[22px] rounded-3xl bg-white text-gray-900 text-sm font-bold border-none cursor-pointer ${isFollowPending || isUnfollowPending ? 'opacity-70' : 'opacity-100'}`}
-                onClick={handleFollowToggle}
-                disabled={isFollowPending || isUnfollowPending}
-              >
-                {isFollowing ? '언팔로우' : '팔로우'}
-              </button>
+              {!isMyProfile && (
+                <button
+                  className={`py-2 px-[22px] rounded-3xl bg-white text-gray-900 text-sm font-bold border-none cursor-pointer ${isFollowPending || isUnfollowPending ? 'opacity-70' : 'opacity-100'}`}
+                  onClick={handleFollowToggle}
+                  disabled={isFollowPending || isUnfollowPending}
+                >
+                  {isFollowing ? '언팔로우' : '팔로우'}
+                </button>
+              )}
               <div className="ml-auto flex gap-4">
                 {/* TODO: 수정api연결 필요 */}
                 <button className="border-none bg-transparent text-[#888] text-sm cursor-pointer hover:text-[var(--color-point)] transition-colors">수정</button>
-                <button className="border-none bg-transparent text-[#888] text-sm cursor-pointer hover:text-[var(--color-point)] transition-colors">신고</button>
+                <button onClick={() => setIsReportModalOpen(true)} className="border-none bg-transparent text-[#888] text-sm cursor-pointer hover:text-[var(--color-point)] transition-colors">신고</button>
               </div>
             </div>
 
@@ -533,6 +539,19 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
+      )}
+
+      {isReportModalOpen && (
+        <ReportModal
+          sellerNickname={nickname}
+          onClose={() => setIsReportModalOpen(false)}
+          onSubmit={(reportData) => {
+            // TODO: 신고 API 연결
+            console.log('신고 데이터:', reportData);
+            alert('신고가 접수되었습니다.');
+            setIsReportModalOpen(false);
+          }}
+        />
       )}
     </div>
   );
