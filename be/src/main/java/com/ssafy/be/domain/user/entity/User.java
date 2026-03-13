@@ -146,4 +146,7 @@ public class User {
         if (nickname != null) this.nickname = nickname;
         if (profileImage != null) this.profileImage = profileImage;
     }
+
+
+
 }
