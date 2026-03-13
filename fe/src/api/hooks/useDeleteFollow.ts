@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { getFetchInstance } from '../instance';
+
 import type { FollowPayload, FollowResponse } from '@/types';
+
+import { getFetchInstance } from '../instance';
 
 export const deleteFollowPath = (userId: string | number) => `/v1/users/${userId}/unfollow`;
 
@@ -16,7 +18,7 @@ export const useDeleteFollow = () => {
     mutationFn: deleteFollow,
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['sellerReputation', variables.userId] });
-      // 언팔로우 후 팔로우한 스토어 목록 갱신
+      queryClient.invalidateQueries({ queryKey: ['liveCards'] });
       queryClient.invalidateQueries({ queryKey: ['followedStores'] });
     },
   });

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { GoHomeFill } from 'react-icons/go';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { useGetStreamEnter } from '@/api/hooks/useGetStreamEnter';
 import WinModal from '@/components/Live/Auction/Buyer/WinModal';
 import AuctionTimer from '@/components/Live/Auction/shared/AuctionTimer';
@@ -15,6 +16,8 @@ import type {
   AuctionCommentPayload,
   BidWinnerPayload,
   ItemSyncPayload,
+  StreamRequest,
+  StreamEnterResponse,
   StreamTimerPayload,
   SyncedAuctionTimer,
 } from '@/types';
@@ -24,6 +27,7 @@ import { disconnectStompClient, sendStreamMessage, subscribeStream } from '@/web
 
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
+import SellerStartModal from './SellerStartModal';
 
 type BroadcastStreamEvent =
   | {
@@ -131,24 +135,32 @@ const createSyncedTimer = (timer: StreamTimerPayload): SyncedAuctionTimer => ({
 export default function LivePage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const location = useLocation();
   const { id: streamId } = useParams<{ id: string }>();
   const numericStreamId = Number(streamId);
+  const shouldAutoOpenStartModal =
+    (location.state as { autoOpenStartModal?: boolean } | null)?.autoOpenStartModal === true;
   const { data: streamEnter } = useGetStreamEnter(numericStreamId);
-  const [isSeller, setIsSeller] = useState(true);
   const [selectedAuctionId, setSelectedAuctionId] = useState<number | null>(null);
   const [timer, setTimer] = useState<SyncedAuctionTimer | null>(null);
   const [winnerInfo, setWinnerInfo] = useState<BidWinnerPayload | null>(null);
+  const [showSellerStartModal, setShowSellerStartModal] = useState(false);
+  const [liveStateOverride, setLiveStateOverride] = useState<boolean | null>(null);
   const [currentItemCond, setCurrentItemCond] = useState('');
   const [auctionStatistics, setAuctionStatistics] = useState<AuctionStatisticsPayload | null>(null);
   const [bidSync, setBidSync] = useState<BidSyncPayload | null>(null);
   const [itemSync, setItemSync] = useState<ItemSyncPayload | null>(null);
   const [auctionComment, setAuctionComment] = useState<{ id: number; message: string } | null>(null);
+  const autoOpenedStartModalStreamIdRef = useRef<number | null>(null);
+  const postStartStream = usePostStartStream();
   const readyItems = itemSync?.items.filter((item) => item.auctionStatus === 'READY') ?? [];
   const introducingAuctionItem = itemSync?.items.find((item) => item.auctionStatus === 'INTRODUCING') ?? null;
   const liveAuctionItem = itemSync?.items.find((item) => item.auctionStatus === 'LIVE') ?? null;
   const selectedAuctionItem = itemSync?.items.find((item) => item.auctionId === selectedAuctionId) ?? null;
   const visibleSelectedAuctionId =
-    selectedAuctionItem && selectedAuctionItem.auctionStatus !== 'SOLD' && selectedAuctionItem.auctionStatus !== 'UNSOLD'
+    selectedAuctionItem &&
+    selectedAuctionItem.auctionStatus !== 'SOLD' &&
+    selectedAuctionItem.auctionStatus !== 'UNSOLD'
       ? selectedAuctionId
       : null;
   const selectedReadyAuctionItem = selectedAuctionItem?.auctionStatus === 'READY' ? selectedAuctionItem : null;
@@ -156,8 +168,82 @@ export default function LivePage() {
   const introduceAuctionId = selectedReadyAuctionItem?.auctionId ?? fallbackReadyAuctionItem?.auctionId ?? null;
   const startAuctionId = introducingAuctionItem?.auctionId ?? null;
   const activeBidAuctionId = liveAuctionItem?.auctionId ?? introducingAuctionItem?.auctionId ?? null;
+  const activeStreamEnter: StreamEnterResponse | null = streamEnter ?? null;
+  const storedUserId =
+    typeof window === 'undefined' ? 0 : Number.parseInt(window.localStorage.getItem('userId') ?? '0', 10);
+  const currentUserId = Number.isFinite(storedUserId) ? storedUserId : 0;
+  const isSeller = activeStreamEnter?.seller.sellerId === currentUserId;
+  const isStreamLive = liveStateOverride ?? Boolean(activeStreamEnter?.isLive);
   const canIntroduce = liveAuctionItem === null && introducingAuctionItem === null && introduceAuctionId !== null;
   const canStart = liveAuctionItem === null && startAuctionId !== null;
+  const canIntroduceAuction = isStreamLive && canIntroduce;
+  const canStartAuction = isStreamLive && canStart;
+  const startRequest = useMemo<StreamRequest | null>(
+    () =>
+      activeStreamEnter
+        ? {
+            title: activeStreamEnter.title,
+            category: activeStreamEnter.category,
+            startType: activeStreamEnter.startType,
+            scheduledAt: activeStreamEnter.scheduledAt ?? undefined,
+            notice: activeStreamEnter.notice ?? undefined,
+            itemIds: activeStreamEnter.items.map((item) => item.itemId),
+          }
+        : null,
+    [activeStreamEnter],
+  );
+
+  const handleSellerStartModalConfirm = async () => {
+    if (
+      isStreamLive ||
+      postStartStream.isPending ||
+      !startRequest ||
+      !Number.isFinite(numericStreamId) ||
+      numericStreamId <= 0
+    ) {
+      return;
+    }
+
+    try {
+      await postStartStream.mutateAsync({
+        streamId: numericStreamId,
+        request: startRequest,
+      });
+      setLiveStateOverride(true);
+      setShowSellerStartModal(false);
+    } catch (error) {
+      console.error('[stream] failed to start stream', error);
+    }
+  };
+
+  const streamTitle = activeStreamEnter?.title ?? '방송 제목';
+
+  useEffect(() => {
+    if (
+      !shouldAutoOpenStartModal ||
+      !isSeller ||
+      !streamEnter ||
+      !startRequest ||
+      !Number.isFinite(numericStreamId) ||
+      numericStreamId <= 0 ||
+      isStreamLive
+    ) {
+      return;
+    }
+
+    if (autoOpenedStartModalStreamIdRef.current === numericStreamId) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      autoOpenedStartModalStreamIdRef.current = numericStreamId;
+      setShowSellerStartModal(true);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [isSeller, isStreamLive, numericStreamId, shouldAutoOpenStartModal, startRequest, streamEnter]);
 
   useEffect(() => {
     if (!auctionComment) {
@@ -292,7 +378,7 @@ export default function LivePage() {
 
   return (
     <div className="flex h-screen w-full flex-col bg-black p-3">
-      <div className="mb-2 flex shrink-0 items-center">
+      <div className="mb-2 flex shrink-0 items-center gap-3">
         <button
           className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-bold text-[#71717A] transition hover:bg-[rgba(255,255,255,0.05)] hover:text-[#A1A1AA]"
           onClick={() => navigate('/')}
@@ -311,6 +397,9 @@ export default function LivePage() {
           </svg>
           <GoHomeFill /> 홈으로
         </button>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold text-white">{streamTitle}</p>
+        </div>
       </div>
 
       <div className="flex min-h-0 flex-1 gap-3">
@@ -323,8 +412,8 @@ export default function LivePage() {
           />
         </div>
         <div className="relative min-w-0 flex-2 overflow-hidden rounded-2xl bg-background">
-          <StreamOverlay viewerCount={streamEnter?.viewerCount ?? 0} />
-          <SellerGuideOverlay />
+          <StreamOverlay viewerCount={activeStreamEnter?.viewerCount ?? 0} />
+          {isSeller && <SellerGuideOverlay />}
           <StreamPlaceholder />
           <ControlBar
             isSeller={isSeller}
@@ -332,37 +421,30 @@ export default function LivePage() {
             activeBidAuctionId={activeBidAuctionId}
             introduceAuctionId={introduceAuctionId}
             startAuctionId={startAuctionId}
-            canIntroduce={canIntroduce}
-            canStart={canStart}
+            canIntroduce={canIntroduceAuction}
+            canStart={canStartAuction}
           />
 
-          {(streamEnter?.notice || auctionComment) && (
+          {(activeStreamEnter?.notice || auctionComment) && (
             <AuctionCommentToast
               key={auctionComment?.id ?? 'stream-notice'}
-              notice={streamEnter?.notice ?? null}
+              notice={activeStreamEnter?.notice ?? null}
               message={auctionComment?.message ?? null}
             />
           )}
 
           <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
-            <div className="flex gap-1 rounded-lg bg-[rgba(0,0,0,.6)] p-1">
-              <button
-                className={`rounded-md px-3 py-1 text-xs font-bold transition ${isSeller ? 'bg-white text-black' : 'text-[#71717a]'}`}
-                onClick={() => setIsSeller(true)}
-              >
-                판매자
-              </button>
-              <button
-                className={`rounded-md px-3 py-1 text-xs font-bold transition ${!isSeller ? 'bg-white text-black' : 'text-[#71717a]'}`}
-                onClick={() => setIsSeller(false)}
-              >
-                구매자
-              </button>
-            </div>
-
             {timer && <AuctionTimer key={timer.receivedAtMs} timer={timer} onExpire={() => undefined} />}
           </div>
 
+          <SellerStartModal
+            open={showSellerStartModal && isSeller && !isStreamLive}
+            streamTitle={streamTitle}
+            isPending={postStartStream.isPending}
+            onConfirm={() => {
+              void handleSellerStartModalConfirm();
+            }}
+          />
           {winnerInfo && (
             <WinModal
               isOpen
@@ -376,7 +458,7 @@ export default function LivePage() {
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <RightPanel isSeller={isSeller} auctionStatistics={auctionStatistics} streamEnter={streamEnter ?? null} />
+          <RightPanel isSeller={isSeller} auctionStatistics={auctionStatistics} streamEnter={activeStreamEnter} />
         </div>
       </div>
     </div>

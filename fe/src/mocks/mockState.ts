@@ -56,6 +56,7 @@ export const mockLoginUsers: MockLoginUser[] = [
 
 let currentMockUser: MockLoginUser | null = null;
 let mockFollowerCount = 342;
+const followedSellerIds = new Set<number>([1, 4, 10, 12, 14]);
 
 export const getCurrentMockUser = () => currentMockUser;
 
@@ -77,4 +78,18 @@ export const incrementMockFollowerCount = () => {
 export const decrementMockFollowerCount = () => {
   mockFollowerCount = Math.max(0, mockFollowerCount - 1);
   return mockFollowerCount;
+};
+
+export const getFollowedSellerIds = () => [...followedSellerIds];
+
+export const isSellerFollowed = (sellerId: number) => followedSellerIds.has(sellerId);
+
+export const followSeller = (sellerId: number) => {
+  followedSellerIds.add(sellerId);
+  return true;
+};
+
+export const unfollowSeller = (sellerId: number) => {
+  followedSellerIds.delete(sellerId);
+  return false;
 };
