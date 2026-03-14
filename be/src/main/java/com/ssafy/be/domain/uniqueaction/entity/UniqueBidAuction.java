@@ -54,12 +54,18 @@ public class UniqueBidAuction {
         return (amount - minPrice) % auction.getItem().getBidUnit() == 0;
     }
 
+    public void introduce() {
+        if (status != UniqueBidStatus.READY)
+            throw new IllegalStateException("READY 상태가 아닙니다");
+        this.status = UniqueBidStatus.INTRODUCING;
+    }
+
     public void start(String startedAt) {
-        if (status != UniqueBidStatus.READY) throw new IllegalStateException("READY 상태가 아닙니다");
+        if (status != UniqueBidStatus.INTRODUCING)
+            throw new IllegalStateException("INTRODUCING 상태가 아닙니다");
         this.status = UniqueBidStatus.LIVE;
         this.startedAt = startedAt;
     }
-
     public void startCalculating() {
         if (status != UniqueBidStatus.LIVE) throw new IllegalStateException("LIVE 상태가 아닙니다");
         this.status = UniqueBidStatus.CALCULATING;

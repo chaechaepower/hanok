@@ -38,19 +38,28 @@ public class UniqueBidAuctionService {
 
 
 
+    @Transactional
+    public void introduceItem(Long auctionId, Long userId) {
+        UniqueBidAuction uniqueAuction = findByAuctionId(auctionId);
+
+        // 판매자만 가능
+        if (!uniqueAuction.isSeller(userId))
+            throw new StompException(UniqueBidAuctionErrorCode.UNAUTHORIZED);
+
+        uniqueAuction.introduce();
+    }
+
+
 
     @Transactional
     public UniqueBidStartResponse startAuction(UniqueBidStartRequest request, Long userId) {
         UniqueBidAuction uniqueAuction = findByAuctionId(request.auctionId());
 
-        //판매자만 시작 가능
         if (!uniqueAuction.isSeller(userId))
             throw new StompException(UniqueBidAuctionErrorCode.UNAUTHORIZED);
 
-        //Live로 상태 변경
         String serverNow = TimeUtils.nowAsString();
-        uniqueAuction.start(serverNow);
-
+        uniqueAuction.start(serverNow); // 이제 INTRODUCING 검증
 
         return buildStartResponse(uniqueAuction, serverNow);
     }
