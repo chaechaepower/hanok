@@ -9,6 +9,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+import static com.ssafy.be.domain.tradereport.entity.TradeType.SETTLEMENT;
+
 @Entity
 @Table(name = "seller")
 @Getter
@@ -25,7 +27,7 @@ public class Seller {
     private String intro;
 
     @Column(nullable = false)
-    private Double rating;
+    private Integer penaltyCount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -60,7 +62,7 @@ public class Seller {
 
     @Builder
     private Seller(String intro,
-                   Double rating,
+                   Integer penaltyCount,
                    SellerType type,
                    String businessNumber,
                    String instaUrl,
@@ -69,7 +71,7 @@ public class Seller {
                    Double avgShipDays,
                    User user) {
         this.intro = intro;
-        this.rating = rating;
+        this.penaltyCount = penaltyCount;
         this.type = type;
         this.businessNumber = businessNumber;
         this.instaUrl = instaUrl;
@@ -84,5 +86,31 @@ public class Seller {
         if (instaUrl != null) this.instaUrl = instaUrl;
         if (youtubeUrl != null) this.youtubeUrl = youtubeUrl;
         if (tiktokUrl != null) this.tiktokUrl = tiktokUrl;
+    }
+
+    public void increasePenaltyCount() {
+        this.penaltyCount++;
+    }
+
+    // 판매자 평점 계산
+    public double getRating() {
+        // 판매자로서 정상 완료한 거래 수 (amount > 0인 정산만)
+        int totalCompletedEscrows = (int) getUser().getTradeReports().stream()
+                .filter(tradeReport -> tradeReport.getTradeType() == SETTLEMENT)
+                .filter(tradeReport -> tradeReport.getAmount() > 0)  // 판매자는 양수
+                .count();
+        
+        int totalTrades = totalCompletedEscrows + this.penaltyCount;
+
+        if (totalTrades == 0) {
+            return 5.0;  // 거래 없으면 기본 5.0
+        }
+
+        // 성공률 기반 점수 (0.0 ~ 5.0)
+        double successRate = (double) totalCompletedEscrows / totalTrades;
+        double rating = successRate * 5.0;
+        
+        // 소수점 둘째자리까지 반올림
+        return Math.round(rating * 100.0) / 100.0;
     }
 }

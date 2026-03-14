@@ -1,11 +1,14 @@
 package com.ssafy.be.domain.user.entity;
 
+import com.ssafy.be.domain.tradereport.entity.TradeReport;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 // [Entity Layer]
 // DB의 user 테이블과 1:1 매핑되는 객체
@@ -71,6 +74,9 @@ public class User {
 
     @Column(name = "notification_setting", nullable = false)
     private Boolean notificationSetting; // 알림 설정 (기본값 true)
+
+    @OneToMany(mappedBy = "user")
+    List<TradeReport> tradeReports = new ArrayList<>();
 
     // 회원가입 시 User 생성을 위한 정적 팩토리 메서드
     // Service에서 new User() 대신 User.createUser()로 생성

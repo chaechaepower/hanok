@@ -35,7 +35,7 @@ public class TestFixture {
     public static Seller createSeller(User user) {
         return Seller.builder()
                 .intro("테스트 판매자입니다.")
-                .rating(5.0)
+                .penaltyCount(0)
                 .type(BUSINESS)
                 .user(user)
                 .build();

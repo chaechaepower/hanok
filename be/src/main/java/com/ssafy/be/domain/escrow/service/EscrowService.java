@@ -150,6 +150,9 @@ public class EscrowService {
 
         escrow.autoCancelEscrow();
         escrow.getBuyer().cancelDepositedEscrowBalance(escrow.getWinningPrice());
+
+        // 판매자 평점 감소
+        escrow.getSeller().increasePenaltyCount();
     }
 
     @Transactional(readOnly = true)

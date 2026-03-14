@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestClient;
 
-import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -59,7 +58,7 @@ public class SellerService {
                 .intro(request.intro() != null ? request.intro() : "")
                 .type(request.type())
                 .businessNumber(request.businessNumber())
-                .rating(0.0)
+                .penaltyCount(0)
                 .instaUrl(request.instaUrl())
                 .youtubeUrl(request.youtubeUrl())
                 .tiktokUrl(request.tiktokUrl())
