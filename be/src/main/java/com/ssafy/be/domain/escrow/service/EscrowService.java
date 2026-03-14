@@ -21,6 +21,7 @@ import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
 import com.ssafy.be.global.websocket.exception.StompException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -139,22 +140,6 @@ public class EscrowService {
         tradeReportRepository.saveAll(List.of(sellerTradeReport, buyerTradeReport));
     }
 
-
-    @Transactional
-    public void autoCancelEscrow(Long escrowId) {
-        Escrow escrow = escrowRepository.findById(escrowId)
-                .orElseThrow(() -> new GlobalException(EscorwErrorCode.ESCROW_NOT_FOUND));
-
-        // DEPOSITED 상태인지
-        validateEscrowStatusDeposited(escrow);
-
-        escrow.autoCancelEscrow();
-        escrow.getBuyer().cancelDepositedEscrowBalance(escrow.getWinningPrice());
-
-        // 판매자 평점 감소
-        escrow.getSeller().increasePenaltyCount();
-    }
-
     @Transactional(readOnly = true)
     public List<EscrowListResponse> getAllEscrows(Long userId) {
         return escrowRepository.findAllBySellerUserId(userId).stream()
@@ -214,12 +199,6 @@ public class EscrowService {
 
     private void validateAvailableCompleteEscrow(Escrow escrow) {
         if (!escrow.isAvailableCompleteEscrow()) {
-            throw new GlobalException(EscorwErrorCode.ESCROW_INVALID_STATUS);
-        }
-    }
-
-    private void validateEscrowStatusDeposited(Escrow escrow) {
-        if (!escrow.isDeposited()) {
             throw new GlobalException(EscorwErrorCode.ESCROW_INVALID_STATUS);
         }
     }

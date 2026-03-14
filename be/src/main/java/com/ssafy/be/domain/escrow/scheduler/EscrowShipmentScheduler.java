@@ -1,5 +1,6 @@
 package com.ssafy.be.domain.escrow.scheduler;
 
+import com.ssafy.be.domain.escrow.service.EscrowCancellationService;
 import com.ssafy.be.domain.escrow.service.EscrowService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,12 +21,12 @@ public class EscrowShipmentScheduler {
     private static final int TIMER_HOURS = 72;
     private final ScheduledExecutorService scheduler = newSingleThreadScheduledExecutor();
     private final Map<Long, ScheduledFuture<?>> scheduledEscrows = new ConcurrentHashMap<>();
-    private final EscrowService escrowService;
+    private final EscrowCancellationService escrowCancellationService;
 
     // 에스크로 자동 취소 스케줄 등록
     public void scheduleEscrow(Long escrowId) {
         ScheduledFuture<?> schedule = scheduler.schedule(
-                () -> escrowService.autoCancelEscrow(escrowId),
+                () -> escrowCancellationService.autoCancelEscrow(escrowId),
                 TIMER_HOURS,
                 TimeUnit.HOURS
         );
