@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.Optional;
+
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
@@ -40,7 +42,7 @@ public class ShippingAddress {
                            String addressDetail,
                            String phone,
                            String recipientName,
-                           boolean isDefault,
+                            Boolean  isDefault,
                            User user) {
         this.addressName = addressName;
         this.postalCode = postalCode;
@@ -50,5 +52,21 @@ public class ShippingAddress {
         this.recipientName = recipientName;
         this.isDefault = isDefault;
         this.user = user;
+    }
+
+    public void update(String addressName, Integer postalCode, String address,
+                       String addressDetail, String phone, String recipientName, Boolean isDefault) {
+        Optional.ofNullable(addressName).ifPresent(v -> this.addressName = v);
+        Optional.ofNullable(postalCode).ifPresent(v -> this.postalCode = v);
+        Optional.ofNullable(address).ifPresent(v -> this.address = v);
+        Optional.ofNullable(addressDetail).ifPresent(v -> this.addressDetail = v);
+        Optional.ofNullable(phone).ifPresent(v -> this.phone = v);
+        Optional.ofNullable(recipientName).ifPresent(v -> this.recipientName = v);
+        Optional.ofNullable(isDefault).ifPresent(v -> this.isDefault = v);
+    }
+
+    // 기본 배송지 해제
+    public void unsetDefault() {
+        this.isDefault = false;
     }
 }
