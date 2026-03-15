@@ -1,9 +1,7 @@
 package com.ssafy.be.domain.user.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.ssafy.be.domain.user.dto.request.AccountRegisterRequest;
-import com.ssafy.be.domain.user.dto.request.IdentityVerificationRequestDto;
-import com.ssafy.be.domain.user.dto.request.SignupRequestDto;
+import com.ssafy.be.domain.user.dto.request.*;
 import com.ssafy.be.domain.user.dto.response.*;
 import com.ssafy.be.domain.user.entity.BankCode;
 import com.ssafy.be.domain.user.entity.User;
@@ -19,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
 
-import com.ssafy.be.domain.user.dto.request.LoginRequestDto;
 import com.ssafy.be.global.infra.redis.RedisService;
 import com.ssafy.be.global.security.util.JwtUtil;
 import io.jsonwebtoken.Claims;
@@ -295,4 +292,17 @@ public class UserService {
         return new AccountRegisterResponse(bankCode.getName(), user.getAccountName(), user.getAccountNum());
     }
 
+    @Transactional
+    public void updatePassword(Long userId, PasswordUpdateRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GlobalException(UserErrorCode.USER_NOT_FOUND));
+
+        // 현재 비밀번호 검증
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new GlobalException(UserErrorCode.INVALID_PASSWORD);
+        }
+
+        // 새 비밀번호 암호화 후 저장
+        user.updatePassword(passwordEncoder.encode(request.newPassword()));
+    }
 }

@@ -228,6 +228,8 @@ public class User {
         if (profileImage != null) this.profileImage = profileImage;
     }
 
-
+    public void updatePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
 
 }

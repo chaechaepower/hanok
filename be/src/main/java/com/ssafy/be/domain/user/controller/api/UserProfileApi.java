@@ -3,6 +3,7 @@ package com.ssafy.be.domain.user.controller.api;
 
 import com.ssafy.be.domain.follow.dto.response.FollowResponse;
 import com.ssafy.be.domain.user.dto.request.AccountRegisterRequest;
+import com.ssafy.be.domain.user.dto.request.PasswordUpdateRequest;
 import com.ssafy.be.domain.user.dto.response.AccountRegisterResponse;
 import com.ssafy.be.domain.user.dto.response.UserProfileResponse;
 import com.ssafy.be.global.common.response.ApiResponse;
@@ -53,4 +54,10 @@ public interface UserProfileApi {
     @GetMapping("/me/account")
     ResponseEntity<ApiResponse<AccountRegisterResponse>> getAccount(
             String principal);
+
+    @Operation(summary = "비밀번호 수정")
+    @PatchMapping("/me/password")
+    ResponseEntity<ApiResponse<Void>> updatePassword(
+            @AuthenticationPrincipal String principal,
+            @RequestBody PasswordUpdateRequest request);
 }
