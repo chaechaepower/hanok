@@ -379,6 +379,30 @@ const completeLiveItem = (streamId: string, finalPrice: number) => {
   return nextPayload;
 };
 
+const getViewerCountForStream = (streamId: string): number => {
+  const destination = `/broadcast/streams/${streamId}`;
+  let count = 0;
+
+  clientSubscriptions.forEach((subscriptions) => {
+    subscriptions.forEach((subscribedDestination) => {
+      if (subscribedDestination === destination) {
+        count++;
+      }
+    });
+  });
+
+  return count;
+};
+
+const broadcastViewerCount = (streamId: string) => {
+  const count = getViewerCountForStream(streamId);
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'VIEWER_COUNT',
+    payload: count,
+  });
+};
+
 const broadcastAuctionStatistics = (streamId: string) => {
   const auctionStatistics = streamAuctionStatisticsStates.get(streamId);
 
@@ -783,6 +807,7 @@ export const liveSocketHandler = liveSocket.addEventListener('connection', ({ cl
 
           if (destination.startsWith('/broadcast/streams/')) {
             sendItemSyncToClient(client, subscriptionId, destination);
+            broadcastViewerCount(getStreamIdFromDestination(destination));
           }
         }
         return;
@@ -792,7 +817,14 @@ export const liveSocketHandler = liveSocket.addEventListener('connection', ({ cl
         const subscriptionId = frame.headers.id;
 
         if (subscriptionId) {
-          getClientSubscriptions(client.id).delete(subscriptionId);
+          const subscriptions = getClientSubscriptions(client.id);
+          const destination = subscriptions.get(subscriptionId);
+
+          subscriptions.delete(subscriptionId);
+
+          if (destination?.startsWith('/broadcast/streams/')) {
+            broadcastViewerCount(getStreamIdFromDestination(destination));
+          }
         }
         return;
       }
@@ -811,6 +843,21 @@ export const liveSocketHandler = liveSocket.addEventListener('connection', ({ cl
       heartbeatTimers.delete(client.id);
     }
 
+    const subscriptions = clientSubscriptions.get(client.id);
+    const affectedStreamIds = new Set<string>();
+
+    if (subscriptions) {
+      subscriptions.forEach((destination) => {
+        if (destination.startsWith('/broadcast/streams/')) {
+          affectedStreamIds.add(getStreamIdFromDestination(destination));
+        }
+      });
+    }
+
     clientSubscriptions.delete(client.id);
+
+    affectedStreamIds.forEach((sid) => {
+      broadcastViewerCount(sid);
+    });
   });
 });
