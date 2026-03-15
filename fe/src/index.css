@@ -13,6 +13,9 @@
   --color-surface: #1a1614;
   --color-surface-elevated: #221e1a;
 
+  /* ── 포인트 (primary alias) ── */
+  --color-point: #8a6e52;
+
   /* ── PRIMARY (브랜드 톤, UI 뼈대, 판매자센터) ── */
   --color-primary-light: #b09880;
   --color-primary: #8a6e52;
@@ -36,6 +39,12 @@
   --color-ember: #3ba88a;
   --color-ember-dark: #2d8a6e;
   --color-ember-muted: #1e5c4a;
+
+  /* ── Warm 베이스 (반투명 유틸리티용) ── */
+  --color-warm: #f0e6d8;
+
+  /* ── 그림자 ── */
+  --shadow-primary-glow: 0 0 0 3px rgba(138, 110, 82, 0.12);
 
   /* ── 뉴트럴 (웜톤 조정) ── */
   --color-neutral-900: #1c1816;

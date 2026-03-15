@@ -1,7 +1,7 @@
 import React from 'react';
 
 type Props = {
-  variant?: 'outline' | 'yellowOutline' | 'white' | 'black' | 'red' | 'yellow';
+  variant?: 'outline' | 'yellowOutline' | 'white' | 'black' | 'red' | 'yellow' | 'navLogin' | 'navSignup';
   size?: 'large' | 'small' | 'responsive';
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
@@ -21,6 +21,9 @@ const variantClass: Record<NonNullable<Props['variant']>, string> = {
   black: 'bg-[#0A0C13] text-white hover:bg-black',
   yellow: 'bg-[#C7B282] text-[#0A0C13] hover:bg-[#C09C57]',
   red: 'bg-[#EF4444] text-white hover:bg-[#da001d]',
+  navLogin: 'bg-primary text-white rounded-[10px] hover:bg-primary-light',
+  navSignup:
+    'bg-transparent text-neutral-300 border border-warm/12 rounded-[10px] hover:border-warm/25 hover:text-neutral-100',
 };
 
 function cx(...classes: Array<string | undefined | false>) {
