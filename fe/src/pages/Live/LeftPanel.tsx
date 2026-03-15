@@ -28,7 +28,7 @@ const STATUS_BADGE: Record<ItemStatus, { label: string; className: string }> = {
   READY: { label: '대기', className: 'text-neutral-500 bg-neutral-500/15 border border-neutral-500/30' },
   INTRODUCING: { label: '설명중', className: 'text-primary-light bg-primary/12 border border-primary/30' },
   LIVE: { label: '경매중', className: 'text-gold bg-gold/12 border border-gold/40' },
-  SOLD: { label: '낙찰', className: 'text-ember bg-ember/12 border border-ember/30' },
+  SOLD: { label: '낙찰', className: 'text-white bg-gold border border-gold' },
   UNSOLD: { label: '유찰', className: 'text-accent-light bg-accent/12 border border-accent/30' },
 };
 
