@@ -9,6 +9,7 @@ import com.ssafy.be.domain.follow.repository.FollowRepository;
 import com.ssafy.be.domain.item.dto.response.ItemSummaryResponse;
 import com.ssafy.be.domain.item.entity.Category;
 import com.ssafy.be.domain.item.entity.Item;
+import com.ssafy.be.domain.item.entity.Tag;
 import com.ssafy.be.domain.item.exception.ItemErrorCode;
 import com.ssafy.be.domain.item.repository.ItemRepository;
 import com.ssafy.be.domain.seller.entity.Seller;
@@ -89,7 +90,7 @@ public class StreamService {
                         Item item = itemRepository
                                 .findByIdAndSellerId(itemId, seller.getId())
                                 .orElseThrow(() -> new GlobalException(ItemErrorCode.ITEM_NOT_FOUND));
-                        auctionRepository.save(
+                        Auction auction = auctionRepository.save(
                                 Auction.builder()
                                         .auctionStatus(AuctionStatus.READY)
                                         .stream(saved)
@@ -98,11 +99,16 @@ public class StreamService {
                         return new ItemSummaryResponse(
                                 item.getId(),
                                 item.getName(),
-                                item.getCategory(),
-                                item.getStartPrice(),
-                                item.getStatus(),
-                                item.getItemCondition(),
+                                item.getDescription(),
+                                item.getTags().stream().map(Tag::getName).toList(),
                                 item.getImage1(),
+                                item.getStartPrice(),
+                                item.getBidUnit(),
+                                item.getAuctionDuration(),
+                                item.getItemCondition(),
+                                item.getCategory(),
+                                auction.getAuctionType(),  // 방금 저장한 auction에서 가져오기
+                                item.getStatus(),
                                 item.getCreatedAt());
                     })
                     .toList();
@@ -155,17 +161,23 @@ public class StreamService {
             }
         }
 
+        // auction에서 item + auctionType 함께 매핑
         List<ItemSummaryResponse> items = auctionRepository.findByStreamId(streamId).stream()
                 .map(auction -> {
                     Item item = auction.getItem();
                     return new ItemSummaryResponse(
                             item.getId(),
                             item.getName(),
-                            item.getCategory(),
-                            item.getStartPrice(),
-                            item.getStatus(),
-                            item.getItemCondition(),
+                            item.getDescription(),
+                            item.getTags().stream().map(Tag::getName).toList(),
                             item.getImage1(),
+                            item.getStartPrice(),
+                            item.getBidUnit(),
+                            item.getAuctionDuration(),
+                            item.getItemCondition(),
+                            item.getCategory(),
+                            auction.getAuctionType(),
+                            item.getStatus(),
                             item.getCreatedAt());
                 })
                 .toList();
@@ -228,17 +240,23 @@ public class StreamService {
                         .findByIdAndSellerId(streamId, seller.getId())
                         .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
+        // auction에서 item + auctionType 함께 매핑
         List<ItemSummaryResponse> items = auctionRepository.findByStreamId(streamId).stream()
                 .map(auction -> {
                     Item item = auction.getItem();
                     return new ItemSummaryResponse(
                             item.getId(),
                             item.getName(),
-                            item.getCategory(),
-                            item.getStartPrice(),
-                            item.getStatus(),
-                            item.getItemCondition(),
+                            item.getDescription(),
+                            item.getTags().stream().map(Tag::getName).toList(),
                             item.getImage1(),
+                            item.getStartPrice(),
+                            item.getBidUnit(),
+                            item.getAuctionDuration(),
+                            item.getItemCondition(),
+                            item.getCategory(),
+                            auction.getAuctionType(),
+                            item.getStatus(),
                             item.getCreatedAt());
                 })
                 .toList();

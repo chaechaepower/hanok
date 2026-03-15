@@ -12,4 +12,5 @@ public interface AuctionRepository extends JpaRepository<Auction, Long> {
     List<Auction> findByStreamId(Long streamId);
     Optional<Auction> findByItemId(Long itemId);
     Optional<Auction> findByStreamIdAndAuctionStatus(Long streamId, AuctionStatus auctionStatus);
+    List<Auction> findByItemIdIn(List<Long> itemIds);
 }
