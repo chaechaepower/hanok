@@ -1,11 +1,23 @@
-import { useState } from 'react';
-import { FiX } from 'react-icons/fi';
+import { useState, useCallback } from 'react';
+import { FiX, FiSearch } from 'react-icons/fi';
 import { FaMapMarkerAlt } from 'react-icons/fa';
 import type { Address, AddressFormState, AddressModalMode } from '@/types';
 import { useGetAddresses } from '@/api/hooks/useGetAddresses';
 import { usePostAddress } from '@/api/hooks/usePostAddress';
 import { usePatchAddress } from '@/api/hooks/usePatchAddress';
 import { useDeleteAddress } from '@/api/hooks/useDeleteAddress';
+
+type JusoResult = {
+  roadAddr: string;
+  jibunAddr: string;
+  zipNo: string;
+  bdNm: string;
+  siNm: string;
+  sggNm: string;
+  emdNm: string;
+};
+
+const JUSO_API_KEY = import.meta.env.VITE_JUSO_API_KEY as string;
 
 const EMPTY_FORM: AddressFormState = {
   label: '',
@@ -22,6 +34,16 @@ export default function ShippingSection() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState<AddressFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState('');
+
+  // 주소 검색 상태
+  const [addressSearchOpen, setAddressSearchOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [searchResults, setSearchResults] = useState<JusoResult[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const countPerPage = 10;
 
   const { data, isLoading } = useGetAddresses();
   const { mutate: createAddress } = usePostAddress();
@@ -93,6 +115,70 @@ export default function ShippingSection() {
       );
     }
   };
+
+  // 도로명 주소 검색
+  const searchAddress = useCallback(
+    async (page: number = 1) => {
+      if (!searchKeyword.trim()) {
+        setSearchError('검색어를 입력해주세요.');
+        return;
+      }
+
+      setSearchLoading(true);
+      setSearchError('');
+
+      try {
+        const params = new URLSearchParams({
+          confmKey: JUSO_API_KEY,
+          currentPage: String(page),
+          countPerPage: String(countPerPage),
+          keyword: searchKeyword.trim(),
+          resultType: 'json',
+        });
+
+        const res = await fetch(`/juso-api/addrlink/addrLinkApi.do?${params.toString()}`);
+        const data = await res.json();
+        const result = data.results;
+
+        if (result.common.errorCode !== '0') {
+          setSearchError(result.common.errorMessage || '주소 검색 중 오류가 발생했습니다.');
+          setSearchResults([]);
+          return;
+        }
+
+        setSearchResults(result.juso ?? []);
+        setTotalCount(Number(result.common.totalCount));
+        setCurrentPage(page);
+      } catch {
+        setSearchError('주소 검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    },
+    [searchKeyword],
+  );
+
+  const openAddressSearch = () => {
+    setSearchKeyword('');
+    setSearchResults([]);
+    setSearchError('');
+    setCurrentPage(1);
+    setTotalCount(0);
+    setAddressSearchOpen(true);
+  };
+
+  const selectAddress = (juso: JusoResult) => {
+    setForm((prev) => ({
+      ...prev,
+      zipCode: juso.zipNo,
+      address: juso.roadAddr,
+      addressDetail: '',
+    }));
+    setAddressSearchOpen(false);
+  };
+
+  const totalPages = Math.ceil(totalCount / countPerPage);
 
   if (isLoading) {
     return (
@@ -169,6 +255,7 @@ export default function ShippingSection() {
         </div>
       )}
 
+      {/* 배송지 추가/수정 모달 */}
       {modalOpen && (
         <div
           className="fixed inset-0 bg-black/70 z-[999] flex items-center justify-center"
@@ -190,27 +277,87 @@ export default function ShippingSection() {
               </button>
             </div>
 
-            {(
-              [
-                { label: '이름', key: 'name', placeholder: '받는 분 이름', type: 'text' },
-                { label: '배송지 별칭', key: 'label', placeholder: '예: 집, 회사', type: 'text' },
-                { label: '우편번호', key: 'zipCode', placeholder: '우편번호', type: 'text' },
-                { label: '주소', key: 'address', placeholder: '도로명 또는 지번 주소', type: 'text' },
-                { label: '상세 주소', key: 'addressDetail', placeholder: '동/호수 등 (선택)', type: 'text' },
-                { label: '휴대폰 번호', key: 'phone', placeholder: '010-0000-0000', type: 'tel' },
-              ] as const
-            ).map(({ label, key, placeholder, type }) => (
-              <div key={key} className="flex flex-col gap-2">
-                <label className="text-[14px] text-[#aaa] font-medium">{label}</label>
+            {/* 이름 */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">이름</label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                placeholder="받는 분 이름"
+                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+              />
+            </div>
+
+            {/* 배송지 별칭 */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">배송지 별칭</label>
+              <input
+                type="text"
+                value={form.label}
+                onChange={(e) => setForm((prev) => ({ ...prev, label: e.target.value }))}
+                placeholder="예: 집, 회사"
+                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+              />
+            </div>
+
+            {/* 우편번호 + 주소 검색 버튼 */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">우편번호</label>
+              <div className="flex gap-2">
                 <input
-                  type={type}
-                  value={form[key]}
-                  onChange={(e) => setForm((prev) => ({ ...prev, [key]: e.target.value }))}
-                  placeholder={placeholder}
-                  className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                  type="text"
+                  value={form.zipCode}
+                  readOnly
+                  placeholder="주소 검색을 이용해주세요"
+                  className="flex-1 box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none cursor-default"
                 />
+                <button
+                  type="button"
+                  onClick={openAddressSearch}
+                  className="flex items-center gap-1.5 px-4 py-3 bg-[#d9b36d] text-[#111] font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-[#c8a45c] transition-colors whitespace-nowrap"
+                >
+                  <FiSearch size={16} />
+                  주소 검색
+                </button>
               </div>
-            ))}
+            </div>
+
+            {/* 주소 (읽기 전용) */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">주소</label>
+              <input
+                type="text"
+                value={form.address}
+                readOnly
+                placeholder="주소 검색을 이용해주세요"
+                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none cursor-default"
+              />
+            </div>
+
+            {/* 상세 주소 */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">상세 주소</label>
+              <input
+                type="text"
+                value={form.addressDetail}
+                onChange={(e) => setForm((prev) => ({ ...prev, addressDetail: e.target.value }))}
+                placeholder="동/호수 등 (선택)"
+                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+              />
+            </div>
+
+            {/* 휴대폰 번호 */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">휴대폰 번호</label>
+              <input
+                type="tel"
+                value={form.phone}
+                onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
+                placeholder="010-0000-0000"
+                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+              />
+            </div>
 
             {formError && <p className="m-0 text-[13px] text-red-400">{formError}</p>}
 
@@ -228,6 +375,126 @@ export default function ShippingSection() {
                 {modalMode === 'add' ? '추가' : '저장'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 도로명 주소 검색 모달 */}
+      {addressSearchOpen && (
+        <div
+          className="fixed inset-0 bg-black/80 z-[1000] flex items-center justify-center"
+          onClick={() => setAddressSearchOpen(false)}
+        >
+          <div
+            className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[520px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] max-h-[80vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="m-0 text-white text-xl font-bold">도로명 주소 검색</h2>
+              <button
+                onClick={() => setAddressSearchOpen(false)}
+                className="bg-transparent border-none text-[#888] cursor-pointer hover:text-white transition-colors"
+              >
+                <FiX size={22} />
+              </button>
+            </div>
+
+            {/* 검색 입력 */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={searchKeyword}
+                onChange={(e) => setSearchKeyword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') searchAddress(1);
+                }}
+                placeholder="도로명, 건물명, 지번 입력"
+                autoFocus
+                className="flex-1 box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+              />
+              <button
+                onClick={() => searchAddress(1)}
+                disabled={searchLoading}
+                className="flex items-center gap-1.5 px-5 py-3 bg-[#d9b36d] text-[#111] font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-[#c8a45c] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <FiSearch size={16} />
+                검색
+              </button>
+            </div>
+
+            {/* 안내 문구 */}
+            {searchResults.length === 0 && !searchError && !searchLoading && (
+              <div className="flex flex-col items-center gap-3 py-8 text-[#666]">
+                <FaMapMarkerAlt size={32} />
+                <div className="text-center text-[14px] leading-relaxed">
+                  <p className="m-0">도로명, 건물명 또는 지번으로 검색하세요.</p>
+                  <p className="m-0 text-[13px] text-[#555] mt-1">예: 판교역로 235, 삼성동 159</p>
+                </div>
+              </div>
+            )}
+
+            {/* 로딩 */}
+            {searchLoading && (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-6 h-6 border-3 border-[#333] border-t-[#d9b36d] rounded-full animate-spin" />
+              </div>
+            )}
+
+            {/* 에러 */}
+            {searchError && <p className="m-0 text-[13px] text-red-400 text-center py-4">{searchError}</p>}
+
+            {/* 검색 결과 */}
+            {!searchLoading && searchResults.length > 0 && (
+              <>
+                <p className="m-0 text-[13px] text-[#888]">
+                  총 <span className="text-[#d9b36d] font-semibold">{totalCount.toLocaleString()}</span>건의 결과
+                </p>
+                <div className="flex flex-col overflow-y-auto max-h-[340px] -mx-2">
+                  {searchResults.map((juso, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => selectAddress(juso)}
+                      className="w-full text-left bg-transparent border-none px-4 py-3.5 cursor-pointer hover:bg-[#2a2a3a] rounded-lg transition-colors group mx-0"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="inline-flex items-center px-2 py-0.5 bg-[#d9b36d]/15 text-[#d9b36d] text-[12px] font-bold rounded mt-0.5 flex-shrink-0">
+                          {juso.zipNo}
+                        </span>
+                        <div className="flex flex-col gap-1 min-w-0">
+                          <span className="text-[14px] text-white group-hover:text-[#d9b36d] transition-colors break-words">
+                            {juso.roadAddr}
+                          </span>
+                          <span className="text-[13px] text-[#777] break-words">{juso.jibunAddr}</span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* 페이지네이션 */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-1 pt-2">
+                    <button
+                      onClick={() => searchAddress(currentPage - 1)}
+                      disabled={currentPage <= 1}
+                      className="px-3 py-1.5 bg-transparent border border-[#2e2e40] text-[#aaa] text-[13px] rounded cursor-pointer hover:bg-[#2a2a3a] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      이전
+                    </button>
+                    <span className="text-[13px] text-[#888] px-3">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      onClick={() => searchAddress(currentPage + 1)}
+                      disabled={currentPage >= totalPages}
+                      className="px-3 py-1.5 bg-transparent border border-[#2e2e40] text-[#aaa] text-[13px] rounded cursor-pointer hover:bg-[#2a2a3a] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      다음
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       )}

@@ -27,6 +27,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/bizno-api/, '/api/fapi'),
       },
+      '/juso-api': {
+        target: 'https://business.juso.go.kr',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/juso-api/, ''),
+      },
     },
   },
 });
