@@ -1,7 +1,9 @@
 package com.ssafy.be.domain.item.controller.api;
 
 import com.ssafy.be.domain.item.dto.request.ItemRegisterRequest;
+import com.ssafy.be.domain.item.dto.request.ItemRegisterSwaggerRequest;
 import com.ssafy.be.domain.item.dto.request.ItemUpdateRequest;
+import com.ssafy.be.domain.item.dto.request.ItemUpdateSwaggerRequest;
 import com.ssafy.be.domain.item.dto.response.ItemRegisterResponse;
 import com.ssafy.be.domain.item.dto.response.ItemSummaryResponse;
 import com.ssafy.be.domain.item.entity.ItemStatus;
@@ -22,7 +24,7 @@ public interface ItemApi {
     @Operation(summary = "물품 등록")
     @RequestBody(content = @Content(
             mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-            schema = @Schema(implementation = ItemRegisterRequest.class)
+            schema = @Schema(implementation = ItemRegisterSwaggerRequest.class)
     ))
     ResponseEntity<ItemRegisterResponse> register(Long userId, ItemRegisterRequest request, List<MultipartFile> images);
 
@@ -32,7 +34,7 @@ public interface ItemApi {
     @Operation(summary = "물품 수정")
     @RequestBody(content = @Content(
             mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
-            schema = @Schema(implementation = ItemUpdateRequest.class)
+            schema = @Schema(implementation = ItemUpdateSwaggerRequest.class)
     ))
     ResponseEntity<ItemRegisterResponse> updateItem(Long userId, Long itemId, ItemUpdateRequest request, List<MultipartFile> images);
 
