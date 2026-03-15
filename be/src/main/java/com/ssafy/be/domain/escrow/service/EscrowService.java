@@ -11,6 +11,7 @@ import com.ssafy.be.domain.escrow.exception.EscorwErrorCode;
 import com.ssafy.be.domain.escrow.repository.EscrowRepository;
 import com.ssafy.be.domain.escrow.scheduler.EscrowShipmentScheduler;
 import com.ssafy.be.domain.item.entity.Item;
+import com.ssafy.be.domain.notification.service.NotificationService;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
 import com.ssafy.be.domain.tradereport.entity.TradeReport;
 import com.ssafy.be.domain.tradereport.entity.TradeType;
@@ -21,7 +22,6 @@ import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
 import com.ssafy.be.global.websocket.exception.StompException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.ssafy.be.domain.escrow.entity.EscrowStatus.DEPOSITED;
+import static com.ssafy.be.domain.notification.model.NotificationType.*;
 
 @RequiredArgsConstructor
 @Service
@@ -37,6 +38,7 @@ public class EscrowService {
     private final EscrowRepository escrowRepository;
     private final TradeReportRepository tradeReportRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
     private final EscrowShipmentScheduler escrowShipmentScheduler;
 
     @Transactional
@@ -56,10 +58,29 @@ public class EscrowService {
                 .shippingAddress(shippingAddress)
                 .build();
 
-        escrowRepository.save(escrow);
+        Escrow savedEscrow = escrowRepository.save(escrow);
 
         // 운송장번호 등록 72시간 타임아웃 스케줄러 예약
         escrowShipmentScheduler.scheduleEscrow(escrow.getId());
+
+        // 알림 발송
+        // 구매자
+        notificationService.sendNotification(
+                buyer.getId(),
+                ESCROW_STARTED_FOR_BUYER.name(),
+                ESCROW_STARTED_FOR_BUYER.getTitle(),
+                ESCROW_STARTED_FOR_BUYER.renderBody(auction.getItem().getName()),
+                "/escrows/" + savedEscrow.getId()
+        );
+
+        // 판매자
+        notificationService.sendNotification(
+                auction.getStream().getSeller().getUser().getId(),
+                ESCROW_STARTED_FOR_SELLER.name(),
+                ESCROW_STARTED_FOR_SELLER.getTitle(),
+                ESCROW_STARTED_FOR_SELLER.renderBody(buyer.getNickname(), auction.getItem().getName()),
+                "/escrows/" + savedEscrow.getId()
+        );
     }
 
     @Transactional
@@ -78,6 +99,25 @@ public class EscrowService {
 
         // 운송장번호 등록 72시간 타임아웃 스케줄러 예약 취소
         escrowShipmentScheduler.cancelScheduledEscrow(escrowId);
+
+        // 알림 발송
+        // 구매자
+        notificationService.sendNotification(
+                escrow.getBuyer().getId(),
+                ESCROW_SHIPPED_FOR_BUYER.name(),
+                ESCROW_SHIPPED_FOR_BUYER.getTitle(),
+                ESCROW_SHIPPED_FOR_BUYER.renderBody(escrow.getSeller().getUser().getNickname(), escrow.getAuction().getItem().getName()),
+                "/escrows/" + escrow.getId()
+        );
+
+        // 판매자
+        notificationService.sendNotification(
+                escrow.getSeller().getUser().getId(),
+                ESCROW_SHIPPED_FOR_SELLER.name(),
+                ESCROW_SHIPPED_FOR_SELLER.getTitle(),
+                ESCROW_SHIPPED_FOR_SELLER.renderBody(escrow.getAuction().getItem().getName()),
+                "/escrows/" + escrow.getId()
+        );
     }
 
     @Transactional
@@ -97,6 +137,25 @@ public class EscrowService {
 
         // 운송장번호 등록 72시간 타임아웃 스케줄러 예약 취소
         escrowShipmentScheduler.cancelScheduledEscrow(escrowId);
+
+        // 알림 발송
+        // 구매자
+        notificationService.sendNotification(
+                escrow.getBuyer().getId(),
+                ESCROW_CANCELLED.name(),
+                ESCROW_CANCELLED.getTitle(),
+                ESCROW_CANCELLED.renderBody(escrow.getAuction().getItem().getName()),
+                "/escrows/" + escrow.getId()
+        );
+
+        // 판매자
+        notificationService.sendNotification(
+                escrow.getSeller().getUser().getId(),
+                ESCROW_CANCELLED.name(),
+                ESCROW_CANCELLED.getTitle(),
+                ESCROW_CANCELLED.renderBody(escrow.getAuction().getItem().getName()),
+                "/escrows/" + escrow.getId()
+        );
     }
 
     @Transactional
@@ -138,6 +197,25 @@ public class EscrowService {
                 .build();
 
         tradeReportRepository.saveAll(List.of(sellerTradeReport, buyerTradeReport));
+
+        // 알림 발송
+        // 구매자
+        notificationService.sendNotification(
+                escrow.getBuyer().getId(),
+                ESCROW_COMPLETED.name(),
+                ESCROW_COMPLETED.getTitle(),
+                ESCROW_COMPLETED.renderBody(escrow.getAuction().getItem().getName()),
+                "/escrows/" + escrow.getId()
+        );
+
+        // 판매자
+        notificationService.sendNotification(
+                escrow.getSeller().getUser().getId(),
+                ESCROW_COMPLETED.name(),
+                ESCROW_COMPLETED.getTitle(),
+                ESCROW_COMPLETED.renderBody(escrow.getAuction().getItem().getName()),
+                "/escrows/" + escrow.getId()
+        );
     }
 
     @Transactional(readOnly = true)

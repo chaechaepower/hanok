@@ -1,20 +1,54 @@
 package com.ssafy.be.domain.notification.model;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum NotificationType {
 
-    // 방송
-    STREAM_STARTED,
-    STREAM_SCHEDULED,
+    // ===== 거래 시작 =====
 
-    // 경매/에스크로
-    AUCTION_WON,
-    AUCTION_LOST,
-    ESCROW_REQUESTED,
-    ESCROW_COMPLETED,
+    ESCROW_STARTED_FOR_BUYER(
+            "거래 시작",
+            "%s을 낙찰하여 거래가 시작되었습니다."
+    ),
 
-    // 배송
-    DELIVERY_REGISTERED,
-    DELIVERY_STARTED,
-    DELIVERY_COMPLETED
+    ESCROW_STARTED_FOR_SELLER(
+            "새로운 주문",
+            "%s님이 %s을 낙찰했습니다. 배송을 준비해주세요."
+    ),
 
+    // ===== 배송 시작 =====
+
+    ESCROW_SHIPPED_FOR_BUYER(
+            "상품 발송",
+            "%s님이 %s을 발송했습니다. 곧 받아보실 수 있어요."
+    ),
+
+    ESCROW_SHIPPED_FOR_SELLER(
+            "배송 시작",
+            "%s을 발송했습니다. 구매자에게 배송 중입니다."
+    ),
+
+    // ===== 거래 완료 =====
+
+    ESCROW_COMPLETED(
+            "거래 완료",
+            "%s 거래가 안전하게 완료되었습니다."
+    ),
+
+    // ===== 거래 취소 =====
+
+    ESCROW_CANCELLED(
+        "거래 취소",
+                "%s 거래가 취소되었습니다."
+    );
+
+    private final String title;
+    private final String body;
+
+    public String renderBody(Object... args) {
+        return String.format(body, args);
+    }
 }

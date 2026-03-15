@@ -6,6 +6,8 @@ import com.ssafy.be.domain.notification.exception.NotificationErrorCode;
 import com.ssafy.be.domain.notification.model.Notification;
 import com.ssafy.be.domain.notification.repository.NotificationRepository;
 import com.ssafy.be.global.exception.GlobalException;
+import com.ssafy.be.global.sse.enums.SseEventType;
+import com.ssafy.be.global.sse.service.SseEmitterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final SseEmitterService sseEmitterService;
 
     // 알림 목록 페이징
     public NotificationPageResponse getNotifications(Long userId, String cursor, int limit) {
@@ -29,7 +32,7 @@ public class NotificationService {
 
         // 2. hasNext = limit+1로 next확인해서 -1 -> 확인된 다음 메모는 삭제하고 해당 갯수 반환
         if (hasNext) {
-            Notification lastNotification = notifications.get(limit-1);
+            Notification lastNotification = notifications.get(limit - 1);
             nextCursor = String.valueOf(lastNotification.id());
             notifications.remove(limit);
         }
@@ -73,13 +76,15 @@ public class NotificationService {
         return unreadCount;
     }
 
-    // 테스트용 발송
+    // 알림 발송
     public void sendNotification(Long userId, String type, String title, String body, String actionUrl) {
         // 하단의 private 메서드를 호출해 도메인 객체(record)를 생성
         Notification newNoti = createNewNotification(userId, type, title, body, actionUrl);
 
         // Repository를 통해 Redis에 저장 (Hash, ZSet, String 카운트 증가 + TTL/Capping 적용)
         notificationRepository.save(newNoti);
+
+        sseEmitterService.sendToClient(SseEventType.NOTIFICATION, userId, from(newNoti));
     }
 
     // 전체 시스템 알림 (예비)
