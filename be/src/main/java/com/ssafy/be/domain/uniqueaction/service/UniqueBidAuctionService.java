@@ -71,8 +71,10 @@ public class UniqueBidAuctionService {
 
         if (!uniqueAuction.isLive())
             throw new StompException(UniqueBidAuctionErrorCode.NOT_LIVE);
+
         if (uniqueAuction.isSeller(userId))
             throw new StompException(UniqueBidAuctionErrorCode.SELF_BID);
+
         if (!uniqueAuction.isValidBidAmount(request.amount()))
             throw new StompException(UniqueBidAuctionErrorCode.INVALID_AMOUNT);
 

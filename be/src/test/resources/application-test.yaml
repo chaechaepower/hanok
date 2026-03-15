@@ -22,3 +22,7 @@ portone:
   secret:
     key: ${PORTONE_SECRET_KEY:portone_test_secret_key}
     webhook: ${PORTONE_SECRET_WEBHOOK:portone_test_secret_webhook} # 추후 운영 서버 도메인으로 웹훅 재등록 필요
+
+bizno:
+  api:
+    key: test-dummy-key
