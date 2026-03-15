@@ -16,6 +16,10 @@ export interface AuctionItem {
   status: ItemStatus;
   condition: ItemCondition;
   thumbnailUrl?: string;
+  description?: string;
+  bidUnit?: number;
+  auctionTime?: number;
+  images?: string[];
 }
 
 interface Props {
@@ -40,6 +44,10 @@ function toAuctionItems(items: ItemSyncItem[]): AuctionItem[] {
     status: item.auctionStatus,
     condition: item.itemCondition,
     thumbnailUrl: item.image || undefined,
+    description: item.description,
+    bidUnit: item.bidUnit,
+    auctionTime: item.auctionTime,
+    images: item.images,
   }));
 }
 
