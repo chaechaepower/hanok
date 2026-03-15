@@ -81,7 +81,7 @@ class SellerNoticeIntegrationTest {
 
         Seller mySeller = sellerRepository.save(Seller.builder()
                 .intro("안녕하세요! 테스트 사업자 셀러입니다.")
-                .rating(5.0)
+                .penaltyCount(0)
                 .type(SellerType.BUSINESS)
                 .user(myUser)
                 .build());
@@ -98,7 +98,7 @@ class SellerNoticeIntegrationTest {
 
         Seller hackerSeller = sellerRepository.save(Seller.builder()
                 .intro("나는 해커다.")
-                .rating(1.0)
+                .penaltyCount(0)
                 .type(SellerType.INDIVIDUAL)
                 .user(hackerUser)
                 .build());

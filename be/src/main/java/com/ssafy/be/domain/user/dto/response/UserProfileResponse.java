@@ -12,4 +12,7 @@ public class UserProfileResponse {
     private final String phone;
     private final Long balance;
     private final Long depositedBalance;
+    private final String bankCode;
+    private final String accountName;
+    private final String accountNum;
 }

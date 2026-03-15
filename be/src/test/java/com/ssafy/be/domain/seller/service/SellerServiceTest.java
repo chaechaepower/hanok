@@ -83,7 +83,7 @@ class SellerServiceTest {
         Seller mockSeller = Seller.builder()
                 .intro("안녕하세요!")
                 .type(SellerType.INDIVIDUAL)
-                .rating(0.0)
+                .penaltyCount(0)
                 .user(mockUser)
                 .build();
 

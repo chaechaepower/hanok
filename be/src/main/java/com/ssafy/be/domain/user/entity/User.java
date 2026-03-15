@@ -1,11 +1,14 @@
 package com.ssafy.be.domain.user.entity;
 
+import com.ssafy.be.domain.tradereport.entity.TradeReport;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 // [Entity Layer]
 // DB의 user 테이블과 1:1 매핑되는 객체
@@ -72,6 +75,9 @@ public class User {
     @Column(name = "notification_setting", nullable = false)
     private Boolean notificationSetting; // 알림 설정 (기본값 true)
 
+    @OneToMany(mappedBy = "user")
+    List<TradeReport> tradeReports = new ArrayList<>();
+
     // 회원가입 시 User 생성을 위한 정적 팩토리 메서드
     // Service에서 new User() 대신 User.createUser()로 생성
     public static User createUser(String email, String encodedPassword,
@@ -113,6 +119,12 @@ public class User {
     public void depositEscrowBalance(Long amount) {
         decreaseDepositedBidBalance(amount);
         increaseDepositedEscrowBalance(amount);
+    }
+
+    // 에스크로 예치 취소
+    public void cancelDepositedEscrowBalance(Long amount) {
+        decreaseDepositedEscrowBalance(amount);
+        increaseBalance(amount);
     }
 
     // 잔액 증가
@@ -177,6 +189,18 @@ public class User {
         this.depositedBidBalance -= amount;
     }
 
+    public void decreaseDepositedEscrowBalance(Long amount) {
+        if (!hasSufficientDepositedEscrowBalance(amount)) {
+            throw new IllegalArgumentException("잔액이 부족합니다.");
+        }
+
+        this.depositedEscrowBalance -= amount;
+    }
+
+    private boolean hasSufficientDepositedEscrowBalance(Long amount) {
+        return this.depositedEscrowBalance >= amount;
+    }
+
     private boolean hasSufficientDepositedBidBalance(Long amount) {
         return this.depositedBidBalance >= amount;
     }
@@ -203,4 +227,7 @@ public class User {
         if (nickname != null) this.nickname = nickname;
         if (profileImage != null) this.profileImage = profileImage;
     }
+
+
+
 }

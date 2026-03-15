@@ -46,7 +46,7 @@ public class UserProfileController implements UserProfileApi {
 
         Long userId = getUserId(principal);
         AccountRegisterResponse response = userService.registerAccount(userId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     @Override
@@ -78,5 +78,12 @@ public class UserProfileController implements UserProfileApi {
             @AuthenticationPrincipal String principal) {
         Long userId = getUserId(principal);
         return ResponseEntity.ok(ApiResponse.success(userService.getMyProfile(userId)));
+    }
+
+    @Override
+    public ResponseEntity<ApiResponse<AccountRegisterResponse>> getAccount(
+            @AuthenticationPrincipal String principal) {
+        Long userId = getUserId(principal);
+        return ResponseEntity.ok(ApiResponse.success(userService.getAccount(userId)));
     }
 }

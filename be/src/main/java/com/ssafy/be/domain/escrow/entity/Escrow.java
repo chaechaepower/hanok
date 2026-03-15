@@ -1,7 +1,6 @@
 package com.ssafy.be.domain.escrow.entity;
 
 import com.ssafy.be.domain.auction.entity.Auction;
-import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
 import com.ssafy.be.domain.user.entity.User;
@@ -17,8 +16,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-import static com.ssafy.be.domain.escrow.entity.EscrowStatus.DEPOSITED;
-import static com.ssafy.be.domain.escrow.entity.EscrowStatus.SHIPPED;
+import static com.ssafy.be.domain.escrow.entity.EscrowStatus.*;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -41,6 +39,8 @@ public class Escrow {
     private String trackingNumber;
 
     private LocalDateTime submittedAt;
+
+    private String cancelReason;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "auction_id")
@@ -92,8 +92,8 @@ public class Escrow {
         this.modifiedAt = modifiedAt;
     }
 
-    public void registerTrackingNumber(String carrierName, String trackingNumber, LocalDateTime submittedAt) {
-        if (!isAvailableRegisterTrackingNumber()) {
+    public void registerShipment(String carrierName, String trackingNumber, LocalDateTime submittedAt) {
+        if (!isAvailableRegisterShipment()) {
             throw new IllegalArgumentException("운송장 번호를 등록할 수 있는 에스크로 상태가 아닙니다.");
         }
 
@@ -103,11 +103,49 @@ public class Escrow {
         this.submittedAt = submittedAt;
     }
 
-    public boolean isEscrowSeller(Long userId) {
+    public void completeEscrow() {
+        this.escrowStatus = COMPLETED;
+    }
+
+    public void manualCancelEscrow(String cancelReason) {
+        if (!isAvailableManualCancelEscrow()) {
+            throw new IllegalArgumentException("취소할 수 있는 에스크로 상태가 아닙니다.");
+        }
+
+        this.escrowStatus = CANCELLED;
+        this.cancelReason = cancelReason;
+    }
+
+    public void autoCancelEscrow() {
+        if (!isDeposited()) {
+            throw new IllegalArgumentException("취소할 수 있는 에스크로 상태가 아닙니다.");
+        }
+
+        this.escrowStatus = CANCELLED;
+        this.cancelReason = "판매자가 운송장번호를 72시간 내에 등록하지 않아 자동 취소됐습니다.";
+    }
+
+    public boolean isSeller(Long userId) {
         return Objects.equals(this.seller.getUser().getId(), userId);
     }
 
-    public boolean isAvailableRegisterTrackingNumber() {
+    public boolean isBuyer(Long userId) {
+        return Objects.equals(this.buyer.getId(), userId);
+    }
+
+    public boolean isAvailableRegisterShipment() {
+        return this.escrowStatus == DEPOSITED;
+    }
+
+    public boolean isAvailableManualCancelEscrow() {
+        return this.escrowStatus == DEPOSITED;
+    }
+
+    public boolean isAvailableCompleteEscrow() {
+        return this.escrowStatus == SHIPPED;
+    }
+
+    public boolean isDeposited() {
         return this.escrowStatus == DEPOSITED;
     }
 }

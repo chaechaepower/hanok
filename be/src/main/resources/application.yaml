@@ -62,3 +62,7 @@ livekit:
   url: ws://localhost:7880
   api-key: ${LIVEKIT_API_KEY:devkey}
   api-secret: ${LIVEKIT_API_SECRET:devsecretkeythatisatleast32characters}
+
+bizno:
+  api:
+    key: ${BIZNO_API_KEY}

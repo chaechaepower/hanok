@@ -276,6 +276,23 @@ public class UserService {
                 .depositedBalance(user.getDepositedBidBalance()
                         + user.getDepositedEscrowBalance()
                         + user.getDepositedWithdrawBalance())
+                .bankCode(user.getBankCode())
+                .accountName(user.getAccountName())
+                .accountNum(user.getAccountNum())
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public AccountRegisterResponse getAccount(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GlobalException(UserErrorCode.USER_NOT_FOUND));
+
+        if (user.getBankCode() == null) {
+            throw new GlobalException(UserErrorCode.ACCOUNT_NOT_FOUND);
+        }
+
+        BankCode bankCode = BankCode.fromCode(user.getBankCode());
+        return new AccountRegisterResponse(bankCode.getName(), user.getAccountName(), user.getAccountNum());
+    }
+
 }

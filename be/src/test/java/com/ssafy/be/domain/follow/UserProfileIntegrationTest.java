@@ -57,7 +57,7 @@ class UserProfileIntegrationTest {
         seller = sellerRepository.save(Seller.builder()
                 .intro("안녕하세요 판매자입니다.")
                 .type(SellerType.INDIVIDUAL)
-                .rating(0.0)
+                .penaltyCount(0)
                 .user(sellerUser)
                 .build());
 

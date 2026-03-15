@@ -25,8 +25,8 @@ public interface UserProfileApi {
             MultipartFile file,
             String principal) throws IOException;
 
-    @Operation(summary = "계좌 정보 등록")
-    @PostMapping("/me/accounts")
+    @Operation(summary = "계좌 정보 등록/수정")
+    @PatchMapping("/me/account")
     ResponseEntity<ApiResponse<AccountRegisterResponse>> registerAccount(
             String principal,
             AccountRegisterRequest request);
@@ -48,4 +48,9 @@ public interface UserProfileApi {
     @GetMapping("/me")
     ResponseEntity<ApiResponse<UserProfileResponse>> getMyProfile(
             @AuthenticationPrincipal String principal);
+
+    @Operation(summary = "계좌 조회")
+    @GetMapping("/me/account")
+    ResponseEntity<ApiResponse<AccountRegisterResponse>> getAccount(
+            String principal);
 }
