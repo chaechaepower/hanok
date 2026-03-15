@@ -7,7 +7,7 @@ import lombok.Builder;
 import java.util.List;
 
 @Builder
-public record UniqueAuctionResult(
+public record UniqueAuctionResultResponse(
         boolean isWon,
         Long winnerId,
         Long winnerPrice,

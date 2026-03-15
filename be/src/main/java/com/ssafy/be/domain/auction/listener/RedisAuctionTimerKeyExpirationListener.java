@@ -39,6 +39,9 @@ public class RedisAuctionTimerKeyExpirationListener extends KeyExpirationEventMe
     public void onMessage(Message message, byte[] pattern) {
         String expiredKey = message.toString();
 
+        // 이미 걸러지지만 명시적 방어
+        if (expiredKey.startsWith("unique:")) return;
+
         // 만료된 key가 경매 타이머 key가 아니라면 무시
         if (!AuctionRedisKeys.isTimerKey(expiredKey)) {
             return;

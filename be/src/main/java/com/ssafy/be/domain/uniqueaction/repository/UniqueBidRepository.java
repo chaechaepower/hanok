@@ -53,14 +53,25 @@ public class UniqueBidRepository {
                 .max(Long::compareTo);
     }
 
+    /*
+    * unique:counts:1
+        ├─ "10000" → 3
+        ├─ "35000" → 1
+        ├─ "50000" → 2
+        └─ "72000" → 1
+     "price" : "cnt"
+    *
+    *
+    * */
     // 가장 많이 겹친 가격
+    // key -> price
     public List<DuplicatePriceInfo> findTopCntDuplicate (Long auctionId, int limit) {
         return redisTemplate.opsForHash().entries(countKey(auctionId))
                 .entrySet().stream()
                 .filter((e -> Long.parseLong(e.getValue().toString())> 1L))
                 .sorted((a,b) -> Long.compare(
-                        Long.parseLong(b.getValue().toString()),
-                        Long.parseLong(a.getValue().toString())
+                        Long.parseLong(b.getKey().toString()),    // price
+                        Long.parseLong(a.getKey().toString())     // price
                 ))
                 .limit(limit)
                 .map(e -> new DuplicatePriceInfo(
@@ -70,6 +81,7 @@ public class UniqueBidRepository {
     }
 
     // 가장 높은 중복 가격
+    // value -> cnt
     public List<DuplicatePriceInfo> findTopPriceDuplicate (Long auctionId, int limit) {
         return redisTemplate.opsForHash().entries(countKey(auctionId))
                 .entrySet().stream()
@@ -95,6 +107,11 @@ public class UniqueBidRepository {
 
     public void deleteAll (Long auctionId) {
         redisTemplate.delete(List.of(bidKey(auctionId), countKey(auctionId)));
+    }
+
+    public boolean existsBid(Long auctionId, Long userId) {
+        return redisTemplate.opsForHash()
+                .hasKey(bidKey(auctionId), userId.toString());
     }
 
 }

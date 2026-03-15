@@ -38,6 +38,7 @@ public class UniqueBidAuctionService {
 
 
 
+    // TODO : 이제 분기가 나뉘면 auctiontype 리턴필요하지 않나?
     @Transactional
     public void introduceItem(Long auctionId, Long userId) {
         UniqueBidAuction uniqueAuction = findByAuctionId(auctionId);
@@ -70,8 +71,10 @@ public class UniqueBidAuctionService {
 
         if (!uniqueAuction.isLive())
             throw new StompException(UniqueBidAuctionErrorCode.NOT_LIVE);
+
         if (uniqueAuction.isSeller(userId))
             throw new StompException(UniqueBidAuctionErrorCode.SELF_BID);
+
         if (!uniqueAuction.isValidBidAmount(request.amount()))
             throw new StompException(UniqueBidAuctionErrorCode.INVALID_AMOUNT);
 
@@ -147,13 +150,14 @@ public class UniqueBidAuctionService {
         return buildWonResult(winnerId, winnerPrice.get(), topDuplicates, shipping);
     }
 
+
     @Transactional(readOnly = true)
-    public UniqueBidSyncResponse syncAuction(Long streamId) {
+    public UniqueBidSyncResponse syncAuction(Long streamId, Long userId) {
         UniqueBidAuction uniqueAuction = uniqueBidAuctionRepository
                 .findByAuction_Stream_IdAndStatus(streamId, UniqueBidStatus.LIVE)
                 .orElseThrow(() -> new StompException(UniqueBidAuctionErrorCode.NOT_LIVE));
 
-        return buildSyncResponse(uniqueAuction);
+        return buildSyncResponse(uniqueAuction, userId);
     }
 
 
@@ -216,7 +220,7 @@ public class UniqueBidAuctionService {
                 .build();
     }
 
-    private UniqueBidSyncResponse buildSyncResponse(UniqueBidAuction uniqueAuction) {
+    private UniqueBidSyncResponse buildSyncResponse(UniqueBidAuction uniqueAuction, Long userId) {
         return UniqueBidSyncResponse.builder()
                 .minPrice(uniqueAuction.getMinPrice())
                 .maxPrice(uniqueAuction.getMaxPrice())
@@ -225,6 +229,7 @@ public class UniqueBidAuctionService {
                 .serverNow(TimeUtils.nowAsString())
                 .serverStartedAt(uniqueAuction.getStartedAt())
                 .participantCount(uniqueBidRepository.countParticipants(uniqueAuction.getAuctionId()))
+                .hasBid(uniqueBidRepository.existsBid(uniqueAuction.getAuctionId(), userId))
                 .build();
     }
 }

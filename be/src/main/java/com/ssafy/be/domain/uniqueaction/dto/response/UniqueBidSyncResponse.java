@@ -10,5 +10,6 @@ public record UniqueBidSyncResponse(
         int durationSeconds,
         String serverNow,
         String serverStartedAt,
-        long participantCount
+        long participantCount,
+        boolean hasBid
 ) {}

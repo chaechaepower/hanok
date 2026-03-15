@@ -35,5 +35,14 @@ public enum StreamEventType {
     STREAM_PAUSED,      // 방송 일시 중단 (재연결 대기)
     STREAM_RESUMED,     // 방송 재연결 성공
     STREAM_FAILED,      // 방송 재연결 실패
+
+    // 유일 호가 경매
+    UNIQUE_AUCTION_START,
+    UNIQUE_BID_PLACE,
+    UNIQUE_BID_ACK,
+    UNIQUE_AUCTION_STATS,
+    UNIQUE_AUCTION_CALCULATING,
+    UNIQUE_AUCTION_END,
+    UNIQUE_BID_SYNC
 }
 
