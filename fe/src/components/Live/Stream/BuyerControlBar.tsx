@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import { IoChatbubbleOutline, IoCheckmark } from 'react-icons/io5';
 import { LuEye, LuVolume2, LuVolumeOff } from 'react-icons/lu';
@@ -31,6 +31,7 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
   const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
   const { data: wallet } = useGetWallet(isLoggedIn);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
   const [muted, setMuted] = useState(false);
   const [tab, setTab] = useState<BidTab>('quick');
   const [customUnit, setCustomUnit] = useState(1000);
@@ -66,7 +67,7 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
     });
   }, [streamId]);
 
-  const handleBidPlace = () => {
+  const handleBidPlace = useCallback(() => {
     if (!hasActiveAuction) {
       return;
     }
@@ -104,7 +105,7 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
     }).catch((error) => {
       console.error('[stream] failed to send BID_PLACED', error);
     });
-  };
+  }, [hasActiveAuction, isLoggedIn, hasRegisteredShippingAddress, isInsufficientBalance, streamId, activeAuctionId, effectiveBidAmount]);
 
   const handleBidAccessAction = () => {
     if (bidAccessModal === 'login') {
@@ -116,21 +117,87 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
     setBidAccessModal(null);
   };
 
-  const handleDecrease = () => {
+  const handleDecrease = useCallback(() => {
     if (isFreeMode) {
       return;
     }
 
     setBidAmount((prev) => Math.max(minimumBidAmount, Math.max(prev, minimumBidAmount) - quickUnit));
-  };
+  }, [isFreeMode, minimumBidAmount, quickUnit]);
 
-  const handleIncrease = () => {
+  const handleIncrease = useCallback(() => {
     if (isFreeMode) {
       return;
     }
 
     setBidAmount((prev) => Math.min(balance, Math.max(prev, minimumBidAmount) + quickUnit));
-  };
+  }, [isFreeMode, balance, minimumBidAmount, quickUnit]);
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      setActiveKeys((prev) => new Set(prev).add(event.key));
+
+      switch (event.key) {
+        case 'Tab':
+          event.preventDefault();
+          setTab((prev) => (prev === 'quick' ? 'custom' : 'quick'));
+          break;
+        case 'Enter':
+          event.preventDefault();
+          handleBidPlace();
+          break;
+        case 'ArrowUp':
+          event.preventDefault();
+          handleIncrease();
+          break;
+        case 'ArrowDown':
+          event.preventDefault();
+          handleDecrease();
+          break;
+        case 'ArrowLeft': {
+          event.preventDefault();
+          const currentIndex = CUSTOM_UNIT_OPTIONS.findIndex((o) => o.value === customUnit);
+          const prevIndex = (currentIndex - 1 + CUSTOM_UNIT_OPTIONS.length) % CUSTOM_UNIT_OPTIONS.length;
+          setCustomUnit(CUSTOM_UNIT_OPTIONS[prevIndex].value);
+          break;
+        }
+        case 'ArrowRight': {
+          event.preventDefault();
+          const currentIndex = CUSTOM_UNIT_OPTIONS.findIndex((o) => o.value === customUnit);
+          const nextIndex = (currentIndex + 1) % CUSTOM_UNIT_OPTIONS.length;
+          setCustomUnit(CUSTOM_UNIT_OPTIONS[nextIndex].value);
+          break;
+        }
+      }
+    },
+    [customUnit, handleBidPlace, handleIncrease, handleDecrease],
+  );
+
+  const handleKeyUp = useCallback((event: KeyboardEvent) => {
+    setActiveKeys((prev) => {
+      const next = new Set(prev);
+      next.delete(event.key);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [handleKeyDown, handleKeyUp]);
 
   const handleFreeInput = (value: string) => {
     const nextValue = value.replace(/[^0-9]/g, '');
@@ -148,7 +215,7 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
     <>
       <div className="absolute bottom-4 left-4 right-4 flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
-          <KeyboardGuide open={guideOpen} onToggle={setGuideOpen} />
+          <KeyboardGuide open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} />
 
           <div className="mx-4 flex h-32.5 flex-1">
             <div

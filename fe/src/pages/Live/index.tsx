@@ -332,7 +332,7 @@ export default function LivePage() {
           />
         </div>
         <div className="relative min-w-0 flex-2 overflow-hidden rounded-2xl bg-background">
-          <StreamOverlay viewerCount={viewerCount} />
+          <StreamOverlay viewerCount={viewerCount} isSeller={isSeller} />
           {isSeller && <SellerGuideOverlay />}
           <StreamPlaceholder />
           <ControlBar
@@ -343,6 +343,9 @@ export default function LivePage() {
             startAuctionId={startAuctionId}
             canIntroduce={canIntroduceAuction}
             canStart={canStartAuction}
+            readyItems={readyItems}
+            selectedAuctionId={selectedAuctionId}
+            onSelectAuctionItem={setSelectedAuctionId}
           />
 
           {(activeStreamEnter?.notice || auctionComment) && (

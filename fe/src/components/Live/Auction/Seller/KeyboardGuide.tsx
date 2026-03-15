@@ -5,12 +5,23 @@ import { LuKeyboard } from 'react-icons/lu';
 const CLOSED_WIDTH = 60;
 const OPEN_WIDTH = 360;
 
+const KEY_BASE = 'flex items-center justify-center rounded-lg transition-colors duration-100';
+const KEY_INACTIVE = 'bg-neutral-800 text-neutral-300';
+const KEY_ACTIVE = 'bg-gold text-background';
+const KEY_DISABLED = 'bg-neutral-900 text-neutral-600';
+
+const BADGE_BASE = 'inline-flex items-center justify-center rounded transition-colors duration-100';
+const BADGE_INACTIVE = 'bg-neutral-800 text-neutral-300';
+const BADGE_ACTIVE = 'bg-gold text-background';
+
 interface Props {
   open: boolean;
   onToggle: (open: boolean) => void;
+  activeKeys?: Set<string>;
 }
 
-export default function KeyboardGuide({ open, onToggle }: Props) {
+export default function KeyboardGuide({ open, onToggle, activeKeys = new Set() }: Props) {
+  const isActive = (key: string) => activeKeys.has(key);
   return (
     <motion.div
       initial={false}
@@ -34,23 +45,27 @@ export default function KeyboardGuide({ open, onToggle }: Props) {
         <div className="flex flex-col items-center gap-1">
           <div className="flex gap-1">
             <div className="w-9" />
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-800 text-neutral-300">
+            <div className={`h-9 w-9 ${KEY_BASE} ${isActive('ArrowUp') ? KEY_ACTIVE : KEY_INACTIVE}`}>
               <IoChevronUp size={14} />
             </div>
             <div className="w-9" />
           </div>
           <div className="flex gap-1">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-900 text-neutral-600">
+            <div className={`h-9 w-9 ${KEY_BASE} ${KEY_DISABLED}`}>
               <IoChevronBack size={12} />
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-800 text-neutral-300">
+            <div className={`h-9 w-9 ${KEY_BASE} ${isActive('ArrowDown') ? KEY_ACTIVE : KEY_INACTIVE}`}>
               <IoChevronDown size={14} />
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-900 text-neutral-600">
+            <div className={`h-9 w-9 ${KEY_BASE} ${KEY_DISABLED}`}>
               <IoChevronForward size={12} />
             </div>
           </div>
-          <div className="mt-0.5 w-full rounded-lg bg-neutral-800 py-1.5 text-center text-[10px] font-bold tracking-widest text-neutral-300">
+          <div
+            className={`mt-0.5 w-full rounded-lg py-1.5 text-center text-[10px] font-bold tracking-widest transition-colors duration-100 ${
+              isActive(' ') ? 'bg-gold text-background' : 'bg-neutral-800 text-neutral-300'
+            }`}
+          >
             SPACE
           </div>
         </div>
@@ -58,16 +73,16 @@ export default function KeyboardGuide({ open, onToggle }: Props) {
         {/* 단축키 설명 */}
         <div className="flex flex-col justify-center gap-3 text-[11px] text-neutral-400">
           <div className="flex items-center gap-2">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded bg-neutral-800 text-[10px] font-bold text-neutral-300">↑</span>
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded bg-neutral-800 text-[10px] font-bold text-neutral-300">↓</span>
+            <span className={`h-7 w-7 text-[10px] font-bold ${BADGE_BASE} ${isActive('ArrowUp') ? BADGE_ACTIVE : BADGE_INACTIVE}`}>↑</span>
+            <span className={`h-7 w-7 text-[10px] font-bold ${BADGE_BASE} ${isActive('ArrowDown') ? BADGE_ACTIVE : BADGE_INACTIVE}`}>↓</span>
             <span>물품 이동</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex h-7 items-center justify-center rounded bg-neutral-800 px-2 text-[10px] font-bold text-neutral-300">SPACE</span>
+            <span className={`h-7 px-2 text-[10px] font-bold ${BADGE_BASE} ${isActive(' ') ? BADGE_ACTIVE : BADGE_INACTIVE}`}>SPACE</span>
             <span>설명 시작</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex h-7 items-center justify-center rounded bg-neutral-800 px-2 text-[10px] font-bold text-neutral-300">↵</span>
+            <span className={`h-7 px-2 text-[10px] font-bold ${BADGE_BASE} ${isActive('Enter') ? BADGE_ACTIVE : BADGE_INACTIVE}`}>↵</span>
             <span>경매 시작</span>
           </div>
         </div>

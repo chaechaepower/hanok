@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { LuMic, LuMicOff, LuVideo, LuVideoOff } from 'react-icons/lu';
 import KeyboardGuide from '@/components/Live/Auction/Seller/KeyboardGuide';
 import { useParams } from 'react-router-dom';
@@ -6,21 +6,38 @@ import { sendStreamMessage } from '@/websocket/stompClient';
 
 // 판매자 전용 컨트롤바
 // 좌: 키보드 가이드 | 중앙: 액션 버튼 (설명/경매 시작) | 우: 미디어
+interface ReadyItem {
+  auctionId: number;
+  auctionStatus: string;
+}
+
 interface Props {
   introduceAuctionId: number | null;
   startAuctionId: number | null;
   canIntroduce: boolean;
   canStart: boolean;
+  readyItems: ReadyItem[];
+  selectedAuctionId: number | null;
+  onSelectAuctionItem: (id: number | null) => void;
 }
 
-export default function SellerControlBar({ introduceAuctionId, startAuctionId, canIntroduce, canStart }: Props) {
+export default function SellerControlBar({
+  introduceAuctionId,
+  startAuctionId,
+  canIntroduce,
+  canStart,
+  readyItems,
+  selectedAuctionId,
+  onSelectAuctionItem,
+}: Props) {
   const [guideOpen, setGuideOpen] = useState(false);
+  const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
   const [micMuted, setMicMuted] = useState(false);
   const [videoOff, setVideoOff] = useState(false);
   const { id: streamId } = useParams<{ id: string }>();
 
   // 경매 시작 socket
-  const handleAuctionStart = () => {
+  const handleAuctionStart = useCallback(() => {
     if (!streamId) {
       console.error('[stream] missing streamId for AUCTION_START');
       return;
@@ -39,9 +56,9 @@ export default function SellerControlBar({ introduceAuctionId, startAuctionId, c
     }).catch((error) => {
       console.error('[stream] failed to send AUCTION_START', error);
     });
-  };
+  }, [streamId, startAuctionId]);
 
-  const handleAuctionItemIntroduce = () => {
+  const handleAuctionItemIntroduce = useCallback(() => {
     if (!streamId) {
       console.error('[stream] missing streamId for ITEM_INTRODUCE');
       return;
@@ -60,12 +77,76 @@ export default function SellerControlBar({ introduceAuctionId, startAuctionId, c
     }).catch((error) => {
       console.error('[stream] failed to send ITEM_INTRODUCE', error);
     });
-  };
+  }, [streamId, introduceAuctionId]);
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement;
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      setActiveKeys((prev) => new Set(prev).add(event.key));
+
+      switch (event.key) {
+        case ' ':
+          event.preventDefault();
+          if (canIntroduce) {
+            handleAuctionItemIntroduce();
+          }
+          break;
+        case 'Enter':
+          event.preventDefault();
+          if (canStart) {
+            handleAuctionStart();
+          }
+          break;
+        case 'ArrowUp': {
+          event.preventDefault();
+          if (readyItems.length === 0) break;
+          const currentIndex = readyItems.findIndex((item) => item.auctionId === selectedAuctionId);
+          const prevIndex = currentIndex <= 0 ? readyItems.length - 1 : currentIndex - 1;
+          onSelectAuctionItem(readyItems[prevIndex].auctionId);
+          break;
+        }
+        case 'ArrowDown': {
+          event.preventDefault();
+          if (readyItems.length === 0) break;
+          const currentIndex = readyItems.findIndex((item) => item.auctionId === selectedAuctionId);
+          const nextIndex = currentIndex < 0 || currentIndex >= readyItems.length - 1 ? 0 : currentIndex + 1;
+          onSelectAuctionItem(readyItems[nextIndex].auctionId);
+          break;
+        }
+      }
+    },
+    [canIntroduce, canStart, handleAuctionItemIntroduce, handleAuctionStart, readyItems, selectedAuctionId, onSelectAuctionItem],
+  );
+
+  const handleKeyUp = useCallback((event: KeyboardEvent) => {
+    setActiveKeys((prev) => {
+      const next = new Set(prev);
+      next.delete(event.key);
+      return next;
+    });
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [handleKeyDown, handleKeyUp]);
 
   return (
     <div className="absolute bottom-4 left-4 right-4 flex items-stretch justify-between">
       {/* 좌하단: 키보드 가이드 */}
-      <KeyboardGuide open={guideOpen} onToggle={setGuideOpen} />
+      <KeyboardGuide open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} />
 
       {/* 하단 중앙: 액션 버튼 */}
       <div className="flex flex-1 items-center flex-col gap-2 px-4">
