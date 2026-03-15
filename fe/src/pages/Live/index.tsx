@@ -1,7 +1,6 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { GoHomeFill } from 'react-icons/go';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { useGetStreamEnter } from '@/api/hooks/useGetStreamEnter';
@@ -14,82 +13,24 @@ import SellerGuideOverlay from '@/components/Live/Stream/SellerGuideOverlay';
 import StreamOverlay from '@/components/Live/Stream/StreamOverlay';
 import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
 import type {
-  AuctionCommentPayload,
+  AuctionStatisticsPayload,
+  BidSyncPayload,
   BidWinnerPayload,
+  BroadcastStreamEvent,
   ItemSyncPayload,
+  PrivateStreamEvent,
   StreamRequest,
   StreamEnterResponse,
   StreamTimerPayload,
   SyncedAuctionTimer,
 } from '@/types';
-import type { AuctionStatisticsPayload } from '@/types';
-import type { BidSyncPayload } from '@/types';
 import { disconnectStompClient, sendStreamMessage, subscribeStream } from '@/websocket/stompClient';
 
 import LeftPanel from './LeftPanel';
+import LiveHeader from './LiveHeader';
 import RightPanel from './RightPanel';
 import SellerStartModal from './SellerStartModal';
 
-type BroadcastStreamEvent =
-  | {
-      eventType: 'AUCTION_START';
-      payload?: {
-        item?: {
-          name?: string;
-          condition?: string;
-          bidUnit?: number;
-          startPrice?: number;
-        };
-        timer?: StreamTimerPayload;
-      };
-    }
-  | {
-      eventType: 'BID_PLACED';
-      payload?: {
-        bidInfo?: {
-          amount?: number;
-        };
-        snipingTimer?: StreamTimerPayload | null;
-      };
-    }
-  | {
-      eventType: 'BID_SYNC';
-      payload?: BidSyncPayload | null;
-    }
-  | {
-      eventType: 'AUCTION_STATISTICS';
-      payload?: AuctionStatisticsPayload;
-    }
-  | {
-      eventType: 'ITEM_SYNC';
-      payload?: ItemSyncPayload | null;
-    }
-  | {
-      eventType: 'ITEM_INTRODUCE';
-      payload: null;
-    }
-  | {
-      eventType: 'AUCTION_COMMENT';
-      payload?: AuctionCommentPayload | null;
-    }
-  | {
-      eventType: 'AUCTION_END';
-      payload: null;
-    }
-  | {
-      eventType: string;
-      payload?: unknown;
-    };
-
-type PrivateStreamEvent =
-  | {
-      eventType: 'BID_WINNER';
-      payload?: BidWinnerPayload;
-    }
-  | {
-      eventType: string;
-      payload?: unknown;
-    };
 
 const isAuctionStartEvent = (
   event: BroadcastStreamEvent,
@@ -135,7 +76,6 @@ const createSyncedTimer = (timer: StreamTimerPayload): SyncedAuctionTimer => ({
 
 export default function LivePage() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const location = useLocation();
   const { id: streamId } = useParams<{ id: string }>();
   const numericStreamId = Number(streamId);
@@ -380,29 +320,7 @@ export default function LivePage() {
 
   return (
     <div className="flex h-screen w-full flex-col bg-background p-3">
-      <div className="mb-2 flex shrink-0 items-center gap-3">
-        <button
-          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-bold text-neutral-500 transition hover:bg-white/5 hover:text-neutral-400"
-          onClick={() => navigate('/')}
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          <GoHomeFill /> 홈으로
-        </button>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-white">{streamTitle}</p>
-        </div>
-      </div>
+      <LiveHeader streamTitle={streamTitle} isLive={isStreamLive} startedAt={activeStreamEnter?.createdAt ?? null} />
 
       <div className="flex min-h-0 flex-1 gap-3">
         <div className="min-w-0 flex-1">

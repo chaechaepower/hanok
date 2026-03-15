@@ -220,3 +220,64 @@ export type ScheduledStreamsResponse = {
   streams: ScheduledStream[];
   hasNext: boolean;
 };
+
+export type BroadcastStreamEvent =
+  | {
+      eventType: 'AUCTION_START';
+      payload?: {
+        item?: {
+          name?: string;
+          condition?: string;
+          bidUnit?: number;
+          startPrice?: number;
+        };
+        timer?: StreamTimerPayload;
+      };
+    }
+  | {
+      eventType: 'BID_PLACED';
+      payload?: {
+        bidInfo?: {
+          amount?: number;
+        };
+        snipingTimer?: StreamTimerPayload | null;
+      };
+    }
+  | {
+      eventType: 'BID_SYNC';
+      payload?: BidSyncPayload | null;
+    }
+  | {
+      eventType: 'AUCTION_STATISTICS';
+      payload?: AuctionStatisticsPayload;
+    }
+  | {
+      eventType: 'ITEM_SYNC';
+      payload?: ItemSyncPayload | null;
+    }
+  | {
+      eventType: 'ITEM_INTRODUCE';
+      payload: null;
+    }
+  | {
+      eventType: 'AUCTION_COMMENT';
+      payload?: AuctionCommentPayload | null;
+    }
+  | {
+      eventType: 'AUCTION_END';
+      payload: null;
+    }
+  | {
+      eventType: string;
+      payload?: unknown;
+    };
+
+export type PrivateStreamEvent =
+  | {
+      eventType: 'BID_WINNER';
+      payload?: BidWinnerPayload;
+    }
+  | {
+      eventType: string;
+      payload?: unknown;
+    };
