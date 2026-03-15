@@ -46,7 +46,7 @@ public class SellerNoticeController implements SellerNoticeApi {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/{noticeId}")
+    @PatchMapping("/{noticeId}")
     @Override
     public ResponseEntity<NoticeResponse> updateNotice(
             @PathVariable Long sellerId,

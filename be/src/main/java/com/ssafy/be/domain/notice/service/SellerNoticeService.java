@@ -53,10 +53,12 @@ public class SellerNoticeService {
 
     @Transactional
     public NoticeResponse updateNotice(Long sellerId, Long noticeId, NoticeUpdateRequest request) {
-        SellerNotice notice = getValidNotice(sellerId, noticeId);
+        SellerNotice notice = noticeRepository.findById(noticeId).orElseThrow();
 
-        notice.update(request.title(), request.content());
+        String newTitle   = request.title()   != null ? request.title()   : notice.getTitle();
+        String newContent = request.content() != null ? request.content() : notice.getContent();
 
+        notice.update(newTitle, newContent);
         return convertToResponse(notice);
     }
 
