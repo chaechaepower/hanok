@@ -21,8 +21,7 @@ public enum UserErrorCode implements ErrorCode {
     INVALID_PASSWORD(HttpStatus.UNAUTHORIZED, "USER-005", "비밀번호가 올바르지 않습니다."),
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "USER-006", "유효하지 않은 Refresh Token입니다."),
     INVALID_BANK_CODE(HttpStatus.BAD_REQUEST, "USER-007", "유효하지 않은 은행 코드입니다."),
-    ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "USER-008", "등록된 계좌가 없습니다."),
-    ;
+    INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "USER-008", "잔액이 부족합니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
