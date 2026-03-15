@@ -176,20 +176,19 @@ export const profileHandlers = [
     );
   }),
 
-  http.get(`${BASE_URL}/v1/sellers/:sellerId/notices`, ({ request }) => {
-    const url = new URL(request.url);
-    const page = Number(url.searchParams.get('page')) || 1;
-    const limit = Number(url.searchParams.get('limit')) || 10;
-    const start = (page - 1) * limit;
-    const end = page * limit;
+  http.get(`${BASE_URL}/v1/sellers/:sellerId/notices`, () => {
+    return HttpResponse.json(mockNoticeItems, { status: 200 });
+  }),
 
-    return HttpResponse.json(
-      {
-        items: mockNoticeItems.slice(start, end),
-        total: mockNoticeItems.length,
-      },
-      { status: 200 },
-    );
+  http.get(`${BASE_URL}/v1/sellers/:sellerId/notices/:noticeId`, ({ params }) => {
+    const noticeId = Number(params.noticeId);
+    const notice = mockNoticeItems.find((item) => item.noticeId === noticeId);
+
+    if (!notice) {
+      return HttpResponse.json({ code: 'NOT_FOUND', message: '공지사항을 찾을 수 없음' }, { status: 404 });
+    }
+
+    return HttpResponse.json(notice, { status: 200 });
   }),
 
   http.post(`${BASE_URL}/v1/sellers/:sellerId/notices`, async ({ request }) => {

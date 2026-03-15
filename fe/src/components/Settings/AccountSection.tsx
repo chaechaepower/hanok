@@ -12,6 +12,12 @@ export default function AccountSection() {
   const [withdrawPassword, setWithdrawPassword] = useState('');
   const [withdrawError, setWithdrawError] = useState('');
 
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
   const { data: meData } = useGetMe();
   const { data: notiData } = useGetNotification();
   const { mutate: patchNotification } = usePatchNotification();
@@ -24,6 +30,37 @@ export default function AccountSection() {
   const handleTogglePush = () => {
     if (!notiData) return;
     patchNotification({ followStreamAlert: !notiData.followStreamAlert });
+  };
+
+  const handleOpenPasswordModal = () => {
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordError('');
+    setIsPasswordModalOpen(true);
+  };
+
+  const handleSubmitPassword = () => {
+    if (!currentPassword.trim()) {
+      setPasswordError('현재 비밀번호를 입력해주세요.');
+      return;
+    }
+    if (!newPassword.trim()) {
+      setPasswordError('새 비밀번호를 입력해주세요.');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPasswordError('비밀번호는 8자 이상이어야 합니다.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('새 비밀번호가 일치하지 않습니다.');
+      return;
+    }
+    // TODO: 비밀번호 변경 API 연결
+    console.log('비밀번호 변경 요청:', { currentPassword, newPassword });
+    setIsPasswordModalOpen(false);
+    showToast({ message: '비밀번호가 변경되었습니다.' });
   };
 
   const handleOpenWithdrawModal = () => {
@@ -62,8 +99,11 @@ export default function AccountSection() {
             <FaUserAlt size={18} className="text-[#aaa]" />
             계정 관리
           </h3>
-          <button className="py-2 px-5 bg-white text-[#111] text-sm font-bold border-none rounded-full cursor-pointer hover:bg-gray-200 transition-colors">
-            정보 수정
+          <button
+            onClick={handleOpenPasswordModal}
+            className="py-2 px-5 bg-white text-[#111] text-sm font-bold border-none rounded-full cursor-pointer hover:bg-gray-200 transition-colors"
+          >
+            비밀번호 수정
           </button>
         </div>
 
@@ -179,6 +219,78 @@ export default function AccountSection() {
                 className="py-3 px-6 bg-red-600 text-white font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isWithdrawPending ? '처리 중…' : '탈퇴 신청'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {isPasswordModalOpen && (
+        <div
+          className="fixed inset-0 bg-black/70 z-[999] flex items-center justify-center"
+          onClick={() => setIsPasswordModalOpen(false)}
+        >
+          <div
+            className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[460px] p-8 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="m-0 text-white text-xl font-bold">비밀번호 수정</h2>
+              <button
+                onClick={() => setIsPasswordModalOpen(false)}
+                className="bg-transparent border-none text-[#888] cursor-pointer hover:text-white transition-colors"
+              >
+                <FiX size={22} />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">현재 비밀번호</label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="현재 비밀번호를 입력하세요"
+                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">새 비밀번호</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="새 비밀번호를 입력하세요 (8자 이상)"
+                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">새 비밀번호 확인</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSubmitPassword()}
+                placeholder="새 비밀번호를 다시 입력하세요"
+                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+              />
+            </div>
+
+            {passwordError && <p className="m-0 text-[13px] text-red-400">{passwordError}</p>}
+
+            <div className="flex justify-end gap-3 mt-2">
+              <button
+                onClick={() => setIsPasswordModalOpen(false)}
+                className="py-3 px-6 bg-[#333] text-[#ddd] border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-[#444] transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleSubmitPassword}
+                className="py-3 px-6 bg-[#d9b36d] text-[#111] font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-[#c8a45c] transition-colors"
+              >
+                변경
               </button>
             </div>
           </div>

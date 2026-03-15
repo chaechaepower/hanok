@@ -208,7 +208,7 @@ export default function ShippingSection() {
                 </div>
 
                 <p className="m-0 text-[15px] text-[#ddd]">
-                  {addr.name}&nbsp;&nbsp;{addr.zipCode}
+                  {addr.name}&nbsp;&nbsp;({addr.zipCode})
                 </p>
                 <p className="m-0 text-[15px] text-[#ddd]">{addr.address}</p>
                 <p className="m-0 text-[15px] text-[#ddd]">{addr.phone}</p>

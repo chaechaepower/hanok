@@ -80,22 +80,12 @@ export type SellerProfileResponse = {
   posts: SellerPost[];
 };
 
-export type GetSellerNoticeParams = {
-  page: number;
-  limit: number;
-};
-
 export type NoticeItem = {
   noticeId: number;
   title: string;
   content: string;
   createdAt: string;
-  updatedAt?: string;
-};
-
-export type GetSellerNoticeResponse = {
-  items: NoticeItem[];
-  total: number;
+  updatedAt: string;
 };
 
 export type PostSellerNoticePayload = {
@@ -108,20 +98,18 @@ export type PostSellerNoticeResponse = {
   title: string;
   content: string;
   createdAt: string;
-};
-
-export type PatchSellerNoticePayload = {
-  title?: string;
-  content?: string;
-};
-
-export type PatchSellerNoticeResponse = {
-  noticeId: number;
-  title: string;
-  content: string;
   updatedAt: string;
 };
 
-export type DeleteSellerNoticeResponse = {
-  success: boolean;
+export type PutSellerNoticePayload = {
+  title: string;
+  content: string;
+};
+
+export type PutSellerNoticeResponse = {
+  noticeId: number;
+  title: string;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
 };

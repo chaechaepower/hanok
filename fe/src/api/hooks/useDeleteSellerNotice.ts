@@ -1,15 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFetchInstance } from '../instance';
-import type { DeleteSellerNoticeResponse } from '@/types';
 
-export const deleteSellerNoticePath = (sellerId: number, notiecId: number) =>
-  `/v1/sellers/${sellerId}/notices/${notiecId}`;
+export const deleteSellerNoticePath = (sellerId: number, noticeId: number) =>
+  `/v1/sellers/${sellerId}/notices/${noticeId}`;
 
 export const deleteSellerNotice = async (sellerId: number, noticeId: number) => {
-  const response = await getFetchInstance().delete<DeleteSellerNoticeResponse>(
-    deleteSellerNoticePath(sellerId, noticeId),
-  );
-  return response.data;
+  await getFetchInstance().delete(deleteSellerNoticePath(sellerId, noticeId));
 };
 
 export const useDeleteSellerNotice = (sellerId: number) => {

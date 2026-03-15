@@ -4,8 +4,9 @@ import { useToast } from '@/components/common/Toast';
 import { useGetSellerProfile } from '@/api/hooks/useGetSellerProfile';
 import { useGetSellerNotice } from '@/api/hooks/useGetSellerNotice';
 import { usePostSellerNotice } from '@/api/hooks/usePostSellerNotice';
-import { usePatchSellerNotice } from '@/api/hooks/usePatchSellerNotice';
+import { usePutSellerNotice } from '@/api/hooks/usePutSellerNotice';
 import { useDeleteSellerNotice } from '@/api/hooks/useDeleteSellerNotice';
+import { useGetSellerNoticeDetail } from '@/api/hooks/useGetSellerNoticeDetail';
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
 import { usePatchFollow } from '@/api/hooks/usePatchFollow';
 import { useDeleteFollow } from '@/api/hooks/useDeleteFollow';
@@ -14,7 +15,7 @@ import ReportModal from '@/components/Profile/ReportModal';
 import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
 import { usePatchSellerProfile } from '@/api/hooks/usePatchSellerProfile';
 import type { EscrowState } from '@/types';
-import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2 } from 'react-icons/fi';
+import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2, FiX } from 'react-icons/fi';
 
 const InstagramIcon = () => (
   <>
@@ -88,7 +89,7 @@ export default function ProfilePage() {
   const [editPostId, setEditPostId] = useState<number | null>(null);
   const [noticeTitle, setNoticeTitle] = useState('');
   const [noticeContent, setNoticeContent] = useState('');
-  const [noticePage] = useState(1);
+
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isProfileEditOpen, setIsProfileEditOpen] = useState(false);
@@ -106,10 +107,13 @@ export default function ProfilePage() {
   const { data: mySellerStatus } = useGetSellerStatus();
   const { mutate: patchProfile, isPending: isProfilePending } = usePatchSellerProfile(sellerId);
 
-  const { data: noticeData } = useGetSellerNotice(sellerId, { page: noticePage, limit: 10 });
+  const { data: notices = [] } = useGetSellerNotice(sellerId);
   const { mutate: postNotice } = usePostSellerNotice(sellerId);
-  const { mutate: patchNotice } = usePatchSellerNotice(sellerId);
+  const { mutate: putNotice } = usePutSellerNotice(sellerId);
   const { mutate: deleteNotice } = useDeleteSellerNotice(sellerId);
+
+  const [viewNoticeId, setViewNoticeId] = useState<number | null>(null);
+  const { data: noticeDetail } = useGetSellerNoticeDetail(sellerId, viewNoticeId);
 
   const { mutate: patchFollow, isPending: isFollowPending } = usePatchFollow();
   const { mutate: deleteFollow, isPending: isUnfollowPending } = useDeleteFollow();
@@ -196,7 +200,7 @@ export default function ProfilePage() {
     if (modalMode === 'create') {
       postNotice({ title: noticeTitle, content: noticeContent }, { onSuccess: () => setIsModalOpen(false) });
     } else if (modalMode === 'edit' && editPostId) {
-      patchNotice(
+      putNotice(
         { noticeId: editPostId, payload: { title: noticeTitle, content: noticeContent } },
         { onSuccess: () => setIsModalOpen(false) },
       );
@@ -221,7 +225,7 @@ export default function ProfilePage() {
   }
 
   const { nickname, intro, profileImage, instagramUrl, youtubeUrl, tiktokUrl } = data;
-  const notices = noticeData?.items || [];
+
 
   return (
     <div className="w-full box-border max-w-[1200px] mx-auto py-10 px-5 flex flex-col gap-8">
@@ -382,7 +386,8 @@ export default function ProfilePage() {
               notices.map((post) => (
                 <div
                   key={post.noticeId}
-                  className="border border-[#2e2e40] rounded-xl py-7 px-8 bg-[#0f0f16] flex flex-col gap-3"
+                  className="border border-[#2e2e40] rounded-xl py-7 px-8 bg-[#0f0f16] flex flex-col gap-3 cursor-pointer hover:border-[#d9b36d]/40 transition-colors"
+                  onClick={() => setViewNoticeId(post.noticeId)}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
@@ -399,13 +404,13 @@ export default function ProfilePage() {
                     <div className="flex gap-3">
                       <button
                         className="bg-transparent border-none text-[#888] text-[13px] cursor-pointer hover:underline"
-                        onClick={() => handleOpenEditModal(post.noticeId, post.title, post.content)}
+                        onClick={(e) => { e.stopPropagation(); handleOpenEditModal(post.noticeId, post.title, post.content); }}
                       >
                         수정
                       </button>
                       <button
                         className="bg-transparent border-none text-red-400 text-[13px] cursor-pointer hover:underline"
-                        onClick={() => handleDeleteNotice(post.noticeId)}
+                        onClick={(e) => { e.stopPropagation(); handleDeleteNotice(post.noticeId); }}
                       >
                         삭제
                       </button>
@@ -487,6 +492,55 @@ export default function ProfilePage() {
                 onClick={handleSubmitNotice}
               >
                 {modalMode === 'create' ? '등록' : '저장'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {viewNoticeId !== null && noticeDetail && (
+        <div
+          className="fixed top-0 left-0 w-full h-full bg-black/70 z-[999] flex items-center justify-center"
+          onClick={() => setViewNoticeId(null)}
+        >
+          <div
+            className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[520px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-[10px]">
+                <BellIcon />
+                <h2 className="m-0 text-white text-xl font-bold">{noticeDetail.title}</h2>
+              </div>
+              <button
+                onClick={() => setViewNoticeId(null)}
+                className="bg-transparent border-none text-[#888] cursor-pointer hover:text-white transition-colors"
+              >
+                <FiX size={22} />
+              </button>
+            </div>
+
+            <p className="m-0 text-[15px] text-[#ddd] leading-relaxed whitespace-pre-wrap">{noticeDetail.content}</p>
+
+            <div className="flex items-center gap-4 text-[13px] text-[#888] border-t border-[#2e2e40] pt-4">
+              <div className="flex items-center gap-[6px]">
+                <CalendarIcon />
+                <span>작성일 {formatDate(noticeDetail.createdAt).split(' ')[0]}</span>
+              </div>
+              {noticeDetail.updatedAt && noticeDetail.updatedAt !== noticeDetail.createdAt && (
+                <div className="flex items-center gap-[6px]">
+                  <CalendarIcon />
+                  <span>수정일 {formatDate(noticeDetail.updatedAt).split(' ')[0]}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setViewNoticeId(null)}
+                className="py-3 px-8 bg-[#333] text-[#ddd] border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-[#444] transition-colors"
+              >
+                닫기
               </button>
             </div>
           </div>
