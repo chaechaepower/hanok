@@ -9,11 +9,11 @@ interface Props {
 }
 
 const STATUS_BADGE: Record<ItemStatus, { label: string; className: string }> = {
-  READY: { label: '대기', className: 'text-neutral-500 bg-neutral-500/15' },
-  INTRODUCING: { label: '설명중', className: 'text-primary-light bg-primary/12' },
-  LIVE: { label: '경매중', className: 'text-gold bg-gold/12' },
-  SOLD: { label: '낙찰', className: 'text-white bg-gold' },
-  UNSOLD: { label: '유찰', className: 'text-accent-light bg-accent/12' },
+  READY: { label: '대기', className: 'badge-neutral' },
+  INTRODUCING: { label: '설명중', className: 'badge-primary-outline' },
+  LIVE: { label: '경매중', className: 'badge-gold-outline' },
+  SOLD: { label: '낙찰', className: 'badge-ember-outline' },
+  UNSOLD: { label: '유찰', className: 'badge-accent-outline' },
 };
 
 const STAT_COLORS = ['text-neutral-400', 'text-gold', 'text-ember'] as const;
@@ -106,9 +106,9 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
                 {doneItems.length} / {items.length}
               </span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
+            <div className="progress-track">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-gold-dark to-gold transition-all duration-600"
+                className="progress-bar progress-bar-gold"
                 style={{ width: `${progressPct}%` }}
               />
             </div>
