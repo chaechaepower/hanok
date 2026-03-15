@@ -160,12 +160,15 @@ const broadcastToDestination = (destination: string, payload: unknown) => {
       return;
     }
 
+    let sent = false;
+
     subscriptions.forEach((subscribedDestination, subscriptionId) => {
-      if (subscribedDestination !== destination) {
+      if (sent || subscribedDestination !== destination) {
         return;
       }
 
       client.send(serializeFrame(createMessageFrame(subscriptionId, destination, payload)));
+      sent = true;
     });
   });
 };

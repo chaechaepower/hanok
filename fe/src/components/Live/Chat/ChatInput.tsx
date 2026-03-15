@@ -85,7 +85,7 @@ export default function ChatInput({ connectionState, onSendMessage, onSendMacro 
   };
 
   return (
-    <div className="relative border-t border-neutral-800 bg-neutral-900/50 px-4 py-3.5">
+    <div className="relative border-t border-neutral-800 bg-background px-4 py-3.5">
       <div className="relative mb-2.5">
         <div ref={scrollRef} className="macro-scroll flex gap-[7px] overflow-x-auto pb-2.5">
           {macros.map((macro) => (
@@ -100,7 +100,7 @@ export default function ChatInput({ connectionState, onSendMessage, onSendMacro 
             </button>
           ))}
         </div>
-        <div className="pointer-events-none absolute bottom-2.5 right-0 top-0 w-10 bg-gradient-to-r from-transparent to-neutral-900/95" />
+        <div className="pointer-events-none absolute bottom-2.5 right-0 top-0 w-10 bg-gradient-to-r from-transparent to-background" />
       </div>
 
       <div className="relative flex items-center">
@@ -116,7 +116,7 @@ export default function ChatInput({ connectionState, onSendMessage, onSendMacro 
               void handleSubmit();
             }
           }}
-          className="w-full rounded-2xl border-none bg-background px-4 py-3 pr-20 text-[13px] text-neutral-100 placeholder:text-neutral-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-55"
+          className="w-full rounded-2xl border-none bg-surface-elevated px-4 py-3 pr-20 text-[13px] text-neutral-100 placeholder:text-neutral-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-55"
         />
         <div className="absolute right-3 flex items-center gap-2">
           <button
