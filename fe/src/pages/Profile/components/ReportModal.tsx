@@ -1,13 +1,8 @@
+import { useToast } from '@/components/common/Toast';
 import { useState } from 'react';
 import { FiX, FiUpload, FiTrash2 } from 'react-icons/fi';
 
-const REPORT_REASONS = [
-  '허위 매물 / 사기 의심',
-  '욕설 / 비방',
-  '부적절한 콘텐츠',
-  '스팸 / 광고',
-  '기타',
-] as const;
+const REPORT_REASONS = ['허위 매물 / 사기 의심', '욕설 / 비방', '부적절한 콘텐츠', '스팸 / 광고', '기타'] as const;
 
 type ReportModalProps = {
   sellerNickname: string;
@@ -19,6 +14,7 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
   const [reason, setReason] = useState('');
   const [detail, setDetail] = useState('');
   const [images, setImages] = useState<File[]>([]);
+  const { showToast } = useToast();
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -32,18 +28,21 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
 
   const handleSubmit = () => {
     if (!reason) {
-      alert('신고 사유를 선택해주세요.');
+      showToast({ message: '신고 사유를 선택해주세요.' });
       return;
     }
     if (!detail.trim()) {
-      alert('상세 설명을 입력해주세요.');
+      showToast({ message: '상세 설명을 입력해주세요.' });
       return;
     }
     onSubmit({ reason, detail, images });
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full h-full bg-black/70 z-[999] flex items-center justify-center" onClick={onClose}>
+    <div
+      className="fixed top-0 left-0 w-full h-full bg-black/70 z-[999] flex items-center justify-center"
+      onClick={onClose}
+    >
       <div
         className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[500px] max-h-[90vh] overflow-y-auto p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
         onClick={(e) => e.stopPropagation()}
@@ -107,11 +106,7 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
             <div className="flex gap-3">
               {images.map((img, i) => (
                 <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-[#2e2e40]">
-                  <img
-                    src={URL.createObjectURL(img)}
-                    alt={`screenshot-${i}`}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={URL.createObjectURL(img)} alt={`screenshot-${i}`} className="w-full h-full object-cover" />
                   <button
                     className="absolute top-1 right-1 bg-black/70 text-white border-none rounded-full w-5 h-5 flex items-center justify-center cursor-pointer p-0"
                     onClick={() => handleRemoveImage(i)}
@@ -127,12 +122,7 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
             <label className="flex items-center justify-center gap-2 py-3 border border-dashed border-[#2e2e40] rounded-lg text-[#888] text-[14px] cursor-pointer hover:border-[#d9b36d] hover:text-[#d9b36d] transition-colors">
               <FiUpload size={16} />
               이미지 업로드
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageChange}
-              />
+              <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
             </label>
           )}
         </div>

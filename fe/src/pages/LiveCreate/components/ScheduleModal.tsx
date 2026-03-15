@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { formatStreamScheduledAt } from './streamDateTime';
 
 type Props = {
   onConfirm: (scheduledAt: string) => void;
@@ -67,7 +68,7 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
   const handleConfirm = () => {
     const scheduled = new Date(selectedDate);
     scheduled.setHours(hour, minute, 0, 0);
-    onConfirm(scheduled.toISOString());
+    onConfirm(formatStreamScheduledAt(scheduled));
   };
 
   return (

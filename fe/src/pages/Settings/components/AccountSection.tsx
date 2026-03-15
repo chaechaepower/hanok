@@ -1,6 +1,7 @@
 import { FaUserAlt } from 'react-icons/fa';
 import { FiBell, FiAlertTriangle, FiX } from 'react-icons/fi';
 import { useState } from 'react';
+import { useToast } from '@/components/common/Toast';
 import { useGetMe } from '@/api/hooks/useGetMe';
 import { useGetNotification } from '@/api/hooks/useGetNotification';
 import { usePatchNotification } from '@/api/hooks/usePatchNotification';
@@ -15,6 +16,7 @@ export default function AccountSection() {
   const { data: notiData } = useGetNotification();
   const { mutate: patchNotification } = usePatchNotification();
   const { mutate: deleteWithdraw, isPending: isWithdrawPending } = useDeleteWithdraw();
+  const { showToast } = useToast();
 
   const user = meData;
   const isPushEnabled = notiData?.followStreamAlert ?? false;
@@ -40,7 +42,7 @@ export default function AccountSection() {
       {
         onSuccess: () => {
           setIsWithdrawModalOpen(false);
-          alert('회원 탈퇴가 신청되었습니다.');
+          showToast({ message: '회원 탈퇴가 신청되었습니다.' });
         },
         onError: () => setWithdrawError('탈퇴 처리 중 오류가 발생했습니다. 다시 시도해주세요.'),
       },

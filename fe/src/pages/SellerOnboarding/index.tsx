@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/components/common/Toast';
 import type { BusinessType } from '@/types';
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
 import { useGetAccount } from '@/api/hooks/useGetAccount';
@@ -19,6 +20,7 @@ export default function SellerOnboardingPage() {
   const navigate = useNavigate();
   const { data: sellerStatus, isLoading } = useGetSellerStatus();
   const { data: accountData, isLoading: isAccountLoading } = useGetAccount();
+  const { showToast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [businessType, setBusinessType] = useState<BusinessType>('INDIVIDUAL');
   const [businessNumber, setBusinessNumber] = useState<string | null>(null);
@@ -26,10 +28,10 @@ export default function SellerOnboardingPage() {
 
   useEffect(() => {
     if (sellerStatus?.isSeller) {
-      alert('이미 판매자로 등록되어 있습니다.');
+      showToast({ message: '이미 판매자로 등록되어 있습니다.' });
       navigate('/'); // Redirect to home or inventory
     }
-  }, [sellerStatus, navigate]);
+  }, [sellerStatus, navigate, showToast]);
 
   const hasExistingAccount = !!(accountData?.bankName && accountData?.accountNumber);
 
@@ -84,10 +86,7 @@ export default function SellerOnboardingPage() {
         )}
 
         {currentStep === 2 && (
-          <Step2
-            onPrev={() => setCurrentStep(1)}
-            onNext={() => setCurrentStep(hasExistingAccount ? 4 : 3)}
-          />
+          <Step2 onPrev={() => setCurrentStep(1)} onNext={() => setCurrentStep(hasExistingAccount ? 4 : 3)} />
         )}
 
         {currentStep === 3 && (

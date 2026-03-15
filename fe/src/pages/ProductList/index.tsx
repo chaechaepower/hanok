@@ -1,18 +1,13 @@
 import { useState } from 'react';
-import { FaBox, FaBroadcastTower, FaTruck, FaPlus } from 'react-icons/fa';
-import type { Product, SideBarItem } from '@/types';
+import { FaPlus } from 'react-icons/fa';
+import type { Product } from '@/types';
+import { useToast } from '@/components/common/Toast';
 import ProductCard from './components/ProductCard';
 import ProductRegistrationModal from './components/ProductRegistrationModal';
 import { useDeleteItem } from '@/api/hooks/useDeleteItem';
 import { useGetItems } from '@/api/hooks/useGetItems';
 import SideBar from '@/components/common/layouts/SideBar';
-
-const sidebarItems: SideBarItem[] = [
-  { id: 'inventory', label: '내 인벤토리', icon: <FaBox size={18} />, path: '/products' },
-  { id: 'live', label: '라이브 방송 관리', icon: <FaBroadcastTower size={18} />, path: '/live/new' },
-  { id: 'delivery', label: '배송 관리', icon: <FaTruck size={18} />, path: '/tracking' },
-];
-
+import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
 
 export default function ProductListPage() {
   const [activeMenu, setActiveMenu] = useState('inventory');
@@ -24,28 +19,29 @@ export default function ProductListPage() {
   const products = fetchedProducts || [];
 
   const { mutateAsync: deleteItem } = useDeleteItem();
+  const { showToast } = useToast();
 
   const handleDelete = async (id: number) => {
     if (confirm('품목을 정말 삭제하시겠습니까?')) {
       try {
         await deleteItem(id);
-        alert('삭제되었습니다.');
+        showToast({ message: '삭제되었습니다.' });
       } catch (err) {
         console.error(err);
-        alert('삭제 실패');
+        showToast({ message: '삭제에 실패했습니다.' });
       }
     }
   };
 
-  const filteredProducts = products.filter(p => {
+  const filteredProducts = products.filter((p) => {
     if (activeTab === 'ALL') return true;
     return p.status === activeTab;
   });
 
   const countByStatus = {
-    READY: products.filter(p => p.status === 'READY').length,
-    PENDING: products.filter(p => p.status === 'PENDING').length,
-    SOLD: products.filter(p => p.status === 'SOLD').length,
+    READY: products.filter((p) => p.status === 'READY').length,
+    PENDING: products.filter((p) => p.status === 'PENDING').length,
+    SOLD: products.filter((p) => p.status === 'SOLD').length,
   };
 
   const tabs = [
@@ -58,12 +54,11 @@ export default function ProductListPage() {
   return (
     <div className="flex w-full max-w-[1200px] mx-auto gap-0 py-10 px-4 min-h-screen bg-[#0B0C10] text-white">
       <SideBar
-        items={sidebarItems}
+        items={sellerSidebarItems}
         activeItemId={activeMenu}
         onItemClick={(item) => setActiveMenu(item.id)}
         className="!w-[200px] shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
       />
-
       <div className="flex-1 flex flex-col gap-3">
         <div className="flex justify-between items-start">
           <div>
@@ -77,8 +72,7 @@ export default function ProductListPage() {
             }}
             className="flex items-center gap-1.5 bg-[#F5F5F7] text-[#1C1C1E] border-none rounded-3xl px-6 py-2.5 text-sm font-semibold cursor-pointer"
           >
-            <FaPlus size={12} />
-            새 물품 등록
+            <FaPlus size={12} />새 물품 등록
           </button>
         </div>
 
@@ -95,9 +89,7 @@ export default function ProductListPage() {
                   }`}
                 >
                   {tab.label}
-                  {isActive && (
-                    <div className="absolute -bottom-px left-0 right-0 h-0.5 bg-white" />
-                  )}
+                  {isActive && <div className="absolute -bottom-px left-0 right-0 h-0.5 bg-white" />}
                 </button>
               );
             })}
@@ -105,7 +97,7 @@ export default function ProductListPage() {
 
           {filteredProducts.length > 0 ? (
             <div className="flex flex-col">
-              {filteredProducts.map(product => (
+              {filteredProducts.map((product) => (
                 <ProductCard
                   key={product.itemId}
                   product={product}

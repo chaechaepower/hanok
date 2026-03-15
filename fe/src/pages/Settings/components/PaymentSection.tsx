@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FaCreditCard } from 'react-icons/fa';
 import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/components/common/Toast';
 import { useGetAccount } from '@/api/hooks/useGetAccount';
 import { usePostUserAccount } from '@/api/hooks/usePostUserAccount';
 import { BANKS } from '@/pages/SellerOnboarding/constants';
@@ -12,6 +13,7 @@ export default function PaymentSection() {
   const queryClient = useQueryClient();
   const { data: accountData, isLoading } = useGetAccount();
   const { mutate: registerAccount, isPending } = usePostUserAccount();
+  const { showToast } = useToast();
 
   const [form, setForm] = useState({
     bankCode: '',
@@ -34,10 +36,10 @@ export default function PaymentSection() {
           queryClient.invalidateQueries({ queryKey: ['account'] });
           setForm({ bankCode: '', bankName: '', accountNum: '', accountName: '' });
           setShowForm(false);
-          alert('계좌가 등록/변경되었습니다.');
+          showToast({ message: '계좌가 등록/변경되었습니다.' });
         },
         onError: () => {
-          alert('계좌 등록/변경에 실패했습니다.');
+          showToast({ message: '계좌 등록/변경에 실패했습니다.' });
         },
       },
     );
@@ -86,45 +88,45 @@ export default function PaymentSection() {
       </div>
 
       {showForm && (
-      <div id="account-registration-form">
-        <h3 className="text-[17px] font-bold text-white mb-5">계좌 정보 입력</h3>
-        <form onSubmit={handleSubmit} className="flex gap-4 items-center">
-          <button
-            type="button"
-            onClick={() => setShowBankModal(true)}
-            className="w-[180px] h-[52px] bg-transparent border border-[#2e2e40] rounded-lg px-4 text-left outline-none cursor-pointer flex items-center justify-between hover:border-[#d9b36d] transition-colors"
-          >
-            <span className={form.bankCode ? 'text-white' : 'text-[#aaa]'}>
-              {form.bankCode ? form.bankName : '은행 선택'}
-            </span>
-            <span className="text-[#555] text-xs">▼</span>
-          </button>
+        <div id="account-registration-form">
+          <h3 className="text-[17px] font-bold text-white mb-5">계좌 정보 입력</h3>
+          <form onSubmit={handleSubmit} className="flex gap-4 items-center">
+            <button
+              type="button"
+              onClick={() => setShowBankModal(true)}
+              className="w-[180px] h-[52px] bg-transparent border border-[#2e2e40] rounded-lg px-4 text-left outline-none cursor-pointer flex items-center justify-between hover:border-[#d9b36d] transition-colors"
+            >
+              <span className={form.bankCode ? 'text-white' : 'text-[#aaa]'}>
+                {form.bankCode ? form.bankName : '은행 선택'}
+              </span>
+              <span className="text-[#555] text-xs">▼</span>
+            </button>
 
-          <input
-            type="text"
-            placeholder="계좌번호 - 없이 숫자만 입력"
-            value={form.accountNum}
-            onChange={(e) => setForm({ ...form, accountNum: e.target.value.replace(/[^0-9]/g, '') })}
-            className="flex-1 h-[52px] bg-transparent border border-[#2e2e40] rounded-lg px-5 text-white placeholder-[#555] outline-none focus:border-[#d9b36d] transition-colors"
-          />
+            <input
+              type="text"
+              placeholder="계좌번호 - 없이 숫자만 입력"
+              value={form.accountNum}
+              onChange={(e) => setForm({ ...form, accountNum: e.target.value.replace(/[^0-9]/g, '') })}
+              className="flex-1 h-[52px] bg-transparent border border-[#2e2e40] rounded-lg px-5 text-white placeholder-[#555] outline-none focus:border-[#d9b36d] transition-colors"
+            />
 
-          <input
-            type="text"
-            placeholder="예금주명"
-            value={form.accountName}
-            onChange={(e) => setForm({ ...form, accountName: e.target.value })}
-            className="w-[140px] h-[52px] bg-transparent border border-[#2e2e40] rounded-lg px-5 text-white placeholder-[#555] outline-none focus:border-[#d9b36d] transition-colors"
-          />
+            <input
+              type="text"
+              placeholder="예금주명"
+              value={form.accountName}
+              onChange={(e) => setForm({ ...form, accountName: e.target.value })}
+              className="w-[140px] h-[52px] bg-transparent border border-[#2e2e40] rounded-lg px-5 text-white placeholder-[#555] outline-none focus:border-[#d9b36d] transition-colors"
+            />
 
-          <button
-            type="submit"
-            disabled={!form.bankCode || !form.accountNum || !form.accountName || isPending}
-            className="h-[52px] px-8 bg-white text-black font-semibold rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition-colors whitespace-nowrap ml-1"
-          >
-            {isPending ? '처리 중...' : '등록 하기'}
-          </button>
-        </form>
-      </div>
+            <button
+              type="submit"
+              disabled={!form.bankCode || !form.accountNum || !form.accountName || isPending}
+              className="h-[52px] px-8 bg-white text-black font-semibold rounded-full disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition-colors whitespace-nowrap ml-1"
+            >
+              {isPending ? '처리 중...' : '등록 하기'}
+            </button>
+          </form>
+        </div>
       )}
 
       {/* 은행 선택 모달 */}
