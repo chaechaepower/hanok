@@ -93,25 +93,6 @@ services:
     networks:
       - hanok-network
 
-  # =============================================
-  # Nginx
-  # =============================================
-  nginx:
-    image: nginx:alpine
-    container_name: hanok-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/www/hanok:/usr/share/nginx/html
-      - /etc/nginx/conf.d:/etc/nginx/conf.d
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-    networks:
-      - hanok-network
-    depends_on:
-      - backend-prod
-
 # =============================================
 # Volume
 # =============================================
