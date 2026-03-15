@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LuMic, LuRadio } from 'react-icons/lu';
+import { LuMic, LuMicOff, LuVideo, LuVideoOff } from 'react-icons/lu';
 import KeyboardGuide from '@/components/Live/Auction/Seller/KeyboardGuide';
 import { useParams } from 'react-router-dom';
 import { sendStreamMessage } from '@/websocket/stompClient';
@@ -15,6 +15,8 @@ interface Props {
 
 export default function SellerControlBar({ introduceAuctionId, startAuctionId, canIntroduce, canStart }: Props) {
   const [guideOpen, setGuideOpen] = useState(false);
+  const [micMuted, setMicMuted] = useState(false);
+  const [videoOff, setVideoOff] = useState(false);
   const { id: streamId } = useParams<{ id: string }>();
 
   // 경매 시작 socket
@@ -71,7 +73,7 @@ export default function SellerControlBar({ introduceAuctionId, startAuctionId, c
           type="button"
           onClick={handleAuctionItemIntroduce}
           disabled={!canIntroduce}
-          className="flex flex-1 w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 text-sm font-bold text-neutral-400 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white/5"
+          className="flex flex-1 w-full items-center justify-center gap-2 rounded-xl bg-surface-elevated text-sm font-bold text-neutral-300 transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-elevated"
         >
           <GoClock size={15} />
           설명 시작
@@ -81,23 +83,29 @@ export default function SellerControlBar({ introduceAuctionId, startAuctionId, c
           type="button"
           onClick={handleAuctionStart}
           disabled={!canStart}
-          className="flex flex-1 w-full items-center justify-center gap-2 rounded-xl bg-gold text-sm font-black text-black transition hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-gold"
+          className="flex flex-1 w-full items-center justify-center gap-2 rounded-xl bg-gold text-sm font-black text-background transition hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-gold"
         >
           <PlayIcon />
           경매 시작
-          <span className="rounded bg-black/15 px-1.5 py-0.5 text-[10px] font-bold text-black/50">
+          <span className="rounded bg-background/15 px-1.5 py-0.5 text-[10px] font-bold text-background/50">
             ENTER
           </span>
         </button>
       </div>
 
       {/* 우하단: 미디어 컨트롤 */}
-      <div className="flex flex-col justify-center gap-3 rounded-2xl bg-black/60 px-2.5">
-        <button className="flex h-10 w-10 items-center justify-center rounded-xl text-white transition hover:bg-white/10">
-          <LuMic size={18} />
+      <div className="flex flex-col justify-center gap-3 rounded-2xl bg-surface/80 px-2.5">
+        <button
+          className={`flex h-10 w-10 items-center justify-center rounded-xl transition hover:bg-warm/10 ${micMuted ? 'text-accent' : 'text-neutral-400 hover:text-neutral-200'}`}
+          onClick={() => setMicMuted((prev) => !prev)}
+        >
+          {micMuted ? <LuMicOff size={18} /> : <LuMic size={18} />}
         </button>
-        <button className="flex h-10 w-10 items-center justify-center rounded-xl text-white transition hover:bg-white/10">
-          <LuRadio size={18} />
+        <button
+          className={`flex h-10 w-10 items-center justify-center rounded-xl transition hover:bg-warm/10 ${videoOff ? 'text-accent' : 'text-neutral-400 hover:text-neutral-200'}`}
+          onClick={() => setVideoOff((prev) => !prev)}
+        >
+          {videoOff ? <LuVideoOff size={18} /> : <LuVideo size={18} />}
         </button>
       </div>
     </div>
@@ -106,7 +114,7 @@ export default function SellerControlBar({ introduceAuctionId, startAuctionId, c
 
 function PlayIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="black" stroke="none">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="none">
       <polygon points="5 3 19 12 5 21 5 3" />
     </svg>
   );

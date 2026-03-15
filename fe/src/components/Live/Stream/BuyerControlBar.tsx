@@ -152,20 +152,20 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
 
           <div className="mx-4 flex h-32.5 flex-1">
             <div
-              className="flex flex-1 flex-col gap-2 rounded-2xl bg-black/60 px-4 py-3"
+              className="flex flex-1 flex-col gap-2 rounded-2xl bg-surface/80 px-4 py-3"
               style={{ opacity: panelOpacity / 100 }}
             >
               <div className="flex gap-1 rounded-lg bg-neutral-900 p-0.5">
                 <button
                   type="button"
-                  className={`flex-1 rounded-md py-1.5 text-xs font-bold transition ${tab === 'quick' ? 'bg-neutral-800 text-white' : 'text-neutral-500'}`}
+                  className={`flex-1 rounded-md py-1.5 text-xs font-bold transition ${tab === 'quick' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'}`}
                   onClick={() => setTab('quick')}
                 >
                   입찰하기
                 </button>
                 <button
                   type="button"
-                  className={`flex-1 rounded-md py-1.5 text-xs font-bold transition ${tab === 'custom' ? 'bg-neutral-800 text-white' : 'text-neutral-500'}`}
+                  className={`flex-1 rounded-md py-1.5 text-xs font-bold transition ${tab === 'custom' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'}`}
                   onClick={() => setTab('custom')}
                 >
                   자율입찰
@@ -177,13 +177,13 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
                   <div className="flex flex-1 flex-col items-center justify-center rounded-lg bg-neutral-900 px-3 py-1">
                     <div className="flex items-center gap-4">
                       <span className="text-[10px] text-neutral-500">잔고</span>
-                      <span className="text-xs font-bold tabular-nums text-white">{balance.toLocaleString()}원</span>
+                      <span className="text-xs font-bold tabular-nums text-neutral-100">{balance.toLocaleString()}원</span>
                     </div>
                     {isInsufficientBalance && <span className="mt-1 text-[10px] font-bold text-accent-light">잔고 부족</span>}
                   </div>
                   <button
                     type="button"
-                    className="flex flex-3 items-center rounded-xl bg-gold px-3 text-white transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-45"
+                    className="flex flex-3 items-center rounded-xl bg-gold px-3 text-neutral-100 transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-45"
                     onClick={handleBidPlace}
                     disabled={isInsufficientBalance}
                   >
@@ -194,7 +194,7 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
                       </div>
                       {hasActiveAuction && <span className="text-xs font-bold text-gold-light">(+{increment.toLocaleString()})</span>}
                     </div>
-                    <span className="rounded bg-white/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">
+                    <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">
                       ENTER
                     </span>
                   </button>
@@ -208,7 +208,7 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
                           key={option.label}
                           type="button"
                           className={`flex-1 rounded-md py-1.5 text-[10px] font-bold transition ${
-                            customUnit === option.value ? 'bg-gold text-white' : 'text-neutral-500'
+                            customUnit === option.value ? 'bg-gold text-neutral-100' : 'text-neutral-500'
                           }`}
                           onClick={() => setCustomUnit(option.value)}
                         >
@@ -221,14 +221,14 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
                       <div className="flex min-h-8 shrink-0 flex-col justify-center rounded-lg bg-neutral-900 px-2.5 py-1">
                         <div className="flex items-center gap-1.5">
                           <span className="text-[10px] text-neutral-500">잔고</span>
-                          <span className="text-xs font-bold tabular-nums text-white">{balance.toLocaleString()}원</span>
+                          <span className="text-xs font-bold tabular-nums text-neutral-100">{balance.toLocaleString()}원</span>
                         </div>
                         {isInsufficientBalance && <span className="mt-1 text-[10px] font-bold text-accent-light">잔고 부족</span>}
                       </div>
                       <div className="h-5 w-px bg-neutral-700" />
                       <button
                         type="button"
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${isFreeMode ? 'bg-neutral-900 text-neutral-600' : 'bg-neutral-800 text-white hover:bg-neutral-700'}`}
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${isFreeMode ? 'bg-neutral-900 text-neutral-600' : 'bg-neutral-800 text-neutral-100 hover:bg-neutral-700'}`}
                         onClick={handleDecrease}
                         disabled={isFreeMode}
                       >
@@ -241,10 +241,10 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
                           value={freeInput}
                           onChange={(event) => handleFreeInput(event.target.value)}
                           placeholder="금액 입력"
-                          className="min-w-0 flex-1 bg-transparent text-center text-sm font-black tabular-nums text-white outline-none placeholder:text-neutral-600"
+                          className="min-w-0 flex-1 bg-transparent text-center text-sm font-black tabular-nums text-neutral-100 outline-none placeholder:text-neutral-600"
                         />
                       ) : (
-                        <div className="min-w-0 flex-1 text-center text-sm font-black tabular-nums text-white">
+                        <div className="min-w-0 flex-1 text-center text-sm font-black tabular-nums text-neutral-100">
                           {hasActiveAuction ? (
                             <>
                               {effectiveBidAmount.toLocaleString()} <span className="text-xs font-normal text-neutral-400">원</span>
@@ -254,7 +254,7 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
                       )}
                       <button
                         type="button"
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${isFreeMode ? 'bg-neutral-900 text-neutral-600' : 'bg-neutral-800 text-white hover:bg-neutral-700'}`}
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${isFreeMode ? 'bg-neutral-900 text-neutral-600' : 'bg-neutral-800 text-neutral-100 hover:bg-neutral-700'}`}
                         onClick={handleIncrease}
                         disabled={isFreeMode}
                       >
@@ -265,7 +265,7 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
 
                   <button
                     type="button"
-                    className="flex flex-1 items-center rounded-xl bg-gold px-3 text-white transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-45"
+                    className="flex flex-1 items-center rounded-xl bg-gold px-3 text-neutral-100 transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-45"
                     onClick={handleBidPlace}
                     disabled={isInsufficientBalance}
                   >
@@ -278,7 +278,7 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
                         </>
                       )}
                     </div>
-                    <span className="rounded bg-white/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">
+                    <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">
                       ENTER
                     </span>
                   </button>
@@ -287,17 +287,17 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
             </div>
           </div>
 
-          <div className="flex h-32.5 flex-col justify-center gap-3 rounded-2xl bg-black/60 px-2.5">
+          <div className="flex h-32.5 flex-col justify-center gap-3 rounded-2xl bg-surface/80 px-2.5">
             <button
               type="button"
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-white transition hover:bg-white/10"
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-neutral-400 transition hover:bg-warm/10 hover:text-neutral-200"
               onClick={() => setMuted((prev) => !prev)}
             >
               {muted ? <LuVolumeOff size={18} /> : <LuVolume2 size={18} />}
             </button>
             <button
               type="button"
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-white transition hover:bg-white/10"
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-neutral-400 transition hover:bg-warm/10 hover:text-neutral-200"
             >
               <IoChatbubbleOutline size={18} />
             </button>
@@ -305,11 +305,11 @@ export default function BuyerControlBar({ bidSync, activeAuctionId }: Props) {
         </div>
 
         <div className="flex items-center gap-2 px-4">
-          <LuEye size={10} className="shrink-0 text-white/30" />
+          <LuEye size={10} className="shrink-0 text-warm/30" />
           <div className="relative h-px flex-1">
-            <div className="absolute inset-0 rounded-full bg-white/20" />
+            <div className="absolute inset-0 rounded-full bg-warm/20" />
             <div
-              className="absolute inset-y-0 left-0 rounded-full bg-white/40"
+              className="absolute inset-y-0 left-0 rounded-full bg-warm/40"
               style={{ width: `${((panelOpacity - 10) / 80) * 100}%` }}
             />
             <input
