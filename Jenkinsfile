@@ -78,6 +78,7 @@ LKEOF
     docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis
     docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate livekit
     docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate backend-prod
+    docker compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate nginx
 
     rm -rf /var/www/hanok/*
     cp -r fe/dist/* /var/www/hanok/
