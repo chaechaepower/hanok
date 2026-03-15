@@ -37,6 +37,35 @@ let mockNoticeItems: MockNoticeItem[] = [
 ];
 
 export const profileHandlers = [
+  http.get(`${BASE_URL}/v1/sellers/:sellerId/sold-auctions`, () => {
+    return HttpResponse.json([
+      {
+        escrowId: 1,
+        image: 'https://picsum.photos/400/300',
+        itemName: '빈티지 카메라',
+        amount: 250000,
+        escrowStatus: 'DEPOSITED',
+        createdAt: '2026-03-05T08:15:30Z',
+      },
+      {
+        escrowId: 2,
+        image: 'https://picsum.photos/400/301',
+        itemName: '레트로 게임기',
+        amount: 180000,
+        escrowStatus: 'INVOICE_SUBMITTED',
+        createdAt: '2026-03-05T09:20:15Z',
+      },
+      {
+        escrowId: 3,
+        image: 'https://picsum.photos/400/302',
+        itemName: '한정판 스니커즈',
+        amount: 320000,
+        escrowStatus: 'COMPLETED',
+        createdAt: '2026-03-05T10:45:50Z',
+      },
+    ]);
+  }),
+
   http.patch(`${BASE_URL}/v1/users/:userId/follow`, async ({ params }) => {
     followSeller(Number(params.userId));
     return HttpResponse.json({
@@ -78,7 +107,7 @@ export const profileHandlers = [
           sellerId: 200,
           nickname: '명품셀러',
           intro: '정품만 취급합니다. 문의 환영합니다.',
-          profile_image: LogoImage,
+          profileImage: LogoImage,
           instagramUrl: 'https://instagram.com/luxury_seller',
           youtubeUrl: 'https://youtube.com/@luxury_seller_tv',
           tiktokUrl: 'https://tiktok.com/@luxury_seller_official',
@@ -95,12 +124,14 @@ export const profileHandlers = [
               soldAt: '2026-03-09T14:00:00Z',
             },
           ],
-          notices: [
+          posts: [
             {
-              noticeId: 10,
-              title: '이번 주 신상 입고 안내',
-              context: '이번 주말에 에르메스 물량 풀립니다.',
-              createdAt: '2026-03-08T12:00:00Z',
+              streamId: 10,
+              title: '이번 주 신상 입고 라이브',
+              category: 'LUXURY_GOODS',
+              thumbnail: LogoImage,
+              scheduledAt: '2026-03-08T20:00:00Z',
+              state: 'SCHEDULED',
             },
           ],
         },
@@ -113,7 +144,7 @@ export const profileHandlers = [
         sellerId,
         nickname: '판매왕',
         intro: '좋은 물건만 팔아요',
-        profile_image: LogoImage,
+        profileImage: LogoImage,
         instagramUrl: 'https://instagram.com/im_rerak',
         youtubeUrl: 'https://youtube.com/@im_rerak',
         tiktokUrl: 'https://tiktok.com/@seller123',
@@ -130,12 +161,14 @@ export const profileHandlers = [
             soldAt: '2026-03-01T14:00:00Z',
           },
         ],
-        notices: [
+        posts: [
           {
-            noticeId: 5,
+            streamId: 5,
             title: '이번 주 방송 예고',
-            context: '방송 이번주에 해요',
-            createdAt: '2026-03-03T12:00:00Z',
+            category: 'SNEAKERS_SHOES',
+            thumbnail: LogoImage,
+            scheduledAt: '2026-03-03T20:00:00Z',
+            state: 'LIVE',
           },
         ],
       },

@@ -11,10 +11,10 @@ import { usePatchFollow } from '@/api/hooks/usePatchFollow';
 import { useDeleteFollow } from '@/api/hooks/useDeleteFollow';
 import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
 import ReportModal from '@/components/Profile/ReportModal';
-import { useGetEscrows } from '@/api/hooks/useGetEscrows';
-import { useGetEscrowDetail } from '@/api/hooks/useGetEscrowDetail';
+import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
+import { usePatchSellerProfile } from '@/api/hooks/usePatchSellerProfile';
 import type { EscrowState } from '@/types';
-import { FiBell, FiCalendar, FiClock, FiGift, FiTruck, FiEdit2 } from 'react-icons/fi';
+import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2 } from 'react-icons/fi';
 
 const InstagramIcon = () => (
   <>
@@ -38,7 +38,7 @@ const BellIcon = () => <FiBell size={20} color="#D9B36D" />;
 const CalendarIcon = () => <FiCalendar size={16} color="#888" />;
 const HistoryIcon = () => <FiClock size={18} color="currentColor" />;
 const GiftIcon = () => <FiGift size={32} color="#D9B36D" />;
-const TruckIcon = () => <FiTruck size={24} color="#D9B36D" />;
+
 
 const formatDate = (iso: string) => {
   const d = new Date(iso);
@@ -91,15 +91,20 @@ export default function ProfilePage() {
   const [noticePage] = useState(1);
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [selectedEscrowId, setSelectedEscrowId] = useState<string | number | null>(null);
+  const [isProfileEditOpen, setIsProfileEditOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    nickname: '',
+    intro: '',
+    instaUrl: '',
+    youtubeUrl: '',
+    tiktokUrl: '',
+  });
 
-  const { data: escrowsData } = useGetEscrows();
-  const escrows = escrowsData?.data || [];
-
-  const { data: escrowDetail } = useGetEscrowDetail(selectedEscrowId);
+  const { data: soldAuctions = [] } = useGetSoldAuctions(sellerId);
 
   const { data, isLoading, isError } = useGetSellerProfile(sellerId);
   const { data: mySellerStatus } = useGetSellerStatus();
+  const { mutate: patchProfile, isPending: isProfilePending } = usePatchSellerProfile(sellerId);
 
   const { data: noticeData } = useGetSellerNotice(sellerId, { page: noticePage, limit: 10 });
   const { mutate: postNotice } = usePostSellerNotice(sellerId);
@@ -149,6 +154,34 @@ export default function ProfilePage() {
     setIsModalOpen(true);
   };
 
+  const handleOpenProfileEdit = () => {
+    if (!data) return;
+    setProfileForm({
+      nickname: data.nickname,
+      intro: data.intro,
+      instaUrl: data.instagramUrl ?? '',
+      youtubeUrl: data.youtubeUrl ?? '',
+      tiktokUrl: data.tiktokUrl ?? '',
+    });
+    setIsProfileEditOpen(true);
+  };
+
+  const handleSubmitProfileEdit = () => {
+    if (!profileForm.nickname.trim()) {
+      showToast({ message: '닉네임을 입력해주세요.' });
+      return;
+    }
+    patchProfile(profileForm, {
+      onSuccess: () => {
+        setIsProfileEditOpen(false);
+        showToast({ message: '프로필이 수정되었습니다.' });
+      },
+      onError: () => {
+        showToast({ message: '프로필 수정에 실패했습니다.' });
+      },
+    });
+  };
+
   const handleDeleteNotice = (postId: number) => {
     if (confirm('공지사항을 정말 삭제하시겠습니까?')) {
       deleteNotice(postId);
@@ -187,7 +220,7 @@ export default function ProfilePage() {
     );
   }
 
-  const { nickname, intro, profile_image, instagramUrl, youtubeUrl, tiktokUrl } = data;
+  const { nickname, intro, profileImage, instagramUrl, youtubeUrl, tiktokUrl } = data;
   const notices = noticeData?.items || [];
 
   return (
@@ -195,10 +228,10 @@ export default function ProfilePage() {
       <div className="w-full box-border border border-[#2e2e40] rounded-2xl py-11 px-14 bg-[#0c0c14]">
         <div className="flex items-start gap-10">
           <div>
-            {profile_image ? (
+            {profileImage ? (
               <>
                 <img
-                  src={profile_image}
+                  src={profileImage}
                   alt={nickname}
                   className="w-[140px] h-[140px] min-w-[140px] min-h-[140px] flex-shrink-0 rounded-full object-contain object-center bg-[#1e1e2d]"
                   onError={(e) => {
@@ -231,10 +264,14 @@ export default function ProfilePage() {
                 </button>
               )}
               <div className="ml-auto flex gap-4">
-                {/* TODO: 수정api연결 필요 */}
-                <button className="border-none bg-transparent text-[#888] text-sm cursor-pointer hover:text-[var(--color-point)] transition-colors">
-                  수정
-                </button>
+                {isMyProfile && (
+                  <button
+                    onClick={handleOpenProfileEdit}
+                    className="border-none bg-transparent text-[#888] text-sm cursor-pointer hover:text-[var(--color-point)] transition-colors"
+                  >
+                    수정
+                  </button>
+                )}
                 <button
                   onClick={() => setIsReportModalOpen(true)}
                   className="border-none bg-transparent text-[#888] text-sm cursor-pointer hover:text-[var(--color-point)] transition-colors"
@@ -382,20 +419,23 @@ export default function ProfilePage() {
 
         {activeTab === 'sales' && (
           <div className="flex flex-col gap-5">
-            {escrows.length === 0 ? (
+            {soldAuctions.length === 0 ? (
               <p className="text-center text-[#888] py-[60px] text-[15px]">낙찰 이력이 없습니다.</p>
             ) : (
-              escrows.map((sale, index) => {
-                const ui = getEscrowStateUI(sale.escrowState);
+              soldAuctions.map((sale, index) => {
+                const ui = getEscrowStateUI(sale.escrowStatus);
                 return (
                   <div
                     key={sale.escrowId}
-                    className={`flex py-4 items-center justify-between ${index > 0 ? 'border-t border-[#1a1a26] mt-4 pt-8' : ''} ${isOwner ? 'cursor-pointer' : 'cursor-default'}`}
-                    onClick={() => isOwner && setSelectedEscrowId(sale.escrowId!)}
+                    className={`flex py-4 items-center justify-between ${index > 0 ? 'border-t border-[#1a1a26] mt-4 pt-8' : ''}`}
                   >
                     <div className="flex items-center gap-6 flex-1">
-                      <div className="w-16 h-16 rounded-full bg-[#1c1c28] border-[1.5px] border-[#d9b36d] flex items-center justify-center">
-                        <GiftIcon />
+                      <div className="w-16 h-16 rounded-full bg-[#1c1c28] border-[1.5px] border-[#d9b36d] flex items-center justify-center overflow-hidden">
+                        {sale.image ? (
+                          <img src={sale.image} alt={sale.itemName} className="w-full h-full object-cover" />
+                        ) : (
+                          <GiftIcon />
+                        )}
                       </div>
 
                       <div className="flex flex-col gap-[6px]">
@@ -453,97 +493,78 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {selectedEscrowId !== null && escrowDetail && (
+      {isProfileEditOpen && (
         <div
           className="fixed top-0 left-0 w-full h-full bg-black/70 z-[999] flex items-center justify-center"
-          onClick={() => setSelectedEscrowId(null)}
+          onClick={() => setIsProfileEditOpen(false)}
         >
           <div
-            className="bg-[#0c0c14] border border-[#2e2e40] rounded-2xl w-[480px] py-9 px-10 flex flex-col gap-8 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+            className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[500px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="m-0 text-white text-[22px] font-bold">낙찰 상세</h2>
+            <h2 className="m-0 text-white text-xl font-bold">프로필 수정</h2>
 
-            <div className="flex gap-6 items-stretch">
-              <img
-                src={escrowDetail.data.winningInfo.imageUrl || 'https://via.placeholder.com/150'}
-                alt="Product"
-                className="w-[140px] h-[140px] rounded-xl object-cover bg-white"
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">닉네임</label>
+              <input
+                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                value={profileForm.nickname}
+                onChange={(e) => setProfileForm((prev) => ({ ...prev, nickname: e.target.value }))}
               />
-              <div className="flex-1 flex flex-col justify-center gap-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-[15px] text-[#ccc] font-medium">상품명</span>
-                  <span className="text-base text-white font-bold">{escrowDetail.data.winningInfo.itemName}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[15px] text-[#ccc] font-medium">낙찰가</span>
-                  <span className="text-base text-[#d9b36d] font-bold">
-                    {formatPrice(escrowDetail.data.winningInfo.finalPrice)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[15px] text-[#ccc] font-medium">판매자</span>
-                  <span className="text-base text-white font-bold">
-                    {escrowDetail.data.winningInfo.sellerName}({escrowDetail.data.winningInfo.sellerId})
-                  </span>
-                </div>
-                <span className="mt-auto self-start text-sm text-[#888]">
-                  {formatDate(escrowDetail.data.winningInfo.wonAt)}
-                </span>
-              </div>
             </div>
 
-            <div className="border border-[#2e2e40] rounded-xl py-5 px-6 flex flex-col gap-3">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="flex items-center gap-2 text-lg font-bold text-white m-0">
-                  <TruckIcon /> 배송 조회
-                </h3>
-                {escrowDetail.data.delivery && (
-                  <span className="text-sm text-[#d9b36d] underline">
-                    {escrowDetail.data.delivery.courierName} {escrowDetail.data.delivery.trackingNumber}
-                  </span>
-                )}
-              </div>
-              <div className="flex justify-between text-[15px]">
-                <span className="text-[#ccc]">남양주 물류 센터</span>
-                <span className="text-white">집하</span>
-              </div>
-              <div className="flex justify-between text-[15px]">
-                <span className="text-[#ccc]">곤지암 센터</span>
-                <span className="text-white">집하</span>
-              </div>
-              <div className="flex justify-between text-[15px]">
-                <span className="text-[#ccc]">대전 허브</span>
-                <span className="text-white">집하</span>
-              </div>
-              <div className="flex justify-between text-[15px]">
-                <span className="text-[#ccc]">구미 물류센터</span>
-                <span className="text-white">이동중</span>
-              </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">소개</label>
+              <textarea
+                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors min-h-[100px] resize-none"
+                value={profileForm.intro}
+                onChange={(e) => setProfileForm((prev) => ({ ...prev, intro: e.target.value }))}
+              />
             </div>
 
-            <div className="border border-[#2e2e40] rounded-xl py-5 px-6 flex flex-col gap-3">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="flex items-center gap-2 text-lg font-bold text-white m-0">
-                  <TruckIcon /> 배송지 정보
-                </h3>
-              </div>
-              <p className="m-0 text-[15px] text-[#ccc] leading-relaxed">{escrowDetail.data.shippingAddress.name}</p>
-              <p className="m-0 text-[15px] text-[#ccc] leading-relaxed">{escrowDetail.data.shippingAddress.phone}</p>
-              <p className="m-0 text-[15px] text-[#ccc] leading-relaxed">
-                {escrowDetail.data.shippingAddress.postalCode}
-              </p>
-              <p className="m-0 text-[15px] text-[#ccc] leading-relaxed">
-                {escrowDetail.data.shippingAddress.address} {escrowDetail.data.shippingAddress.addressDetail}
-              </p>
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">Instagram URL</label>
+              <input
+                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                placeholder="https://instagram.com/..."
+                value={profileForm.instaUrl}
+                onChange={(e) => setProfileForm((prev) => ({ ...prev, instaUrl: e.target.value }))}
+              />
             </div>
 
-            <div className="flex justify-center mt-2">
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">YouTube URL</label>
+              <input
+                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                placeholder="https://youtube.com/..."
+                value={profileForm.youtubeUrl}
+                onChange={(e) => setProfileForm((prev) => ({ ...prev, youtubeUrl: e.target.value }))}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[14px] text-[#aaa] font-medium">TikTok URL</label>
+              <input
+                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                placeholder="https://tiktok.com/..."
+                value={profileForm.tiktokUrl}
+                onChange={(e) => setProfileForm((prev) => ({ ...prev, tiktokUrl: e.target.value }))}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 mt-2">
               <button
-                className="py-3 px-12 bg-[#f5f5f5] text-[#111] border-none rounded-[24px] text-base font-bold cursor-pointer"
-                onClick={() => setSelectedEscrowId(null)}
+                className="py-[10px] px-6 bg-[#333] text-[#ddd] border-none rounded-lg cursor-pointer text-sm font-semibold"
+                onClick={() => setIsProfileEditOpen(false)}
               >
-                닫기
+                취소
+              </button>
+              <button
+                className="py-[10px] px-6 bg-[#d9b36d] text-[#111] font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-[#c8a45c] transition-colors disabled:opacity-50"
+                onClick={handleSubmitProfileEdit}
+                disabled={isProfilePending}
+              >
+                {isProfilePending ? '저장 중...' : '저장'}
               </button>
             </div>
           </div>
