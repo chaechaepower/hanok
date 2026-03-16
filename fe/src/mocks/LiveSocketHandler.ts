@@ -22,6 +22,14 @@ type MockAuctionStatisticsState = AuctionStatisticsPayload;
 type MockBidSyncState = {
   bidUnit: number;
 };
+type MockUniqueBidSyncState = {
+  bidRange: {
+    minPrice: number;
+    maxPrice: number;
+    bidUnit: number;
+  };
+  participantCount: number;
+};
 
 const AUCTION_DURATION_SECONDS = 10;
 const SNIPING_THRESHOLD_SECONDS = 5;
@@ -48,6 +56,7 @@ const heartbeatTimers = new Map<string, number>();
 const streamTimerStates = new Map<string, MockTimerState>();
 const streamAuctionStatisticsStates = new Map<string, MockAuctionStatisticsState>();
 const streamBidSyncStates = new Map<string, MockBidSyncState>();
+const streamUniqueBidSyncStates = new Map<string, MockUniqueBidSyncState>();
 const streamItemSyncStates = new Map<string, ItemSyncPayload>();
 const winnerAnnouncementTimers = new Map<string, number>();
 
@@ -450,6 +459,29 @@ const broadcastBidSync = (streamId: string) => {
   });
 };
 
+const createUniqueBidSyncPayload = (streamId: string, nowMs: number) => {
+  const timerState = streamTimerStates.get(streamId);
+  const uniqueBidSyncState = streamUniqueBidSyncStates.get(streamId);
+
+  if (!timerState || !uniqueBidSyncState) {
+    return null;
+  }
+
+  return {
+    bidRange: uniqueBidSyncState.bidRange,
+    timer: createTimerPayload(timerState, nowMs),
+    participantCount: uniqueBidSyncState.participantCount,
+    hasBid: false,
+  };
+};
+
+const broadcastUniqueBidSync = (streamId: string) => {
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'UNIQUE_BID_SYNC',
+    payload: createUniqueBidSyncPayload(streamId, Date.now()),
+  });
+};
+
 const broadcastItemSync = (streamId: string) => {
   const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
 
@@ -597,6 +629,53 @@ const handleAuctionStart = (destination: string, body: string) => {
   broadcastAuctionStatistics(streamId);
 };
 
+const handleUniqueAuctionStart = (destination: string, body: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  const payload = JSON.parse(body) as {
+    payload?: {
+      auctionId?: number;
+    };
+  };
+  const auctionId = payload.payload?.auctionId;
+  const nowMs = Date.now();
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
+  const targetItem =
+    itemSyncPayload.items.find((item) => item.auctionId === auctionId) ??
+    itemSyncPayload.items.find((item) => item.auctionStatus === 'INTRODUCING') ??
+    itemSyncPayload.items.find((item) => item.auctionStatus === 'READY');
+  const minPrice = targetItem?.startPrice ?? 1000;
+  const bidUnit = targetItem?.bidUnit ?? 1000;
+  const maxPrice = minPrice + bidUnit * 99;
+  const state: MockTimerState = {
+    durationSeconds: AUCTION_DURATION_SECONDS,
+    startedAtMs: nowMs,
+    finalPrice: minPrice,
+  };
+
+  streamTimerStates.set(streamId, state);
+  streamUniqueBidSyncStates.set(streamId, {
+    bidRange: {
+      minPrice,
+      maxPrice,
+      bidUnit,
+    },
+    participantCount: 0,
+  });
+  activateNextReadyItem(streamId, auctionId);
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'UNIQUE_AUCTION_START',
+    payload: {
+      bidRange: {
+        minPrice,
+        maxPrice,
+        bidUnit,
+      },
+      timer: createTimerPayload(state, nowMs),
+    },
+  });
+};
+
 const handleBidPlace = (destination: string, body: string) => {
   const streamId = getStreamIdFromDestination(destination);
   const payload = JSON.parse(body) as {
@@ -673,6 +752,11 @@ const handleBidSync = (destination: string) => {
   broadcastBidSync(streamId);
 };
 
+const handleUniqueBidSync = (destination: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  broadcastUniqueBidSync(streamId);
+};
+
 const handleItemSync = (destination: string) => {
   const streamId = getStreamIdFromDestination(destination);
   broadcastItemSync(streamId);
@@ -693,6 +777,25 @@ const handleAuctionItemIntroduce = (destination: string, body: string) => {
 
   broadcastToDestination(`/broadcast/streams/${streamId}`, {
     eventType: 'ITEM_INTRODUCE',
+    payload: null,
+  });
+};
+
+const handleUniqueAuctionItemIntroduce = (destination: string, body: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  const payload = JSON.parse(body) as {
+    payload?: {
+      auctionId?: number;
+    };
+  };
+  const auctionId = payload.payload?.auctionId;
+
+  if (typeof auctionId === 'number') {
+    introduceAuctionItem(streamId, auctionId);
+  }
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'UNIQUE_AUCTION_INTRODUCE',
     payload: null,
   });
 };
@@ -761,6 +864,10 @@ const handleSendFrame = (frame: StompFrame) => {
       handleAuctionStart(frame.headers.destination, frame.body);
     }
 
+    if (body.eventType === 'UNIQUE_AUCTION_START') {
+      handleUniqueAuctionStart(frame.headers.destination, frame.body);
+    }
+
     if (body.eventType === 'BID_PLACED') {
       handleBidPlace(frame.headers.destination, frame.body);
     }
@@ -769,12 +876,20 @@ const handleSendFrame = (frame: StompFrame) => {
       handleBidSync(frame.headers.destination);
     }
 
+    if (body.eventType === 'UNIQUE_BID_SYNC') {
+      handleUniqueBidSync(frame.headers.destination);
+    }
+
     if (body.eventType === 'ITEM_SYNC') {
       handleItemSync(frame.headers.destination);
     }
 
     if (body.eventType === 'ITEM_INTRODUCE') {
       handleAuctionItemIntroduce(frame.headers.destination, frame.body);
+    }
+
+    if (body.eventType === 'UNIQUE_AUCTION_INTRODUCE') {
+      handleUniqueAuctionItemIntroduce(frame.headers.destination, frame.body);
     }
 
     if (body.eventType === 'CHAT_MESSAGE') {
