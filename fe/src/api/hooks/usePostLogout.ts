@@ -9,6 +9,7 @@ export const logout = async () => {
   const response = await getFetchInstance().post<ApiResponse>(getLogoutPath());
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
+  localStorage.removeItem('userId');
   return response.data;
 };
 

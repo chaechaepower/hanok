@@ -11,10 +11,10 @@ export const getStreamEnter = async (streamId: number) => {
   return response.data;
 };
 
-export const useGetStreamEnter = (streamId: number) => {
+export const useGetStreamEnter = (streamId: number, enabled = true) => {
   return useQuery({
     queryKey: ['streamEnter', streamId],
     queryFn: () => getStreamEnter(streamId),
-    enabled: Number.isFinite(streamId) && streamId > 0,
+    enabled: enabled && Number.isFinite(streamId) && streamId > 0,
   });
 };

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FaCreditCard } from 'react-icons/fa';
 import { useQueryClient } from '@tanstack/react-query';
+import { useToast } from '@/components/common/Toast';
 import { useGetAccount } from '@/api/hooks/useGetAccount';
 import { usePostUserAccount } from '@/api/hooks/usePostUserAccount';
 
@@ -8,6 +9,7 @@ export default function PaymentSection() {
   const queryClient = useQueryClient();
   const { data: accountData, isLoading } = useGetAccount();
   const { mutate: registerAccount, isPending } = usePostUserAccount();
+  const { showToast } = useToast();
 
   const [form, setForm] = useState({
     bankCode: '',
@@ -52,10 +54,10 @@ export default function PaymentSection() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: ['account'] });
           setForm({ bankCode: '', bankName: '', accountNum: '', accountName: '' });
-          alert('계좌가 등록/변경되었습니다.');
+          showToast({ message: '계좌가 등록/변경되었습니다.' });
         },
         onError: () => {
-          alert('계좌 등록/변경에 실패했습니다.');
+          showToast({ message: '계좌 등록/변경에 실패했습니다.' });
         },
       },
     );

@@ -1,18 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { FaBox, FaBroadcastTower, FaTruck, FaPlus } from 'react-icons/fa';
+import { FaBroadcastTower, FaPlus } from 'react-icons/fa';
+import { useToast } from '@/components/common/Toast';
 import CategorySelectModal from './components/CategorySelectModal';
 import { useDeleteStream } from '@/api/hooks/useDeleteStream';
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
-import type { SideBarItem } from '@/types';
 import SideBar from '@/components/common/layouts/SideBar';
+import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
 import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
-
-const sidebarItems: SideBarItem[] = [
-  { id: 'inventory', label: '내 인벤토리', icon: <FaBox size={18} />, path: '/products' },
-  { id: 'live', label: '라이브 방송 관리', icon: <FaBroadcastTower size={18} />, path: '/live/new' },
-  { id: 'delivery', label: '배송 관리', icon: <FaTruck size={18} />, path: '/tracking' },
-];
 
 const getCategoryLabel = (categoryId: string): string =>
   MAIN_CATEGORY_ITEMS.find((c) => c.id === categoryId)?.label ?? categoryId;
@@ -31,6 +26,7 @@ export default function LiveCreatePage() {
   const streams = data?.streams ?? [];
   const deleteMutation = useDeleteStream();
   const [showModal, setShowModal] = useState(false);
+  const { showToast } = useToast();
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
@@ -38,7 +34,7 @@ export default function LiveCreatePage() {
       await deleteMutation.mutateAsync(id);
     } catch (err) {
       console.error(err);
-      alert('삭제에 실패했습니다. 다시 시도해주세요.');
+      showToast({ message: '삭제에 실패했습니다. 다시 시도해주세요.' });
     }
   };
 
@@ -63,11 +59,7 @@ export default function LiveCreatePage() {
       >
         <div className="relative w-[130px] h-[100px] rounded-xl overflow-hidden shrink-0 bg-[#1a1a1a]">
           {stream.thumbnail ? (
-            <img
-              src={stream.thumbnail}
-              alt={stream.title}
-              className="w-full h-full object-cover"
-            />
+            <img src={stream.thumbnail} alt={stream.title} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-[#222]">
               <FaBroadcastTower size={32} className="text-white/20" />
@@ -86,21 +78,15 @@ export default function LiveCreatePage() {
         </div>
 
         <div className="flex-1 flex flex-col gap-1.5">
-          <p className="text-[#888] text-sm">
-            {formatScheduledAt(stream.scheduledAt)}
-          </p>
-          <p className="text-white text-base font-semibold">
-            방송 제목 : {stream.title}
-          </p>
-          <p className="text-[#888] text-sm">
-            방송 카테고리 : {getCategoryLabel(stream.category)}
-          </p>
+          <p className="text-[#888] text-sm">{formatScheduledAt(stream.scheduledAt)}</p>
+          <p className="text-white text-base font-semibold">방송 제목 : {stream.title}</p>
+          <p className="text-[#888] text-sm">방송 카테고리 : {getCategoryLabel(stream.category)}</p>
         </div>
 
         <div className="flex items-center gap-4 shrink-0 pr-2">
           <button
             type="button"
-            onClick={() => navigate(`/live/edit/${stream.streamId}`)}
+            onClick={() => navigate(`/live/register?streamId=${stream.streamId}`)}
             className="text-sm transition-colors text-white/70 hover:text-white"
           >
             수정
@@ -120,7 +106,7 @@ export default function LiveCreatePage() {
   return (
     <div className="w-full max-w-[1200px] mx-auto flex gap-0 py-10 px-4">
       <SideBar
-        items={sidebarItems}
+        items={sellerSidebarItems}
         activeItemId={activeMenu}
         onItemClick={(item) => setActiveMenu(item.id)}
         className="!w-[200px] shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
@@ -145,12 +131,7 @@ export default function LiveCreatePage() {
         <div className="flex flex-col gap-4">{content}</div>
       </main>
 
-      {showModal && (
-        <CategorySelectModal
-          onConfirm={handleConfirmCategory}
-          onClose={() => setShowModal(false)}
-        />
-      )}
+      {showModal && <CategorySelectModal onConfirm={handleConfirmCategory} onClose={() => setShowModal(false)} />}
     </div>
   );
 }

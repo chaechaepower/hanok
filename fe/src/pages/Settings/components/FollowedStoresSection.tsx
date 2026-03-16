@@ -1,9 +1,11 @@
+import { useNavigate } from 'react-router-dom';
 import { FaStore } from 'react-icons/fa';
 import { useGetFollowedStores } from '@/api/hooks/useGetFollowedStores';
 import { useDeleteFollow } from '@/api/hooks/useDeleteFollow';
 import type { FollowingItem } from '@/types';
 
 export default function FollowedStoresSection() {
+  const navigate = useNavigate();
   const { data, isLoading } = useGetFollowedStores();
   const { mutate: unfollow, isPending } = useDeleteFollow();
 
@@ -38,7 +40,8 @@ export default function FollowedStoresSection() {
           {followedList.map(({ followId, seller }) => (
             <div
               key={followId}
-              className="w-full box-border border border-[#2e2e40] rounded-2xl p-6 bg-[#0c0c14] flex items-center gap-5 hover:border-[#3a3a50] transition-colors"
+              onClick={() => navigate(`/profile/${seller.sellerId}`)}
+              className="w-full box-border border border-[#2e2e40] rounded-2xl p-6 bg-[#0c0c14] flex items-center gap-5 hover:border-[#3a3a50] transition-colors cursor-pointer"
             >
               <div className="relative flex-shrink-0">
                 {seller.profileImageUri ? (
@@ -67,7 +70,7 @@ export default function FollowedStoresSection() {
               </div>
 
               <button
-                onClick={() => handleUnfollow(seller.sellerId)}
+                onClick={(e) => { e.stopPropagation(); handleUnfollow(seller.sellerId); }}
                 disabled={isPending}
                 className="flex-shrink-0 py-2 px-5 bg-white text-[#111] text-sm font-bold border-none rounded-full cursor-pointer hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >

@@ -4,8 +4,6 @@ import {
   RoomEvent,
   Track,
   RemoteTrack,
-  RemoteTrackPublication,
-  RemoteParticipant,
   ConnectionState,
 } from 'livekit-client';
 
@@ -57,7 +55,7 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
     // 구매자: 원격 트랙(판매자 영상) 수신
     room.on(
       RoomEvent.TrackSubscribed,
-      (track: RemoteTrack, _pub: RemoteTrackPublication, _participant: RemoteParticipant) => {
+      (track: RemoteTrack) => {
         if (track.kind === Track.Kind.Video && videoRef.current) {
           track.attach(videoRef.current);
         }

@@ -8,9 +8,12 @@ interface Props {
 }
 
 export default function SellerAuctionPanel({ auctionStatistics }: Props) {
+  const effectiveCurrentPrice = auctionStatistics
+    ? Math.max(auctionStatistics.currentPrice, auctionStatistics.startPrice)
+    : 0;
   const riseRate =
     auctionStatistics && auctionStatistics.startPrice > 0
-      ? ((auctionStatistics.currentPrice - auctionStatistics.startPrice) / auctionStatistics.startPrice) * 100
+      ? ((effectiveCurrentPrice - auctionStatistics.startPrice) / auctionStatistics.startPrice) * 100
       : 0;
 
   return (
