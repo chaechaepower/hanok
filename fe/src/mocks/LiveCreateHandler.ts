@@ -33,7 +33,7 @@ const createStreamItems = (itemIds: number[], category: string, thumbnail: strin
       status: 'READY',
       auctionType: mockItem?.auctionType ?? 'BOTTOM_UP',
       itemCondition: mockItem?.itemCondition ?? 'BRAND_NEW',
-      image1: mockItem?.image1 ?? thumbnail,
+      image1: mockItem?.images[0] ?? thumbnail,
       createdAt: mockItem?.createdAt ?? new Date(Date.now() - index * 60000).toISOString(),
       ...(mockItem?.description ? { description: mockItem.description } : {}),
       ...(typeof mockItem?.bidUnit === 'number' ? { bidUnit: mockItem.bidUnit } : {}),
