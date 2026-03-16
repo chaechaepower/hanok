@@ -10,10 +10,11 @@ export const getAccount = async () => {
   return response.data;
 };
 
-export const useGetAccount = () => {
+export const useGetAccount = (enabled = true) => {
   return useQuery({
     queryKey: ['account'],
     queryFn: getAccount,
     staleTime: 1000 * 60,
+    enabled: enabled && Boolean(localStorage.getItem('accessToken')),
   });
 };
