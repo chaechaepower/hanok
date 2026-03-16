@@ -92,7 +92,7 @@ export default function LiveCard({ stream, className = '' }: LiveCardProps) {
             className="h-full w-full object-cover transition-transform duration-300 ease-out will-change-transform group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-[13px] font-medium tracking-[0.08em] text-white/50">
+          <div className="flex h-full w-full items-center justify-center bg-gray-500 text-[13px] font-medium tracking-[0.08em] text-white/50">
             LIVE THUMBNAIL
           </div>
         )}
@@ -111,7 +111,7 @@ export default function LiveCard({ stream, className = '' }: LiveCardProps) {
         )}
 
         {stream.isLive && !isScheduledCard && (
-          <span className="absolute left-3 top-3 rounded-md bg-[#EF4444] px-2.5 py-1.5 text-[12px] font-semibold text-point">
+          <span className="absolute left-3 top-3 rounded-md bg-[#EF4444] px-2.5 py-1.5 text-[12px] font-semibold text-white">
             Live ∙ {stream.viewerCount.toLocaleString()}
           </span>
         )}

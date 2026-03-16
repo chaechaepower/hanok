@@ -41,7 +41,7 @@ const MAIN_LIVE_STREAMS: LiveCardData[] = Array.from({ length: 60 }, (_, index) 
     streamId: id,
     title: `Live auction #${id}`,
     category,
-    thumbnailUri: `https://picsum.photos/seed/live-${id}/800/1200`,
+    thumbnailUri: null,
     isLive,
     viewerCount: ((id * 53) % 900) + 20,
     scheduledAt,
@@ -49,7 +49,7 @@ const MAIN_LIVE_STREAMS: LiveCardData[] = Array.from({ length: 60 }, (_, index) 
     seller: {
       sellerId: seller.sellerId,
       nickname: seller.nickname,
-      profileImageUri: `https://picsum.photos/seed/seller-${seller.sellerId}/120/120`,
+      profileImageUri: null,
     },
   };
 });

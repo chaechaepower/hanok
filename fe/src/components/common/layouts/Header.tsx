@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { FaUser } from 'react-icons/fa';
 import { GoBellFill } from 'react-icons/go';
@@ -5,18 +6,48 @@ import { IoMdSettings } from 'react-icons/io';
 import { TbCircleLetterMFilled } from 'react-icons/tb';
 import { HiMiniHome } from 'react-icons/hi2';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
+import { useGetUnreadCount } from '@/api/hooks/useGetUnreadCount';
+import { useSSE } from '@/hooks/useSSE';
+import { useToast } from '@/components/common/Toast/useToast';
 import Logo from '@/assets/Logo.png';
 import SearchBar from '../SearchBar';
 import Button from '../Button';
+import NotificationPanel from '../NotificationPanel';
 
 export default function Header() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
   const { data: sellerStatus } = useGetSellerStatus(isLoggedIn);
   const sellerButtonLabel = sellerStatus?.isSeller ? '판매자 센터' : '판매자 등록';
   const sellerButtonPath = sellerStatus?.isSeller ? '/products' : '/seller/register';
+
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const { data: unreadData } = useGetUnreadCount();
+  const unreadCount = unreadData ?? 0;
+
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    if (!isNotifOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsNotifOpen(false);
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [isNotifOpen]);
+
+  useSSE({
+    enabled: isLoggedIn,
+    onNotification: (notification) => {
+      showToast({ title: notification.title, message: notification.body });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
+    },
+  });
 
   const handleSellerButtonClick = () => {
     navigate(isLoggedIn ? sellerButtonPath : '/login');
@@ -63,9 +94,12 @@ export default function Header() {
           <HeaderIcon onClick={() => navigate('/wallet')} ariaLabel="Go to wallet" tooltip="가상머니">
             <TbCircleLetterMFilled className="h-5 w-5 fill-current stroke-none" />
           </HeaderIcon>
-          <HeaderIcon onClick={() => {}} ariaLabel="Open alerts" tooltip="알림" badgeCount={3} hasNoti>
-            <GoBellFill className="h-5 w-5" />
-          </HeaderIcon>
+          <div className="relative">
+            <HeaderIcon onClick={() => setIsNotifOpen((prev) => !prev)} ariaLabel="Open alerts" tooltip="알림" badgeCount={unreadCount > 0 ? unreadCount : undefined} hasNoti>
+              <GoBellFill className="h-5 w-5" />
+            </HeaderIcon>
+            {isNotifOpen && <NotificationPanel onClose={() => setIsNotifOpen(false)} />}
+          </div>
           <HeaderIcon onClick={() => navigate('/settings')} ariaLabel="Go to settings" tooltip="설정">
             <IoMdSettings className="h-5 w-5" />
           </HeaderIcon>

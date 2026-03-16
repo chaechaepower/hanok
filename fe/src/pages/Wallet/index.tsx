@@ -57,7 +57,7 @@ export default function WalletPage() {
 
   const balance = wallet?.balance ?? 0;
   const depositedAuctionBalance = wallet?.depositedAuctionBalance ?? 0;
-  const registeredWithdrawAccount = account ? `${account.bankName} ${account.accountNumber}(등록됨)` : '';
+  const registeredWithdrawAccount = account ? `${account.bankName} ${account.accountNum}(등록됨)` : '';
   const numericPointAmount = Number(pointAmountInput || 0);
   const clampWithdrawAmount = (amount: number) => {
     if (pointModalType !== 'withdraw') return amount;

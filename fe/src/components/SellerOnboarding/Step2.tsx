@@ -4,9 +4,14 @@ import { TERMS_CONTENT } from '../../pages/SellerOnboarding/constants';
 
 export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: () => void }) {
   const [agreed, setAgreed] = useState(false);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const toggleTerm = (idx: number) => {
+    setOpenIndex(openIndex === idx ? null : idx);
+  };
 
   return (
-    <>
+    <div style={{ contain: 'inline-size' }}>
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'white', marginBottom: '10px' }}>
           경매 판매자 이용약관 동의
@@ -19,25 +24,72 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
         </p>
       </div>
 
-      <ol
+      <div
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '24px',
+          gap: '12px',
           marginBottom: '32px',
-          paddingLeft: '0',
-          listStyle: 'none',
         }}
       >
-        {TERMS_CONTENT.map((term, idx) => (
-          <li key={idx}>
-            <p style={{ fontSize: '15px', fontWeight: '700', color: 'white', marginBottom: '8px' }}>
-              {idx + 1}. {term.title}
-            </p>
-            <p style={{ fontSize: '14px', color: '#C8C8C8', lineHeight: '1.8', marginLeft: '14px' }}>{term.body}</p>
-          </li>
-        ))}
-      </ol>
+        {TERMS_CONTENT.map((term, idx) => {
+          const isOpen = openIndex === idx;
+          return (
+            <div
+              key={idx}
+              style={{
+                border: '1px solid #2C2C2E',
+                borderRadius: '12px',
+                overflow: 'hidden',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => toggleTerm(idx)}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '16px 20px',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'white',
+                  fontSize: '15px',
+                  fontWeight: '700',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <span>
+                  {idx + 1}. {term.title}
+                </span>
+                <svg
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    color: '#636366',
+                    transition: 'transform 0.2s',
+                    transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    flexShrink: 0,
+                  }}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {isOpen && (
+                <div style={{ padding: '0 20px 16px 20px' }}>
+                  <p style={{ fontSize: '14px', color: '#C8C8C8', lineHeight: '1.8' }}>{term.body}</p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       <label
         style={{
@@ -93,7 +145,7 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
         </span>
       </label>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '40px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', position: 'sticky', bottom: 0, paddingTop: '24px', paddingBottom: '24px' }}>
         <Button variant="outline" onClick={onPrev} className="w-30!">
           이전
         </Button>
@@ -101,6 +153,6 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
           다음
         </Button>
       </div>
-    </>
+    </div>
   );
 }
