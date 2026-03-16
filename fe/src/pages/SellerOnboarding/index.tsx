@@ -33,11 +33,9 @@ export default function SellerOnboardingPage() {
     return (
       <div
         style={{
-          minHeight: '100vh',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: '#0B0C10',
           color: 'white',
         }}
       >
@@ -53,8 +51,6 @@ export default function SellerOnboardingPage() {
   return (
     <div
       style={{
-        minHeight: '100vh',
-        backgroundColor: '#0B0C10',
         color: 'white',
         display: 'flex',
         flexDirection: 'column',

@@ -158,7 +158,7 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
         </p>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '40px' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', position: 'sticky', bottom: 0, paddingTop: '24px', paddingBottom: '24px' }}>
         <Button onClick={handleNext} className="w-30!">
           다음
         </Button>

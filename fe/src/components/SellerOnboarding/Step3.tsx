@@ -216,7 +216,7 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
         </>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '40px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', position: 'sticky', bottom: 0, paddingTop: '24px', paddingBottom: '24px' }}>
         <Button variant="outline" onClick={onPrev} className="w-30!">
           이전
         </Button>

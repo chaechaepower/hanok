@@ -10,10 +10,11 @@ export const getMe = async () => {
   return response.data;
 };
 
-export const useGetMe = () => {
+export const useGetMe = (options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: ['me'],
     queryFn: getMe,
     staleTime: 1000 * 60,
+    enabled: options?.enabled,
   });
 };

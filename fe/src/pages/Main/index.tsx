@@ -71,7 +71,8 @@ type FollowingSectionProps = {
 };
 
 const FollowingSection = ({ category, isLiveStatus, sortFilter, statusFilter }: FollowingSectionProps) => {
-  const { data: meData } = useGetMe();
+  const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
+  const { data: meData } = useGetMe({ enabled: isLoggedIn });
   const {
     data: followingLiveData,
     fetchNextPage: fetchFollowingNextPage,
