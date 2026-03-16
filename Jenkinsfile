@@ -36,7 +36,7 @@ pipeline {
                             steps {
                                 dir('fe') {
                                     sh 'cp /var/jenkins_home/env/.env.fe .env'
-                                    sh 'npm install'
+                                    sh 'npm install --legacy-peer-deps'
                                     sh 'npm run build'
                                 }
                             }
