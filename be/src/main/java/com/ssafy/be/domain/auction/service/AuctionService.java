@@ -452,6 +452,7 @@ public class AuctionService {
                 .itemName(auction.getItem().getName())
                 .image(auction.getItem().getImage1())
                 .startPrice(auction.getItem().getStartPrice())
+                .auctionType(auction.getItem().getAuctionType())
                 .auctionStatus(auction.getAuctionStatus())
                 .finalPrice(auction.getAuctionStatus() == AuctionStatus.SOLD ? auction.getFinalPrice() : null)
                 .itemCondition(auction.getItem().getItemCondition())

@@ -25,9 +25,6 @@ public class Auction {
     @Enumerated(EnumType.STRING)
     private AuctionStatus auctionStatus;
 
-    @Enumerated(EnumType.STRING)
-    private AuctionType auctionType;
-
     private String startedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -41,13 +38,11 @@ public class Auction {
     @Builder
     private Auction(AuctionStatus auctionStatus,
                     Long finalPrice,
-                    AuctionType auctionType,
                     String startedAt,
                     Stream stream,
                     Item item) {
         this.auctionStatus = auctionStatus;
         this.finalPrice = finalPrice;
-        this.auctionType = auctionType;
         this.startedAt = startedAt;
         this.stream = stream;
         this.item = item;

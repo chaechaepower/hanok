@@ -107,7 +107,7 @@ public class StreamService {
                                 item.getAuctionDuration(),
                                 item.getItemCondition(),
                                 item.getCategory(),
-                                auction.getAuctionType(),  // 방금 저장한 auction에서 가져오기
+                                auction.getItem().getAuctionType(),  // 방금 저장한 auction에서 가져오기
                                 item.getStatus(),
                                 item.getCreatedAt());
                     })
@@ -176,7 +176,7 @@ public class StreamService {
                             item.getAuctionDuration(),
                             item.getItemCondition(),
                             item.getCategory(),
-                            auction.getAuctionType(),
+                            auction.getItem().getAuctionType(),
                             item.getStatus(),
                             item.getCreatedAt());
                 })
@@ -255,7 +255,7 @@ public class StreamService {
                             item.getAuctionDuration(),
                             item.getItemCondition(),
                             item.getCategory(),
-                            auction.getAuctionType(),
+                            auction.getItem().getAuctionType(),
                             item.getStatus(),
                             item.getCreatedAt());
                 })
