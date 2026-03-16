@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { FaUser } from 'react-icons/fa';
 import { GoBellFill } from 'react-icons/go';
@@ -30,6 +30,15 @@ export default function Header() {
   const unreadCount = unreadData?.count ?? 0;
 
   const { showToast } = useToast();
+
+  useEffect(() => {
+    if (!isNotifOpen) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsNotifOpen(false);
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [isNotifOpen]);
 
   useSSE({
     enabled: isLoggedIn,
