@@ -8,13 +8,15 @@ interface Props {
   items: AuctionItem[];
 }
 
-const STATUS_BADGE: Record<ItemStatus, { label: string; text: string; bg: string }> = {
-  READY: { label: '대기', text: '#71717A', bg: 'rgba(113,113,122,0.15)' },
-  INTRODUCING: { label: '설명중', text: '#93C5FD', bg: 'rgba(59,130,246,0.12)' },
-  LIVE: { label: '경매중', text: '#C5A059', bg: 'rgba(197,160,89,0.12)' },
-  SOLD: { label: '낙찰', text: '#4ade80', bg: 'rgba(74,222,128,0.12)' },
-  UNSOLD: { label: '유찰', text: '#F87171', bg: 'rgba(248,113,113,0.12)' },
+const STATUS_BADGE: Record<ItemStatus, { label: string; className: string }> = {
+  READY: { label: '대기', className: 'badge-neutral' },
+  INTRODUCING: { label: '설명중', className: 'badge-primary-outline' },
+  LIVE: { label: '경매중', className: 'badge-gold-outline' },
+  SOLD: { label: '낙찰', className: 'badge-ember-outline' },
+  UNSOLD: { label: '유찰', className: 'badge-accent-outline' },
 };
+
+const STAT_COLORS = ['text-neutral-400', 'text-gold', 'text-ember'] as const;
 
 function formatPrice(n: number) {
   return n.toLocaleString('ko-KR');
@@ -51,13 +53,7 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-100 flex items-center justify-center transition-opacity duration-250"
-      style={{
-        background: 'rgba(0,0,0,0.75)',
-        backdropFilter: 'blur(12px)',
-        opacity: open ? 1 : 0,
-        pointerEvents: open ? 'all' : 'none',
-      }}
+      className={`fixed inset-0 z-100 flex items-center justify-center bg-black/75 backdrop-blur-[12px] transition-opacity duration-250 ${open ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
       onClick={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
@@ -65,27 +61,18 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
       }}
     >
       <div
-        className="flex max-h-[80vh] w-130 flex-col overflow-hidden rounded-[28px] bg-[#0E0E10]"
-        style={{
-          border: '1px solid rgba(255,255,255,0.07)',
-          boxShadow: '0 32px 80px rgba(0,0,0,0.6)',
-          transform: open ? 'translateY(0)' : 'translateY(16px)',
-          transition: 'transform 0.25s',
-        }}
+        className={`flex max-h-[80vh] w-130 flex-col overflow-hidden rounded-[28px] border border-white/7 bg-surface shadow-[0_32px_80px_rgba(0,0,0,0.6)] transition-transform duration-250 ${open ? 'translate-y-0' : 'translate-y-4'}`}
       >
-        <div
-          className="flex shrink-0 items-start justify-between px-7 pt-6 pb-5"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
-        >
+        <div className="flex shrink-0 items-start justify-between border-b border-white/5 px-7 pt-6 pb-5">
           <div>
             <h2 className="text-base font-black tracking-tight text-white">오늘의 경매 리포트</h2>
-            <p className="mt-1 text-[11px] font-medium text-[#52525B]">{dateStr}</p>
+            <p className="mt-1 text-[11px] font-medium text-neutral-600">{dateStr}</p>
           </div>
           <button
-            className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-[rgba(255,255,255,0.1)]"
+            className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-white/10"
             onClick={onClose}
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" stroke="#71717A" strokeWidth="2" strokeLinecap="round">
+            <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" className="text-neutral-500" strokeWidth="2" strokeLinecap="round">
               <line x1="2" y1="2" x2="12" y2="12" />
               <line x1="12" y1="2" x2="2" y2="12" />
             </svg>
@@ -95,59 +82,52 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
         <div className="left-panel-scroll flex flex-col gap-5 overflow-y-auto p-7">
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: '전체 물품 수', value: items.length, color: '#A1A1AA', sub: '등록된 경매 물품' },
-              { label: '종료 물품 수', value: doneItems.length, color: '#C5A059', sub: '낙찰 또는 유찰' },
-              { label: '진행 물품 수', value: remainItems.length, color: '#1DFD6D', sub: '대기, 설명, 경매중' },
-            ].map((stat) => (
+              { label: '전체 물품 수', value: items.length, sub: '등록된 경매 물품' },
+              { label: '종료 물품 수', value: doneItems.length, sub: '낙찰 또는 유찰' },
+              { label: '진행 물품 수', value: remainItems.length, sub: '대기, 설명, 경매중' },
+            ].map((stat, idx) => (
               <div
                 key={stat.label}
-                className="flex flex-col gap-1 rounded-[20px] p-4"
-                style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+                className="flex flex-col gap-1 rounded-[20px] border border-white/6 bg-white/[0.02] p-4"
               >
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#52525B]">{stat.label}</span>
-                <span className="text-[26px] font-black leading-none" style={{ color: stat.color }}>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-600">{stat.label}</span>
+                <span className={`text-[26px] font-black leading-none ${STAT_COLORS[idx]}`}>
                   {stat.value}
                 </span>
-                <span className="text-[10px] font-medium text-[#52525B]">{stat.sub}</span>
+                <span className="text-[10px] font-medium text-neutral-600">{stat.sub}</span>
               </div>
             ))}
           </div>
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-[#71717A]">종료 진행률</span>
-              <span className="text-[11px] font-semibold text-[#71717A]">
+              <span className="text-[11px] font-semibold text-neutral-500">종료 진행률</span>
+              <span className="text-[11px] font-semibold text-neutral-500">
                 {doneItems.length} / {items.length}
               </span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-[rgba(255,255,255,0.05)]">
+            <div className="progress-track">
               <div
-                className="h-full rounded-full transition-all duration-600"
-                style={{
-                  width: `${progressPct}%`,
-                  background: 'linear-gradient(to right, #8B6914, #C5A059)',
-                }}
+                className="progress-bar progress-bar-gold"
+                style={{ width: `${progressPct}%` }}
               />
             </div>
           </div>
 
-          <div
-            className="flex items-center justify-between rounded-[20px] px-5 py-4"
-            style={{ background: 'rgba(197,160,89,0.05)', border: '1px solid rgba(197,160,89,0.12)' }}
-          >
+          <div className="flex items-center justify-between rounded-[20px] border border-gold/12 bg-gold/5 px-5 py-4">
             <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] font-bold uppercase text-[#52525B]">총 낙찰 금액</span>
-              <span className="text-2xl font-black text-[#C5A059]">{formatPrice(totalSales)}원</span>
+              <span className="text-[10px] font-bold uppercase text-neutral-600">총 낙찰 금액</span>
+              <span className="text-2xl font-black text-gold">{formatPrice(totalSales)}원</span>
             </div>
             <div className="flex flex-col items-end gap-0.5">
-              <span className="text-[10px] font-bold text-[#52525B]">평균 낙찰가</span>
-              <span className="text-base font-black text-[rgba(197,160,89,0.7)]">{formatPrice(avgSales)}원</span>
+              <span className="text-[10px] font-bold text-neutral-600">평균 낙찰가</span>
+              <span className="text-base font-black text-gold/70">{formatPrice(avgSales)}원</span>
             </div>
           </div>
 
           <div className="flex flex-col gap-2">
-            <div className="pb-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#52525B]">
+            <div className="border-b border-white/4 pb-2">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-neutral-600">
                 경매 물품 목록
               </span>
             </div>
@@ -159,31 +139,25 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
               return (
                 <div
                   key={item.id}
-                  className="flex items-center gap-3.5 py-2.5"
-                  style={{
-                    borderBottom: index < items.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none',
-                  }}
+                  className={`flex items-center gap-3.5 py-2.5 ${index < items.length - 1 ? 'border-b border-white/3' : ''}`}
                 >
-                  <span className="w-5 text-[11px] font-bold text-[#3F3F46]">{index + 1}</span>
-                  <span
-                    className="rounded-full px-1.5 py-0.5 text-[9px] font-extrabold"
-                    style={{ color: statusBadge.text, background: statusBadge.bg }}
-                  >
+                  <span className="w-5 text-[11px] font-bold text-neutral-700">{index + 1}</span>
+                  <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-extrabold ${statusBadge.className}`}>
                     {statusBadge.label}
                   </span>
                   <span
-                    className={`min-w-0 flex-1 truncate text-xs font-bold ${isDone ? 'text-[#52525B] line-through' : 'text-white'}`}
+                    className={`min-w-0 flex-1 truncate text-xs font-bold ${isDone ? 'text-neutral-600 line-through' : 'text-white'}`}
                   >
                     {item.name}
                   </span>
                   <div className="flex flex-col items-end gap-0.5">
-                    <span className="text-[10px] font-medium text-[#52525B]">
+                    <span className="text-[10px] font-medium text-neutral-600">
                       시작가 {formatPrice(item.startPrice)}원
                     </span>
                     {isDone && item.finalPrice ? (
-                      <span className="text-xs font-black text-[#C5A059]">{formatPrice(item.finalPrice)}원</span>
+                      <span className="text-xs font-black text-gold">{formatPrice(item.finalPrice)}원</span>
                     ) : (
-                      <span className="text-[11px] font-semibold text-[#3F3F46]">
+                      <span className="text-[11px] font-semibold text-neutral-700">
                         {item.status === 'LIVE' || item.status === 'INTRODUCING' ? '진행중' : '대기'}
                       </span>
                     )}

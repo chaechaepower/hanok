@@ -43,7 +43,7 @@ export default function BidAccessModal({ isOpen, variant, onClose, onAction }: B
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-[28px] border border-white/12 bg-[rgba(17,24,39,.92)] p-6 text-white shadow-[0_24px_80px_rgba(0,0,0,.45)]"
+        className="w-full max-w-sm rounded-[28px] border border-white/12 bg-background/92 p-6 text-white shadow-[0_24px_80px_rgba(0,0,0,.45)]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-5 inline-flex rounded-full border border-white/10 bg-white/8 px-3 py-1 text-[11px] font-bold text-white/75">
@@ -63,7 +63,7 @@ export default function BidAccessModal({ isOpen, variant, onClose, onAction }: B
           </button>
           <button
             type="button"
-            className="flex-1 rounded-2xl bg-[#3b82f6] px-4 py-3 text-[14px] font-black text-white transition hover:bg-[#2563eb]"
+            className="flex-1 rounded-2xl bg-gold px-4 py-3 text-[14px] font-black text-white transition hover:bg-gold-dark"
             onClick={onAction}
           >
             {copy.actionLabel}

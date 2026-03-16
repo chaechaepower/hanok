@@ -160,12 +160,15 @@ const broadcastToDestination = (destination: string, payload: unknown) => {
       return;
     }
 
+    let sent = false;
+
     subscriptions.forEach((subscribedDestination, subscriptionId) => {
-      if (subscribedDestination !== destination) {
+      if (sent || subscribedDestination !== destination) {
         return;
       }
 
       client.send(serializeFrame(createMessageFrame(subscriptionId, destination, payload)));
+      sent = true;
     });
   });
 };
@@ -179,49 +182,95 @@ const createTimerPayload = (state: MockTimerState, nowMs: number) => ({
 const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
   items: [
     {
-      itemName: '청자 투각 칠보문 향로',
+      auctionId: 101,
+      itemName: '고려청자 상감운학문 매병',
       image: 'https://picsum.photos/400/300?random=1',
-      startPrice: 130000,
-      auctionId: 1,
-      auctionStatus: 'READY',
+      startPrice: 250000,
+      auctionStatus: 'INTRODUCING',
       finalPrice: null,
       itemCondition: 'BRAND_NEW',
+      description: '고려시대 12세기 상감청자 매병으로, 운학문(구름과 학) 무늬가 정교하게 시문되어 있습니다.',
+      bidUnit: 10000,
+      auctionTime: 30,
+      images: ['https://picsum.photos/seed/101a/400/400', 'https://picsum.photos/seed/101b/400/400', 'https://picsum.photos/seed/101c/400/400'],
     },
     {
+      auctionId: 102,
       itemName: '청자 투각 칠보문 향로',
       image: 'https://picsum.photos/400/300?random=2',
       startPrice: 130000,
-      auctionId: 2,
-      auctionStatus: 'READY',
-      finalPrice: null,
-      itemCondition: 'OPEN_BOX',
-    },
-    {
-      itemName: '청자 투각 칠보문 향로',
-      image: 'https://picsum.photos/400/300?random=3',
-      startPrice: 130000,
-      auctionId: 3,
-      auctionStatus: 'READY',
-      finalPrice: null,
-      itemCondition: 'USED',
-    },
-    {
-      itemName: '청자 투각 칠보문 향로',
-      image: 'https://picsum.photos/400/300?random=3',
-      startPrice: 130000,
-      auctionId: 4,
       auctionStatus: 'SOLD',
-      finalPrice: 200000,
-      itemCondition: 'USED',
+      finalPrice: 195000,
+      itemCondition: 'OPEN_BOX',
+      description: '칠보문 투각 기법이 적용된 고려청자 향로입니다.',
+      bidUnit: 5000,
+      auctionTime: 30,
+      images: ['https://picsum.photos/seed/102a/400/400', 'https://picsum.photos/seed/102b/400/400', 'https://picsum.photos/seed/102c/400/400'],
     },
     {
-      itemName: '청자 투각 칠보문 향로',
+      auctionId: 103,
+      itemName: '백자 달항아리',
       image: 'https://picsum.photos/400/300?random=3',
-      startPrice: 130000,
-      auctionId: 5,
+      startPrice: 180000,
+      auctionStatus: 'SOLD',
+      finalPrice: 270000,
+      itemCondition: 'REFURBISHED',
+      description: '조선 후기 백자 달항아리로 둥근 형태가 특징입니다.',
+      bidUnit: 5000,
+      auctionTime: 60,
+      images: ['https://picsum.photos/seed/103a/400/400', 'https://picsum.photos/seed/103b/400/400', 'https://picsum.photos/seed/103c/400/400'],
+    },
+    {
+      auctionId: 104,
+      itemName: '분청사기 철화 어문 장군',
+      image: 'https://picsum.photos/400/300?random=4',
+      startPrice: 95000,
+      auctionStatus: 'SOLD',
+      finalPrice: 142500,
+      itemCondition: 'USED',
+      description: '분청사기에 철화 기법으로 물고기 문양을 그린 장군입니다.',
+      bidUnit: 3000,
+      auctionTime: 30,
+      images: ['https://picsum.photos/seed/104a/400/400', 'https://picsum.photos/seed/104b/400/400', 'https://picsum.photos/seed/104c/400/400'],
+    },
+    {
+      auctionId: 105,
+      itemName: '나전칠기 보석함',
+      image: 'https://picsum.photos/400/300?random=5',
+      startPrice: 320000,
+      auctionStatus: 'SOLD',
+      finalPrice: 480000,
+      itemCondition: 'BRAND_NEW',
+      description: '전통 나전칠기 기법으로 제작된 보석함입니다.',
+      bidUnit: 10000,
+      auctionTime: 60,
+      images: ['https://picsum.photos/seed/105a/400/400', 'https://picsum.photos/seed/105b/400/400', 'https://picsum.photos/seed/105c/400/400'],
+    },
+    {
+      auctionId: 106,
+      itemName: '조선백자 청화 용문 항아리',
+      image: 'https://picsum.photos/400/300?random=6',
+      startPrice: 200000,
+      auctionStatus: 'SOLD',
+      finalPrice: 300000,
+      itemCondition: 'OPEN_BOX',
+      description: '조선시대 청화백자로 용 문양이 힘차게 그려져 있습니다.',
+      bidUnit: 5000,
+      auctionTime: 30,
+      images: ['https://picsum.photos/seed/106a/400/400', 'https://picsum.photos/seed/106b/400/400', 'https://picsum.photos/seed/106c/400/400'],
+    },
+    {
+      auctionId: 107,
+      itemName: '금동 미륵보살 반가사유상',
+      image: 'https://picsum.photos/400/300?random=7',
+      startPrice: 500000,
       auctionStatus: 'UNSOLD',
       finalPrice: null,
       itemCondition: 'USED',
+      description: '삼국시대 금동 반가사유상 재현품입니다.',
+      bidUnit: 20000,
+      auctionTime: 60,
+      images: ['https://picsum.photos/seed/107a/400/400', 'https://picsum.photos/seed/107b/400/400', 'https://picsum.photos/seed/107c/400/400'],
     },
   ],
 });
@@ -331,6 +380,30 @@ const completeLiveItem = (streamId: string, finalPrice: number) => {
 
   streamItemSyncStates.set(streamId, nextPayload);
   return nextPayload;
+};
+
+const getViewerCountForStream = (streamId: string): number => {
+  const destination = `/broadcast/streams/${streamId}`;
+  let count = 0;
+
+  clientSubscriptions.forEach((subscriptions) => {
+    subscriptions.forEach((subscribedDestination) => {
+      if (subscribedDestination === destination) {
+        count++;
+      }
+    });
+  });
+
+  return count;
+};
+
+const broadcastViewerCount = (streamId: string) => {
+  const count = getViewerCountForStream(streamId);
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'VIEWER_COUNT',
+    payload: count,
+  });
 };
 
 const broadcastAuctionStatistics = (streamId: string) => {
@@ -737,6 +810,7 @@ export const liveSocketHandler = liveSocket.addEventListener('connection', ({ cl
 
           if (destination.startsWith('/broadcast/streams/')) {
             sendItemSyncToClient(client, subscriptionId, destination);
+            broadcastViewerCount(getStreamIdFromDestination(destination));
           }
         }
         return;
@@ -746,7 +820,14 @@ export const liveSocketHandler = liveSocket.addEventListener('connection', ({ cl
         const subscriptionId = frame.headers.id;
 
         if (subscriptionId) {
-          getClientSubscriptions(client.id).delete(subscriptionId);
+          const subscriptions = getClientSubscriptions(client.id);
+          const destination = subscriptions.get(subscriptionId);
+
+          subscriptions.delete(subscriptionId);
+
+          if (destination?.startsWith('/broadcast/streams/')) {
+            broadcastViewerCount(getStreamIdFromDestination(destination));
+          }
         }
         return;
       }
@@ -765,6 +846,21 @@ export const liveSocketHandler = liveSocket.addEventListener('connection', ({ cl
       heartbeatTimers.delete(client.id);
     }
 
+    const subscriptions = clientSubscriptions.get(client.id);
+    const affectedStreamIds = new Set<string>();
+
+    if (subscriptions) {
+      subscriptions.forEach((destination) => {
+        if (destination.startsWith('/broadcast/streams/')) {
+          affectedStreamIds.add(getStreamIdFromDestination(destination));
+        }
+      });
+    }
+
     clientSubscriptions.delete(client.id);
+
+    affectedStreamIds.forEach((sid) => {
+      broadcastViewerCount(sid);
+    });
   });
 });
