@@ -23,6 +23,7 @@ export function useStompViewerCount() {
       return;
     }
 
+    let isDisposed = false;
     let unsubscribe: (() => void) | null = null;
 
     void subscribeStream<{ eventType?: string; payload?: unknown }>({
@@ -36,6 +37,11 @@ export function useStompViewerCount() {
       },
     })
       .then((cleanup) => {
+        if (isDisposed) {
+          cleanup();
+          return;
+        }
+
         unsubscribe = cleanup;
       })
       .catch((error) => {
@@ -43,6 +49,7 @@ export function useStompViewerCount() {
       });
 
     return () => {
+      isDisposed = true;
       unsubscribe?.();
     };
   }, [streamId]);

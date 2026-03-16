@@ -469,6 +469,7 @@ export default function LivePage() {
       showToast({ message: event.payload.message });
     };
 
+    let isDisposed = false;
     let unsubscribeStream: () => void = () => {};
 
     void subscribeStream<BroadcastStreamEvent, PrivateStreamEvent, ErrorStreamEvent>({
@@ -478,6 +479,11 @@ export default function LivePage() {
       onError: handleErrorEvent,
     })
       .then(async (cleanup) => {
+        if (isDisposed) {
+          cleanup();
+          return;
+        }
+
         unsubscribeStream = cleanup;
         await requestItemSync();
       })
@@ -486,6 +492,7 @@ export default function LivePage() {
       });
 
     return () => {
+      isDisposed = true;
       unsubscribeStream();
       void disconnectStompClient();
     };

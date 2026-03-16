@@ -152,6 +152,10 @@ const registerSubscription = (
   return () => {
     entry.active?.unsubscribe();
     managedSubscriptions.delete(entry.id);
+
+    if (managedSubscriptions.size === 0) {
+      void disconnectStompClient();
+    }
   };
 };
 
