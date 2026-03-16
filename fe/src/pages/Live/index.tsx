@@ -86,6 +86,11 @@ const isUniqueAuctionIntroduceEvent = (
 ): event is Extract<BroadcastStreamEvent, { eventType: 'UNIQUE_AUCTION_INTRODUCE' }> =>
   event.eventType === 'UNIQUE_AUCTION_INTRODUCE';
 
+const isUniqueAuctionCalculatingEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'UNIQUE_AUCTION_CALCULATING' }> =>
+  event.eventType === 'UNIQUE_AUCTION_CALCULATING';
+
 const isUniqueAuctionEndEvent = (
   event: BroadcastStreamEvent,
 ): event is Extract<BroadcastStreamEvent, { eventType: 'UNIQUE_AUCTION_END' }> =>
@@ -387,6 +392,10 @@ export default function LivePage() {
 
       if (isUniqueAuctionIntroduceEvent(event)) {
         void requestItemSync();
+        return;
+      }
+
+      if (isUniqueAuctionCalculatingEvent(event)) {
         return;
       }
 
