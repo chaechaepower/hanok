@@ -55,8 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                 List.of() // 권한 목록
                         );
 
-                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                log.info("Current User Authorities: {}", auth.getAuthorities());
+
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
             } catch (JwtException | IllegalArgumentException e) {
