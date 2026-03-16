@@ -11,68 +11,37 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
   };
 
   return (
-    <div style={{ contain: 'inline-size' }}>
-      <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'white', marginBottom: '10px' }}>
+    <div className="contain-[inline-size]">
+      <div className="mb-6">
+        <h2 className="text-lg font-bold text-white mb-2.5">
           경매 판매자 이용약관 동의
         </h2>
-        <p style={{ fontSize: '14px', color: '#C7B282', lineHeight: '1.7', marginBottom: '4px' }}>
+        <p className="text-sm text-[#C7B282] leading-[1.7] mb-1">
           한옥(한반도 옥션)에서 판매자로 활동하기 위해서는 아래 약관에 동의해야 합니다.
         </p>
-        <p style={{ fontSize: '14px', color: '#C7B282', lineHeight: '1.7' }}>
+        <p className="text-sm text-[#C7B282] leading-[1.7]">
           판매자는 플랫폼 내 경매 진행 및 상품 판매에 대한 책임을 지며, 본 약관을 준수해야 합니다.
         </p>
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-          marginBottom: '32px',
-        }}
-      >
+      <div className="flex flex-col gap-3 mb-8">
         {TERMS_CONTENT.map((term, idx) => {
           const isOpen = openIndex === idx;
           return (
             <div
               key={idx}
-              style={{
-                border: '1px solid #2C2C2E',
-                borderRadius: '12px',
-                overflow: 'hidden',
-              }}
+              className="border border-[#2C2C2E] rounded-xl overflow-hidden"
             >
               <button
                 type="button"
                 onClick={() => toggleTerm(idx)}
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '16px 20px',
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: 'white',
-                  fontSize: '15px',
-                  fontWeight: '700',
-                  fontFamily: 'inherit',
-                }}
+                className="w-full flex items-center justify-between px-5 py-4 bg-transparent border-none cursor-pointer text-white text-[15px] font-bold font-[inherit]"
               >
                 <span>
                   {idx + 1}. {term.title}
                 </span>
                 <svg
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    color: '#636366',
-                    transition: 'transform 0.2s',
-                    transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    flexShrink: 0,
-                  }}
+                  className={`w-4 h-4 text-[#636366] shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -82,8 +51,8 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
                 </svg>
               </button>
               {isOpen && (
-                <div style={{ padding: '0 20px 16px 20px' }}>
-                  <p style={{ fontSize: '14px', color: '#C8C8C8', lineHeight: '1.8' }}>{term.body}</p>
+                <div className="px-5 pb-4">
+                  <p className="text-sm text-[#C8C8C8] leading-[1.8]">{term.body}</p>
                 </div>
               )}
             </div>
@@ -91,44 +60,21 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
         })}
       </div>
 
-      <label
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-          cursor: 'pointer',
-          marginBottom: '40px',
-        }}
-      >
+      <label className="flex items-center gap-3 cursor-pointer mb-10">
         <div
-          style={{
-            width: '20px',
-            height: '20px',
-            minWidth: '20px',
-            borderRadius: '4px',
-            border: `2px solid ${agreed ? '#CEAF82' : '#636366'}`,
-            backgroundColor: agreed ? '#CEAF82' : 'transparent',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.15s',
-            position: 'relative',
-          }}
+          className={`w-5 h-5 min-w-5 rounded border-2 flex items-center justify-center transition-all duration-150 relative ${
+            agreed ? 'border-[#CEAF82] bg-[#CEAF82]' : 'border-[#636366] bg-transparent'
+          }`}
         >
           <input
             type="checkbox"
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
-            style={{
-              appearance: 'none',
-              position: 'absolute',
-              inset: 0,
-              cursor: 'pointer',
-            }}
+            className="appearance-none absolute inset-0 cursor-pointer"
           />
           {agreed && (
             <svg
-              style={{ width: '12px', height: '12px', color: 'black', pointerEvents: 'none' }}
+              className="w-3 h-3 text-black pointer-events-none"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -140,12 +86,12 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
             </svg>
           )}
         </div>
-        <span style={{ fontSize: '14px', color: '#E5E5EA' }}>
+        <span className="text-sm text-[#E5E5EA]">
           판매자 이용약관 및 경매 정책을 모두 확인하고 동의합니다.
         </span>
       </label>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', position: 'sticky', bottom: 0, paddingTop: '24px', paddingBottom: '24px' }}>
+      <div className="flex justify-between sticky bottom-0 pt-6 pb-6">
         <Button variant="outline" onClick={onPrev} className="w-30!">
           이전
         </Button>

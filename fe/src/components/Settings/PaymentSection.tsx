@@ -132,8 +132,7 @@ export default function PaymentSection() {
 
       {showBankModal && (
         <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60"
           onClick={() => setShowBankModal(false)}
         >
           <div

@@ -15,8 +15,9 @@ import ReportModal from '@/components/Profile/ReportModal';
 import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
 import { usePatchSellerProfile } from '@/api/hooks/usePatchSellerProfile';
 import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
-import type { EscrowState } from '@/types';
-import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2, FiX, FiCamera } from 'react-icons/fi';
+import type { EscrowState, ScheduledStream } from '@/types';
+import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2, FiX, FiCamera, FiTv } from 'react-icons/fi';
+import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
 
 const InstagramIcon = () => (
   <>
@@ -135,6 +136,9 @@ export default function ProfilePage() {
   const [viewNoticeId, setViewNoticeId] = useState<number | null>(null);
   const { data: noticeDetail } = useGetSellerNoticeDetail(sellerId, viewNoticeId);
 
+  const [selectedStream, setSelectedStream] = useState<ScheduledStream | null>(null);
+  const { data: scheduledStreamsData } = useGetScheduledStreams(0, 50);
+
   const { mutate: patchFollow, isPending: isFollowPending } = usePatchFollow();
   const { mutate: deleteFollow, isPending: isUnfollowPending } = useDeleteFollow();
 
@@ -167,6 +171,7 @@ export default function ProfilePage() {
     setModalMode('create');
     setNoticeTitle('');
     setNoticeContent('');
+    setSelectedStream(null);
     setIsModalOpen(true);
   };
 
@@ -174,7 +179,18 @@ export default function ProfilePage() {
     setModalMode('edit');
     setEditPostId(postId);
     setNoticeTitle(title);
-    setNoticeContent(content);
+
+    const streamMatch = content.match(/\[방송 안내\]\s*([\s\S]+)$/);
+    if (streamMatch) {
+      setNoticeContent(content.slice(0, content.indexOf('[방송 안내]')).trim());
+      const infoText = streamMatch[1].trim();
+      const matched = scheduledStreamsData?.streams.find((s) => infoText.includes(s.title)) ?? null;
+      setSelectedStream(matched);
+    } else {
+      setNoticeContent(content);
+      setSelectedStream(null);
+    }
+
     setIsModalOpen(true);
   };
 
@@ -212,16 +228,28 @@ export default function ProfilePage() {
     }
   };
 
+  const buildNoticeContent = () => {
+    let content = noticeContent;
+    if (selectedStream) {
+      const dateStr = selectedStream.scheduledAt
+        ? new Date(selectedStream.scheduledAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : '';
+      content += `\n\n[방송 안내] ${selectedStream.title}${dateStr ? ` (${dateStr})` : ''}`;
+    }
+    return content;
+  };
+
   const handleSubmitNotice = () => {
     if (!noticeTitle.trim() || !noticeContent.trim()) {
       showToast({ message: '제목과 내용을 모두 입력해주세요.' });
       return;
     }
+    const finalContent = buildNoticeContent();
     if (modalMode === 'create') {
-      postNotice({ title: noticeTitle, content: noticeContent }, { onSuccess: () => setIsModalOpen(false) });
+      postNotice({ title: noticeTitle, content: finalContent }, { onSuccess: () => setIsModalOpen(false) });
     } else if (modalMode === 'edit' && editPostId) {
       patchNotice(
-        { noticeId: editPostId, payload: { title: noticeTitle, content: noticeContent } },
+        { noticeId: editPostId, payload: { title: noticeTitle, content: finalContent } },
         { onSuccess: () => setIsModalOpen(false) },
       );
     }
@@ -422,7 +450,12 @@ export default function ProfilePage() {
             {notices.length === 0 ? (
               <p className="text-center text-[#888] py-[60px] text-[15px]">등록된 공지사항이 없습니다.</p>
             ) : (
-              notices.map((post) => (
+              notices.map((post) => {
+                const streamMatch = post.content.match(/\[방송 안내\]\s*([\s\S]+)$/);
+                const mainContent = streamMatch ? post.content.slice(0, post.content.indexOf('[방송 안내]')).trim() : post.content;
+                const streamInfo = streamMatch ? streamMatch[1].trim() : null;
+
+                return (
                 <div
                   key={post.noticeId}
                   className="border border-[#2e2e40] rounded-xl py-7 px-8 bg-[#0f0f16] flex flex-col gap-3 cursor-pointer hover:border-[#d9b36d]/40 transition-colors"
@@ -434,7 +467,12 @@ export default function ProfilePage() {
                         <BellIcon />
                         <h3 className="m-0 text-lg font-bold text-white">{post.title}</h3>
                       </div>
-                      <p className="m-0 mt-1 ml-[30px] text-sm text-[#aaa] leading-relaxed">{post.content}</p>
+                      {mainContent && (
+                        <p className="m-0 mt-1 ml-[30px] text-sm text-[#aaa] leading-relaxed">{mainContent}</p>
+                      )}
+                      {streamInfo && (
+                        <p className="m-0 mt-1 ml-[30px] text-sm text-[#aaa] leading-relaxed">{streamInfo}</p>
+                      )}
                       <div className="flex items-center gap-[6px] mt-2 ml-[30px]">
                         <CalendarIcon />
                         <span className="text-[13px] text-[#666]">{formatDate(post.createdAt).split(' ')[0]}</span>
@@ -458,7 +496,8 @@ export default function ProfilePage() {
                     )}
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
           </div>
         )}
@@ -521,6 +560,50 @@ export default function ProfilePage() {
               value={noticeContent}
               onChange={(e) => setNoticeContent(e.target.value)}
             />
+
+            {scheduledStreamsData?.streams && scheduledStreamsData.streams.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <label className="text-[13px] text-[#aaa] font-medium flex items-center gap-[6px]">
+                  <FiTv size={14} color="#d9b36d" />
+                  예약된 방송 연결 (선택)
+                </label>
+                {selectedStream ? (
+                  <div className="flex items-center gap-2 bg-[#1a1a2e] border border-[#d9b36d]/30 rounded-lg px-3 py-2">
+                    <FiTv size={14} color="#d9b36d" />
+                    <span className="text-[13px] text-[#d9b36d] font-medium">{selectedStream.title}</span>
+                    <button
+                      type="button"
+                      className="ml-auto bg-transparent border-none text-[#888] cursor-pointer hover:text-white"
+                      onClick={() => setSelectedStream(null)}
+                    >
+                      <FiX size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <select
+                    className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg p-[14px] text-[15px] outline-none focus:border-[#d9b36d] transition-colors appearance-none cursor-pointer"
+                    value=""
+                    onChange={(e) => {
+                      const id = Number(e.target.value);
+                      const stream = scheduledStreamsData.streams.find((s) => s.streamId === id) ?? null;
+                      setSelectedStream(stream);
+                    }}
+                  >
+                    <option value="">방송을 선택하세요</option>
+                    {scheduledStreamsData.streams.map((stream) => (
+                      <option key={stream.streamId} value={stream.streamId}>
+                        {stream.title}
+                        {stream.scheduledAt
+                          ? ` - ${new Date(stream.scheduledAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+                          : ''}
+                        {` [${stream.category}]`}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            )}
+
             <div className="flex justify-end gap-3 mt-[10px]">
               <button
                 className="py-[10px] px-6 bg-[#333] text-[#ddd] border-none rounded-lg cursor-pointer text-sm font-semibold"

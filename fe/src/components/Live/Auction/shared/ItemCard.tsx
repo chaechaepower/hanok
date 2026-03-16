@@ -284,8 +284,7 @@ export default function Demo() {
 
   return (
     <div
-      style={{ fontFamily: "'Noto Sans KR', sans-serif" }}
-      className="min-h-screen bg-zinc-950 flex items-start justify-center py-10 px-4"
+      className="min-h-screen bg-zinc-950 flex items-start justify-center py-10 px-4 font-['Noto_Sans_KR',sans-serif]"
     >
       <link
         href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap"

@@ -14,6 +14,8 @@ type Step3Props = {
 const BANK_LIST = BANKS.filter((b) => Number(b.code) < 200);
 const STOCK_LIST = BANKS.filter((b) => Number(b.code) >= 200);
 
+const inputClass = 'w-full h-12 bg-[#0B0C10] border border-[#2C2C2E] rounded-lg text-white text-sm px-4 outline-none font-[inherit]';
+
 export default function Step3({ onPrev, onNext, hasExistingAccount, existingAccount }: Step3Props) {
   const existingBankCode = existingAccount?.bankName
     ? BANKS.find((b) => b.name === existingAccount.bankName)?.code || ''
@@ -26,19 +28,6 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
   const [bankTab, setBankTab] = useState<'bank' | 'stock'>('bank');
 
   const selectedBankName = BANKS.find((b) => b.code === bank)?.name || '';
-
-  const inputStyle = {
-    height: '48px',
-    backgroundColor: '#0B0C10',
-    border: '1px solid #2C2C2E',
-    borderRadius: '8px',
-    color: 'white',
-    fontSize: '14px',
-    padding: '0 16px',
-    outline: 'none',
-    fontFamily: 'inherit',
-    width: '100%',
-  } as React.CSSProperties;
 
   const handleNext = () => {
     if (hasExistingAccount) {
@@ -71,40 +60,40 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
 
   return (
     <>
-      <div style={{ marginBottom: '28px' }}>
-        <h2 style={{ fontSize: '17px', fontWeight: '700', color: 'white', marginBottom: '8px' }}>
+      <div className="mb-7">
+        <h2 className="text-[17px] font-bold text-white mb-2">
           정산받을 은행 계좌 인증을 진행해주세요.
         </h2>
-        <p style={{ fontSize: '14px', color: '#C8C8C8' }}>판매 금액이 정산되는 계좌입니다.</p>
+        <p className="text-sm text-[#C8C8C8]">판매 금액이 정산되는 계좌입니다.</p>
       </div>
 
       {hasExistingAccount ? (
-        <div style={{ backgroundColor: '#1C1C1E', border: '1px solid #2C2C2E', borderRadius: '12px', padding: '24px', marginBottom: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-            <p style={{ fontSize: '15px', color: '#E5E5EA', fontWeight: '600', margin: 0 }}>계좌 정보</p>
-            <span style={{ fontSize: '12px', color: '#0B0C10', backgroundColor: '#CEAF82', borderRadius: '4px', padding: '2px 8px', fontWeight: '600' }}>등록됨</span>
+        <div className="bg-[#1C1C1E] border border-[#2C2C2E] rounded-xl p-6 mb-4">
+          <div className="flex items-center gap-2 mb-5">
+            <p className="text-[15px] text-[#E5E5EA] font-semibold m-0">계좌 정보</p>
+            <span className="text-xs text-[#0B0C10] bg-[#CEAF82] rounded px-2 py-0.5 font-semibold">등록됨</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '14px', color: '#8E8E93' }}>예금주</span>
-              <span style={{ fontSize: '14px', color: 'white' }}>{existingAccount?.accountName}</span>
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-between">
+              <span className="text-sm text-[#8E8E93]">예금주</span>
+              <span className="text-sm text-white">{existingAccount?.accountName}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '14px', color: '#8E8E93' }}>은행</span>
-              <span style={{ fontSize: '14px', color: 'white' }}>{existingAccount?.bankName}</span>
+            <div className="flex justify-between">
+              <span className="text-sm text-[#8E8E93]">은행</span>
+              <span className="text-sm text-white">{existingAccount?.bankName}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '14px', color: '#8E8E93' }}>계좌번호</span>
-              <span style={{ fontSize: '14px', color: 'white' }}>{existingAccount?.accountNum}</span>
+            <div className="flex justify-between">
+              <span className="text-sm text-[#8E8E93]">계좌번호</span>
+              <span className="text-sm text-white">{existingAccount?.accountNum}</span>
             </div>
           </div>
-          <p style={{ fontSize: '12px', color: '#636366', marginTop: '16px', marginBottom: 0 }}>계좌 변경은 설정에서 가능합니다.</p>
+          <p className="text-xs text-[#636366] mt-4 mb-0">계좌 변경은 설정에서 가능합니다.</p>
         </div>
       ) : (
         <>
-          <p style={{ fontSize: '14px', color: '#E5E5EA', marginBottom: '12px', fontWeight: '600' }}>계좌 정보 입력</p>
+          <p className="text-sm text-[#E5E5EA] mb-3 font-semibold">계좌 정보 입력</p>
 
-          <div style={{ marginBottom: '16px' }}>
+          <div className="mb-4">
             <input
               type="text"
               value={accountName}
@@ -113,23 +102,15 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
                 setError('');
               }}
               placeholder="예금주명"
-              style={inputStyle}
+              className={inputClass}
             />
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
+          <div className="mb-4">
             <button
               type="button"
               onClick={() => setShowBankModal(true)}
-              style={{
-                ...inputStyle,
-                textAlign: 'left',
-                color: bank ? 'white' : '#636366',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
+              className={`${inputClass} text-left cursor-pointer flex items-center justify-between ${bank ? 'text-white' : 'text-[#636366]'}`}
             >
               <span>{bank ? selectedBankName : '은행/증권사 선택'}</span>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2">
@@ -140,8 +121,7 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
 
           {showBankModal && (
             <div
-              className="fixed inset-0 z-[1000] flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+              className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60"
               onClick={() => setShowBankModal(false)}
             >
               <div
@@ -198,7 +178,7 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
             </div>
           )}
 
-          <div style={{ marginBottom: '16px' }}>
+          <div className="mb-4">
             <input
               type="text"
               value={accountNumber}
@@ -207,16 +187,16 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
                 setError('');
               }}
               placeholder="계좌번호"
-              style={inputStyle}
+              className={inputClass}
               maxLength={20}
             />
           </div>
 
-          {error && <p style={{ color: '#FF453A', fontSize: '13px', paddingLeft: '4px', marginBottom: '8px' }}>{error}</p>}
+          {error && <p className="text-[#FF453A] text-[13px] pl-1 mb-2">{error}</p>}
         </>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', position: 'sticky', bottom: 0, paddingTop: '24px', paddingBottom: '24px' }}>
+      <div className="flex justify-between sticky bottom-0 pt-6 pb-6">
         <Button variant="outline" onClick={onPrev} className="w-30!">
           이전
         </Button>
