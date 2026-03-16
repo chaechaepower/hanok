@@ -18,27 +18,23 @@ function formatElapsed(seconds: number): string {
 }
 
 function useElapsedTimer(isLive: boolean, startedAt: string | null) {
-  const [elapsed, setElapsed] = useState(0);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const startMs = startedAt ? new Date(startedAt).getTime() : Number.NaN;
+  const elapsed = !isLive || Number.isNaN(startMs) ? 0 : Math.max(0, Math.floor((nowMs - startMs) / 1000));
 
   useEffect(() => {
-    if (!isLive || !startedAt) {
-      setElapsed(0);
+    if (!isLive || Number.isNaN(startMs)) {
       return;
     }
 
-    const startMs = new Date(startedAt).getTime();
-
-    const tick = () => {
-      setElapsed(Math.max(0, Math.floor((Date.now() - startMs) / 1000)));
-    };
-
-    tick();
-    const intervalId = window.setInterval(tick, 1000);
+    const intervalId = window.setInterval(() => {
+      setNowMs(Date.now());
+    }, 1000);
 
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [isLive, startedAt]);
+  }, [isLive, startMs]);
 
   return elapsed;
 }
@@ -65,7 +61,7 @@ export default function LiveHeader({ streamTitle, isLive, startedAt }: Props) {
         >
           <path d="M15 18l-6-6 6-6" />
         </svg>
-        <GoHomeFill /> 홈으로
+        <GoHomeFill /> 홈
       </button>
 
       <div className="min-w-0 flex-1 text-center">
@@ -74,9 +70,7 @@ export default function LiveHeader({ streamTitle, isLive, startedAt }: Props) {
 
       <div className="shrink-0 px-2">
         {isLive ? (
-          <span className="font-mono-num text-xs tabular-nums text-neutral-400">
-            {formatElapsed(elapsed)}
-          </span>
+          <span className="font-mono-num text-xs tabular-nums text-neutral-400">{formatElapsed(elapsed)}</span>
         ) : (
           <span className="text-xs text-neutral-600">대기중</span>
         )}

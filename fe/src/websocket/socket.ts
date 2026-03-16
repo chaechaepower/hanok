@@ -5,6 +5,7 @@ const stripTrailingSlash = (value: string) => value.replace(/\/+$/, '');
 export const STREAM_SOCKET_DESTINATIONS = {
   broadcast: (streamId: number | string) => `/broadcast/streams/${streamId}`,
   private: (streamId: number | string) => `/user/private/streams/${streamId}`,
+  errors: () => '/user/private/errors',
   send: (streamId: number | string) => `/app/streams/${streamId}`,
 };
 

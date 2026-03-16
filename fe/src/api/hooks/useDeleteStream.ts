@@ -16,6 +16,7 @@ export const useDeleteStream = () => {
     mutationFn: deleteStream,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scheduled-streams'] });
+      queryClient.invalidateQueries({ queryKey: ['liveCards'] });
     },
   });
 };

@@ -1,4 +1,4 @@
-import { MdOutlineVideocamOff } from "react-icons/md";
+import { MdOutlineVideocamOff } from 'react-icons/md';
 
 interface Props {
   onClose?: () => void;
@@ -6,24 +6,17 @@ interface Props {
 
 export default function StreamEnded({ onClose }: Props) {
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-[20px] animate-[fadeIn_.3s_ease]">
-      <div className="flex w-full max-w-[550px] mx-4 aspect-square flex-col items-center justify-center gap-8 overflow-hidden rounded-3xl border border-white/7 bg-surface shadow-[0_24px_60px_rgba(0,0,0,.6)]">
-        {/* 아이콘 */}
+    <div className="animate-[fadeIn_.3s_ease] fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-[20px]">
+      <div className="mx-4 flex aspect-square w-full max-w-[550px] flex-col items-center justify-center gap-8 overflow-hidden rounded-3xl border border-white/7 bg-surface shadow-[0_24px_60px_rgba(0,0,0,.6)]">
         <div className="flex h-20 w-20 items-center justify-center rounded-full border border-gold/20 bg-gold/[0.08]">
           <MdOutlineVideocamOff size={36} className="text-gold/80" />
         </div>
 
-        {/* 안내 텍스트 */}
         <div className="flex flex-col items-center gap-2 text-center">
-          <div className="text-xl font-bold tracking-wide text-gold">
-            방송이 종료되었습니다
-          </div>
-          <div className="text-sm text-neutral-500">
-            재연결 시간이 초과되어 경매가 자동 취소되었습니다.
-          </div>
+          <div className="text-xl font-bold tracking-wide text-gold">방송이 종료되었습니다.</div>
+          <div className="text-sm text-neutral-500">판매자가 재연결되지 않아 경매가 자동 취소되었습니다.</div>
         </div>
 
-        {/* 나가기 버튼 */}
         <button
           onClick={onClose}
           className="rounded-xl border border-gold/30 bg-gold/10 px-8 py-3 text-base font-semibold text-gold transition-colors hover:bg-gold/20"

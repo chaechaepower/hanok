@@ -87,6 +87,43 @@ export type AuctionStatisticsPayload = {
   recentBids: AuctionStatisticsRecentBid[];
 };
 
+export type UniqueBidRange = {
+  minPrice: number;
+  maxPrice: number;
+  bidUnit: number;
+};
+
+export type UniqueAuctionStatsPayload = {
+  participantCount: number;
+};
+
+export type UniqueBidSyncPayload = {
+  bidRange: UniqueBidRange;
+  timer: StreamTimerPayload;
+  participantCount: number;
+  hasBid: boolean;
+};
+
+export type UniqueBidAckPayload = {
+  amount: number;
+};
+
+export type UniqueAuctionEndDuplicate = {
+  price: number;
+  cnt: number;
+};
+
+export type UniqueAuctionEndPayload = {
+  isWon: boolean;
+  winnerPrice: number | null;
+  topDuplicates: UniqueAuctionEndDuplicate[] | null;
+};
+
+export type StompErrorPayload = {
+  code: string;
+  message: string;
+};
+
 export type BidSyncPayload = {
   item: {
     bidUnit: number;
@@ -103,14 +140,17 @@ export type ItemSyncAuctionStatus = 'READY' | 'INTRODUCING' | 'LIVE' | 'SOLD' | 
 
 export type ItemSyncItemCondition = 'BRAND_NEW' | 'OPEN_BOX' | 'REFURBISHED' | 'USED';
 
+export type LiveAuctionType = 'BOTTOM_UP' | 'UNIQUE_TOP';
+
 export type ItemSyncItem = {
   auctionId: number;
   itemName: string;
-  image: string;
   startPrice: number;
   auctionStatus: ItemSyncAuctionStatus;
+  auctionType: LiveAuctionType;
   finalPrice: number | null;
   itemCondition: ItemSyncItemCondition;
+  image?: string;
   description?: string;
   bidUnit?: number;
   auctionTime?: number;
@@ -137,6 +177,7 @@ export type LiveStreamItem = {
   category: string;
   startPrice: number;
   status: LiveStreamItemStatus;
+  auctionType?: LiveAuctionType;
   itemCondition: ItemSyncItemCondition;
   image1: string | null;
   createdAt: string;
@@ -223,6 +264,18 @@ export type ScheduledStreamsResponse = {
 
 export type BroadcastStreamEvent =
   | {
+      eventType: 'STREAM_PAUSED';
+      payload: null;
+    }
+  | {
+      eventType: 'STREAM_RESUMED';
+      payload: null;
+    }
+  | {
+      eventType: 'STREAM_FAILED';
+      payload: null;
+    }
+  | {
       eventType: 'AUCTION_START';
       payload?: {
         item?: {
@@ -252,8 +305,31 @@ export type BroadcastStreamEvent =
       payload?: AuctionStatisticsPayload;
     }
   | {
+      eventType: 'UNIQUE_AUCTION_STATS';
+      payload?: UniqueAuctionStatsPayload | null;
+    }
+  | {
       eventType: 'ITEM_SYNC';
       payload?: ItemSyncPayload | null;
+    }
+  | {
+      eventType: 'UNIQUE_AUCTION_START';
+      payload?: {
+        bidRange?: UniqueBidRange;
+        timer?: StreamTimerPayload;
+      };
+    }
+  | {
+      eventType: 'UNIQUE_AUCTION_INTRODUCE';
+      payload: null;
+    }
+  | {
+      eventType: 'UNIQUE_AUCTION_CALCULATING';
+      payload: null;
+    }
+  | {
+      eventType: 'UNIQUE_AUCTION_END';
+      payload?: UniqueAuctionEndPayload;
     }
   | {
       eventType: 'ITEM_INTRODUCE';
@@ -268,7 +344,8 @@ export type BroadcastStreamEvent =
       payload: null;
     }
   | {
-      eventType: string;
+      eventType?: string;
+      event?: string;
       payload?: unknown;
     };
 
@@ -276,6 +353,24 @@ export type PrivateStreamEvent =
   | {
       eventType: 'BID_WINNER';
       payload?: BidWinnerPayload;
+    }
+  | {
+      eventType: 'UNIQUE_BID_SYNC';
+      payload?: UniqueBidSyncPayload | null;
+    }
+  | {
+      eventType: 'UNIQUE_BID_ACK';
+      payload?: UniqueBidAckPayload;
+    }
+  | {
+      eventType: string;
+      payload?: unknown;
+    };
+
+export type ErrorStreamEvent =
+  | {
+      eventType: 'ERROR';
+      payload?: StompErrorPayload;
     }
   | {
       eventType: string;

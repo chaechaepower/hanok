@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState } from "react";
-import { MdOutlineWifiOff } from "react-icons/md";
+import { useEffect, useRef, useState } from 'react';
+import { MdOutlineWifiOff } from 'react-icons/md';
 
 interface Props {
+  initialSeconds?: number;
   onTimeout?: () => void;
 }
 
-export default function StreamDisconnected({ onTimeout }: Props) {
-  const [secs, setSecs] = useState(60);
+export default function StreamDisconnected({ initialSeconds = 30, onTimeout }: Props) {
+  const [secs, setSecs] = useState(initialSeconds);
   const calledRef = useRef(false);
 
   useEffect(() => {
@@ -17,56 +18,45 @@ export default function StreamDisconnected({ onTimeout }: Props) {
       }
       return;
     }
-    const t = setTimeout(() => setSecs((prev) => prev - 1), 1000);
-    return () => clearTimeout(t);
+
+    const timeoutId = window.setTimeout(() => {
+      setSecs((prev) => prev - 1);
+    }, 1000);
+
+    return () => window.clearTimeout(timeoutId);
   }, [secs, onTimeout]);
 
-  const mm = String(Math.floor(secs / 60)).padStart(2, "0");
-  const ss = String(secs % 60).padStart(2, "0");
-  const progress = ((60 - secs) / 60) * 100;
+  const mm = String(Math.floor(secs / 60)).padStart(2, '0');
+  const ss = String(secs % 60).padStart(2, '0');
+  const progress = ((initialSeconds - secs) / initialSeconds) * 100;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-[20px] animate-[fadeIn_.3s_ease]">
-      <div className="flex w-full max-w-[550px] mx-4 aspect-square flex-col overflow-hidden rounded-3xl border border-white/7 bg-surface shadow-[0_24px_60px_rgba(0,0,0,.6)]">
-        {/* 콘텐츠 영역 — 세로 중앙, 8px grid spacing */}
+    <div className="animate-[fadeIn_.3s_ease] fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-[20px]">
+      <div className="mx-4 flex aspect-square w-full max-w-[550px] flex-col overflow-hidden rounded-3xl border border-white/7 bg-surface shadow-[0_24px_60px_rgba(0,0,0,.6)]">
         <div className="flex flex-1 flex-col items-center justify-center gap-8">
-          {/* 상단 그룹: 아이콘 + 타이틀 */}
           <div className="flex flex-col items-center gap-4">
             <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-gold/20 bg-gold/[0.08]">
               <MdOutlineWifiOff size={36} className="text-gold/80" />
-              <div className="absolute top-0.5 right-0.5 h-3.5 w-3.5 rounded-full border-2 border-surface bg-gold-light animate-blink" />
+              <div className="absolute right-0.5 top-0.5 h-3.5 w-3.5 rounded-full border-2 border-surface bg-gold-light animate-blink" />
             </div>
-            <div className="text-xl font-bold tracking-wide text-gold">
-              방송 재연결 중...
-            </div>
+            <div className="text-xl font-bold tracking-wide text-gold">방송 연결이 끊어졌습니다.</div>
           </div>
 
-          {/* 중앙 그룹: 타이머 + 상태 */}
           <div className="flex flex-col items-center gap-2">
-            <div className="text-[80px] font-black leading-none tracking-wider text-white tabular-nums">
+            <div className="tabular-nums text-[80px] font-black leading-none tracking-wider text-white">
               {mm}
-              <span className="mx-1.5 text-[60px] font-normal text-neutral-700">
-                :
-              </span>
+              <span className="mx-1.5 text-[60px] font-normal text-neutral-700">:</span>
               {ss}
             </div>
-            <div className="text-sm text-neutral-600">
-              자동으로 재연결을 시도하고 있습니다.
-            </div>
+            <div className="text-sm text-neutral-600">판매자 재연결을 기다리고 있습니다.</div>
           </div>
 
-          {/* 하단 그룹: 안내 텍스트 */}
           <div className="flex flex-col items-center gap-1 text-center text-base leading-relaxed text-neutral-500">
-            <span className="font-semibold text-gold/70">
-              1분 내 연결되지 않을 경우,
-            </span>
-            <span className="font-semibold text-gold/70">
-              경매는 자동 취소됩니다.
-            </span>
+            <span className="font-semibold text-gold/70">30초 안에 판매자가 다시 연결되면</span>
+            <span className="font-semibold text-gold/70">방송이 이어서 재개됩니다.</span>
           </div>
         </div>
 
-        {/* 프로그레스 바 — 하단 고정 */}
         <div className="h-1 w-full bg-white/[.04]">
           <div
             className="h-full bg-gradient-to-r from-gold-dark to-gold transition-[width] duration-1000 ease-linear"

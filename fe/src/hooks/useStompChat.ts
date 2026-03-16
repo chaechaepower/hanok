@@ -47,6 +47,7 @@ export function useStompChat() {
       return;
     }
 
+    let isDisposed = false;
     let unsubscribe: (() => void) | null = null;
 
     void subscribeStream<StompResponse<unknown>>({
@@ -118,6 +119,11 @@ export function useStompChat() {
       },
     })
       .then((cleanup) => {
+        if (isDisposed) {
+          cleanup();
+          return;
+        }
+
         unsubscribe = cleanup;
       })
       .catch((error) => {
@@ -125,6 +131,7 @@ export function useStompChat() {
       });
 
     return () => {
+      isDisposed = true;
       unsubscribe?.();
     };
   }, [streamId]);

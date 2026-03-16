@@ -16,6 +16,7 @@ export const usePatchStream = (streamId: number) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scheduled-streams'] });
+      queryClient.invalidateQueries({ queryKey: ['liveCards'] });
     },
   });
 };

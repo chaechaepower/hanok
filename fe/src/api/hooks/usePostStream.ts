@@ -18,6 +18,7 @@ export const usePostStream = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['scheduled-streams'] });
+      queryClient.invalidateQueries({ queryKey: ['liveCards'] });
     },
   });
 };

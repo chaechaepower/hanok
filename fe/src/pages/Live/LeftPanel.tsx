@@ -14,6 +14,7 @@ export interface AuctionItem {
   startPrice: number;
   finalPrice?: number;
   status: ItemStatus;
+  auctionType: ItemSyncItem['auctionType'];
   condition: ItemCondition;
   thumbnailUrl?: string;
   description?: string;
@@ -42,8 +43,9 @@ function toAuctionItems(items: ItemSyncItem[]): AuctionItem[] {
     startPrice: item.startPrice,
     finalPrice: item.finalPrice ?? undefined,
     status: item.auctionStatus,
+    auctionType: item.auctionType,
     condition: item.itemCondition,
-    thumbnailUrl: item.image || undefined,
+    thumbnailUrl: item.images?.[0] ?? item.image ?? undefined,
     description: item.description,
     bidUnit: item.bidUnit,
     auctionTime: item.auctionTime,
@@ -93,7 +95,7 @@ export default function LeftPanel({
               item={item}
               isSelected={isSeller && selectedAuctionId === item.id}
               isSeller={isSeller}
-              onSelect={() => onSelectAuctionItem?.(selectedAuctionId === item.id ? null : item.id)}
+              onSelect={() => onSelectAuctionItem?.(item.id)}
             />
           ))}
 

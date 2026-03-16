@@ -1,4 +1,4 @@
-import { ws, type WebSocketData } from 'msw';
+﻿import { ws, type WebSocketData } from 'msw';
 
 import type { AuctionStatisticsPayload, BidSyncPayload, ItemSyncPayload } from '@/types';
 import { getStreamSocketConnectUrl } from '@/websocket/socket';
@@ -21,6 +21,18 @@ type MockTimerState = {
 type MockAuctionStatisticsState = AuctionStatisticsPayload;
 type MockBidSyncState = {
   bidUnit: number;
+};
+type MockUniqueBidSyncState = {
+  bidRange: {
+    minPrice: number;
+    maxPrice: number;
+    bidUnit: number;
+  };
+  participantCount: number;
+};
+type MockPausedTimerState = {
+  remainingSeconds: number;
+  finalPrice: number;
 };
 
 const AUCTION_DURATION_SECONDS = 10;
@@ -48,8 +60,11 @@ const heartbeatTimers = new Map<string, number>();
 const streamTimerStates = new Map<string, MockTimerState>();
 const streamAuctionStatisticsStates = new Map<string, MockAuctionStatisticsState>();
 const streamBidSyncStates = new Map<string, MockBidSyncState>();
+const streamUniqueBidSyncStates = new Map<string, MockUniqueBidSyncState>();
+const streamUniqueBidAmountsStates = new Map<string, number[]>();
 const streamItemSyncStates = new Map<string, ItemSyncPayload>();
 const winnerAnnouncementTimers = new Map<string, number>();
+const streamPausedTimerStates = new Map<string, MockPausedTimerState>();
 
 const createTimestamp = (ms: number) => new Date(ms).toISOString();
 
@@ -160,15 +175,12 @@ const broadcastToDestination = (destination: string, payload: unknown) => {
       return;
     }
 
-    let sent = false;
-
     subscriptions.forEach((subscribedDestination, subscriptionId) => {
-      if (sent || subscribedDestination !== destination) {
+      if (subscribedDestination !== destination) {
         return;
       }
 
       client.send(serializeFrame(createMessageFrame(subscriptionId, destination, payload)));
-      sent = true;
     });
   });
 };
@@ -186,13 +198,18 @@ const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
       itemName: '고려청자 상감운학문 매병',
       image: 'https://picsum.photos/400/300?random=1',
       startPrice: 250000,
-      auctionStatus: 'INTRODUCING',
+      auctionStatus: 'READY',
+      auctionType: 'UNIQUE_TOP',
       finalPrice: null,
       itemCondition: 'BRAND_NEW',
       description: '고려시대 12세기 상감청자 매병으로, 운학문(구름과 학) 무늬가 정교하게 시문되어 있습니다.',
       bidUnit: 10000,
       auctionTime: 30,
-      images: ['https://picsum.photos/seed/101a/400/400', 'https://picsum.photos/seed/101b/400/400', 'https://picsum.photos/seed/101c/400/400'],
+      images: [
+        'https://picsum.photos/seed/101a/400/400',
+        'https://picsum.photos/seed/101b/400/400',
+        'https://picsum.photos/seed/101c/400/400',
+      ],
     },
     {
       auctionId: 102,
@@ -200,12 +217,17 @@ const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
       image: 'https://picsum.photos/400/300?random=2',
       startPrice: 130000,
       auctionStatus: 'SOLD',
+      auctionType: 'BOTTOM_UP',
       finalPrice: 195000,
       itemCondition: 'OPEN_BOX',
       description: '칠보문 투각 기법이 적용된 고려청자 향로입니다.',
       bidUnit: 5000,
       auctionTime: 30,
-      images: ['https://picsum.photos/seed/102a/400/400', 'https://picsum.photos/seed/102b/400/400', 'https://picsum.photos/seed/102c/400/400'],
+      images: [
+        'https://picsum.photos/seed/102a/400/400',
+        'https://picsum.photos/seed/102b/400/400',
+        'https://picsum.photos/seed/102c/400/400',
+      ],
     },
     {
       auctionId: 103,
@@ -213,12 +235,17 @@ const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
       image: 'https://picsum.photos/400/300?random=3',
       startPrice: 180000,
       auctionStatus: 'SOLD',
+      auctionType: 'BOTTOM_UP',
       finalPrice: 270000,
       itemCondition: 'REFURBISHED',
       description: '조선 후기 백자 달항아리로 둥근 형태가 특징입니다.',
       bidUnit: 5000,
       auctionTime: 60,
-      images: ['https://picsum.photos/seed/103a/400/400', 'https://picsum.photos/seed/103b/400/400', 'https://picsum.photos/seed/103c/400/400'],
+      images: [
+        'https://picsum.photos/seed/103a/400/400',
+        'https://picsum.photos/seed/103b/400/400',
+        'https://picsum.photos/seed/103c/400/400',
+      ],
     },
     {
       auctionId: 104,
@@ -226,12 +253,17 @@ const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
       image: 'https://picsum.photos/400/300?random=4',
       startPrice: 95000,
       auctionStatus: 'SOLD',
+      auctionType: 'BOTTOM_UP',
       finalPrice: 142500,
       itemCondition: 'USED',
       description: '분청사기에 철화 기법으로 물고기 문양을 그린 장군입니다.',
       bidUnit: 3000,
       auctionTime: 30,
-      images: ['https://picsum.photos/seed/104a/400/400', 'https://picsum.photos/seed/104b/400/400', 'https://picsum.photos/seed/104c/400/400'],
+      images: [
+        'https://picsum.photos/seed/104a/400/400',
+        'https://picsum.photos/seed/104b/400/400',
+        'https://picsum.photos/seed/104c/400/400',
+      ],
     },
     {
       auctionId: 105,
@@ -239,12 +271,17 @@ const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
       image: 'https://picsum.photos/400/300?random=5',
       startPrice: 320000,
       auctionStatus: 'SOLD',
+      auctionType: 'BOTTOM_UP',
       finalPrice: 480000,
       itemCondition: 'BRAND_NEW',
       description: '전통 나전칠기 기법으로 제작된 보석함입니다.',
       bidUnit: 10000,
       auctionTime: 60,
-      images: ['https://picsum.photos/seed/105a/400/400', 'https://picsum.photos/seed/105b/400/400', 'https://picsum.photos/seed/105c/400/400'],
+      images: [
+        'https://picsum.photos/seed/105a/400/400',
+        'https://picsum.photos/seed/105b/400/400',
+        'https://picsum.photos/seed/105c/400/400',
+      ],
     },
     {
       auctionId: 106,
@@ -252,12 +289,17 @@ const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
       image: 'https://picsum.photos/400/300?random=6',
       startPrice: 200000,
       auctionStatus: 'SOLD',
+      auctionType: 'BOTTOM_UP',
       finalPrice: 300000,
       itemCondition: 'OPEN_BOX',
       description: '조선시대 청화백자로 용 문양이 힘차게 그려져 있습니다.',
       bidUnit: 5000,
       auctionTime: 30,
-      images: ['https://picsum.photos/seed/106a/400/400', 'https://picsum.photos/seed/106b/400/400', 'https://picsum.photos/seed/106c/400/400'],
+      images: [
+        'https://picsum.photos/seed/106a/400/400',
+        'https://picsum.photos/seed/106b/400/400',
+        'https://picsum.photos/seed/106c/400/400',
+      ],
     },
     {
       auctionId: 107,
@@ -265,12 +307,17 @@ const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
       image: 'https://picsum.photos/400/300?random=7',
       startPrice: 500000,
       auctionStatus: 'UNSOLD',
+      auctionType: 'BOTTOM_UP',
       finalPrice: null,
       itemCondition: 'USED',
       description: '삼국시대 금동 반가사유상 재현품입니다.',
       bidUnit: 20000,
       auctionTime: 60,
-      images: ['https://picsum.photos/seed/107a/400/400', 'https://picsum.photos/seed/107b/400/400', 'https://picsum.photos/seed/107c/400/400'],
+      images: [
+        'https://picsum.photos/seed/107a/400/400',
+        'https://picsum.photos/seed/107b/400/400',
+        'https://picsum.photos/seed/107c/400/400',
+      ],
     },
   ],
 });
@@ -294,6 +341,72 @@ const clearWinnerAnnouncement = (streamId: string) => {
 
   globalThis.clearTimeout(winnerAnnouncementTimer);
   winnerAnnouncementTimers.delete(streamId);
+};
+
+const getActiveLiveItem = (streamId: string) => {
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
+  return itemSyncPayload.items.find((item) => item.auctionStatus === 'LIVE') ?? null;
+};
+
+const pauseStreamForReconnect = (streamId: string) => {
+  const currentState = streamTimerStates.get(streamId);
+
+  if (currentState) {
+    const remainingSeconds = Math.max(
+      1,
+      Math.ceil((currentState.startedAtMs + currentState.durationSeconds * 1000 - Date.now()) / 1000),
+    );
+
+    streamPausedTimerStates.set(streamId, {
+      remainingSeconds,
+      finalPrice: currentState.finalPrice,
+    });
+  }
+
+  clearWinnerAnnouncement(streamId);
+  streamTimerStates.delete(streamId);
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'STREAM_PAUSED',
+    payload: null,
+  });
+};
+
+const resumeStreamAfterReconnect = (streamId: string) => {
+  const pausedState = streamPausedTimerStates.get(streamId);
+
+  if (pausedState) {
+    streamTimerStates.set(streamId, {
+      durationSeconds: pausedState.remainingSeconds,
+      startedAtMs: Date.now(),
+      finalPrice: pausedState.finalPrice,
+    });
+
+    const activeItem = getActiveLiveItem(streamId);
+    if (activeItem?.auctionType === 'UNIQUE_TOP') {
+      scheduleUniqueAuctionEnd(streamId);
+    } else {
+      scheduleWinnerAnnouncement(streamId);
+    }
+
+    streamPausedTimerStates.delete(streamId);
+  }
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'STREAM_RESUMED',
+    payload: null,
+  });
+};
+
+const failStreamAfterReconnectTimeout = (streamId: string) => {
+  clearWinnerAnnouncement(streamId);
+  streamTimerStates.delete(streamId);
+  streamPausedTimerStates.delete(streamId);
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'STREAM_FAILED',
+    payload: null,
+  });
 };
 
 const activateNextReadyItem = (streamId: string, targetAuctionId?: number) => {
@@ -382,6 +495,29 @@ const completeLiveItem = (streamId: string, finalPrice: number) => {
   return nextPayload;
 };
 
+const completeUniqueLiveItem = (streamId: string, isWon: boolean, winnerPrice: number | null) => {
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
+  let completed = false;
+
+  const nextPayload: ItemSyncPayload = {
+    items: itemSyncPayload.items.map((item) => {
+      if (!completed && item.auctionStatus === 'LIVE') {
+        completed = true;
+        return {
+          ...item,
+          auctionStatus: isWon ? 'SOLD' : 'UNSOLD',
+          finalPrice: isWon ? winnerPrice : null,
+        };
+      }
+
+      return item;
+    }),
+  };
+
+  streamItemSyncStates.set(streamId, nextPayload);
+  return nextPayload;
+};
+
 const getViewerCountForStream = (streamId: string): number => {
   const destination = `/broadcast/streams/${streamId}`;
   let count = 0;
@@ -443,6 +579,71 @@ const broadcastBidSync = (streamId: string) => {
   });
 };
 
+const createUniqueBidSyncPayload = (streamId: string, nowMs: number) => {
+  const timerState = streamTimerStates.get(streamId);
+  const uniqueBidSyncState = streamUniqueBidSyncStates.get(streamId);
+
+  if (!timerState || !uniqueBidSyncState) {
+    return null;
+  }
+
+  return {
+    bidRange: uniqueBidSyncState.bidRange,
+    timer: createTimerPayload(timerState, nowMs),
+    participantCount: uniqueBidSyncState.participantCount,
+    hasBid: false,
+  };
+};
+
+const broadcastUniqueBidSync = (streamId: string) => {
+  broadcastToDestination(`/user/private/streams/${streamId}`, {
+    eventType: 'UNIQUE_BID_SYNC',
+    payload: createUniqueBidSyncPayload(streamId, Date.now()),
+  });
+};
+
+const ensureSeededUniqueAuctionState = (streamId: string) => {
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
+  const activeUniqueItem = itemSyncPayload?.items.find(
+    (item) => item.auctionType === 'UNIQUE_TOP' && item.auctionStatus === 'LIVE',
+  );
+
+  if (!activeUniqueItem) {
+    return;
+  }
+
+  let initializedTimer = false;
+
+  if (!streamTimerStates.has(streamId)) {
+    streamTimerStates.set(streamId, {
+      durationSeconds: activeUniqueItem.auctionTime ?? AUCTION_DURATION_SECONDS,
+      startedAtMs: Date.now(),
+      finalPrice: activeUniqueItem.startPrice,
+    });
+    initializedTimer = true;
+  }
+
+  if (!streamUniqueBidSyncStates.has(streamId)) {
+    const bidUnit = activeUniqueItem.bidUnit ?? 1000;
+    streamUniqueBidSyncStates.set(streamId, {
+      bidRange: {
+        minPrice: activeUniqueItem.startPrice,
+        maxPrice: activeUniqueItem.startPrice + bidUnit * 99,
+        bidUnit,
+      },
+      participantCount: 0,
+    });
+  }
+
+  if (!streamUniqueBidAmountsStates.has(streamId)) {
+    streamUniqueBidAmountsStates.set(streamId, []);
+  }
+
+  if (initializedTimer) {
+    scheduleUniqueAuctionEnd(streamId);
+  }
+};
+
 const broadcastItemSync = (streamId: string) => {
   const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
 
@@ -474,6 +675,7 @@ const sendItemSyncToClient = (
   destination: string,
 ) => {
   const streamId = getStreamIdFromDestination(destination);
+  ensureSeededUniqueAuctionState(streamId);
   const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
 
   streamItemSyncStates.set(streamId, itemSyncPayload);
@@ -536,6 +738,63 @@ const scheduleWinnerAnnouncement = (streamId: string) => {
   winnerAnnouncementTimers.set(streamId, winnerAnnouncementTimer);
 };
 
+const scheduleUniqueAuctionEnd = (streamId: string) => {
+  clearWinnerAnnouncement(streamId);
+
+  const currentState = streamTimerStates.get(streamId);
+
+  if (!currentState) {
+    return;
+  }
+
+  const remainingMs = Math.max(0, currentState.startedAtMs + currentState.durationSeconds * 1000 - Date.now());
+  const winnerAnnouncementTimer = globalThis.setTimeout(() => {
+    const bidAmounts = streamUniqueBidAmountsStates.get(streamId) ?? [];
+    const priceCountMap = new Map<number, number>();
+
+    bidAmounts.forEach((amount) => {
+      priceCountMap.set(amount, (priceCountMap.get(amount) ?? 0) + 1);
+    });
+
+    const uniquePrices = [...priceCountMap.entries()]
+      .filter(([, count]) => count === 1)
+      .map(([price]) => price)
+      .sort((a, b) => b - a);
+    const winnerPrice = uniquePrices[0] ?? null;
+    const topDuplicates =
+      winnerPrice === null
+        ? [...priceCountMap.entries()]
+            .filter(([, count]) => count > 1)
+            .sort((a, b) => b[0] - a[0])
+            .slice(0, 3)
+            .map(([price, cnt]) => ({ price, cnt }))
+        : null;
+
+    broadcastToDestination(`/broadcast/streams/${streamId}`, {
+      eventType: 'UNIQUE_AUCTION_CALCULATING',
+      payload: null,
+    });
+
+    completeUniqueLiveItem(streamId, winnerPrice !== null, winnerPrice);
+    streamTimerStates.delete(streamId);
+    streamUniqueBidSyncStates.delete(streamId);
+    streamUniqueBidAmountsStates.delete(streamId);
+
+    broadcastToDestination(`/broadcast/streams/${streamId}`, {
+      eventType: 'UNIQUE_AUCTION_END',
+      payload: {
+        isWon: winnerPrice !== null,
+        winnerPrice,
+        topDuplicates,
+      },
+    });
+
+    winnerAnnouncementTimers.delete(streamId);
+  }, remainingMs);
+
+  winnerAnnouncementTimers.set(streamId, winnerAnnouncementTimer);
+};
+
 const handleAuctionStart = (destination: string, body: string) => {
   const streamId = getStreamIdFromDestination(destination);
   const payload = JSON.parse(body) as {
@@ -582,12 +841,101 @@ const handleAuctionStart = (destination: string, body: string) => {
       timer: createTimerPayload(state, nowMs),
     },
   });
+  broadcastAuctionComment(streamId, '경매가 시작되었습니다.');
 
   if (bidAmount > 0) {
     broadcastAuctionComment(streamId, `현재 최고 입찰가 ${bidAmount.toLocaleString('ko-KR')}원입니다!`);
   }
 
   broadcastAuctionStatistics(streamId);
+};
+
+const handleUniqueAuctionStart = (destination: string, body: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  const payload = JSON.parse(body) as {
+    payload?: {
+      auctionId?: number;
+    };
+  };
+  const auctionId = payload.payload?.auctionId;
+  const nowMs = Date.now();
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
+  const targetItem =
+    itemSyncPayload.items.find((item) => item.auctionId === auctionId) ??
+    itemSyncPayload.items.find((item) => item.auctionStatus === 'INTRODUCING') ??
+    itemSyncPayload.items.find((item) => item.auctionStatus === 'READY');
+  const minPrice = targetItem?.startPrice ?? 1000;
+  const bidUnit = targetItem?.bidUnit ?? 1000;
+  const maxPrice = minPrice + bidUnit * 99;
+  const state: MockTimerState = {
+    durationSeconds: AUCTION_DURATION_SECONDS,
+    startedAtMs: nowMs,
+    finalPrice: minPrice,
+  };
+
+  streamTimerStates.set(streamId, state);
+  streamUniqueBidSyncStates.set(streamId, {
+    bidRange: {
+      minPrice,
+      maxPrice,
+      bidUnit,
+    },
+    participantCount: 0,
+  });
+  streamUniqueBidAmountsStates.set(streamId, []);
+  activateNextReadyItem(streamId, auctionId);
+  scheduleUniqueAuctionEnd(streamId);
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'UNIQUE_AUCTION_START',
+    payload: {
+      bidRange: {
+        minPrice,
+        maxPrice,
+        bidUnit,
+      },
+      timer: createTimerPayload(state, nowMs),
+    },
+  });
+  broadcastAuctionComment(streamId, '경매가 시작되었습니다.');
+};
+
+const handleUniqueBidPlace = (destination: string, body: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  ensureSeededUniqueAuctionState(streamId);
+  const payload = JSON.parse(body) as {
+    payload?: {
+      amount?: number;
+    };
+  };
+  const amount = payload.payload?.amount ?? 0;
+  const currentAmounts = streamUniqueBidAmountsStates.get(streamId) ?? [];
+  const nextAmounts = amount > 0 ? [...currentAmounts, amount] : currentAmounts;
+
+  streamUniqueBidAmountsStates.set(streamId, nextAmounts);
+
+  const currentState = streamUniqueBidSyncStates.get(streamId);
+
+  if (currentState) {
+    streamUniqueBidSyncStates.set(streamId, {
+      ...currentState,
+      participantCount: nextAmounts.length,
+    });
+  }
+
+  broadcastToDestination(`/user/private/streams/${streamId}`, {
+    eventType: 'UNIQUE_BID_ACK',
+    payload: {
+      amount,
+    },
+  });
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'UNIQUE_AUCTION_STATS',
+    payload: {
+      participantCount: nextAmounts.length,
+    },
+  });
 };
 
 const handleBidPlace = (destination: string, body: string) => {
@@ -666,8 +1014,15 @@ const handleBidSync = (destination: string) => {
   broadcastBidSync(streamId);
 };
 
+const handleUniqueBidSync = (destination: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  ensureSeededUniqueAuctionState(streamId);
+  broadcastUniqueBidSync(streamId);
+};
+
 const handleItemSync = (destination: string) => {
   const streamId = getStreamIdFromDestination(destination);
+  ensureSeededUniqueAuctionState(streamId);
   broadcastItemSync(streamId);
 };
 
@@ -690,6 +1045,25 @@ const handleAuctionItemIntroduce = (destination: string, body: string) => {
   });
 };
 
+const handleUniqueAuctionItemIntroduce = (destination: string, body: string) => {
+  const streamId = getStreamIdFromDestination(destination);
+  const payload = JSON.parse(body) as {
+    payload?: {
+      auctionId?: number;
+    };
+  };
+  const auctionId = payload.payload?.auctionId;
+
+  if (typeof auctionId === 'number') {
+    introduceAuctionItem(streamId, auctionId);
+  }
+
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'UNIQUE_AUCTION_INTRODUCE',
+    payload: null,
+  });
+};
+
 const handleChatMessage = (destination: string, body: string) => {
   const streamId = getStreamIdFromDestination(destination);
   const payload = JSON.parse(body) as {
@@ -700,6 +1074,21 @@ const handleChatMessage = (destination: string, body: string) => {
   const message = payload.payload?.message?.trim();
 
   if (!message) {
+    return;
+  }
+
+  if (message === '/pause') {
+    pauseStreamForReconnect(streamId);
+    return;
+  }
+
+  if (message === '/resume') {
+    resumeStreamAfterReconnect(streamId);
+    return;
+  }
+
+  if (message === '/fail') {
+    failStreamAfterReconnectTimeout(streamId);
     return;
   }
 
@@ -754,12 +1143,24 @@ const handleSendFrame = (frame: StompFrame) => {
       handleAuctionStart(frame.headers.destination, frame.body);
     }
 
+    if (body.eventType === 'UNIQUE_AUCTION_START') {
+      handleUniqueAuctionStart(frame.headers.destination, frame.body);
+    }
+
     if (body.eventType === 'BID_PLACED') {
       handleBidPlace(frame.headers.destination, frame.body);
     }
 
+    if (body.eventType === 'UNIQUE_BID_PLACE') {
+      handleUniqueBidPlace(frame.headers.destination, frame.body);
+    }
+
     if (body.eventType === 'BID_SYNC') {
       handleBidSync(frame.headers.destination);
+    }
+
+    if (body.eventType === 'UNIQUE_BID_SYNC') {
+      handleUniqueBidSync(frame.headers.destination);
     }
 
     if (body.eventType === 'ITEM_SYNC') {
@@ -770,12 +1171,28 @@ const handleSendFrame = (frame: StompFrame) => {
       handleAuctionItemIntroduce(frame.headers.destination, frame.body);
     }
 
+    if (body.eventType === 'UNIQUE_AUCTION_INTRODUCE') {
+      handleUniqueAuctionItemIntroduce(frame.headers.destination, frame.body);
+    }
+
     if (body.eventType === 'CHAT_MESSAGE') {
       handleChatMessage(frame.headers.destination, frame.body);
     }
 
     if (body.eventType === 'MACRO_TEMPLATE') {
       handleMacroTemplate(frame.headers.destination, frame.body);
+    }
+
+    if (body.eventType === 'STREAM_PAUSED') {
+      pauseStreamForReconnect(getStreamIdFromDestination(frame.headers.destination));
+    }
+
+    if (body.eventType === 'STREAM_RESUMED') {
+      resumeStreamAfterReconnect(getStreamIdFromDestination(frame.headers.destination));
+    }
+
+    if (body.eventType === 'STREAM_FAILED') {
+      failStreamAfterReconnectTimeout(getStreamIdFromDestination(frame.headers.destination));
     }
   }
 };

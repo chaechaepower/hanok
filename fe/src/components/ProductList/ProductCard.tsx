@@ -88,9 +88,7 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
 
       <div className="flex-1 flex flex-col">
         <div className="flex justify-between mb-2">
-          <div className="text-[#8E8E93] text-[13px]">
-            {product.tags.map(tag => `#${tag}`).join(' ')}
-          </div>
+          <div className="text-[#8E8E93] text-[13px]">{product.tags.map((tag) => `#${tag}`).join(' ')}</div>
           {product.status === 'READY' && (
             <div className="flex gap-3">
               <button
@@ -109,27 +107,26 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
           )}
         </div>
 
-        <h3 className="text-white text-lg font-bold m-0 mb-1.5">
-          {product.name}
-        </h3>
-        <p className="text-[#8E8E93] text-sm m-0 mb-6 leading-relaxed">
-          {product.description}
-        </p>
+        <h3 className="text-white text-lg font-bold m-0 mb-1.5">{product.name}</h3>
+        <p className="text-[#8E8E93] text-sm m-0 mb-6 leading-relaxed">{product.description}</p>
 
         <div className="grid grid-cols-6 border border-[#3A3A3C] rounded-xl bg-[#2C2C2E] mt-auto overflow-hidden">
           <MetricBox label="시작가격" value={`${product.startPrice.toLocaleString()} 원`} />
           <MetricBox label="최소 입찰단위" value={`${product.bidUnit.toLocaleString()} 원`} />
           <MetricBox label="경매 시간" value={`${product.auctionDuration} 초`} />
           <MetricBox label="물품 상태" value={conditionLabels[product.itemCondition] || product.itemCondition} />
-          <MetricBox label="카테고리" value={MAIN_CATEGORY_ITEMS.find(c => c.id === product.category)?.label || product.category} />
-          <MetricBox label="경매 방식" value={`${product.auctionType} ↑`} isLast />
+          <MetricBox
+            label="카테고리"
+            value={MAIN_CATEGORY_ITEMS.find((c) => c.id === product.category)?.label || product.category}
+          />
+          <MetricBox label="경매 방식" value={product.auctionType === 'UNIQUE_TOP' ? '유일최고가' : '상향식'} isLast />
         </div>
       </div>
     </div>
   );
 }
 
-function MetricBox({ label, value, isLast = false }: { label: string, value: string, isLast?: boolean }) {
+function MetricBox({ label, value, isLast = false }: { label: string; value: string; isLast?: boolean }) {
   return (
     <div className={`px-4 py-3 flex flex-col justify-center ${isLast ? '' : 'border-r border-[#3A3A3C]'}`}>
       <div className="text-[#A1A1A6] text-xs mb-1">{label}</div>

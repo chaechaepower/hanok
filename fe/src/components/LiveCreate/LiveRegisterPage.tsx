@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  FaArrowLeft,
-
-  FaCalendarAlt,
-  FaCamera,
-  FaCircle,
-
-  FaTimes,
-} from 'react-icons/fa';
+import { FaArrowLeft, FaCalendarAlt, FaCamera, FaCircle, FaTimes } from 'react-icons/fa';
 import { MdLiveTv } from 'react-icons/md';
 import { CATEGORY_MACROS } from '@/constants/macro';
 import { useGetItemsByCategory } from '@/api/hooks/useGetItems';
@@ -37,7 +29,7 @@ const toFallbackProduct = (item: LiveStreamItem): Product => ({
   auctionDuration: 0,
   itemCondition: item.itemCondition,
   category: item.category,
-  auctionType: '',
+  auctionType: 'BOTTOM_UP',
 });
 
 export default function LiveRegisterPage() {
@@ -227,6 +219,26 @@ export default function LiveRegisterPage() {
     return true;
   };
 
+  const handleSaveMacros = () => {
+    if (!isEditMode) {
+      setMacrosSaved(true);
+      setMacrosDirty(false);
+      showToast({ message: '매크로가 저장됐습니다.' });
+      return;
+    }
+
+    postMacros.mutate(
+      { streamId, body: { macros: buildMacrosPayload() } },
+      {
+        onSuccess: () => {
+          setMacrosSaved(true);
+          setMacrosDirty(false);
+          showToast({ message: '매크로가 저장되었습니다.' });
+        },
+        onError: () => showToast({ message: '매크로 저장에 실패하였습니다.' }),
+      },
+    );
+  };
 
   const buildStreamRequest = (startType: 'SCHEDULED' | 'IMMEDIATE', scheduledAtValue?: string): StreamRequest => {
     const resolvedScheduledAt = (scheduledAtValue ?? scheduledAt) || undefined;
@@ -352,7 +364,6 @@ export default function LiveRegisterPage() {
       setIsSubmitting(false);
     }
   };
-
 
   const sellerEntryButtonLabel = isEditMode ? '방송 입장' : '방송 준비';
   const pageTitle = isEditMode ? '라이브 방송 수정' : '라이브 방송 등록';
@@ -515,7 +526,6 @@ export default function LiveRegisterPage() {
               </div>
             )}
           </div>
-
         </div>
 
         <aside
@@ -563,7 +573,9 @@ export default function LiveRegisterPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-[#52525B] uppercase tracking-wider">상단 고정 공지사항 (선택)</label>
+              <label className="text-[10px] font-bold text-[#52525B] uppercase tracking-wider">
+                상단 고정 공지사항 (선택)
+              </label>
               <input
                 type="text"
                 value={notice}
@@ -601,14 +613,20 @@ export default function LiveRegisterPage() {
                       <input
                         type="text"
                         value={macroAnswers[macro.questionType] ?? ''}
-                        onChange={(e) => { setMacroAnswers((prev) => ({ ...prev, [macro.questionType]: e.target.value })); }}
+                        onChange={(e) => { 
+                          setMacroAnswers((prev) => ({ ...prev, [macro.questionType]: e.target.value }));
+                          setMacrosSaved(false);
+                          setMacrosDirty(true);
+                        }}
                         placeholder="응답을 입력해주세요."
                         className="flex-1 min-w-0 bg-transparent border border-[rgba(255,255,255,0.07)] rounded-lg px-2 py-1.5 text-white text-[11px] placeholder:text-[#3F3F46] outline-none focus:border-[rgba(197,160,89,0.4)] transition-colors"
                       />
                     </div>
                   );
                 })}
-                {!macroFields.length && <p className="text-[#52525B] text-xs font-bold">해당 카테고리의 매크로가 없습니다.</p>}
+                {!macroFields.length && (
+                  <p className="text-[#52525B] text-xs font-bold">해당 카테고리의 매크로가 없습니다.</p>
+                )}
               </div>
             </div>
           </div>

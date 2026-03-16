@@ -12,6 +12,7 @@ import type {
   UpdateStreamResponse,
 } from '@/types';
 
+import { getMockItemById } from './ItemHandler';
 import { getCurrentMockUser, mockLoginUsers } from './mockState';
 
 type RegisteredLive = Live & {
@@ -21,16 +22,24 @@ type RegisteredLive = Live & {
 };
 
 const createStreamItems = (itemIds: number[], category: string, thumbnail: string | null): LiveStreamItem[] =>
-  itemIds.map((itemId, index) => ({
-    itemId,
-    name: `Mock item ${itemId}`,
-    category,
-    startPrice: 10000 * (index + 1),
-    status: 'READY',
-    itemCondition: 'BRAND_NEW',
-    image1: thumbnail,
-    createdAt: new Date(Date.now() - index * 60000).toISOString(),
-  }));
+  itemIds.map((itemId, index) => {
+    const mockItem = getMockItemById(itemId);
+
+    return {
+      itemId,
+      name: mockItem?.name ?? `Mock item ${itemId}`,
+      category: mockItem?.category ?? category,
+      startPrice: mockItem?.startPrice ?? 10000 * (index + 1),
+      status: 'READY',
+      auctionType: mockItem?.auctionType ?? 'BOTTOM_UP',
+      itemCondition: mockItem?.itemCondition ?? 'BRAND_NEW',
+      image1: mockItem?.image1 ?? thumbnail,
+      createdAt: mockItem?.createdAt ?? new Date(Date.now() - index * 60000).toISOString(),
+      ...(mockItem?.description ? { description: mockItem.description } : {}),
+      ...(typeof mockItem?.bidUnit === 'number' ? { bidUnit: mockItem.bidUnit } : {}),
+      ...(typeof mockItem?.auctionDuration === 'number' ? { auctionTime: mockItem.auctionDuration } : {}),
+    };
+  });
 
 const defaultSeedSeller = mockLoginUsers.find((user) => user.userId === 2);
 
@@ -68,6 +77,7 @@ export const getInitialItemSyncPayloadForStream = (streamId: number): ItemSyncPa
       image: item.image1 ?? live.thumbnail ?? '',
       startPrice: item.startPrice,
       auctionStatus: item.status,
+      auctionType: item.auctionType ?? 'BOTTOM_UP',
       finalPrice: item.status === 'SOLD' ? Math.round(item.startPrice * 1.5) : null,
       itemCondition: item.itemCondition,
       description: item.description,
@@ -112,14 +122,20 @@ const registeredLives: RegisteredLive[] = [
         name: '고려청자 상감운학문 매병',
         category: 'BAGS_FASHION_ACCESSORIES',
         startPrice: 250000,
-        status: 'INTRODUCING',
+        status: 'READY',
         itemCondition: 'BRAND_NEW',
         image1: Logo,
         createdAt: new Date(Date.now() - 0 * 60000).toISOString(),
-        description: '고려시대 12세기 상감청자 매병으로, 운학문(구름과 학) 무늬가 정교하게 시문되어 있습니다. 보존 상태가 매우 우수합니다.',
+        description:
+          '고려시대 12세기 상감청자 매병으로, 운학문(구름과 학) 무늬가 정교하게 시문되어 있습니다. 보존 상태가 매우 우수합니다.',
         bidUnit: 10000,
+        auctionType: 'UNIQUE_TOP',
         auctionTime: 30,
-        images: ['https://picsum.photos/seed/101a/400/400', 'https://picsum.photos/seed/101b/400/400', 'https://picsum.photos/seed/101c/400/400'],
+        images: [
+          'https://picsum.photos/seed/101a/400/400',
+          'https://picsum.photos/seed/101b/400/400',
+          'https://picsum.photos/seed/101c/400/400',
+        ],
       },
       {
         itemId: 102,
@@ -130,10 +146,16 @@ const registeredLives: RegisteredLive[] = [
         itemCondition: 'OPEN_BOX',
         image1: Logo,
         createdAt: new Date(Date.now() - 1 * 60000).toISOString(),
-        description: '칠보문 투각 기법이 적용된 고려청자 향로입니다. 뚜껑의 투각 세공이 정밀하며, 향 연기가 문양 사이로 퍼지는 구조입니다.',
+        description:
+          '칠보문 투각 기법이 적용된 고려청자 향로입니다. 뚜껑의 투각 세공이 정밀하며, 향 연기가 문양 사이로 퍼지는 구조입니다.',
         bidUnit: 5000,
         auctionTime: 30,
-        images: ['https://picsum.photos/seed/102a/400/400', 'https://picsum.photos/seed/102b/400/400', 'https://picsum.photos/seed/102c/400/400'],
+        auctionType: 'UNIQUE_TOP',
+        images: [
+          'https://picsum.photos/seed/102a/400/400',
+          'https://picsum.photos/seed/102b/400/400',
+          'https://picsum.photos/seed/102c/400/400',
+        ],
       },
       {
         itemId: 103,
@@ -147,7 +169,12 @@ const registeredLives: RegisteredLive[] = [
         description: '조선 후기 백자 달항아리로 둥근 형태가 특징입니다. 유약의 자연스러운 흐름이 잘 보존되어 있습니다.',
         bidUnit: 5000,
         auctionTime: 60,
-        images: ['https://picsum.photos/seed/103a/400/400', 'https://picsum.photos/seed/103b/400/400', 'https://picsum.photos/seed/103c/400/400'],
+        auctionType: 'UNIQUE_TOP',
+        images: [
+          'https://picsum.photos/seed/103a/400/400',
+          'https://picsum.photos/seed/103b/400/400',
+          'https://picsum.photos/seed/103c/400/400',
+        ],
       },
       {
         itemId: 104,
@@ -158,10 +185,16 @@ const registeredLives: RegisteredLive[] = [
         itemCondition: 'USED',
         image1: Logo,
         createdAt: new Date(Date.now() - 3 * 60000).toISOString(),
-        description: '분청사기에 철화 기법으로 물고기 문양을 그린 장군(대형 항아리)입니다. 소박하면서도 힘찬 붓놀림이 특징입니다.',
+        description:
+          '분청사기에 철화 기법으로 물고기 문양을 그린 장군(대형 항아리)입니다. 소박하면서도 힘찬 붓놀림이 특징입니다.',
         bidUnit: 3000,
         auctionTime: 30,
-        images: ['https://picsum.photos/seed/104a/400/400', 'https://picsum.photos/seed/104b/400/400', 'https://picsum.photos/seed/104c/400/400'],
+        auctionType: 'UNIQUE_TOP',
+        images: [
+          'https://picsum.photos/seed/104a/400/400',
+          'https://picsum.photos/seed/104b/400/400',
+          'https://picsum.photos/seed/104c/400/400',
+        ],
       },
       {
         itemId: 105,
@@ -172,10 +205,16 @@ const registeredLives: RegisteredLive[] = [
         itemCondition: 'BRAND_NEW',
         image1: Logo,
         createdAt: new Date(Date.now() - 4 * 60000).toISOString(),
-        description: '전통 나전칠기 기법으로 제작된 보석함입니다. 자개 조각이 정밀하게 배치되어 화려한 광택을 자랑합니다.',
+        description:
+          '전통 나전칠기 기법으로 제작된 보석함입니다. 자개 조각이 정밀하게 배치되어 화려한 광택을 자랑합니다.',
         bidUnit: 10000,
         auctionTime: 60,
-        images: ['https://picsum.photos/seed/105a/400/400', 'https://picsum.photos/seed/105b/400/400', 'https://picsum.photos/seed/105c/400/400'],
+        auctionType: 'UNIQUE_TOP',
+        images: [
+          'https://picsum.photos/seed/105a/400/400',
+          'https://picsum.photos/seed/105b/400/400',
+          'https://picsum.photos/seed/105c/400/400',
+        ],
       },
       {
         itemId: 106,
@@ -186,10 +225,16 @@ const registeredLives: RegisteredLive[] = [
         itemCondition: 'OPEN_BOX',
         image1: Logo,
         createdAt: new Date(Date.now() - 5 * 60000).toISOString(),
-        description: '조선시대 청화백자로 용 문양이 힘차게 그려져 있습니다. 코발트 안료의 발색이 선명하게 남아 있습니다.',
+        description:
+          '조선시대 청화백자로 용 문양이 힘차게 그려져 있습니다. 코발트 안료의 발색이 선명하게 남아 있습니다.',
         bidUnit: 5000,
         auctionTime: 30,
-        images: ['https://picsum.photos/seed/106a/400/400', 'https://picsum.photos/seed/106b/400/400', 'https://picsum.photos/seed/106c/400/400'],
+        auctionType: 'UNIQUE_TOP',
+        images: [
+          'https://picsum.photos/seed/106a/400/400',
+          'https://picsum.photos/seed/106b/400/400',
+          'https://picsum.photos/seed/106c/400/400',
+        ],
       },
       {
         itemId: 107,
@@ -203,7 +248,12 @@ const registeredLives: RegisteredLive[] = [
         description: '삼국시대 금동 반가사유상 재현품입니다. 온화한 미소와 섬세한 손가락 표현이 돋보이는 작품입니다.',
         bidUnit: 20000,
         auctionTime: 60,
-        images: ['https://picsum.photos/seed/107a/400/400', 'https://picsum.photos/seed/107b/400/400', 'https://picsum.photos/seed/107c/400/400'],
+        auctionType: 'UNIQUE_TOP',
+        images: [
+          'https://picsum.photos/seed/107a/400/400',
+          'https://picsum.photos/seed/107b/400/400',
+          'https://picsum.photos/seed/107c/400/400',
+        ],
       },
     ],
     ...defaultSeedSellerSnapshot,
@@ -249,9 +299,43 @@ const registeredLives: RegisteredLive[] = [
     items: createStreamItems([301], 'WATCHES', Logo),
     ...defaultSeedSellerSnapshot,
   },
+  {
+    streamId: 5,
+    title: 'Unique top test live',
+    category: 'SNEAKERS_SHOES',
+    thumbnail: Logo,
+    scheduledAt: null,
+    startType: 'IMMEDIATE',
+    notice: 'Unique auction buyer test room.',
+    isLive: true,
+    createdAt: new Date(Date.now() - 900000).toISOString(),
+    items: [
+      {
+        itemId: 501,
+        name: 'Unique test sneakers',
+        category: 'SNEAKERS_SHOES',
+        startPrice: 100000,
+        status: 'LIVE',
+        auctionType: 'UNIQUE_TOP',
+        itemCondition: 'BRAND_NEW',
+        image1: Logo,
+        createdAt: new Date(Date.now() - 900000).toISOString(),
+        description: 'Buyer-side unique auction test item.',
+        bidUnit: 5000,
+        auctionTime: 30,
+        images: [
+          'https://picsum.photos/seed/unique-test-1/400/400',
+          'https://picsum.photos/seed/unique-test-2/400/400',
+        ],
+      },
+    ],
+    sellerId: 12,
+    sellerNickname: 'sneaker_room',
+    sellerProfileImage: 'https://picsum.photos/seed/seller-12/120/120',
+  },
 ];
 
-let nextLiveId = 5;
+let nextLiveId = 6;
 
 const parseStreamRequest = async (request: Request) => {
   let body: StreamRequest;

@@ -1,29 +1,39 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { useGetStreamEnter } from '@/api/hooks/useGetStreamEnter';
 import { useStompViewerCount } from '@/hooks/useStompViewerCount';
 import { useLiveKit } from '@/hooks/useLiveKit';
 import WinModal from '@/components/Live/Auction/Buyer/WinModal';
+import UniqueAuctionResultModal from '@/components/Live/Auction/Buyer/UniqueAuctionResultModal';
 import AuctionTimer from '@/components/Live/Auction/shared/AuctionTimer';
 import AuctionCommentToast from '@/components/Live/Stream/AuctionCommentToast';
 import ControlBar from '@/components/Live/Stream/ControlBar';
+import StreamDisconnected from '@/components/Live/Stream/Streamdisconnected';
+import StreamEnded from '@/components/Live/Stream/StreamEnded';
 import SellerGuideOverlay from '@/components/Live/Stream/SellerGuideOverlay';
 import StreamOverlay from '@/components/Live/Stream/StreamOverlay';
 import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
+import { useToast } from '@/components/common/Toast';
 import type {
   AuctionStatisticsPayload,
   BidSyncPayload,
   BidWinnerPayload,
   BroadcastStreamEvent,
+  ErrorStreamEvent,
+  ItemSyncItem,
   ItemSyncPayload,
   PrivateStreamEvent,
+  StompErrorPayload,
   StreamRequest,
+  StreamState,
   StreamEnterResponse,
   StreamTimerPayload,
   SyncedAuctionTimer,
+  UniqueAuctionEndPayload,
+  UniqueBidSyncPayload,
 } from '@/types';
 import { disconnectStompClient, sendStreamMessage, subscribeStream } from '@/websocket/stompClient';
 
@@ -31,7 +41,6 @@ import LeftPanel from './LeftPanel';
 import LiveHeader from './LiveHeader';
 import RightPanel from './RightPanel';
 import SellerStartModal from './SellerStartModal';
-
 
 const isAuctionStartEvent = (
   event: BroadcastStreamEvent,
@@ -66,9 +75,68 @@ const isBidEndEvent = (
   event: BroadcastStreamEvent,
 ): event is Extract<BroadcastStreamEvent, { eventType: 'AUCTION_END' }> => event.eventType === 'AUCTION_END';
 
+const isUniqueAuctionStartEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'UNIQUE_AUCTION_START' }> =>
+  event.eventType === 'UNIQUE_AUCTION_START';
+
+const isUniqueAuctionStatsEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'UNIQUE_AUCTION_STATS' }> =>
+  event.eventType === 'UNIQUE_AUCTION_STATS';
+
+const isUniqueAuctionIntroduceEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'UNIQUE_AUCTION_INTRODUCE' }> =>
+  event.eventType === 'UNIQUE_AUCTION_INTRODUCE';
+
+const isUniqueAuctionCalculatingEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'UNIQUE_AUCTION_CALCULATING' }> =>
+  event.eventType === 'UNIQUE_AUCTION_CALCULATING';
+
+const isUniqueAuctionEndEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'UNIQUE_AUCTION_END' }> =>
+  event.eventType === 'UNIQUE_AUCTION_END';
+
+const isStreamPausedEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'STREAM_PAUSED' }> =>
+  event.eventType === 'STREAM_PAUSED' || ('event' in event && event.event === 'stream:paused');
+
+const isStreamResumedEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'STREAM_RESUMED' }> =>
+  event.eventType === 'STREAM_RESUMED' || ('event' in event && event.event === 'stream:resumed');
+
+const isStreamFailedEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'STREAM_FAILED' }> =>
+  event.eventType === 'STREAM_FAILED' || ('event' in event && event.event === 'stream:failed');
+
+const isLegacyUniqueAuctionEndEvent = (event: {
+  eventType: string;
+  payload?: unknown;
+}): event is { eventType: 'UNIQUE_AUCTION_END'; payload?: UniqueAuctionEndPayload } =>
+  event.eventType === 'UNIQUE_AUCTION_END';
+
 const isBidWinnerEvent = (
   event: PrivateStreamEvent,
 ): event is Extract<PrivateStreamEvent, { eventType: 'BID_WINNER' }> => event.eventType === 'BID_WINNER';
+
+const isUniqueBidAckEvent = (
+  event: PrivateStreamEvent,
+): event is Extract<PrivateStreamEvent, { eventType: 'UNIQUE_BID_ACK' }> => event.eventType === 'UNIQUE_BID_ACK';
+
+const isUniqueBidSyncEvent = (
+  event: PrivateStreamEvent,
+): event is Extract<PrivateStreamEvent, { eventType: 'UNIQUE_BID_SYNC' }> => event.eventType === 'UNIQUE_BID_SYNC';
+
+const isStompErrorEvent = (event: ErrorStreamEvent): event is Extract<ErrorStreamEvent, { eventType: 'ERROR' }> =>
+  event.eventType === 'ERROR';
+
+const isUniqueAlreadyBidError = (payload?: StompErrorPayload) => payload?.code === 'UNIQUE-003';
 
 const createSyncedTimer = (timer: StreamTimerPayload): SyncedAuctionTimer => ({
   ...timer,
@@ -76,7 +144,9 @@ const createSyncedTimer = (timer: StreamTimerPayload): SyncedAuctionTimer => ({
 });
 
 export default function LivePage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
   const location = useLocation();
   const { id: streamId } = useParams<{ id: string }>();
   const numericStreamId = Number(streamId);
@@ -86,15 +156,24 @@ export default function LivePage() {
   const { viewerCount } = useStompViewerCount();
   const [selectedAuctionId, setSelectedAuctionId] = useState<number | null>(null);
   const [timer, setTimer] = useState<SyncedAuctionTimer | null>(null);
-  const [winnerInfo, setWinnerInfo] = useState<BidWinnerPayload | null>(null);
+  const [winnerInfo, setWinnerInfo] = useState<{
+    payload: BidWinnerPayload;
+    itemCond: ItemSyncItem['itemCondition'] | '';
+  } | null>(null);
   const [showSellerStartModal, setShowSellerStartModal] = useState(false);
   const [liveStateOverride, setLiveStateOverride] = useState<boolean | null>(null);
-  const [currentItemCond, setCurrentItemCond] = useState('');
   const [auctionStatistics, setAuctionStatistics] = useState<AuctionStatisticsPayload | null>(null);
   const [bidSync, setBidSync] = useState<BidSyncPayload | null>(null);
+  const [uniqueBidSync, setUniqueBidSync] = useState<UniqueBidSyncPayload | null>(null);
   const [itemSync, setItemSync] = useState<ItemSyncPayload | null>(null);
+  const [streamState, setStreamState] = useState<StreamState>('live');
+  const [uniqueAuctionResult, setUniqueAuctionResult] = useState<{
+    itemName: string;
+    payload: UniqueAuctionEndPayload;
+  } | null>(null);
   const [auctionComment, setAuctionComment] = useState<{ id: number; message: string } | null>(null);
   const autoOpenedStartModalStreamIdRef = useRef<number | null>(null);
+  const lastActiveItemRef = useRef<ItemSyncItem | null>(null);
   const postStartStream = usePostStartStream();
   const readyItems = itemSync?.items.filter((item) => item.auctionStatus === 'READY') ?? [];
   const introducingAuctionItem = itemSync?.items.find((item) => item.auctionStatus === 'INTRODUCING') ?? null;
@@ -109,8 +188,11 @@ export default function LivePage() {
   const selectedReadyAuctionItem = selectedAuctionItem?.auctionStatus === 'READY' ? selectedAuctionItem : null;
   const fallbackReadyAuctionItem = readyItems[0] ?? null;
   const introduceAuctionId = selectedReadyAuctionItem?.auctionId ?? fallbackReadyAuctionItem?.auctionId ?? null;
+  const introduceAuctionType = selectedReadyAuctionItem?.auctionType ?? fallbackReadyAuctionItem?.auctionType ?? null;
   const startAuctionId = introducingAuctionItem?.auctionId ?? null;
+  const startAuctionType = introducingAuctionItem?.auctionType ?? null;
   const activeBidAuctionId = liveAuctionItem?.auctionId ?? introducingAuctionItem?.auctionId ?? null;
+  const activeAuctionType = liveAuctionItem?.auctionType ?? introducingAuctionItem?.auctionType ?? null;
   const activeStreamEnter: StreamEnterResponse | null = streamEnter ?? null;
   const storedUserId =
     typeof window === 'undefined' ? 0 : Number.parseInt(window.localStorage.getItem('userId') ?? '0', 10);
@@ -211,6 +293,40 @@ export default function LivePage() {
   }, [auctionComment]);
 
   useEffect(() => {
+    const nextActiveItem = liveAuctionItem ?? introducingAuctionItem;
+
+    if (nextActiveItem) {
+      lastActiveItemRef.current = nextActiveItem;
+    }
+  }, [introducingAuctionItem, liveAuctionItem]);
+
+  useEffect(() => {
+    if (!streamId || activeBidAuctionId === null || !activeAuctionType) {
+      return;
+    }
+
+    void sendStreamMessage(streamId, {
+      eventType: activeAuctionType === 'UNIQUE_TOP' ? 'UNIQUE_BID_SYNC' : 'BID_SYNC',
+      payload: null,
+    }).catch((error) => {
+      console.error('[stream] failed to sync active auction state', error);
+    });
+  }, [activeAuctionType, activeBidAuctionId, streamId]);
+
+  useEffect(() => {
+    if (!streamId || !isStreamLive) {
+      return;
+    }
+
+    void sendStreamMessage(streamId, {
+      eventType: 'ITEM_SYNC',
+      payload: null,
+    }).catch((error) => {
+      console.error('[stream] failed to sync items after stream start', error);
+    });
+  }, [isStreamLive, streamId]);
+
+  useEffect(() => {
     if (!streamId) {
       return;
     }
@@ -222,10 +338,23 @@ export default function LivePage() {
       });
     };
 
+    const requestActiveAuctionSync = async (item: ItemSyncItem | null) => {
+      if (!item) {
+        return;
+      }
+
+      await sendStreamMessage(streamId, {
+        eventType: item.auctionType === 'UNIQUE_TOP' ? 'UNIQUE_BID_SYNC' : 'BID_SYNC',
+        payload: null,
+      });
+    };
+
     const handleBroadcastEvent = (event: BroadcastStreamEvent) => {
       if (isAuctionStartEvent(event) && event.payload?.timer) {
+        setStreamState('live');
         setTimer(createSyncedTimer(event.payload.timer));
-        setCurrentItemCond(event.payload.item?.condition ?? '');
+        setUniqueBidSync(null);
+        setUniqueAuctionResult(null);
         if (typeof event.payload.item?.startPrice === 'number' && typeof event.payload.item?.bidUnit === 'number') {
           setBidSync({
             item: {
@@ -236,6 +365,22 @@ export default function LivePage() {
           });
         }
         setWinnerInfo(null);
+        void requestItemSync();
+        return;
+      }
+
+      if (isUniqueAuctionStartEvent(event) && event.payload?.bidRange && event.payload?.timer) {
+        setStreamState('live');
+        setBidSync(null);
+        setAuctionStatistics(null);
+        setUniqueAuctionResult(null);
+        setTimer(createSyncedTimer(event.payload.timer));
+        setUniqueBidSync({
+          bidRange: event.payload.bidRange,
+          timer: event.payload.timer,
+          participantCount: 0,
+          hasBid: false,
+        });
         void requestItemSync();
         return;
       }
@@ -263,11 +408,38 @@ export default function LivePage() {
 
       if (isBidSyncEvent(event)) {
         setBidSync(event.payload ?? null);
+        if (event.payload?.timer) {
+          setTimer(createSyncedTimer(event.payload.timer));
+        }
         return;
       }
 
       if (isItemSyncEvent(event)) {
         setItemSync(event.payload ?? null);
+        const nextActiveItem =
+          event.payload?.items.find((item) => item.auctionStatus === 'LIVE') ??
+          event.payload?.items.find((item) => item.auctionStatus === 'INTRODUCING') ??
+          null;
+        void requestActiveAuctionSync(nextActiveItem);
+        return;
+      }
+
+      if (isStreamPausedEvent(event)) {
+        setStreamState('disconnected');
+        setTimer(null);
+        return;
+      }
+
+      if (isStreamResumedEvent(event)) {
+        setStreamState('live');
+        void requestItemSync();
+        return;
+      }
+
+      if (isStreamFailedEvent(event)) {
+        setStreamState('ended');
+        setLiveStateOverride(false);
+        setTimer(null);
         return;
       }
 
@@ -284,6 +456,25 @@ export default function LivePage() {
         return;
       }
 
+      if (isUniqueAuctionIntroduceEvent(event)) {
+        void requestItemSync();
+        return;
+      }
+
+      if (isUniqueAuctionCalculatingEvent(event)) {
+        return;
+      }
+
+      if (isUniqueAuctionEndEvent(event) && event.payload) {
+        setUniqueAuctionResult({
+          itemName: lastActiveItemRef.current?.itemName ?? '경매 상품',
+          payload: event.payload,
+        });
+        setUniqueBidSync(null);
+        void requestItemSync();
+        return;
+      }
+
       if (isBidEndEvent(event)) {
         void requestItemSync();
         return;
@@ -291,23 +482,79 @@ export default function LivePage() {
 
       if (isAuctionStatisticsEvent(event) && event.payload) {
         setAuctionStatistics(event.payload);
+        return;
+      }
+
+      if (isUniqueAuctionStatsEvent(event) && event.payload) {
+        setUniqueBidSync((prev) =>
+          prev
+            ? {
+                ...prev,
+                participantCount: event.payload?.participantCount ?? prev.participantCount,
+              }
+            : prev,
+        );
       }
     };
 
     const handlePrivateEvent = (event: PrivateStreamEvent) => {
+      if (isUniqueBidSyncEvent(event)) {
+        setUniqueBidSync(event.payload ?? null);
+        if (event.payload?.timer) {
+          setTimer(createSyncedTimer(event.payload.timer));
+        }
+        return;
+      }
+
       if (isBidWinnerEvent(event) && event.payload) {
-        setWinnerInfo(event.payload);
+        setWinnerInfo({
+          payload: event.payload,
+          itemCond: lastActiveItemRef.current?.itemCondition ?? '',
+        });
+        return;
+      }
+
+      if (isUniqueBidAckEvent(event) && event.payload) {
+        setUniqueBidSync((prev) => (prev ? { ...prev, hasBid: true } : prev));
+        showToast({ message: `${event.payload.amount.toLocaleString()}원 입찰이 접수되었습니다.` });
+        return;
+      }
+
+      if (isLegacyUniqueAuctionEndEvent(event) && event.payload) {
+        setUniqueAuctionResult({
+          itemName: lastActiveItemRef.current?.itemName ?? '경매 상품',
+          payload: event.payload,
+        });
       }
     };
 
+    const handleErrorEvent = (event: ErrorStreamEvent) => {
+      if (!isStompErrorEvent(event) || !event.payload) {
+        return;
+      }
+
+      if (isUniqueAlreadyBidError(event.payload)) {
+        setUniqueBidSync((prev) => (prev ? { ...prev, hasBid: true } : prev));
+      }
+
+      showToast({ message: event.payload.message });
+    };
+
+    let isDisposed = false;
     let unsubscribeStream: () => void = () => {};
 
-    void subscribeStream<BroadcastStreamEvent, PrivateStreamEvent>({
+    void subscribeStream<BroadcastStreamEvent, PrivateStreamEvent, ErrorStreamEvent>({
       streamId,
       onBroadcast: handleBroadcastEvent,
       onPrivate: handlePrivateEvent,
+      onError: handleErrorEvent,
     })
       .then(async (cleanup) => {
+        if (isDisposed) {
+          cleanup();
+          return;
+        }
+
         unsubscribeStream = cleanup;
         await requestItemSync();
       })
@@ -316,15 +563,21 @@ export default function LivePage() {
       });
 
     return () => {
+      isDisposed = true;
       unsubscribeStream();
       void disconnectStompClient();
     };
-  }, [streamId]);
+  }, [showToast, streamId]);
 
   const handleWinConfirm = async () => {
     await Promise.resolve();
     await queryClient.invalidateQueries({ queryKey: ['wallet'] });
     setWinnerInfo(null);
+  };
+
+  const handleUniqueAuctionResultClose = () => {
+    void queryClient.invalidateQueries({ queryKey: ['wallet'] });
+    setUniqueAuctionResult(null);
   };
 
   return (
@@ -353,10 +606,14 @@ export default function LivePage() {
           {livekitState !== 'connected' && <StreamPlaceholder />}
           <ControlBar
             isSeller={isSeller}
+            auctionType={activeAuctionType}
             bidSync={bidSync}
+            uniqueBidSync={uniqueBidSync}
             activeBidAuctionId={activeBidAuctionId}
             introduceAuctionId={introduceAuctionId}
+            introduceAuctionType={introduceAuctionType}
             startAuctionId={startAuctionId}
+            startAuctionType={startAuctionType}
             canIntroduce={canIntroduceAuction}
             canStart={canStartAuction}
             readyItems={readyItems}
@@ -391,17 +648,46 @@ export default function LivePage() {
           {winnerInfo && (
             <WinModal
               isOpen
-              itemName={winnerInfo.item.itemName}
-              itemCond={currentItemCond || '경매 종료 상품'}
-              finalPrice={winnerInfo.item.finalPrice}
-              address={winnerInfo.shipping}
+              itemName={winnerInfo.payload.item.itemName}
+              itemCond={winnerInfo.itemCond || 'Auction item'}
+              finalPrice={winnerInfo.payload.item.finalPrice}
+              address={winnerInfo.payload.shipping}
               onConfirm={handleWinConfirm}
               onClose={() => setWinnerInfo(null)}
             />
           )}
+          {uniqueAuctionResult && (
+            <UniqueAuctionResultModal
+              isOpen
+              itemName={uniqueAuctionResult.itemName}
+              payload={uniqueAuctionResult.payload}
+              onClose={handleUniqueAuctionResultClose}
+            />
+          )}
+          {streamState === 'disconnected' && (
+            <StreamDisconnected
+              initialSeconds={30}
+              onTimeout={() => {
+                setStreamState('ended');
+              }}
+            />
+          )}
+          {streamState === 'ended' && (
+            <StreamEnded
+              onClose={() => {
+                navigate(-1);
+              }}
+            />
+          )}
         </div>
         <div className="min-w-0 flex-1 overflow-hidden rounded-2xl">
-          <RightPanel isSeller={isSeller} auctionStatistics={auctionStatistics} streamEnter={activeStreamEnter} />
+          <RightPanel
+            isSeller={isSeller}
+            auctionType={activeAuctionType}
+            auctionStatistics={auctionStatistics}
+            uniqueBidSync={uniqueBidSync}
+            streamEnter={activeStreamEnter}
+          />
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { LuMic, LuMicOff, LuVideo, LuVideoOff } from 'react-icons/lu';
 import KeyboardGuide from '@/components/Live/Auction/Seller/KeyboardGuide';
+import type { LiveAuctionType } from '@/types';
 import { useParams } from 'react-router-dom';
 import { sendStreamMessage } from '@/websocket/stompClient';
 
@@ -13,7 +14,9 @@ interface ReadyItem {
 
 interface Props {
   introduceAuctionId: number | null;
+  introduceAuctionType: LiveAuctionType | null;
   startAuctionId: number | null;
+  startAuctionType: LiveAuctionType | null;
   canIntroduce: boolean;
   canStart: boolean;
   readyItems: ReadyItem[];
@@ -27,7 +30,9 @@ interface Props {
 
 export default function SellerControlBar({
   introduceAuctionId,
+  introduceAuctionType,
   startAuctionId,
+  startAuctionType,
   canIntroduce,
   canStart,
   readyItems,
@@ -55,14 +60,14 @@ export default function SellerControlBar({
     }
 
     void sendStreamMessage(streamId, {
-      eventType: 'AUCTION_START',
+      eventType: startAuctionType === 'UNIQUE_TOP' ? 'UNIQUE_AUCTION_START' : 'AUCTION_START',
       payload: {
         auctionId: startAuctionId,
       },
     }).catch((error) => {
       console.error('[stream] failed to send AUCTION_START', error);
     });
-  }, [streamId, startAuctionId]);
+  }, [streamId, startAuctionId, startAuctionType]);
 
   const handleAuctionItemIntroduce = useCallback(() => {
     if (!streamId) {
@@ -76,14 +81,14 @@ export default function SellerControlBar({
     }
 
     void sendStreamMessage(streamId, {
-      eventType: 'ITEM_INTRODUCE',
+      eventType: introduceAuctionType === 'UNIQUE_TOP' ? 'UNIQUE_AUCTION_INTRODUCE' : 'ITEM_INTRODUCE',
       payload: {
         auctionId: introduceAuctionId,
       },
     }).catch((error) => {
       console.error('[stream] failed to send ITEM_INTRODUCE', error);
     });
-  }, [streamId, introduceAuctionId]);
+  }, [streamId, introduceAuctionId, introduceAuctionType]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {

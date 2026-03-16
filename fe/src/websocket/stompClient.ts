@@ -19,12 +19,14 @@ type ManagedSubscription = {
   active?: StompSubscription;
 };
 
-type StreamSubscriptionOptions<TBroadcast = unknown, TPrivate = unknown> = {
+type StreamSubscriptionOptions<TBroadcast = unknown, TPrivate = unknown, TError = unknown> = {
   streamId: number | string;
   onBroadcast?: StompMessageHandler<TBroadcast>;
   onPrivate?: StompMessageHandler<TPrivate>;
+  onError?: StompMessageHandler<TError>;
   broadcastHeaders?: StompHeaders;
   privateHeaders?: StompHeaders;
+  errorHeaders?: StompHeaders;
 };
 
 let client: Client | null = null;
@@ -150,6 +152,10 @@ const registerSubscription = (
   return () => {
     entry.active?.unsubscribe();
     managedSubscriptions.delete(entry.id);
+
+    if (managedSubscriptions.size === 0) {
+      void disconnectStompClient();
+    }
   };
 };
 
@@ -212,13 +218,15 @@ export const disconnectStompClient = async () => {
   setConnectionState('idle');
 };
 
-export const subscribeStream = async <TBroadcast = unknown, TPrivate = unknown>({
+export const subscribeStream = async <TBroadcast = unknown, TPrivate = unknown, TError = unknown>({
   streamId,
   onBroadcast,
   onPrivate,
+  onError,
   broadcastHeaders,
   privateHeaders,
-}: StreamSubscriptionOptions<TBroadcast, TPrivate>) => {
+  errorHeaders,
+}: StreamSubscriptionOptions<TBroadcast, TPrivate, TError>) => {
   await connectStompClient();
 
   const unsubscribers: Array<() => void> = [];
@@ -243,6 +251,18 @@ export const subscribeStream = async <TBroadcast = unknown, TPrivate = unknown>(
           onPrivate(parseStompMessageBody<TPrivate>(message), message);
         },
         privateHeaders,
+      ),
+    );
+  }
+
+  if (onError) {
+    unsubscribers.push(
+      registerSubscription(
+        STREAM_SOCKET_DESTINATIONS.errors(),
+        (message) => {
+          onError(parseStompMessageBody<TError>(message), message);
+        },
+        errorHeaders,
       ),
     );
   }
