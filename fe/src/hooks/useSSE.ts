@@ -11,7 +11,10 @@ interface UseSSEOptions {
 
 export function useSSE({ onNotification, enabled }: UseSSEOptions) {
   const onNotificationRef = useRef(onNotification);
-  onNotificationRef.current = onNotification;
+
+  useEffect(() => {
+    onNotificationRef.current = onNotification;
+  });
 
   useEffect(() => {
     if (!enabled) return;

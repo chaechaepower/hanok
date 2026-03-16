@@ -16,5 +16,7 @@ export const useGetStreamEnter = (streamId: number, enabled = true) => {
     queryKey: ['streamEnter', streamId],
     queryFn: () => getStreamEnter(streamId),
     enabled: enabled && Number.isFinite(streamId) && streamId > 0,
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
   });
 };
