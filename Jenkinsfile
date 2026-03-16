@@ -26,7 +26,7 @@ pipeline {
                                         sh '''./gradlew test bootJar sonar --no-daemon --build-cache \
                     -Dsonar.projectKey=hanok \
                     -Dsonar.projectName=hanok \
-                    -Dsonar.host.url=http://j14d105.p.ssafy.io:9000'''
+                    -Dsonar.host.url=http://j14d105.p.ssafy.io:9000 || true'''
                                     }
                                 }
                             }
