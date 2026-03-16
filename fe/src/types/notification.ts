@@ -7,3 +7,10 @@ export type Notification = {
   createdAt: string;
   actionUrl: string;
 };
+
+export type NotificationPage = {
+  items: Notification[];
+  unreadCount: number;
+  hasNext: boolean;
+  nextCursor: string | null;
+};

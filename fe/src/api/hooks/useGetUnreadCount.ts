@@ -6,7 +6,7 @@ import type { ApiResponse } from '@/types';
 export const getUnreadCountPath = () => '/v1/notifications/unread-count';
 
 export const getUnreadCount = async () => {
-  const response = await getFetchInstance().get<ApiResponse<{ count: number }>>(getUnreadCountPath());
+  const response = await getFetchInstance().get<ApiResponse<number>>(getUnreadCountPath());
   return response.data.data;
 };
 

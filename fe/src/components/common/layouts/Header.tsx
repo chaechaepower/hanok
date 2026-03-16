@@ -27,7 +27,7 @@ export default function Header() {
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const { data: unreadData } = useGetUnreadCount();
-  const unreadCount = unreadData?.count ?? 0;
+  const unreadCount = unreadData ?? 0;
 
   const { showToast } = useToast();
 
