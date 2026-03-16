@@ -192,23 +192,23 @@ export default function ShippingSection() {
         </div>
         <button
           onClick={openAddModal}
-          className="flex-shrink-0 py-2 px-4 bg-[#1a1a28] border border-[#3a3a50] text-white text-sm font-semibold rounded-full cursor-pointer hover:bg-[#2a2a3a] transition-colors"
+          className="flex-shrink-0 py-2 px-4 bg-[#0a0a0a] border border-[#3a3a50] text-white text-sm font-semibold rounded-full cursor-pointer hover:bg-[#2a2a3a] transition-colors"
         >
           + 새 배송지 추가
         </button>
       </div>
 
       {addresses.length === 0 ? (
-        <div className="w-full box-border border border-[#2e2e40] rounded-2xl p-12 bg-[#0c0c14] flex flex-col items-center gap-4">
+        <div className="w-full box-border border border-[#d9b36d]/30 rounded-2xl p-12 bg-[#050505] flex flex-col items-center gap-4">
           <FaMapMarkerAlt size={40} className="text-[#333]" />
           <p className="m-0 text-[#555] text-[15px]">등록된 배송지가 없습니다.</p>
         </div>
       ) : (
-        <div className="w-full box-border border border-[#2e2e40] rounded-2xl bg-[#0c0c14] overflow-hidden">
+        <div className="w-full box-border border border-[#d9b36d]/30 rounded-2xl bg-[#050505] overflow-hidden">
           {[...addresses]
             .sort((a, b) => Number(b.isDefault) - Number(a.isDefault))
             .map((addr, idx) => (
-              <div key={addr.id} className={`p-8 flex flex-col gap-2 ${idx !== 0 ? 'border-t border-[#2e2e40]' : ''}`}>
+              <div key={addr.id} className={`p-8 flex flex-col gap-2 ${idx !== 0 ? 'border-t border-[#d9b36d]/20' : ''}`}>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-white font-bold text-[16px]">{addr.addressName}</span>
                   {addr.isDefault && (
@@ -258,7 +258,7 @@ export default function ShippingSection() {
           onClick={() => setModalOpen(false)}
         >
           <div
-            className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[500px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto"
+            className="bg-[#0a0a0a] border border-white/5 rounded-2xl w-[500px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -280,7 +280,7 @@ export default function ShippingSection() {
                 value={form.recipientName}
                 onChange={(e) => setForm((prev) => ({ ...prev, recipientName: e.target.value }))}
                 placeholder="받는 분 이름"
-                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
               />
             </div>
 
@@ -291,7 +291,7 @@ export default function ShippingSection() {
                 value={form.addressName}
                 onChange={(e) => setForm((prev) => ({ ...prev, addressName: e.target.value }))}
                 placeholder="예: 집, 회사"
-                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
               />
             </div>
 
@@ -303,7 +303,7 @@ export default function ShippingSection() {
                   value={form.postalCode}
                   readOnly
                   placeholder="주소 검색을 이용해주세요"
-                  className="flex-1 box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none cursor-default"
+                  className="flex-1 box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none cursor-default"
                 />
                 <button
                   type="button"
@@ -323,7 +323,7 @@ export default function ShippingSection() {
                 value={form.address}
                 readOnly
                 placeholder="주소 검색을 이용해주세요"
-                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none cursor-default"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none cursor-default"
               />
             </div>
 
@@ -334,7 +334,7 @@ export default function ShippingSection() {
                 value={form.addressDetail}
                 onChange={(e) => setForm((prev) => ({ ...prev, addressDetail: e.target.value }))}
                 placeholder="동/호수 등 (선택)"
-                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
               />
             </div>
 
@@ -360,7 +360,7 @@ export default function ShippingSection() {
                   }
                 }}
                 placeholder="0000-0000"
-                className={`w-full box-border bg-[#0f0f16] text-white border rounded-lg px-4 py-3 text-[15px] outline-none transition-colors ${phoneError ? 'border-red-500' : 'border-[#2e2e40] focus:border-[#d9b36d]'}`}
+                className={`w-full box-border bg-white/[0.02] text-white border rounded-lg px-4 py-3 text-[15px] outline-none transition-colors ${phoneError ? 'border-red-500' : 'border-white/5 focus:border-[#d9b36d]'}`}
               />
               {phoneError && <p className="m-0 text-[13px] text-red-400">{phoneError}</p>}
             </div>
@@ -391,7 +391,7 @@ export default function ShippingSection() {
           onClick={() => setAddressSearchOpen(false)}
         >
           <div
-            className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[520px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] max-h-[80vh] overflow-hidden"
+            className="bg-[#0a0a0a] border border-white/5 rounded-2xl w-[520px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] max-h-[80vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -414,7 +414,7 @@ export default function ShippingSection() {
                 }}
                 placeholder="도로명, 건물명, 지번 입력"
                 autoFocus
-                className="flex-1 box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="flex-1 box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
               />
               <button
                 onClick={() => searchAddress(1)}
@@ -476,7 +476,7 @@ export default function ShippingSection() {
                     <button
                       onClick={() => searchAddress(currentPage - 1)}
                       disabled={currentPage <= 1}
-                      className="px-3 py-1.5 bg-transparent border border-[#2e2e40] text-[#aaa] text-[13px] rounded cursor-pointer hover:bg-[#2a2a3a] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 bg-transparent border border-white/5 text-[#aaa] text-[13px] rounded cursor-pointer hover:bg-[#2a2a3a] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       이전
                     </button>
@@ -486,7 +486,7 @@ export default function ShippingSection() {
                     <button
                       onClick={() => searchAddress(currentPage + 1)}
                       disabled={currentPage >= totalPages}
-                      className="px-3 py-1.5 bg-transparent border border-[#2e2e40] text-[#aaa] text-[13px] rounded cursor-pointer hover:bg-[#2a2a3a] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 bg-transparent border border-white/5 text-[#aaa] text-[13px] rounded cursor-pointer hover:bg-[#2a2a3a] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     >
                       다음
                     </button>

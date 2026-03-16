@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRegisterSeller } from '@/api/hooks/usePostRegisterSeller';
 import Button from '@/components/common/Button';
 import type { AccountData, BusinessType } from '@/types';
 import axios from 'axios';
+
+const inputClass = 'w-full h-12 bg-[#1C1C1E] border border-[#3A3A3C] rounded-lg text-white text-sm px-4 outline-none font-[inherit]';
 
 export default function Step4({
   onPrev,
@@ -25,27 +27,6 @@ export default function Step4({
   const [instaLink, setInstaLink] = useState('');
   const [tictokLink, setTictokLink] = useState('');
   const [error, setError] = useState('');
-
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    height: '48px',
-    backgroundColor: '#1C1C1E',
-    border: '1px solid #3A3A3C',
-    borderRadius: '8px',
-    color: 'white',
-    fontSize: '14px',
-    padding: '0 16px',
-    outline: 'none',
-    fontFamily: 'inherit',
-  };
-
-  const labelStyle: React.CSSProperties = {
-    fontSize: '14px',
-    color: '#E5E5EA',
-    fontWeight: '600',
-    marginBottom: '10px',
-    display: 'block',
-  };
 
   const handleRegister = async () => {
     if (!nickname.trim()) {
@@ -79,8 +60,8 @@ export default function Step4({
 
   return (
     <>
-      <div style={{ marginBottom: '20px' }}>
-        <label style={labelStyle}>판매자명</label>
+      <div className="mb-5">
+        <label className="text-sm text-[#E5E5EA] font-semibold mb-2.5 block">판매자명</label>
         <input
           type="text"
           value={nickname}
@@ -89,53 +70,53 @@ export default function Step4({
             setError('');
           }}
           placeholder="이름을 입력해주세요"
-          style={inputStyle}
+          className={inputClass}
           maxLength={20}
         />
       </div>
 
-      <div style={{ marginBottom: '20px' }}>
-        <label style={labelStyle}>판매자 소개글</label>
+      <div className="mb-5">
+        <label className="text-sm text-[#E5E5EA] font-semibold mb-2.5 block">판매자 소개글</label>
         <input
           type="text"
           value={intro}
           onChange={(e) => setIntro(e.target.value)}
           placeholder="상점의 소개를 입력해주세요"
-          style={inputStyle}
+          className={inputClass}
           maxLength={100}
         />
       </div>
 
-      <div style={{ marginBottom: '24px' }}>
-        <label style={labelStyle}>SNS 링크(선택)</label>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div className="mb-6">
+        <label className="text-sm text-[#E5E5EA] font-semibold mb-2.5 block">SNS 링크(선택)</label>
+        <div className="flex flex-col gap-2.5">
           <input
             type="url"
             value={youtubeLink}
             onChange={(e) => setYoutubeLink(e.target.value)}
             placeholder="유튜브 URL"
-            style={inputStyle}
+            className={inputClass}
           />
           <input
             type="url"
             value={instaLink}
             onChange={(e) => setInstaLink(e.target.value)}
             placeholder="인스타그램 URL"
-            style={inputStyle}
+            className={inputClass}
           />
           <input
             type="url"
             value={tictokLink}
             onChange={(e) => setTictokLink(e.target.value)}
             placeholder="틱톡 URL"
-            style={inputStyle}
+            className={inputClass}
           />
         </div>
       </div>
 
-      {error && <p style={{ color: '#FF453A', fontSize: '13px', marginBottom: '12px' }}>{error}</p>}
+      {error && <p className="text-[#FF453A] text-[13px] mb-3">{error}</p>}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', position: 'sticky', bottom: 0, paddingTop: '24px', paddingBottom: '24px' }}>
+      <div className="flex justify-between sticky bottom-0 pt-6 pb-6">
         <Button variant="outline" onClick={onPrev} className="w-30!">
           이전
         </Button>

@@ -26,119 +26,45 @@ function CancelModal({
 
   return (
     <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        backgroundColor: 'rgba(0,0,0,0.55)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-      }}
+      className="fixed inset-0 bg-black/55 flex items-center justify-center z-[1000]"
       onClick={onClose}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          backgroundColor: '#fff',
-          borderRadius: '20px',
-          padding: '40px 32px 32px',
-          width: '360px',
-          position: 'relative',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '20px',
-        }}
+        className="bg-white rounded-[20px] p-[40px_32px_32px] w-[360px] relative shadow-[0_20px_60px_rgba(0,0,0,0.25)] flex flex-col items-center gap-5"
       >
         <button
           onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: '16px',
-            right: '16px',
-            background: 'none',
-            border: 'none',
-            cursor: 'pointer',
-            color: '#888',
-            padding: '4px',
-          }}
+          className="absolute top-4 right-4 bg-transparent border-none cursor-pointer text-[#888] p-1"
         >
           <FiX size={20} />
         </button>
 
-        <div
-          style={{
-            width: '56px',
-            height: '56px',
-            borderRadius: '50%',
-            backgroundColor: '#FEE2E2',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
+        <div className="w-14 h-14 rounded-full bg-[#FEE2E2] flex items-center justify-center">
           <FiX size={28} color="#EF4444" />
         </div>
 
-        <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#1A2238', margin: 0 }}>거래를 취소하시겠습니까?</h2>
+        <h2 className="text-xl font-bold text-[#1A2238] m-0">거래를 취소하시겠습니까?</h2>
 
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            backgroundColor: '#F5F5F7',
-            borderRadius: '10px',
-            padding: '12px 16px',
-            width: '100%',
-          }}
-        >
+        <div className="flex items-center gap-2.5 bg-[#F5F5F7] rounded-[10px] p-[12px_16px] w-full">
           <BsBox size={18} color="#555" />
-          <span style={{ fontSize: '15px', color: '#1A2238', fontWeight: '500' }}>{itemName}</span>
+          <span className="text-[15px] text-[#1A2238] font-medium">{itemName}</span>
         </div>
 
-        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <label style={{ fontSize: '13px', color: '#888', fontWeight: '500' }}>취소 사유</label>
+        <div className="w-full flex flex-col gap-2">
+          <label className="text-[13px] text-[#888] font-medium">취소 사유</label>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="취소 사유를 입력해주세요."
             rows={4}
-            style={{
-              width: '100%',
-              padding: '14px',
-              fontSize: '14px',
-              color: '#1A2238',
-              border: '1px solid #E5E5EA',
-              borderRadius: '10px',
-              resize: 'none',
-              outline: 'none',
-              fontFamily: 'inherit',
-              boxSizing: 'border-box',
-              backgroundColor: '#fff',
-              lineHeight: '1.6',
-            }}
+            className="w-full p-3.5 text-sm text-[#1A2238] border border-[#E5E5EA] rounded-[10px] resize-none outline-none font-[inherit] box-border bg-white leading-[1.6]"
           />
         </div>
 
         <button
           onClick={() => onConfirm(reason)}
-          style={{
-            width: '100%',
-            height: '52px',
-            backgroundColor: '#1A2238',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '12px',
-            fontSize: '16px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'background 0.2s',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#2C3E62')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#1A2238')}
+          className="w-full h-[52px] bg-[#1A2238] text-white border-none rounded-xl text-base font-semibold cursor-pointer transition-colors hover:bg-[#2C3E62]"
         >
           확인
         </button>
@@ -215,45 +141,23 @@ export default function TrackingInput() {
         />
       )}
 
-      <div
-        style={{
-          display: 'flex',
-          gap: '40px',
-          color: 'white',
-          padding: '40px 16px',
-          backgroundColor: 'transparent',
-          minHeight: '100vh',
-          width: '100%',
-          maxWidth: '1200px',
-          margin: '0 auto',
-        }}
-      >
+      <div className="flex gap-10 text-white p-[40px_16px] bg-transparent min-h-screen w-full max-w-[1200px] mx-auto">
         <SideBar
           items={sellerSidebarItems}
           activeItemId={activeMenu}
           onItemClick={(item) => setActiveMenu(item.id)}
           className="!w-[200px] shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
         />
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '48px' }}>
+        <div className="flex-1 flex flex-col gap-12">
           <section>
-            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#CEAF82', marginBottom: '16px' }}>
+            <h2 className="text-xl font-bold text-[#CEAF82] mb-4">
               배송 등록 대기
             </h2>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                paddingBottom: '12px',
-                borderBottom: '1px solid #3A3A3C',
-                fontSize: '14px',
-                color: '#E5E5EA',
-                marginBottom: '16px',
-              }}
-            >
+            <div className="flex justify-between pb-3 border-b border-[#3A3A3C] text-sm text-[#E5E5EA] mb-4">
               <span>상품</span>
               <span>낙찰가</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="flex flex-col gap-4">
               {pendingItems.length > 0 ? (
                 pendingItems.map((item) => (
                   <div
@@ -284,7 +188,7 @@ export default function TrackingInput() {
                   </div>
                 ))
               ) : (
-                <div style={{ padding: '20px 0', textAlign: 'center', color: '#8E8E93', fontSize: '14px' }}>
+                <div className="py-5 text-center text-[#8E8E93] text-sm">
                   대기 중인 배송이 없습니다.
                 </div>
               )}
@@ -292,24 +196,14 @@ export default function TrackingInput() {
           </section>
 
           <section>
-            <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#CEAF82', marginBottom: '16px' }}>
+            <h2 className="text-xl font-bold text-[#CEAF82] mb-4">
               배송 등록 완료
             </h2>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                paddingBottom: '12px',
-                borderBottom: '1px solid #3A3A3C',
-                fontSize: '14px',
-                color: '#E5E5EA',
-                marginBottom: '16px',
-              }}
-            >
+            <div className="flex justify-between pb-3 border-b border-[#3A3A3C] text-sm text-[#E5E5EA] mb-4">
               <span>상품</span>
               <span>낙찰가</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="flex flex-col gap-4">
               {completedItems.length > 0 ? (
                 completedItems.map((item) => (
                   <div
@@ -347,7 +241,7 @@ export default function TrackingInput() {
                   </div>
                 ))
               ) : (
-                <div style={{ padding: '20px 0', textAlign: 'center', color: '#8E8E93', fontSize: '14px' }}>
+                <div className="py-5 text-center text-[#8E8E93] text-sm">
                   완료된 배송이 없습니다.
                 </div>
               )}
@@ -356,77 +250,40 @@ export default function TrackingInput() {
 
           {cancelledItems.length > 0 && (
             <section>
-              <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#8E8E93', marginBottom: '16px' }}>
+              <h2 className="text-xl font-bold text-[#8E8E93] mb-4">
                 거래 취소
               </h2>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  paddingBottom: '12px',
-                  borderBottom: '1px solid #3A3A3C',
-                  fontSize: '14px',
-                  color: '#E5E5EA',
-                  marginBottom: '16px',
-                }}
-              >
+              <div className="flex justify-between pb-3 border-b border-[#3A3A3C] text-sm text-[#E5E5EA] mb-4">
                 <span>상품</span>
                 <span>낙찰가</span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="flex flex-col gap-4">
                 {cancelledItems.map((item) => (
                   <div
                     key={item.escrowId || item.itemName}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '16px',
-                      opacity: 0.5,
-                      border: '1px solid transparent',
-                      borderRadius: '16px',
-                    }}
+                    className="flex justify-between items-center p-4 opacity-50 border border-transparent rounded-2xl"
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                      <div
-                        style={{
-                          width: '80px',
-                          height: '80px',
-                          backgroundColor: '#2C2C2E',
-                          borderRadius: '12px',
-                          overflow: 'hidden',
-                          flexShrink: 0,
-                        }}
-                      >
+                    <div className="flex items-center gap-5">
+                      <div className="w-[80px] h-[80px] bg-[#2C2C2E] rounded-xl overflow-hidden shrink-0">
                         {item.imageUrl ? (
                           <img
                             src={item.imageUrl}
                             alt={item.itemName}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(100%)' }}
+                            className="w-full h-full object-cover grayscale"
                           />
                         ) : (
-                          <div
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: '#8E8E93',
-                              fontSize: '12px',
-                            }}
-                          >
+                          <div className="w-full h-full flex items-center justify-center text-[#8E8E93] text-xs">
                             이미지 준비중
                           </div>
                         )}
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ color: '#8E8E93', fontSize: '12px', fontWeight: 'bold' }}>거래 취소</span>
-                        <span style={{ fontSize: '18px', fontWeight: '700' }}>{item.itemName}</span>
-                        <span style={{ color: '#AEAEB2', fontSize: '13px' }}>{formatDate(item.createdAt)}</span>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[#8E8E93] text-xs font-bold">거래 취소</span>
+                        <span className="text-lg font-bold">{item.itemName}</span>
+                        <span className="text-[#AEAEB2] text-[13px]">{formatDate(item.createdAt)}</span>
                       </div>
                     </div>
-                    <div style={{ fontSize: '18px', fontWeight: '700' }}>{formatPrice(item.amount)}</div>
+                    <div className="text-lg font-bold">{formatPrice(item.amount)}</div>
                   </div>
                 ))}
               </div>
@@ -434,20 +291,10 @@ export default function TrackingInput() {
           )}
         </div>
 
-        <div style={{ width: '420px', flexShrink: 0 }}>
+        <div className="w-[420px] shrink-0">
           {selectedItemDetail ? (
-            <div
-              style={{
-                backgroundColor: '#1C1C1E',
-                borderRadius: '24px',
-                padding: '32px',
-                border: '1px solid #3A3A3C',
-                display: 'flex',
-                flexDirection: 'column',
-                minHeight: '600px',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+            <div className="bg-[#1C1C1E] rounded-3xl p-8 border border-[#3A3A3C] flex flex-col min-h-[600px]">
+              <div className="flex justify-end mb-2">
                 <button
                   onClick={() => setSelectedItemId(null)}
                   className="bg-transparent border-none text-[#8E8E93] cursor-pointer hover:text-white transition-colors p-0"
@@ -455,108 +302,50 @@ export default function TrackingInput() {
                   <FiX size={22} />
                 </button>
               </div>
-              <div style={{ display: 'flex', gap: '20px', marginBottom: '32px' }}>
-                <div
-                  style={{
-                    width: '120px',
-                    height: '120px',
-                    backgroundColor: '#2C2C2E',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    flexShrink: 0,
-                  }}
-                >
+              <div className="flex gap-5 mb-8">
+                <div className="w-[120px] h-[120px] bg-[#2C2C2E] rounded-2xl overflow-hidden shrink-0">
                   {selectedItemDetail.winningInfo.imageUrl ? (
                     <img
                       src={selectedItemDetail.winningInfo.imageUrl}
                       alt={selectedItemDetail.winningInfo.itemName}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#8E8E93',
-                        fontSize: '14px',
-                      }}
-                    >
+                    <div className="w-full h-full flex items-center justify-center text-[#8E8E93] text-sm">
                       이미지 준비중
                     </div>
                   )}
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1 }}>
-                  <p
-                    style={{
-                      fontSize: '20px',
-                      fontWeight: 'bold',
-                      marginBottom: '8px',
-                      wordBreak: 'keep-all',
-                      lineHeight: '1.3',
-                    }}
-                  >
+                <div className="flex flex-col justify-center flex-1">
+                  <p className="text-xl font-bold mb-2 break-keep leading-[1.3]">
                     {selectedItemDetail.winningInfo.itemName}
                   </p>
-                  <p style={{ color: '#8E8E93', fontSize: '13px', marginBottom: '16px' }}>
+                  <p className="text-[#8E8E93] text-[13px] mb-4">
                     {formatDate(selectedItemDetail.winningInfo.wonAt)}
                   </p>
-                  <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr', gap: '8px 12px', fontSize: '14px' }}>
-                    <span style={{ color: '#AEAEB2' }}>낙찰가</span>
-                    <span style={{ textAlign: 'right', fontWeight: '500' }}>
+                  <div className="grid grid-cols-[60px_1fr] gap-[8px_12px] text-sm">
+                    <span className="text-[#AEAEB2]">낙찰가</span>
+                    <span className="text-right font-medium">
                       {formatPrice(selectedItemDetail.winningInfo.finalPrice)}
                     </span>
-                    <span style={{ color: '#AEAEB2' }}>구매자</span>
-                    <span style={{ textAlign: 'right' }}>
+                    <span className="text-[#AEAEB2]">구매자</span>
+                    <span className="text-right">
                       {selectedItemDetail.winningInfo.sellerName}({selectedItemDetail.winningInfo.sellerId})
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div
-                style={{
-                  height: '1px',
-                  backgroundColor: '#3A3A3C',
-                  margin: '0 -32px 32px -32px',
-                  width: 'calc(100% + 64px)',
-                }}
-              />
+              <div className="h-px bg-[#3A3A3C] -mx-8 mb-8 w-[calc(100%+64px)]" />
 
-              <div
-                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}
-              >
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    color: '#CEAF82',
-                    fontWeight: 'bold',
-                    fontSize: '16px',
-                  }}
-                >
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-2 text-[#CEAF82] font-bold text-base">
                   <FaTruck size={18} />
                   <span>배송지 정보</span>
                 </div>
               </div>
 
-              <div
-                style={{
-                  backgroundColor: '#151517',
-                  borderRadius: '12px',
-                  padding: '24px',
-                  border: '1px solid #2C2C2E',
-                  marginBottom: '16px',
-                  fontSize: '14px',
-                  color: '#E5E5EA',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px',
-                }}
-              >
+              <div className="bg-[#151517] rounded-xl p-6 border border-[#2C2C2E] mb-4 text-sm text-[#E5E5EA] flex flex-col gap-2">
                 <p>{selectedItemDetail.shippingAddress.name}</p>
                 <p>{selectedItemDetail.shippingAddress.phone}</p>
                 <p>
@@ -566,46 +355,23 @@ export default function TrackingInput() {
               </div>
 
               {selectedItemDetail.delivery && (
-                <div
-                  style={{
-                    backgroundColor: '#151517',
-                    borderRadius: '12px',
-                    padding: '16px 24px',
-                    border: '1px solid #2C2C2E',
-                    marginBottom: '16px',
-                    fontSize: '14px',
-                    color: '#E5E5EA',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
-                  <span style={{ color: '#AEAEB2' }}>택배 정보</span>
-                  <span style={{ fontWeight: '600' }}>
+                <div className="bg-[#151517] rounded-xl p-[16px_24px] border border-[#2C2C2E] mb-4 text-sm text-[#E5E5EA] flex justify-between items-center">
+                  <span className="text-[#AEAEB2]">택배 정보</span>
+                  <span className="font-semibold">
                     {selectedItemDetail.delivery.courierName} | {selectedItemDetail.delivery.trackingNumber}
                   </span>
                 </div>
               )}
 
-              <div style={{ flex: 1 }} />
+              <div className="flex-1" />
 
               {isTrackingSubmitted ? (
-                <div
-                  style={{
-                    backgroundColor: '#2C2C2E',
-                    borderRadius: '12px',
-                    padding: '20px',
-                    border: '1px solid #3A3A3C',
-                    textAlign: 'center',
-                    color: '#8E8E93',
-                    fontSize: '14px',
-                  }}
-                >
+                <div className="bg-[#2C2C2E] rounded-xl p-5 border border-[#3A3A3C] text-center text-[#8E8E93] text-sm">
                   운송장이 등록된 상품입니다.
                 </div>
               ) : (
                 <>
-                  <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
+                  <div className="flex gap-2 mb-8">
                     <button
                       type="button"
                       onClick={() => selectedItemId && setShowCourierModal(true)}
@@ -626,7 +392,7 @@ export default function TrackingInput() {
                     />
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '12px' }}>
+                  <div className="flex flex-col items-end gap-3">
                     <button
                       onClick={() => {
                         if (!courier || !trackingNumber || !selectedItemId) {
@@ -645,31 +411,13 @@ export default function TrackingInput() {
                           },
                         );
                       }}
-                      style={{
-                        width: '120px',
-                        height: '48px',
-                        backgroundColor: 'white',
-                        color: 'black',
-                        borderRadius: '8px',
-                        border: 'none',
-                        fontSize: '16px',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.2s',
-                      }}
+                      className="w-[120px] h-12 bg-white text-black rounded-lg border-none text-base font-bold cursor-pointer transition-colors hover:bg-gray-200"
                     >
                       등록
                     </button>
                     <button
                       onClick={() => setShowCancelModal(true)}
-                      style={{
-                        backgroundColor: 'transparent',
-                        border: 'none',
-                        color: '#8E8E93',
-                        fontSize: '13px',
-                        textDecoration: 'underline',
-                        cursor: 'pointer',
-                      }}
+                      className="bg-transparent border-none text-[#8E8E93] text-[13px] underline cursor-pointer"
                     >
                       거래취소
                     </button>
@@ -678,15 +426,7 @@ export default function TrackingInput() {
               )}
             </div>
           ) : (
-            <div
-              style={{
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#8E8E93',
-              }}
-            >
+            <div className="h-full flex items-center justify-center text-[#8E8E93]">
               목록에서 배송을 선택해주세요
             </div>
           )}
@@ -695,8 +435,7 @@ export default function TrackingInput() {
 
       {showCourierModal && (
         <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60"
           onClick={() => setShowCourierModal(false)}
         >
           <div

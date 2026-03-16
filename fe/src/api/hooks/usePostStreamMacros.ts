@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFetchInstance } from '@/api/instance';
 import type {
   PostStreamMacrosRequest,
@@ -6,6 +6,8 @@ import type {
 } from '@/types';
 
 export const usePostStreamMacros = () => {
+  const queryClient = useQueryClient();
+
   return useMutation<PostStreamMacrosResponse, Error, { streamId: number; body: PostStreamMacrosRequest }>({
     mutationFn: async ({ streamId, body }) => {
       const res = await getFetchInstance().post<PostStreamMacrosResponse>(
@@ -13,6 +15,9 @@ export const usePostStreamMacros = () => {
         body,
       );
       return res.data;
+    },
+    onSuccess: (_data, { streamId }) => {
+      void queryClient.invalidateQueries({ queryKey: ['stream-macros', streamId] });
     },
   });
 };

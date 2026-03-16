@@ -68,7 +68,7 @@ export default function Header() {
           className="flex items-center gap-2.5 transition-opacity hover:opacity-85"
           aria-label="Go to home"
         >
-          <img src={Logo} alt="Logo" className="h-9 w-auto object-contain" />
+          <img src={Logo} alt="Logo" className="h-9 w-auto object-contain brightness-0 invert sepia saturate-50 hue-rotate-[350deg]" />
         </button>
 
         <div className="h-7 w-px shrink-0 bg-warm/6" />
