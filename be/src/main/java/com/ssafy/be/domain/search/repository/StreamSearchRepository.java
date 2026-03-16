@@ -1,6 +1,7 @@
 package com.ssafy.be.domain.search.repository;
 
 import com.ssafy.be.domain.stream.entity.Stream;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -9,7 +10,7 @@ import java.util.List;
 
 
 @Repository
-public interface StreamSearchRepository {
+public interface StreamSearchRepository extends JpaRepository<Stream, Long> {
 
     //FULLTEXT는 JPA로 안되서 native sql
 
