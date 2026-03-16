@@ -19,6 +19,10 @@ interface Props {
   readyItems: ReadyItem[];
   selectedAuctionId: number | null;
   onSelectAuctionItem: (id: number | null) => void;
+  toggleMic?: () => void;
+  toggleCamera?: () => void;
+  isMicOn?: boolean;
+  isCameraOn?: boolean;
 }
 
 export default function SellerControlBar({
@@ -29,11 +33,13 @@ export default function SellerControlBar({
   readyItems,
   selectedAuctionId,
   onSelectAuctionItem,
+  toggleMic,
+  toggleCamera,
+  isMicOn = true,
+  isCameraOn = true,
 }: Props) {
   const [guideOpen, setGuideOpen] = useState(false);
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
-  const [micMuted, setMicMuted] = useState(false);
-  const [videoOff, setVideoOff] = useState(false);
   const { id: streamId } = useParams<{ id: string }>();
 
   // 경매 시작 socket
@@ -177,16 +183,16 @@ export default function SellerControlBar({
       {/* 우하단: 미디어 컨트롤 */}
       <div className="flex flex-col justify-center gap-3 rounded-2xl bg-surface/80 px-2.5">
         <button
-          className={`flex h-10 w-10 items-center justify-center rounded-xl transition hover:bg-warm/10 ${micMuted ? 'text-accent' : 'text-neutral-400 hover:text-neutral-200'}`}
-          onClick={() => setMicMuted((prev) => !prev)}
+          className={`flex h-10 w-10 items-center justify-center rounded-xl transition hover:bg-warm/10 ${!isMicOn ? 'text-accent' : 'text-neutral-400 hover:text-neutral-200'}`}
+          onClick={toggleMic}
         >
-          {micMuted ? <LuMicOff size={18} /> : <LuMic size={18} />}
+          {!isMicOn ? <LuMicOff size={18} /> : <LuMic size={18} />}
         </button>
         <button
-          className={`flex h-10 w-10 items-center justify-center rounded-xl transition hover:bg-warm/10 ${videoOff ? 'text-accent' : 'text-neutral-400 hover:text-neutral-200'}`}
-          onClick={() => setVideoOff((prev) => !prev)}
+          className={`flex h-10 w-10 items-center justify-center rounded-xl transition hover:bg-warm/10 ${!isCameraOn ? 'text-accent' : 'text-neutral-400 hover:text-neutral-200'}`}
+          onClick={toggleCamera}
         >
-          {videoOff ? <LuVideoOff size={18} /> : <LuVideo size={18} />}
+          {!isCameraOn ? <LuVideoOff size={18} /> : <LuVideo size={18} />}
         </button>
       </div>
     </div>

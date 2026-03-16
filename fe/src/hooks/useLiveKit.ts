@@ -7,7 +7,7 @@ import {
   ConnectionState,
 } from 'livekit-client';
 
-export type LiveKitState = 'connecting' | 'connected' | 'disconnected' | 'error';
+export type LiveKitState = 'idle' | 'connecting' | 'connected' | 'disconnected' | 'error';
 
 interface UseLiveKitOptions {
   serverUrl: string;
@@ -26,14 +26,35 @@ interface UseLiveKitReturn {
 }
 
 export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): UseLiveKitReturn {
-  const [state, setState] = useState<LiveKitState>('connecting');
+  const [state, setState] = useState<LiveKitState>('idle');
   const [isMicOn, setIsMicOn] = useState(true);
   const [isCameraOn, setIsCameraOn] = useState(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const roomRef = useRef<Room | null>(null);
+  const isHostRef = useRef(isHost);
+  isHostRef.current = isHost;
+
+  // video 엘리먼트가 준비된 후 트랙을 attach하는 헬퍼
+  const attachTrackToVideo = useCallback((track: { attach: (el: HTMLVideoElement) => void }) => {
+    const tryAttach = (attempt: number) => {
+      if (videoRef.current) {
+        track.attach(videoRef.current);
+        return;
+      }
+      if (attempt < 10) {
+        requestAnimationFrame(() => tryAttach(attempt + 1));
+      }
+    };
+    tryAttach(0);
+  }, []);
 
   useEffect(() => {
-    if (!serverUrl || !token) return;
+    if (!serverUrl || !token) {
+      setState('idle');
+      return;
+    }
+
+    setState('connecting');
 
     const room = new Room();
     roomRef.current = room;
@@ -56,8 +77,8 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
     room.on(
       RoomEvent.TrackSubscribed,
       (track: RemoteTrack) => {
-        if (track.kind === Track.Kind.Video && videoRef.current) {
-          track.attach(videoRef.current);
+        if (track.kind === Track.Kind.Video) {
+          attachTrackToVideo(track);
         }
       },
     );
@@ -71,11 +92,11 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
         await room.connect(serverUrl, token);
         setState('connected');
 
-        if (isHost) {
+        if (isHostRef.current) {
           await room.localParticipant.enableCameraAndMicrophone();
           const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
-          if (camPub?.track && videoRef.current) {
-            camPub.track.attach(videoRef.current);
+          if (camPub?.track) {
+            attachTrackToVideo(camPub.track);
           }
         }
       } catch (err) {
@@ -87,10 +108,13 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
     connect();
 
     return () => {
+      room.localParticipant?.getTrackPublications().forEach((pub) => {
+        pub.track?.detach();
+      });
       room.disconnect();
       roomRef.current = null;
     };
-  }, [serverUrl, token, isHost]);
+  }, [serverUrl, token, attachTrackToVideo]);
 
   const disconnect = useCallback(() => {
     roomRef.current?.disconnect();

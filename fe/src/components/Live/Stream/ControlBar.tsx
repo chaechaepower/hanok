@@ -18,6 +18,10 @@ interface Props {
   readyItems: ReadyItem[];
   selectedAuctionId: number | null;
   onSelectAuctionItem: (id: number | null) => void;
+  toggleMic?: () => void;
+  toggleCamera?: () => void;
+  isMicOn?: boolean;
+  isCameraOn?: boolean;
 }
 
 export default function ControlBar({
@@ -31,6 +35,10 @@ export default function ControlBar({
   readyItems,
   selectedAuctionId,
   onSelectAuctionItem,
+  toggleMic,
+  toggleCamera,
+  isMicOn,
+  isCameraOn,
 }: Props) {
   return isSeller ? (
     <SellerControlBar
@@ -41,6 +49,10 @@ export default function ControlBar({
       readyItems={readyItems}
       selectedAuctionId={selectedAuctionId}
       onSelectAuctionItem={onSelectAuctionItem}
+      toggleMic={toggleMic}
+      toggleCamera={toggleCamera}
+      isMicOn={isMicOn}
+      isCameraOn={isCameraOn}
     />
   ) : (
     <BuyerControlBar bidSync={bidSync} activeAuctionId={activeBidAuctionId} />

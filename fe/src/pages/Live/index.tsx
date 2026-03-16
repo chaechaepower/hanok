@@ -5,6 +5,7 @@ import { useLocation, useParams } from 'react-router-dom';
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { useGetStreamEnter } from '@/api/hooks/useGetStreamEnter';
 import { useStompViewerCount } from '@/hooks/useStompViewerCount';
+import { useLiveKit } from '@/hooks/useLiveKit';
 import WinModal from '@/components/Live/Auction/Buyer/WinModal';
 import AuctionTimer from '@/components/Live/Auction/shared/AuctionTimer';
 import AuctionCommentToast from '@/components/Live/Stream/AuctionCommentToast';
@@ -116,6 +117,14 @@ export default function LivePage() {
   const currentUserId = Number.isFinite(storedUserId) ? storedUserId : 0;
   const isSeller = activeStreamEnter?.seller.sellerId === currentUserId;
   const isStreamLive = liveStateOverride ?? Boolean(activeStreamEnter?.isLive);
+
+  const livekitUrl = import.meta.env.VITE_LIVEKIT_URL ?? '';
+  const livekitToken = activeStreamEnter?.token ?? '';
+  const { state: livekitState, videoRef, toggleMic, toggleCamera, isMicOn, isCameraOn } = useLiveKit({
+    serverUrl: isStreamLive ? livekitUrl : '',
+    token: isStreamLive ? livekitToken : '',
+    isHost: isSeller,
+  });
   const canIntroduce = liveAuctionItem === null && introducingAuctionItem === null && introduceAuctionId !== null;
   const canStart = liveAuctionItem === null && startAuctionId !== null;
   const canIntroduceAuction = isStreamLive && canIntroduce;
@@ -334,7 +343,14 @@ export default function LivePage() {
         <div className="relative min-w-0 flex-2 overflow-hidden rounded-2xl bg-background">
           <StreamOverlay viewerCount={viewerCount} isSeller={isSeller} />
           {isSeller && <SellerGuideOverlay />}
-          <StreamPlaceholder />
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className={`h-full w-full object-contain ${livekitState === 'connected' ? '' : 'hidden'}`}
+          />
+          {livekitState !== 'connected' && <StreamPlaceholder />}
           <ControlBar
             isSeller={isSeller}
             bidSync={bidSync}
@@ -346,6 +362,10 @@ export default function LivePage() {
             readyItems={readyItems}
             selectedAuctionId={selectedAuctionId}
             onSelectAuctionItem={setSelectedAuctionId}
+            toggleMic={toggleMic}
+            toggleCamera={toggleCamera}
+            isMicOn={isMicOn}
+            isCameraOn={isCameraOn}
           />
 
           {(activeStreamEnter?.notice || auctionComment) && (
