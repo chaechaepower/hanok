@@ -6,10 +6,10 @@ import { useGetMe } from '@/api/hooks/useGetMe';
 import { useGetNotification } from '@/api/hooks/useGetNotification';
 import { useGetWallet } from '@/api/hooks/useGetWallet';
 import { useLogout } from '@/api/hooks/usePostLogout';
-import AccountSection from './components/AccountSection';
-import FollowedStoresSection from './components/FollowedStoresSection';
-import ShippingSection from './components/ShippingSection';
-import PaymentSection from './components/PaymentSection';
+import AccountSection from '@/components/Settings/AccountSection';
+import FollowedStoresSection from '@/components/Settings/FollowedStoresSection';
+import ShippingSection from '@/components/Settings/ShippingSection';
+import PaymentSection from '@/components/Settings/PaymentSection';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -55,7 +55,6 @@ export default function SettingsPage() {
 
   return (
     <div className="w-full box-border max-w-[1200px] mx-auto py-10 px-5 flex flex-col gap-8">
-      {/* Top Profile Card */}
       <div className="w-full box-border border border-[#2e2e40] rounded-2xl py-8 px-10 bg-[#0c0c14] flex items-center justify-between">
         <div className="flex items-center gap-6">
           {user?.profileImage ? (
@@ -99,7 +98,6 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex gap-10 mt-2">
-        {/* Sidebar */}
         <div className="w-[240px] flex flex-col gap-2">
           {tabs.map((tab) => (
             <button
@@ -118,16 +116,13 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        {/* Main Content Area */}
         <div className="flex-1 flex flex-col gap-6">
           {activeTab === 'account' && <AccountSection />}
           {activeTab === 'stores' && <FollowedStoresSection />}
           {activeTab === 'shipping' && <ShippingSection />}
           {activeTab === 'payment' && <PaymentSection />}
           {activeTab !== 'account' && activeTab !== 'stores' && activeTab !== 'shipping' && activeTab !== 'payment' && (
-            <div className="flex items-center justify-center p-20 text-[#888]">
-              해당 메뉴는 준비 중입니다.
-            </div>
+            <div className="flex items-center justify-center p-20 text-[#888]">해당 메뉴는 준비 중입니다.</div>
           )}
         </div>
       </div>

@@ -2,15 +2,19 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRegisterSeller } from '@/api/hooks/usePostRegisterSeller';
 import Button from '@/components/common/Button';
+import type { AccountData, BusinessType } from '@/types';
+import axios from 'axios';
 
 export default function Step4({
   onPrev,
   businessType,
   businessNumber,
+  account,
 }: {
   onPrev: () => void;
-  businessType: 'individual' | 'corporate';
+  businessType: BusinessType;
   businessNumber: string | null;
+  account: AccountData | null;
 }) {
   const navigate = useNavigate();
   const { mutateAsync: registerSeller, isPending } = useRegisterSeller();
@@ -55,19 +59,26 @@ export default function Step4({
         businessNumber: businessNumber,
         nickname: nickname.trim(),
         intro: intro.trim(),
-        youtube_link: youtubeLink.trim(),
-        insta_link: instaLink.trim(),
-        tictok_link: tictokLink.trim(),
+        youtubeUrl: youtubeLink.trim(),
+        instaUrl: instaLink.trim(),
+        tiktokUrl: tictokLink.trim(),
+        bankCode: account?.bankCode ?? '',
+        accountNum: account?.accountNum ?? '',
+        accountName: account?.accountName ?? '',
       });
       navigate('/');
-    } catch {
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 409) {
+        alert('이미 판매자로 등록된 사용자입니다.');
+        navigate('/');
+        return;
+      }
       setError('판매자 등록에 실패했습니다. 다시 시도해주세요.');
     }
   };
 
   return (
     <>
-      {/* 판매자명 */}
       <div style={{ marginBottom: '20px' }}>
         <label style={labelStyle}>판매자명</label>
         <input
@@ -83,7 +94,6 @@ export default function Step4({
         />
       </div>
 
-      {/* 판매자 소개글 */}
       <div style={{ marginBottom: '20px' }}>
         <label style={labelStyle}>판매자 소개글</label>
         <input
@@ -96,7 +106,6 @@ export default function Step4({
         />
       </div>
 
-      {/* SNS 링크 */}
       <div style={{ marginBottom: '24px' }}>
         <label style={labelStyle}>SNS 링크(선택)</label>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -126,7 +135,6 @@ export default function Step4({
 
       {error && <p style={{ color: '#FF453A', fontSize: '13px', marginBottom: '12px' }}>{error}</p>}
 
-      {/* Navigation buttons */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '40px' }}>
         <Button variant="outline" onClick={onPrev} className="w-30!">
           이전

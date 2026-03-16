@@ -111,6 +111,10 @@ export type ItemSyncItem = {
   auctionStatus: ItemSyncAuctionStatus;
   finalPrice: number | null;
   itemCondition: ItemSyncItemCondition;
+  description?: string;
+  bidUnit?: number;
+  auctionTime?: number;
+  images?: string[];
 };
 
 export type ItemSyncPayload = {
@@ -136,6 +140,10 @@ export type LiveStreamItem = {
   itemCondition: ItemSyncItemCondition;
   image1: string | null;
   createdAt: string;
+  description?: string;
+  bidUnit?: number;
+  auctionTime?: number;
+  images?: string[];
 };
 
 export type Live = {
@@ -145,7 +153,7 @@ export type Live = {
   thumbnail: string | null;
   scheduledAt: string | null;
   startType: 'SCHEDULED' | 'IMMEDIATE';
-  notice?: string;
+  notice: string | null;
   isLive: boolean;
   createdAt: string;
   items: LiveStreamItem[];
@@ -212,3 +220,64 @@ export type ScheduledStreamsResponse = {
   streams: ScheduledStream[];
   hasNext: boolean;
 };
+
+export type BroadcastStreamEvent =
+  | {
+      eventType: 'AUCTION_START';
+      payload?: {
+        item?: {
+          name?: string;
+          condition?: string;
+          bidUnit?: number;
+          startPrice?: number;
+        };
+        timer?: StreamTimerPayload;
+      };
+    }
+  | {
+      eventType: 'BID_PLACED';
+      payload?: {
+        bidInfo?: {
+          amount?: number;
+        };
+        snipingTimer?: StreamTimerPayload | null;
+      };
+    }
+  | {
+      eventType: 'BID_SYNC';
+      payload?: BidSyncPayload | null;
+    }
+  | {
+      eventType: 'AUCTION_STATISTICS';
+      payload?: AuctionStatisticsPayload;
+    }
+  | {
+      eventType: 'ITEM_SYNC';
+      payload?: ItemSyncPayload | null;
+    }
+  | {
+      eventType: 'ITEM_INTRODUCE';
+      payload: null;
+    }
+  | {
+      eventType: 'AUCTION_COMMENT';
+      payload?: AuctionCommentPayload | null;
+    }
+  | {
+      eventType: 'AUCTION_END';
+      payload: null;
+    }
+  | {
+      eventType: string;
+      payload?: unknown;
+    };
+
+export type PrivateStreamEvent =
+  | {
+      eventType: 'BID_WINNER';
+      payload?: BidWinnerPayload;
+    }
+  | {
+      eventType: string;
+      payload?: unknown;
+    };

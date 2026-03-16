@@ -12,7 +12,7 @@ import {
 } from './mockState';
 
 type MockNoticeItem = {
-  postId: number;
+  noticeId: number;
   title: string;
   content: string;
   createdAt: string;
@@ -21,14 +21,14 @@ type MockNoticeItem = {
 
 let mockNoticeItems: MockNoticeItem[] = [
   {
-    postId: 5,
+    noticeId: 5,
     title: 'This week shipping notice',
     content: 'Orders placed this week will start shipping in three days.',
     createdAt: '2026-03-03T12:00:00Z',
     updatedAt: '2026-03-03T12:00:00Z',
   },
   {
-    postId: 6,
+    noticeId: 6,
     title: 'Weekend live schedule',
     content: 'The weekend live auction starts at 8 PM and featured lots open first.',
     createdAt: '2026-03-02T09:00:00Z',
@@ -37,6 +37,41 @@ let mockNoticeItems: MockNoticeItem[] = [
 ];
 
 export const profileHandlers = [
+  http.patch(`${BASE_URL}/v1/sellers/:sellerId/profile`, async ({ request }) => {
+    const body = (await request.json()) as Record<string, string>;
+    console.log('Mock: seller profile updated', body);
+    return HttpResponse.json({ status: 'SUCCESS', message: '수정 성공', data: {} }, { status: 200 });
+  }),
+
+  http.get(`${BASE_URL}/v1/sellers/:sellerId/sold-auctions`, () => {
+    return HttpResponse.json([
+      {
+        escrowId: 1,
+        image: 'https://picsum.photos/400/300',
+        itemName: '빈티지 카메라',
+        amount: 250000,
+        escrowStatus: 'DEPOSITED',
+        createdAt: '2026-03-05T08:15:30Z',
+      },
+      {
+        escrowId: 2,
+        image: 'https://picsum.photos/400/301',
+        itemName: '레트로 게임기',
+        amount: 180000,
+        escrowStatus: 'INVOICE_SUBMITTED',
+        createdAt: '2026-03-05T09:20:15Z',
+      },
+      {
+        escrowId: 3,
+        image: 'https://picsum.photos/400/302',
+        itemName: '한정판 스니커즈',
+        amount: 320000,
+        escrowStatus: 'COMPLETED',
+        createdAt: '2026-03-05T10:45:50Z',
+      },
+    ]);
+  }),
+
   http.patch(`${BASE_URL}/v1/users/:userId/follow`, async ({ params }) => {
     followSeller(Number(params.userId));
     return HttpResponse.json({
@@ -78,7 +113,7 @@ export const profileHandlers = [
           sellerId: 200,
           nickname: '명품셀러',
           intro: '정품만 취급합니다. 문의 환영합니다.',
-          profile_image: LogoImage,
+          profileImage: LogoImage,
           instagramUrl: 'https://instagram.com/luxury_seller',
           youtubeUrl: 'https://youtube.com/@luxury_seller_tv',
           tiktokUrl: 'https://tiktok.com/@luxury_seller_official',
@@ -97,10 +132,12 @@ export const profileHandlers = [
           ],
           posts: [
             {
-              postId: 10,
-              title: '이번 주 신상 입고 안내',
-              context: '이번 주말에 에르메스 물량 풀립니다.',
-              createdAt: '2026-03-08T12:00:00Z',
+              streamId: 10,
+              title: '이번 주 신상 입고 라이브',
+              category: 'LUXURY_GOODS',
+              thumbnail: LogoImage,
+              scheduledAt: '2026-03-08T20:00:00Z',
+              state: 'SCHEDULED',
             },
           ],
         },
@@ -113,7 +150,7 @@ export const profileHandlers = [
         sellerId,
         nickname: '판매왕',
         intro: '좋은 물건만 팔아요',
-        profile_image: LogoImage,
+        profileImage: LogoImage,
         instagramUrl: 'https://instagram.com/im_rerak',
         youtubeUrl: 'https://youtube.com/@im_rerak',
         tiktokUrl: 'https://tiktok.com/@seller123',
@@ -132,10 +169,12 @@ export const profileHandlers = [
         ],
         posts: [
           {
-            postId: 5,
+            streamId: 5,
             title: '이번 주 방송 예고',
-            context: '방송 이번주에 해요',
-            createdAt: '2026-03-03T12:00:00Z',
+            category: 'SNEAKERS_SHOES',
+            thumbnail: LogoImage,
+            scheduledAt: '2026-03-03T20:00:00Z',
+            state: 'LIVE',
           },
         ],
       },
@@ -143,26 +182,25 @@ export const profileHandlers = [
     );
   }),
 
-  http.get(`${BASE_URL}/v1/sellers/:sellerId/notice`, ({ request }) => {
-    const url = new URL(request.url);
-    const page = Number(url.searchParams.get('page')) || 1;
-    const limit = Number(url.searchParams.get('limit')) || 10;
-    const start = (page - 1) * limit;
-    const end = page * limit;
-
-    return HttpResponse.json(
-      {
-        items: mockNoticeItems.slice(start, end),
-        total: mockNoticeItems.length,
-      },
-      { status: 200 },
-    );
+  http.get(`${BASE_URL}/v1/sellers/:sellerId/notices`, () => {
+    return HttpResponse.json(mockNoticeItems, { status: 200 });
   }),
 
-  http.post(`${BASE_URL}/v1/sellers/:sellerId/posts`, async ({ request }) => {
+  http.get(`${BASE_URL}/v1/sellers/:sellerId/notices/:noticeId`, ({ params }) => {
+    const noticeId = Number(params.noticeId);
+    const notice = mockNoticeItems.find((item) => item.noticeId === noticeId);
+
+    if (!notice) {
+      return HttpResponse.json({ code: 'NOT_FOUND', message: '공지사항을 찾을 수 없음' }, { status: 404 });
+    }
+
+    return HttpResponse.json(notice, { status: 200 });
+  }),
+
+  http.post(`${BASE_URL}/v1/sellers/:sellerId/notices`, async ({ request }) => {
     const body = (await request.json()) as { title: string; content: string };
     const newNotice: MockNoticeItem = {
-      postId: Date.now(),
+      noticeId: Date.now(),
       title: body.title,
       content: body.content,
       createdAt: new Date().toISOString(),
@@ -173,7 +211,7 @@ export const profileHandlers = [
 
     return HttpResponse.json(
       {
-        postId: newNotice.postId,
+        noticeId: newNotice.noticeId,
         title: newNotice.title,
         content: newNotice.content,
         createdAt: newNotice.createdAt,
@@ -182,12 +220,12 @@ export const profileHandlers = [
     );
   }),
 
-  http.patch(`${BASE_URL}/v1/sellers/:sellerId/posts/:postId`, async ({ request, params }) => {
-    const postId = Number(params.postId);
+  http.patch(`${BASE_URL}/v1/sellers/:sellerId/notices/:noticeId`, async ({ request, params }) => {
+    const noticeId = Number(params.noticeId);
     const body = (await request.json()) as { title: string; content: string };
 
     mockNoticeItems = mockNoticeItems.map((item) =>
-      item.postId === postId
+      item.noticeId === noticeId
         ? {
             ...item,
             title: body.title,
@@ -197,11 +235,11 @@ export const profileHandlers = [
         : item,
     );
 
-    const updatedNotice = mockNoticeItems.find((item) => item.postId === postId);
+    const updatedNotice = mockNoticeItems.find((item) => item.noticeId === noticeId);
 
     return HttpResponse.json(
       {
-        postId,
+        noticeId,
         title: updatedNotice?.title ?? body.title,
         content: updatedNotice?.content ?? body.content,
         updatedAt: updatedNotice?.updatedAt ?? new Date().toISOString(),
@@ -210,9 +248,9 @@ export const profileHandlers = [
     );
   }),
 
-  http.delete(`${BASE_URL}/v1/sellers/:sellerId/posts/:postId`, ({ params }) => {
-    const postId = Number(params.postId);
-    mockNoticeItems = mockNoticeItems.filter((item) => item.postId !== postId);
+  http.delete(`${BASE_URL}/v1/sellers/:sellerId/notices/:noticeId`, ({ params }) => {
+    const noticeId = Number(params.noticeId);
+    mockNoticeItems = mockNoticeItems.filter((item) => item.noticeId !== noticeId);
 
     return HttpResponse.json({ success: true }, { status: 200 });
   }),

@@ -45,3 +45,12 @@ export type PostTrackingInfoPayload = {
   carrierName: string;
   trackingNumber: string;
 };
+
+export type SoldAuctionItem = {
+  escrowId: number;
+  image: string;
+  itemName: string;
+  amount: number;
+  escrowStatus: EscrowState;
+  createdAt: string;
+};

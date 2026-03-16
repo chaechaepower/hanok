@@ -2,11 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   FaArrowLeft,
-  FaBroadcastTower,
+
   FaCalendarAlt,
   FaCamera,
   FaCircle,
-  FaList,
   FaSave,
   FaTimes,
 } from 'react-icons/fa';
@@ -19,26 +18,27 @@ import { usePatchStream } from '@/api/hooks/usePatchStream';
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { usePostStream } from '@/api/hooks/usePostStream';
 import { usePostStreamMacros } from '@/api/hooks/usePostStreamMacros';
+import { useToast } from '@/components/common/Toast';
 import type { LiveStreamItem, Product, StreamRequest } from '@/types';
 import { CATEGORIES } from './categories';
 import InventorySelectModal from './InventorySelectModal';
 import ScheduleModal from './ScheduleModal';
+import { normalizeStreamScheduledAt } from './streamDateTime';
 
 const toFallbackProduct = (item: LiveStreamItem): Product => ({
-  id: item.itemId,
-  status: 'WAITING',
-  title: item.name,
+  itemId: item.itemId,
+  status: 'READY',
+  name: item.name,
   description: '',
   tags: [],
-  imageUrls: item.image1 ? [item.image1] : [],
+  images: item.image1 ? [item.image1] : [],
   startPrice: item.startPrice,
   bidUnit: 0,
-  auctionTime: 0,
-  condition: item.itemCondition,
+  auctionDuration: 0,
+  itemCondition: item.itemCondition,
   category: item.category,
-  auctionMethod: '',
+  auctionType: '',
 });
-import { useToast } from '@/components/common/Toast';
 
 export default function LiveRegisterPage() {
   const [searchParams] = useSearchParams();
@@ -103,7 +103,7 @@ export default function LiveRegisterPage() {
     setNotice(streamData.notice ?? '');
     setThumbnailUrl(streamData.thumbnail ?? null);
     setThumbnailFile(null);
-    setScheduledAt(streamData.scheduledAt ?? '');
+    setScheduledAt(normalizeStreamScheduledAt(streamData.scheduledAt));
     initializedStreamIdRef.current = streamId;
   }, [isEditMode, streamData, streamId]);
 
@@ -117,7 +117,7 @@ export default function LiveRegisterPage() {
       return;
     }
 
-    const inventoryById = new Map(filteredInventory.map((item) => [item.id, item]));
+    const inventoryById = new Map(filteredInventory.map((item) => [item.itemId, item]));
     const items = streamData.items.map((item) => inventoryById.get(item.itemId) ?? toFallbackProduct(item));
     setSelectedItems(items);
     initializedItemsStreamIdRef.current = streamId;
@@ -180,9 +180,7 @@ export default function LiveRegisterPage() {
 
   const toggleItem = (item: Product) => {
     setSelectedItems((prev) =>
-      prev.some((selectedItem) => selectedItem.id === item.id)
-        ? prev.filter((selectedItem) => selectedItem.id !== item.id)
-        : [...prev, item],
+      prev.some((i) => i.itemId === item.itemId) ? prev.filter((i) => i.itemId !== item.itemId) : [...prev, item],
     );
   };
 
@@ -215,6 +213,9 @@ export default function LiveRegisterPage() {
       answer: macroAnswers[macro.questionType] ?? '',
     }));
 
+  const [macrosSaved, setMacrosSaved] = useState(false);
+  const [macrosDirty, setMacrosDirty] = useState(false);
+
   const validateStreamForm = () => {
     if (!title.trim()) {
       showToast({ message: '방송 제목을 입력해주세요.' });
@@ -226,19 +227,26 @@ export default function LiveRegisterPage() {
       return false;
     }
 
+    if (macrosDirty && !macrosSaved) {
+      showToast({ message: '매크로를 저장해주세요.' });
+      return false;
+    }
+
     return true;
   };
 
   const handleSaveMacros = () => {
     if (!isEditMode) {
-      showToast({ message: '매크로는 방송 예약 또는 시작 시 함께 저장됩니다.' });
+      setMacrosSaved(true);
+      setMacrosDirty(false);
+      showToast({ message: '매크로가 저장됐습니다.' });
       return;
     }
 
     postMacros.mutate(
       { streamId, body: { macros: buildMacrosPayload() } },
       {
-        onSuccess: () => showToast({ message: '매크로가 저장되었습니다.' }),
+        onSuccess: () => { setMacrosSaved(true); setMacrosDirty(false); showToast({ message: '매크로가 저장되었습니다.' }); },
         onError: () => showToast({ message: '매크로 저장에 실패하였습니다.' }),
       },
     );
@@ -250,7 +258,7 @@ export default function LiveRegisterPage() {
     return {
       title,
       category: categoryId,
-      itemIds: selectedItems.map((item) => item.id),
+      itemIds: selectedItems.map((item) => item.itemId),
       startType,
       notice: notice || undefined,
       scheduledAt: startType === 'SCHEDULED' ? resolvedScheduledAt : undefined,
@@ -360,7 +368,7 @@ export default function LiveRegisterPage() {
     }
   };
 
-  const currentItem = selectedItems[0] ?? null;
+
   const sellerEntryButtonLabel = isEditMode ? '방송 입장' : '방송 준비';
   const pageTitle = isEditMode ? '라이브 방송 수정' : '라이브 방송 등록';
   const scheduleButtonLabel = isEditMode ? '예약 수정' : '방송 예약';
@@ -385,7 +393,7 @@ export default function LiveRegisterPage() {
   }
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto px-4 py-6 flex flex-col gap-4">
+    <div className="w-full mx-auto px-6 py-4 flex flex-col gap-3 h-screen overflow-hidden">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
@@ -434,48 +442,98 @@ export default function LiveRegisterPage() {
         </div>
       </div>
 
-      <div className="flex gap-4" style={{ minHeight: '600px' }}>
-        <aside className="w-[190px] shrink-0 flex flex-col gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <FaList className="text-[#e74c3c] text-sm" />
-              <h2 className="text-white font-bold text-base">경매 물품 리스트</h2>
-            </div>
-            <p className="text-[#888] text-xs leading-relaxed">방송 중 순서대로 표시됩니다.</p>
+      <div className="flex gap-4 flex-1 min-h-0">
+        <aside
+          className="w-[340px] shrink-0 flex flex-col rounded-2xl bg-[#050505] px-4 py-6"
+          style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <span className="text-xs font-bold text-[#A1A1AA]">경매 물품 목록</span>
+            <span className="text-[11px] font-bold text-[#52525B]">{selectedItems.length}</span>
           </div>
 
-          <div className="flex flex-col gap-2 flex-1">
-            {selectedItems.map((item, idx) => (
-              <div key={item.id} className="flex items-center gap-2 border border-white/10 rounded-lg p-2 bg-[#111]">
-                <span className="text-[#888] text-xs w-4">{idx + 1}</span>
-                <div className="w-8 h-8 rounded bg-[#222] flex items-center justify-center shrink-0">
-                  <FaBroadcastTower size={12} className="text-white/30" />
-                </div>
-                <span className="text-white text-xs truncate flex-1">{item.title}</span>
-                <button
-                  type="button"
-                  onClick={() => toggleItem(item)}
-                  className="text-[#e74c3c] text-xs hover:text-red-400"
+          <div className="flex flex-col gap-2 overflow-y-auto pr-2">
+            {selectedItems.map((item) => {
+              const conditionLabel =
+                { BRAND_NEW: '미개봉 새제품', OPEN_BOX: '개봉된 새상품', REFURBISHED: '리퍼비시', USED: '중고' }[
+                  item.itemCondition
+                ] ?? item.itemCondition;
+
+              return (
+                <div
+                  key={item.itemId}
+                  className="flex gap-3 rounded-[20px] p-3.5 transition-all duration-200"
+                  style={{
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.06)',
+                  }}
                 >
-                  <FaTimes />
-                </button>
-              </div>
-            ))}
+                  <div
+                    className="h-16 w-16 shrink-0 rounded-[14px] bg-[#27272A]"
+                    style={
+                      item.images && item.images.length > 0
+                        ? { backgroundImage: `url(${item.images[0]})`, backgroundPosition: 'center', backgroundSize: 'cover' }
+                        : undefined
+                    }
+                  />
+                  <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+                    <span className="truncate text-xs font-bold leading-snug text-white">{item.name}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[13px] font-black text-[#C5A059]">
+                        {item.startPrice.toLocaleString()}원
+                      </span>
+                      <span
+                        className="rounded-full px-1.5 py-0.5 text-[9px] font-extrabold"
+                        style={{ color: 'rgba(255,220,140,0.95)', background: 'rgba(197,160,89,0.08)' }}
+                      >
+                        {conditionLabel}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end justify-center">
+                    <span
+                      className="rounded-full px-1.5 py-0.5 text-[9px] font-extrabold"
+                      style={{
+                        color: '#71717A',
+                        background: 'rgba(113,113,122,0.15)',
+                        border: '1px solid rgba(113,113,122,0.3)',
+                      }}
+                    >
+                      대기
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => toggleItem(item)}
+                      className="mt-1.5 text-[#e74c3c] text-[10px] hover:text-red-400 bg-transparent border-none cursor-pointer"
+                    >
+                      <FaTimes size={10} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
           <button
             type="button"
             onClick={() => setShowInventoryModal(true)}
-            className="w-full py-2 px-3 bg-[#1a1a1a] border border-white/20 text-white text-sm rounded-full hover:bg-white/10 transition-colors"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-[rgba(255,255,255,0.07)] bg-transparent px-4 py-2.5 text-xs font-bold text-[#71717A] transition-all hover:border-[rgba(255,255,255,0.12)] hover:bg-[#18181B] hover:text-[#D4D4D8]"
           >
             인벤토리에서 물품 선택
           </button>
         </aside>
 
         <div className="flex-1 min-w-0 relative rounded-2xl overflow-hidden bg-black flex flex-col">
+          {notice && (
+            <div className="absolute top-4 left-4 right-4 z-10 flex items-center gap-2 bg-[#1a1a1a]/80 rounded-lg px-4 py-2 backdrop-blur-sm">
+              <span className="text-[11px] font-bold text-[#A1A1AA] bg-[#2a2a2a] px-2 py-0.5 rounded">공지사항</span>
+              <span className="text-sm text-white/80">{notice}</span>
+            </div>
+          )}
+
           <div className="flex-1 flex items-center justify-center">
             {thumbnailUrl ? (
-              <img src={thumbnailUrl} alt="thumbnail" className="w-full h-full object-cover" />
+              <img src={thumbnailUrl} alt="thumbnail" className="max-w-[60%] max-h-[60%] object-contain" />
             ) : (
               <div className="flex flex-col items-center gap-3 text-white/20">
                 <MdLiveTv size={60} />
@@ -484,114 +542,109 @@ export default function LiveRegisterPage() {
             )}
           </div>
 
-          {currentItem && (
-            <div className="absolute bottom-0 left-0 right-0 flex items-center gap-4 px-5 py-4 bg-gradient-to-t from-black/90 to-transparent">
-              <div className="w-16 h-16 rounded-xl bg-[#222] flex items-center justify-center shrink-0">
-                <FaBroadcastTower size={24} className="text-white/30" />
-              </div>
-              <div className="flex-1">
-                <p className="text-white font-bold text-base">{currentItem.title}</p>
-                <p className="text-white/60 text-sm">{currentItem.description}</p>
-              </div>
-              <p className="text-white font-bold text-lg">{currentItem.startPrice.toLocaleString()}원</p>
-            </div>
-          )}
         </div>
 
-        <aside className="w-[220px] shrink-0 flex flex-col gap-4">
-          <h2 className="text-white font-bold text-base">방송 기본 설정</h2>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-[#888] text-xs">썸네일 업로드</label>
-            <button
-              type="button"
-              onClick={() => thumbnailInputRef.current?.click()}
-              className="w-full h-[100px] border border-white/15 rounded-xl bg-[#111] flex flex-col items-center justify-center gap-2 hover:bg-white/5 transition-colors"
-            >
-              {thumbnailUrl ? (
-                <img src={thumbnailUrl} alt="thumb" className="w-full h-full object-cover rounded-xl" />
-              ) : (
-                <>
-                  <FaCamera size={20} className="text-white/40" />
-                  <span className="text-[#888] text-xs">이미지 첨부</span>
-                </>
-              )}
-            </button>
-            <input
-              ref={thumbnailInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleThumbnailChange}
-            />
+        <aside
+          className="w-[300px] shrink-0 flex flex-col rounded-2xl bg-[#050505] overflow-hidden"
+          style={{ borderLeft: '1px solid rgba(255,255,255,0.05)' }}
+        >
+          <div className="px-4 py-4 border-b border-[rgba(255,255,255,0.05)]">
+            <span className="text-xs font-bold text-white">방송 기본 설정</span>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-[#888] text-xs">방송 제목</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="제목을 입력하세요."
-              className="w-full bg-transparent border border-white/15 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/25 outline-none focus:border-white/40"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-[#888] text-xs">상단 고정 공지사항 (선택)</label>
-            <input
-              type="text"
-              value={notice}
-              onChange={(e) => setNotice(e.target.value)}
-              placeholder="공지사항을 입력하세요."
-              className="w-full bg-transparent border border-white/15 rounded-lg px-3 py-2 text-white text-sm placeholder:text-white/25 outline-none focus:border-white/40"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <label className="text-[#888] text-xs">카테고리 매크로</label>
+          <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-[#52525B] uppercase tracking-wider">썸네일 업로드</label>
               <button
                 type="button"
-                onClick={handleSaveMacros}
-                className="flex items-center gap-1 text-[#d9b36d] text-xs hover:text-[#f0e6c8] transition-colors"
+                onClick={() => thumbnailInputRef.current?.click()}
+                className="w-full h-[100px] border border-[rgba(255,255,255,0.07)] rounded-xl bg-transparent flex flex-col items-center justify-center gap-2 hover:border-[rgba(255,255,255,0.12)] hover:bg-[#18181B] transition-all"
               >
-                <FaSave size={11} />
-                저장
+                {thumbnailUrl ? (
+                  <img src={thumbnailUrl} alt="thumb" className="w-full h-full object-contain rounded-xl" />
+                ) : (
+                  <>
+                    <FaCamera size={18} className="text-[#52525B]" />
+                    <span className="text-[#52525B] text-[11px] font-bold">이미지 첨부</span>
+                  </>
+                )}
               </button>
+              <input
+                ref={thumbnailInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleThumbnailChange}
+              />
             </div>
-            <div className="flex flex-col gap-2">
-              {macroFields.map((macro) => {
-                const command = macro.question.trim();
 
-                return (
-                  <div key={macro.questionType} className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      className={`shrink-0 px-3 py-1.5 rounded-full border bg-[#111] text-xs whitespace-nowrap transition-colors ${
-                        macroAnswers[macro.questionType]
-                          ? 'border-white/20 text-white hover:bg-white/10'
-                          : 'border-white/15 text-white/25 hover:bg-white/5'
-                      }`}
-                      onClick={() => {
-                        const cmd = '!' + command;
-                        navigator.clipboard?.writeText(cmd).catch(() => {});
-                      }}
-                      title="클릭하면 커맨드 복사"
-                    >
-                      !{command}
-                    </button>
-                    <input
-                      type="text"
-                      value={macroAnswers[macro.questionType] ?? ''}
-                      onChange={(e) => setMacroAnswers((prev) => ({ ...prev, [macro.questionType]: e.target.value }))}
-                      placeholder="응답을 입력해주세요."
-                      className="flex-1 min-w-0 bg-transparent border border-white/15 rounded-lg px-2 py-1.5 text-white text-xs placeholder:text-white/25 outline-none focus:border-white/40"
-                    />
-                  </div>
-                );
-              })}
-              {!macroFields.length && <p className="text-[#888] text-xs">해당 카테고리의 매크로가 없습니다.</p>}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-[#52525B] uppercase tracking-wider">방송 제목</label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="제목을 입력하세요."
+                className="w-full bg-transparent border border-[rgba(255,255,255,0.07)] rounded-lg px-3 py-2 text-white text-xs placeholder:text-[#3F3F46] outline-none focus:border-[rgba(197,160,89,0.4)] transition-colors"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold text-[#52525B] uppercase tracking-wider">상단 고정 공지사항 (선택)</label>
+              <input
+                type="text"
+                value={notice}
+                onChange={(e) => setNotice(e.target.value)}
+                placeholder="공지사항을 입력하세요."
+                className="w-full bg-transparent border border-[rgba(255,255,255,0.07)] rounded-lg px-3 py-2 text-white text-xs placeholder:text-[#3F3F46] outline-none focus:border-[rgba(197,160,89,0.4)] transition-colors"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-bold text-[#52525B] uppercase tracking-wider">카테고리 매크로</label>
+                <button
+                  type="button"
+                  onClick={handleSaveMacros}
+                  className="flex items-center gap-1 text-[#C5A059] text-[11px] font-bold hover:text-[#f0e6c8] transition-colors"
+                >
+                  <FaSave size={10} />
+                  저장
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {macroFields.map((macro) => {
+                  const command = macro.question.trim();
+
+                  return (
+                    <div key={macro.questionType} className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-extrabold whitespace-nowrap transition-colors ${
+                          macroAnswers[macro.questionType]
+                            ? 'bg-[rgba(197,160,89,0.12)] border border-[rgba(197,160,89,0.4)] text-[#C5A059]'
+                            : 'bg-transparent border border-[rgba(255,255,255,0.07)] text-[#52525B]'
+                        }`}
+                        onClick={() => {
+                          const cmd = '!' + command;
+                          navigator.clipboard?.writeText(cmd).catch(() => {});
+                        }}
+                        title="클릭하면 커맨드 복사"
+                      >
+                        !{command}
+                      </button>
+                      <input
+                        type="text"
+                        value={macroAnswers[macro.questionType] ?? ''}
+                        onChange={(e) => { setMacroAnswers((prev) => ({ ...prev, [macro.questionType]: e.target.value })); setMacrosSaved(false); setMacrosDirty(true); }}
+                        placeholder="응답을 입력해주세요."
+                        className="flex-1 min-w-0 bg-transparent border border-[rgba(255,255,255,0.07)] rounded-lg px-2 py-1.5 text-white text-[11px] placeholder:text-[#3F3F46] outline-none focus:border-[rgba(197,160,89,0.4)] transition-colors"
+                      />
+                    </div>
+                  );
+                })}
+                {!macroFields.length && <p className="text-[#52525B] text-xs font-bold">해당 카테고리의 매크로가 없습니다.</p>}
+              </div>
             </div>
           </div>
         </aside>

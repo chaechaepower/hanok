@@ -2,12 +2,12 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { FaBroadcastTower, FaPlus } from 'react-icons/fa';
 import { useToast } from '@/components/common/Toast';
-import CategorySelectModal from './components/CategorySelectModal';
 import { useDeleteStream } from '@/api/hooks/useDeleteStream';
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
 import SideBar from '@/components/common/layouts/SideBar';
 import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
 import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
+import CategorySelectModal from '@/components/LiveCreate/CategorySelectModal';
 
 const getCategoryLabel = (categoryId: string): string =>
   MAIN_CATEGORY_ITEMS.find((c) => c.id === categoryId)?.label ?? categoryId;
@@ -23,7 +23,11 @@ export default function LiveCreatePage() {
   const navigate = useNavigate();
   const [activeMenu, setActiveMenu] = useState('live');
   const { data, isLoading } = useGetScheduledStreams();
-  const streams = data?.streams ?? [];
+  const streams = [...(data?.streams ?? [])].sort((a, b) => {
+    if (a.state === 'LIVE' && b.state !== 'LIVE') return -1;
+    if (a.state !== 'LIVE' && b.state === 'LIVE') return 1;
+    return 0;
+  });
   const deleteMutation = useDeleteStream();
   const [showModal, setShowModal] = useState(false);
   const { showToast } = useToast();
@@ -79,7 +83,7 @@ export default function LiveCreatePage() {
 
         <div className="flex-1 flex flex-col gap-1.5">
           <p className="text-[#888] text-sm">{formatScheduledAt(stream.scheduledAt)}</p>
-          <p className="text-white text-base font-semibold">방송 제목 : {stream.title}</p>
+          <p className="text-white text-base font-semibold">{stream.title}</p>
           <p className="text-[#888] text-sm">방송 카테고리 : {getCategoryLabel(stream.category)}</p>
         </div>
 

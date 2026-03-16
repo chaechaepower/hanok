@@ -5,7 +5,7 @@ import type { PostTrackingInfoPayload } from '@/types';
 import { queryClient } from '../instance';
 
 export const postTrackingInfoPath = (escrowId: string | number) =>
-  `/v1/escrows/${escrowId}/invoice`;
+  `/v1/escrows/${escrowId}/tracking`;
 
 export const postTrackingInfo = async ({
   escrowId,

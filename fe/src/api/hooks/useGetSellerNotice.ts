@@ -1,28 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { getFetchInstance } from '../instance';
-import type { GetSellerNoticeParams, GetSellerNoticeResponse } from '@/types';
+import type { NoticeItem } from '@/types';
 
-export const getSellerNoticePath = (sellerId: number) =>
-  `/v1/sellers/${sellerId}/notice`;
+export const getSellerNoticePath = (sellerId: number) => `/v1/sellers/${sellerId}/notices`;
 
-export const getSellerNotice = async (
-  sellerId: number,
-  params: GetSellerNoticeParams
-) => {
-  const response = await getFetchInstance().get<GetSellerNoticeResponse>(
-    getSellerNoticePath(sellerId),
-    { params }
-  );
+export const getSellerNotice = async (sellerId: number) => {
+  const response = await getFetchInstance().get<NoticeItem[]>(getSellerNoticePath(sellerId));
   return response.data;
 };
 
-export const useGetSellerNotice = (
-  sellerId: number,
-  params: GetSellerNoticeParams
-) => {
+export const useGetSellerNotice = (sellerId: number) => {
   return useQuery({
-    queryKey: ['sellerNotice', sellerId, params.page, params.limit],
-    queryFn: () => getSellerNotice(sellerId, params),
+    queryKey: ['sellerNotice', sellerId],
+    queryFn: () => getSellerNotice(sellerId),
     enabled: !!sellerId,
   });
 };

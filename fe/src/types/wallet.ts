@@ -21,7 +21,8 @@ export type CompleteWalletChargePayload = {
 
 export type UserAccountResponse = {
   bankName: string;
-  accountNumber: string;
+  accountNum: string;
+  accountName: string;
 };
 
 export type TradeReportType = 'CHARGE' | 'WITHDRAW' | 'SETTLEMENT';

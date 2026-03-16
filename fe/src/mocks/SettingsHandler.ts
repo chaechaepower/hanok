@@ -182,52 +182,62 @@ export const settingsHandlers = [
     );
   }),
 
-  http.get(`${BASE_URL}/v1/users/me/account`, () =>
-    HttpResponse.json(
+  // GET /v1/users/me/account
+  // 계좌 없는 상태로 테스트: bankName, accountNum, accountName을 빈 값으로 설정
+  // 계좌 있는 상태로 테스트하려면 아래 값을 채우세요
+  http.get(`${BASE_URL}/v1/users/me/account`, () => {
+    return HttpResponse.json(
       {
-        bankName: null,
-        accountNumber: null,
+        bankName: '신한은행',
+        accountNum: '110-123-456789',
+        accountName: '홍길동',
       },
       { status: 200 },
-    ),
-  ),
+    );
+  }),
 
-  http.post(`${BASE_URL}/v1/users/me/accounts`, async ({ request }) => {
+  http.patch(`${BASE_URL}/v1/users/me/account`, async ({ request }) => {
     const body = (await request.json()) as {
       bankCode: string;
-      bankName: string;
       accountNum: string;
       accountName: string;
     };
 
     console.log('Mock: account registered', body);
-    return HttpResponse.json({ success: true }, { status: 200 });
+    return HttpResponse.json(
+      {
+        bankName: '신한은행',
+        accountNum: body.accountNum,
+        accountName: body.accountName,
+      },
+      { status: 200 },
+    );
   }),
 
   http.get(`${BASE_URL}/v1/users/me/addresses`, () =>
     HttpResponse.json(
-      {
-        addresses: [
-          {
-            id: 1,
-            label: 'Home',
-            isDefault: true,
-            name: 'Mock User',
-            zipCode: '43123',
-            address: '17 Mock Street, Seoul',
-            phone: '010-0000-5678',
-          },
-          {
-            id: 2,
-            label: 'Office',
-            isDefault: false,
-            name: 'Mock User',
-            zipCode: '12312',
-            address: '123 Test Avenue, Seoul',
-            phone: '010-0000-5678',
-          },
-        ],
-      },
+      [
+        {
+          id: 1,
+          addressName: 'Home',
+          postalCode: 43123,
+          address: '서울특별시 강남구 테헤란로 17',
+          addressDetail: '101동 1001호',
+          phone: '010-0000-5678',
+          recipientName: 'Mock User',
+          isDefault: true,
+        },
+        {
+          id: 2,
+          addressName: 'Office',
+          postalCode: 12312,
+          address: '서울특별시 서초구 서초대로 123',
+          addressDetail: '5층',
+          phone: '010-0000-5678',
+          recipientName: 'Mock User',
+          isDefault: false,
+        },
+      ],
       { status: 200 },
     ),
   ),
@@ -243,4 +253,22 @@ export const settingsHandlers = [
   http.delete(`${BASE_URL}/v1/users/me/addresses/:id`, () =>
     HttpResponse.json({ message: 'Address deleted successfully.' }, { status: 200 }),
   ),
+
+  http.patch(`${BASE_URL}/v1/users/me/password`, async () => {
+    return HttpResponse.json(
+      { status: 'SUCCESS', message: '비밀번호가 변경되었습니다.', data: {} },
+      { status: 200 },
+    );
+  }),
+
+  http.patch(`${BASE_URL}/v1/users/me/profile-image`, async () => {
+    return HttpResponse.json(
+      {
+        status: 'SUCCESS',
+        message: '프로필 이미지가 업로드되었습니다.',
+        data: 'https://api.dicebear.com/7.x/adventurer/svg?seed=updated',
+      },
+      { status: 200 },
+    );
+  }),
 ];

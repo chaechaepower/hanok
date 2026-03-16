@@ -7,10 +7,10 @@ interface Props {
 export default function StreamEnded({ onClose }: Props) {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/70 backdrop-blur-[20px] animate-[fadeIn_.3s_ease]">
-      <div className="flex w-full max-w-[550px] mx-4 aspect-square flex-col items-center justify-center gap-8 overflow-hidden rounded-3xl border border-white/[.07] bg-[#111113] shadow-[0_24px_60px_rgba(0,0,0,.6)]">
+      <div className="flex w-full max-w-[550px] mx-4 aspect-square flex-col items-center justify-center gap-8 overflow-hidden rounded-3xl border border-white/7 bg-surface shadow-[0_24px_60px_rgba(0,0,0,.6)]">
         {/* 아이콘 */}
-        <div className="flex h-20 w-20 items-center justify-center rounded-full border border-[rgba(197,160,89,.2)] bg-[rgba(197,160,89,.08)]">
-          <MdOutlineVideocamOff size={36} className="text-[rgba(197,160,89,.8)]" />
+        <div className="flex h-20 w-20 items-center justify-center rounded-full border border-gold/20 bg-gold/[0.08]">
+          <MdOutlineVideocamOff size={36} className="text-gold/80" />
         </div>
 
         {/* 안내 텍스트 */}
@@ -18,7 +18,7 @@ export default function StreamEnded({ onClose }: Props) {
           <div className="text-xl font-bold tracking-wide text-gold">
             방송이 종료되었습니다
           </div>
-          <div className="text-sm text-[#71717a]">
+          <div className="text-sm text-neutral-500">
             재연결 시간이 초과되어 경매가 자동 취소되었습니다.
           </div>
         </div>
@@ -26,7 +26,7 @@ export default function StreamEnded({ onClose }: Props) {
         {/* 나가기 버튼 */}
         <button
           onClick={onClose}
-          className="rounded-xl border border-[rgba(197,160,89,.3)] bg-[rgba(197,160,89,.1)] px-8 py-3 text-base font-semibold text-gold transition-colors hover:bg-[rgba(197,160,89,.2)]"
+          className="rounded-xl border border-gold/30 bg-gold/10 px-8 py-3 text-base font-semibold text-gold transition-colors hover:bg-gold/20"
         >
           나가기
         </button>

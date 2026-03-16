@@ -23,7 +23,7 @@ export default function MainLayout() {
     <>
       <Header />
       <div className="relative mx-auto flex min-h-screen w-full flex-col">
-        <div className="flex w-full flex-1 flex-col items-center pb-10 md:pt-0 pt-16">
+        <div className="flex w-full flex-1 flex-col items-center pb-10 pt-16">
           <QueryErrorResetBoundary>
             {({ reset }) => (
               <ErrorBoundary FallbackComponent={ErrorComponent} onReset={reset}>

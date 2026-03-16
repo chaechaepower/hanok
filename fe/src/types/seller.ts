@@ -12,11 +12,10 @@ export type SellerReputationResponse = {
   data: SellerReputationData;
 };
 
-export type BusinessType = 'individual' | 'corporate';
+export type BusinessType = 'INDIVIDUAL' | 'BUSINESS';
 
 export type RegisterAccountPayload = {
   bankCode: string;
-  bankName: string;
   accountNum: string;
   accountName: string;
 };
@@ -28,9 +27,12 @@ export type RegisterSellerPayload = {
   businessNumber: string | null;
   nickname: string;
   intro: string;
-  youtube_link: string;
-  insta_link: string;
-  tictok_link: string;
+  youtubeUrl: string;
+  instaUrl: string;
+  tiktokUrl: string;
+  bankCode: string;
+  accountNum: string;
+  accountName: string;
 };
 
 export type RegisterSellerResponse = {
@@ -41,6 +43,7 @@ export type RegisterSellerResponse = {
 
 export type SellerStatusResponse = {
   isSeller: boolean;
+  sellerId: number | null;
 };
 
 export type SellerProfileStats = {
@@ -57,17 +60,19 @@ export type SellerRecentSale = {
 };
 
 export type SellerPost = {
-  postId: number;
+  streamId: number;
   title: string;
-  context: string;
-  createdAt: string;
+  category: string;
+  thumbnail: string;
+  scheduledAt: string;
+  state: string;
 };
 
 export type SellerProfileResponse = {
   sellerId: number;
   nickname: string;
   intro: string;
-  profile_image: string | null;
+  profileImage: string | null;
   instagramUrl: string | null;
   youtubeUrl: string | null;
   tiktokUrl: string | null;
@@ -76,22 +81,12 @@ export type SellerProfileResponse = {
   posts: SellerPost[];
 };
 
-export type GetSellerNoticeParams = {
-  page: number;
-  limit: number;
-};
-
 export type NoticeItem = {
-  postId: number;
+  noticeId: number;
   title: string;
   content: string;
   createdAt: string;
-  updatedAt?: string;
-};
-
-export type GetSellerNoticeResponse = {
-  items: NoticeItem[];
-  total: number;
+  updatedAt: string;
 };
 
 export type PostSellerNoticePayload = {
@@ -100,10 +95,11 @@ export type PostSellerNoticePayload = {
 };
 
 export type PostSellerNoticeResponse = {
-  postId: number;
+  noticeId: number;
   title: string;
   content: string;
   createdAt: string;
+  updatedAt: string;
 };
 
 export type PatchSellerNoticePayload = {
@@ -112,12 +108,9 @@ export type PatchSellerNoticePayload = {
 };
 
 export type PatchSellerNoticeResponse = {
-  postId: number;
+  noticeId: number;
   title: string;
   content: string;
+  createdAt: string;
   updatedAt: string;
-};
-
-export type DeleteSellerNoticeResponse = {
-  success: boolean;
 };

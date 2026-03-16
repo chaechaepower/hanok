@@ -2,6 +2,11 @@ import SellerControlBar from './SellerControlBar';
 import BuyerControlBar from './BuyerControlBar';
 import type { BidSyncPayload } from '@/types';
 
+interface ReadyItem {
+  auctionId: number;
+  auctionStatus: string;
+}
+
 interface Props {
   isSeller: boolean;
   bidSync: BidSyncPayload | null;
@@ -10,6 +15,9 @@ interface Props {
   startAuctionId: number | null;
   canIntroduce: boolean;
   canStart: boolean;
+  readyItems: ReadyItem[];
+  selectedAuctionId: number | null;
+  onSelectAuctionItem: (id: number | null) => void;
 }
 
 export default function ControlBar({
@@ -20,6 +28,9 @@ export default function ControlBar({
   startAuctionId,
   canIntroduce,
   canStart,
+  readyItems,
+  selectedAuctionId,
+  onSelectAuctionItem,
 }: Props) {
   return isSeller ? (
     <SellerControlBar
@@ -27,6 +38,9 @@ export default function ControlBar({
       startAuctionId={startAuctionId}
       canIntroduce={canIntroduce}
       canStart={canStart}
+      readyItems={readyItems}
+      selectedAuctionId={selectedAuctionId}
+      onSelectAuctionItem={onSelectAuctionItem}
     />
   ) : (
     <BuyerControlBar bidSync={bidSync} activeAuctionId={activeBidAuctionId} />

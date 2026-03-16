@@ -7,7 +7,6 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
 
   return (
     <>
-      {/* Terms header */}
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '18px', fontWeight: '700', color: 'white', marginBottom: '10px' }}>
           경매 판매자 이용약관 동의
@@ -20,7 +19,6 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
         </p>
       </div>
 
-      {/* Terms list */}
       <ol
         style={{
           display: 'flex',
@@ -41,7 +39,6 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
         ))}
       </ol>
 
-      {/* Agreement confirmation checkbox */}
       <label
         style={{
           display: 'flex',
@@ -51,7 +48,6 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
           marginBottom: '40px',
         }}
       >
-        {/* Custom checkbox */}
         <div
           style={{
             width: '20px',
@@ -97,7 +93,6 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
         </span>
       </label>
 
-      {/* Navigation buttons */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '40px' }}>
         <Button variant="outline" onClick={onPrev} className="w-30!">
           이전

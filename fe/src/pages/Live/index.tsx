@@ -1,10 +1,10 @@
 ﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { GoHomeFill } from 'react-icons/go';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { useGetStreamEnter } from '@/api/hooks/useGetStreamEnter';
+import { useStompViewerCount } from '@/hooks/useStompViewerCount';
 import WinModal from '@/components/Live/Auction/Buyer/WinModal';
 import AuctionTimer from '@/components/Live/Auction/shared/AuctionTimer';
 import AuctionCommentToast from '@/components/Live/Stream/AuctionCommentToast';
@@ -13,82 +13,24 @@ import SellerGuideOverlay from '@/components/Live/Stream/SellerGuideOverlay';
 import StreamOverlay from '@/components/Live/Stream/StreamOverlay';
 import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
 import type {
-  AuctionCommentPayload,
+  AuctionStatisticsPayload,
+  BidSyncPayload,
   BidWinnerPayload,
+  BroadcastStreamEvent,
   ItemSyncPayload,
+  PrivateStreamEvent,
   StreamRequest,
   StreamEnterResponse,
   StreamTimerPayload,
   SyncedAuctionTimer,
 } from '@/types';
-import type { AuctionStatisticsPayload } from '@/types';
-import type { BidSyncPayload } from '@/types';
 import { disconnectStompClient, sendStreamMessage, subscribeStream } from '@/websocket/stompClient';
 
 import LeftPanel from './LeftPanel';
+import LiveHeader from './LiveHeader';
 import RightPanel from './RightPanel';
 import SellerStartModal from './SellerStartModal';
 
-type BroadcastStreamEvent =
-  | {
-      eventType: 'AUCTION_START';
-      payload?: {
-        item?: {
-          name?: string;
-          condition?: string;
-          bidUnit?: number;
-          startPrice?: number;
-        };
-        timer?: StreamTimerPayload;
-      };
-    }
-  | {
-      eventType: 'BID_PLACED';
-      payload?: {
-        bidInfo?: {
-          amount?: number;
-        };
-        snipingTimer?: StreamTimerPayload | null;
-      };
-    }
-  | {
-      eventType: 'BID_SYNC';
-      payload?: BidSyncPayload | null;
-    }
-  | {
-      eventType: 'AUCTION_STATISTICS';
-      payload?: AuctionStatisticsPayload;
-    }
-  | {
-      eventType: 'ITEM_SYNC';
-      payload?: ItemSyncPayload | null;
-    }
-  | {
-      eventType: 'ITEM_INTRODUCE';
-      payload: null;
-    }
-  | {
-      eventType: 'AUCTION_COMMENT';
-      payload?: AuctionCommentPayload | null;
-    }
-  | {
-      eventType: 'AUCTION_END';
-      payload: null;
-    }
-  | {
-      eventType: string;
-      payload?: unknown;
-    };
-
-type PrivateStreamEvent =
-  | {
-      eventType: 'BID_WINNER';
-      payload?: BidWinnerPayload;
-    }
-  | {
-      eventType: string;
-      payload?: unknown;
-    };
 
 const isAuctionStartEvent = (
   event: BroadcastStreamEvent,
@@ -134,13 +76,13 @@ const createSyncedTimer = (timer: StreamTimerPayload): SyncedAuctionTimer => ({
 
 export default function LivePage() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const location = useLocation();
   const { id: streamId } = useParams<{ id: string }>();
   const numericStreamId = Number(streamId);
   const shouldAutoOpenStartModal =
     (location.state as { autoOpenStartModal?: boolean } | null)?.autoOpenStartModal === true;
   const { data: streamEnter } = useGetStreamEnter(numericStreamId);
+  const { viewerCount } = useStompViewerCount();
   const [selectedAuctionId, setSelectedAuctionId] = useState<number | null>(null);
   const [timer, setTimer] = useState<SyncedAuctionTimer | null>(null);
   const [winnerInfo, setWinnerInfo] = useState<BidWinnerPayload | null>(null);
@@ -377,33 +319,11 @@ export default function LivePage() {
   };
 
   return (
-    <div className="flex h-screen w-full flex-col bg-black p-3">
-      <div className="mb-2 flex shrink-0 items-center gap-3">
-        <button
-          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-bold text-[#71717A] transition hover:bg-[rgba(255,255,255,0.05)] hover:text-[#A1A1AA]"
-          onClick={() => navigate('/')}
-        >
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-          <GoHomeFill /> 홈으로
-        </button>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-white">{streamTitle}</p>
-        </div>
-      </div>
+    <div className="flex h-screen w-full flex-col bg-surface p-3">
+      <LiveHeader streamTitle={streamTitle} isLive={isStreamLive} startedAt={activeStreamEnter?.createdAt ?? null} />
 
       <div className="flex min-h-0 flex-1 gap-3">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 overflow-hidden rounded-2xl">
           <LeftPanel
             isSeller={isSeller}
             syncedItems={itemSync?.items ?? null}
@@ -412,7 +332,7 @@ export default function LivePage() {
           />
         </div>
         <div className="relative min-w-0 flex-2 overflow-hidden rounded-2xl bg-background">
-          <StreamOverlay viewerCount={activeStreamEnter?.viewerCount ?? 0} />
+          <StreamOverlay viewerCount={viewerCount} isSeller={isSeller} />
           {isSeller && <SellerGuideOverlay />}
           <StreamPlaceholder />
           <ControlBar
@@ -423,6 +343,9 @@ export default function LivePage() {
             startAuctionId={startAuctionId}
             canIntroduce={canIntroduceAuction}
             canStart={canStartAuction}
+            readyItems={readyItems}
+            selectedAuctionId={selectedAuctionId}
+            onSelectAuctionItem={setSelectedAuctionId}
           />
 
           {(activeStreamEnter?.notice || auctionComment) && (
@@ -457,7 +380,7 @@ export default function LivePage() {
             />
           )}
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 overflow-hidden rounded-2xl">
           <RightPanel isSeller={isSeller} auctionStatistics={auctionStatistics} streamEnter={activeStreamEnter} />
         </div>
       </div>

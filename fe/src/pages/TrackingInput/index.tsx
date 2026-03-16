@@ -11,19 +11,7 @@ import { useGetEscrowDetail } from '@/api/hooks/useGetEscrowDetail';
 import { usePostTrackingInfo } from '@/api/hooks/usePostTrackingInfo';
 import { usePostCancelEscrow } from '@/api/hooks/usePostCancelEscrow';
 
-// 자주 쓰는 국내 택배사 목록 (정적 데이터)
-const COURIER_LIST = [
-  { Code: '04', Name: 'CJ대한통운' },
-  { Code: '01', Name: '우체국택배' },
-  { Code: '05', Name: '한진택배' },
-  { Code: '08', Name: '롯데택배' },
-  { Code: '06', Name: '로젠택배' },
-  { Code: '22', Name: '대신택배' },
-  { Code: '23', Name: '경동택배' },
-  { Code: '32', Name: '합동택배' },
-  { Code: '46', Name: 'CU 편의점택배' },
-  { Code: '24', Name: 'GS Postbox 택배' },
-];
+import { COURIERS } from '@/pages/SellerOnboarding/constants';
 
 function CancelModal({
   itemName,
@@ -180,7 +168,9 @@ export default function TrackingInput() {
   const selectedItemDetail = detailResponse?.data;
 
   const [courier, setCourier] = useState('');
+  const [courierName, setCourierName] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [showCourierModal, setShowCourierModal] = useState(false);
 
   const pendingItems = items.filter((item) => item.escrowState === 'DEPOSITED');
   const completedItems = items.filter(
@@ -199,7 +189,7 @@ export default function TrackingInput() {
   const handleCancelConfirm = (cancelReason: string) => {
     console.log('Cancel reason:', cancelReason);
     if (!selectedItemId) return;
-    cancelEscrow(selectedItemId, {
+    cancelEscrow({ escrowId: selectedItemId, cancelReason }, {
       onSuccess: () => {
         setShowCancelModal(false);
         showToast({ message: '거래가 취소되었습니다.' });
@@ -213,6 +203,7 @@ export default function TrackingInput() {
   };
 
   const formatPrice = (price: number) => price.toLocaleString() + '원';
+  const formatDate = (dateStr: string) => dateStr.replace(/T/, ' ').replace(/:\d{2}(\.\d+)?Z?$/, '').replace(/Z$/, '');
 
   return (
     <>
@@ -230,7 +221,7 @@ export default function TrackingInput() {
           gap: '40px',
           color: 'white',
           padding: '40px 16px',
-          backgroundColor: '#0B0C10',
+          backgroundColor: 'transparent',
           minHeight: '100vh',
           width: '100%',
           maxWidth: '1200px',
@@ -268,57 +259,28 @@ export default function TrackingInput() {
                   <div
                     key={item.escrowId || item.itemName}
                     onClick={() => handleSelectItem(item.escrowId)}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '16px',
-                      backgroundColor: selectedItemId === String(item.escrowId) ? '#1C1C1E' : 'transparent',
-                      border: selectedItemId === String(item.escrowId) ? '1px solid #3A3A3C' : '1px solid transparent',
-                      borderRadius: '16px',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s',
-                    }}
+                    className={`flex justify-between items-center p-4 rounded-2xl cursor-pointer transition-colors ${
+                      selectedItemId === String(item.escrowId)
+                        ? 'bg-[#1C1C1E] border border-[#3A3A3C]'
+                        : 'bg-transparent border border-transparent hover:bg-[#1C1C1E]/60'
+                    }`}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                      <div
-                        style={{
-                          width: '80px',
-                          height: '80px',
-                          backgroundColor: '#2C2C2E',
-                          borderRadius: '12px',
-                          overflow: 'hidden',
-                          flexShrink: 0,
-                        }}
-                      >
+                    <div className="flex items-center gap-5">
+                      <div className="w-[80px] h-[80px] bg-[#2C2C2E] rounded-xl overflow-hidden shrink-0">
                         {item.imageUrl ? (
-                          <img
-                            src={item.imageUrl}
-                            alt={item.itemName}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
+                          <img src={item.imageUrl} alt={item.itemName} className="w-full h-full object-cover" />
                         ) : (
-                          <div
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: '#8E8E93',
-                              fontSize: '12px',
-                            }}
-                          >
+                          <div className="w-full h-full flex items-center justify-center text-[#8E8E93] text-xs">
                             이미지 준비중
                           </div>
                         )}
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ fontSize: '18px', fontWeight: '700' }}>{item.itemName}</span>
-                        <span style={{ color: '#AEAEB2', fontSize: '13px' }}>{item.createdAt}</span>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-lg font-bold">{item.itemName}</span>
+                        <span className="text-[#AEAEB2] text-[13px]">{formatDate(item.createdAt)}</span>
                       </div>
                     </div>
-                    <div style={{ fontSize: '18px', fontWeight: '700' }}>{formatPrice(item.amount)}</div>
+                    <div className="text-lg font-bold">{formatPrice(item.amount)}</div>
                   </div>
                 ))
               ) : (
@@ -353,64 +315,35 @@ export default function TrackingInput() {
                   <div
                     key={item.escrowId || item.itemName}
                     onClick={() => handleSelectItem(item.escrowId)}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '16px',
-                      backgroundColor: selectedItemId === String(item.escrowId) ? '#1C1C1E' : 'transparent',
-                      border: selectedItemId === String(item.escrowId) ? '1px solid #3A3A3C' : '1px solid transparent',
-                      borderRadius: '16px',
-                      cursor: 'pointer',
-                      transition: 'background-color 0.2s',
-                    }}
+                    className={`flex justify-between items-center p-4 rounded-2xl cursor-pointer transition-colors ${
+                      selectedItemId === String(item.escrowId)
+                        ? 'bg-[#1C1C1E] border border-[#3A3A3C]'
+                        : 'bg-transparent border border-transparent hover:bg-[#1C1C1E]/60'
+                    }`}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                      <div
-                        style={{
-                          width: '80px',
-                          height: '80px',
-                          backgroundColor: '#2C2C2E',
-                          borderRadius: '12px',
-                          overflow: 'hidden',
-                          flexShrink: 0,
-                        }}
-                      >
+                    <div className="flex items-center gap-5">
+                      <div className="w-[80px] h-[80px] bg-[#2C2C2E] rounded-xl overflow-hidden shrink-0">
                         {item.imageUrl ? (
-                          <img
-                            src={item.imageUrl}
-                            alt={item.itemName}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
+                          <img src={item.imageUrl} alt={item.itemName} className="w-full h-full object-cover" />
                         ) : (
-                          <div
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: '#8E8E93',
-                              fontSize: '12px',
-                            }}
-                          >
+                          <div className="w-full h-full flex items-center justify-center text-[#8E8E93] text-xs">
                             이미지 준비중
                           </div>
                         )}
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <span style={{ color: '#CEAF82', fontSize: '12px', fontWeight: 'bold' }}>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[#CEAF82] text-xs font-bold">
                           {item.escrowState === 'INVOICE_SUBMITTED'
                             ? '배송중'
                             : item.escrowState === 'COMPLETED'
                               ? '배송 완료'
                               : item.escrowState}
                         </span>
-                        <span style={{ fontSize: '18px', fontWeight: '700' }}>{item.itemName}</span>
-                        <span style={{ color: '#AEAEB2', fontSize: '13px' }}>{item.createdAt}</span>
+                        <span className="text-lg font-bold">{item.itemName}</span>
+                        <span className="text-[#AEAEB2] text-[13px]">{formatDate(item.createdAt)}</span>
                       </div>
                     </div>
-                    <div style={{ fontSize: '18px', fontWeight: '700' }}>{formatPrice(item.amount)}</div>
+                    <div className="text-lg font-bold">{formatPrice(item.amount)}</div>
                   </div>
                 ))
               ) : (
@@ -490,7 +423,7 @@ export default function TrackingInput() {
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <span style={{ color: '#8E8E93', fontSize: '12px', fontWeight: 'bold' }}>거래 취소</span>
                         <span style={{ fontSize: '18px', fontWeight: '700' }}>{item.itemName}</span>
-                        <span style={{ color: '#AEAEB2', fontSize: '13px' }}>{item.createdAt}</span>
+                        <span style={{ color: '#AEAEB2', fontSize: '13px' }}>{formatDate(item.createdAt)}</span>
                       </div>
                     </div>
                     <div style={{ fontSize: '18px', fontWeight: '700' }}>{formatPrice(item.amount)}</div>
@@ -514,6 +447,14 @@ export default function TrackingInput() {
                 minHeight: '600px',
               }}
             >
+              <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+                <button
+                  onClick={() => setSelectedItemId(null)}
+                  className="bg-transparent border-none text-[#8E8E93] cursor-pointer hover:text-white transition-colors p-0"
+                >
+                  <FiX size={22} />
+                </button>
+              </div>
               <div style={{ display: 'flex', gap: '20px', marginBottom: '32px' }}>
                 <div
                   style={{
@@ -560,7 +501,7 @@ export default function TrackingInput() {
                     {selectedItemDetail.winningInfo.itemName}
                   </p>
                   <p style={{ color: '#8E8E93', fontSize: '13px', marginBottom: '16px' }}>
-                    {selectedItemDetail.winningInfo.wonAt}
+                    {formatDate(selectedItemDetail.winningInfo.wonAt)}
                   </p>
                   <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr', gap: '8px 12px', fontSize: '14px' }}>
                     <span style={{ color: '#AEAEB2' }}>낙찰가</span>
@@ -665,55 +606,23 @@ export default function TrackingInput() {
               ) : (
                 <>
                   <div style={{ display: 'flex', gap: '8px', marginBottom: '32px' }}>
-                    <select
-                      value={courier}
-                      onChange={(e) => setCourier(e.target.value)}
+                    <button
+                      type="button"
+                      onClick={() => selectedItemId && setShowCourierModal(true)}
                       disabled={!selectedItemId}
-                      style={{
-                        width: '140px',
-                        height: '48px',
-                        backgroundColor: 'transparent',
-                        border: '1px solid #3A3A3C',
-                        borderRadius: '8px',
-                        color: 'white',
-                        padding: '0 12px',
-                        fontSize: '14px',
-                        appearance: 'none',
-                        outline: 'none',
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 12px center',
-                      }}
+                      className="w-[160px] h-[48px] bg-transparent border border-[#3A3A3C] rounded-lg px-3 text-left cursor-pointer flex items-center justify-between hover:border-[#d9b36d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <option value="" disabled hidden>
-                        택배사 선택
-                      </option>
-                      {COURIER_LIST.map((company) => (
-                        <option
-                          key={company.Code}
-                          value={company.Code}
-                          style={{ backgroundColor: '#1C1C1E', color: 'white' }}
-                        >
-                          {company.Name}
-                        </option>
-                      ))}
-                    </select>
+                      <span className={courier ? 'text-white text-sm' : 'text-[#8E8E93] text-sm'}>
+                        {courier ? courierName : '택배사 선택'}
+                      </span>
+                      <span className="text-[#555] text-xs">▼</span>
+                    </button>
                     <input
                       type="text"
                       placeholder="송장 번호"
                       value={trackingNumber}
                       onChange={(e) => setTrackingNumber(e.target.value)}
-                      style={{
-                        flex: 1,
-                        height: '48px',
-                        backgroundColor: 'transparent',
-                        border: '1px solid #3A3A3C',
-                        borderRadius: '8px',
-                        color: 'white',
-                        padding: '0 16px',
-                        fontSize: '14px',
-                        outline: 'none',
-                      }}
+                      className="flex-1 h-[48px] bg-transparent border border-[#3A3A3C] rounded-lg px-4 text-white text-sm outline-none"
                     />
                   </div>
 
@@ -783,6 +692,54 @@ export default function TrackingInput() {
           )}
         </div>
       </div>
+
+      {showCourierModal && (
+        <div
+          className="fixed inset-0 z-[1000] flex items-center justify-center"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setShowCourierModal(false)}
+        >
+          <div
+            className="w-full max-w-[430px] max-h-[70vh] bg-[#1C1C1E] rounded-2xl flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-5 pt-4 shrink-0">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-[17px] font-bold text-white">택배사 선택</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowCourierModal(false)}
+                  className="bg-transparent border-none text-[#8E8E93] text-2xl cursor-pointer p-0"
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+            <div className="overflow-y-auto px-5 pt-2 pb-5">
+              <div className="grid grid-cols-3 gap-2">
+                {COURIERS.map((c) => (
+                  <button
+                    key={c.code}
+                    type="button"
+                    onClick={() => {
+                      setCourier(c.code);
+                      setCourierName(c.name);
+                      setShowCourierModal(false);
+                    }}
+                    className={`py-3 px-1 border-none rounded-lg text-[13px] cursor-pointer text-center whitespace-nowrap overflow-hidden text-ellipsis ${
+                      courier === c.code
+                        ? 'bg-[#CEAF82] text-[#0B0C10] font-bold'
+                        : 'bg-[#2C2C2E] text-[#E5E5EA] font-normal'
+                    }`}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

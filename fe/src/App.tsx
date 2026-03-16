@@ -6,7 +6,6 @@ import SellerOnboardingPage from './pages/SellerOnboarding';
 import LivePage from './pages/Live';
 import LiveTestPage from './pages/LiveTest';
 import LiveCreatePage from './pages/LiveCreate';
-import LiveRegisterPage from './pages/LiveCreate/components/LiveRegisterPage';
 import ProductListPage from './pages/ProductList';
 import SignUpPage from './pages/SignUp';
 import LoginPage from './pages/Login';
@@ -14,6 +13,7 @@ import WalletPage from './pages/Wallet';
 import SettingsPage from './pages/Settings';
 import MainLayout from '@/components/common/layouts/MainLayout';
 import SellerOnlyRoute from '@/components/common/layouts/SellerOnlyRoute';
+import LiveRegisterPage from './components/LiveCreate/LiveRegisterPage';
 
 function App() {
   return (

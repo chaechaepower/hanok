@@ -4,6 +4,14 @@ import { BASE_URL } from '@/api/instance';
 
 const mockEscrows = [
   {
+    escrowId: 100,
+    imageUrl: 'https://picsum.photos/seed/camera/140/140',
+    itemName: '빈티지 카메라',
+    amount: 250000,
+    escrowState: 'DEPOSITED',
+    createdAt: '2026-03-15T08:15:30Z',
+  },
+  {
     escrowId: 101,
     imageUrl: 'https://picsum.photos/seed/shoes/140/140',
     itemName: 'Vintage sneakers',
@@ -35,7 +43,14 @@ export const escrowHandlers = [
 
   http.get(`${BASE_URL}/v1/escrows/:escrowId`, ({ params }) => {
     const escrowId = String(params.escrowId);
-    const isCompleted = escrowId === '102';
+
+    const detailMap: Record<string, { imageUrl: string; itemName: string; finalPrice: number; wonAt: string; courierName?: string; trackingNumber?: string }> = {
+      '100': { imageUrl: 'https://picsum.photos/seed/camera/140/140', itemName: '빈티지 카메라', finalPrice: 250000, wonAt: '2026-03-15T08:15:30Z' },
+      '101': { imageUrl: 'https://picsum.photos/seed/shoes/140/140', itemName: 'Vintage sneakers', finalPrice: 75000, wonAt: '2026-03-01T23:00:00Z', courierName: '한진택배', trackingNumber: '580123456789' },
+      '102': { imageUrl: 'https://picsum.photos/seed/jacket/140/140', itemName: 'Collector jacket', finalPrice: 120000, wonAt: '2026-02-20T19:30:00Z', courierName: 'CJ Logistics', trackingNumber: '120312319124' },
+    };
+
+    const detail = detailMap[escrowId] ?? detailMap['100'];
 
     return HttpResponse.json(
       {
@@ -43,14 +58,12 @@ export const escrowHandlers = [
         message: 'Escrow detail fetched successfully.',
         data: {
           winningInfo: {
-            imageUrl: isCompleted
-              ? 'https://picsum.photos/seed/jacket/140/140'
-              : 'https://picsum.photos/seed/candle/140/140',
-            itemName: isCompleted ? 'Collector jacket' : 'Vintage candle holder',
-            finalPrice: isCompleted ? 120000 : 2300,
+            imageUrl: detail.imageUrl,
+            itemName: detail.itemName,
+            finalPrice: detail.finalPrice,
             sellerName: 'Mock Seller',
             sellerId: 'seller_1',
-            wonAt: isCompleted ? '2026-02-20T19:30:00Z' : '2026-03-01T10:24:00Z',
+            wonAt: detail.wonAt,
           },
           shippingAddress: {
             name: 'Mock User',
@@ -59,11 +72,8 @@ export const escrowHandlers = [
             address: '123 Mock Street',
             addressDetail: '405-107',
           },
-          delivery: isCompleted
-            ? {
-                courierName: 'CJ Logistics',
-                trackingNumber: '120312319124',
-              }
+          delivery: detail.courierName
+            ? { courierName: detail.courierName, trackingNumber: detail.trackingNumber! }
             : null,
         },
       },
@@ -71,7 +81,7 @@ export const escrowHandlers = [
     );
   }),
 
-  http.post(`${BASE_URL}/v1/escrows/:escrowId/invoice`, async () => {
+  http.post(`${BASE_URL}/v1/escrows/:escrowId/tracking`, async () => {
     return HttpResponse.json({ success: true }, { status: 200 });
   }),
 

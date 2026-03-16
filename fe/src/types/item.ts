@@ -1,39 +1,37 @@
 export type CreateItemPayload = {
-  title: string;
+  name: string;
   description: string;
-  newImages: File[];
+  category: string;
   startPrice: number;
-  auctionDuration: number;
   bidUnit: number;
-  categoryId: number;
-  condition?: string;
-  auctionMethod?: string;
+  auctionDuration: number;
+  itemCondition: string;
+  auctionType: string;
   tags?: string[];
+  images?: File[];
 };
 
 export type CreateItemResponse = {
   itemId: number;
-  title: string;
+  name: string;
   status: string;
 };
 
 export type UpdateItemPayload = {
-  title: string;
-  description: string;
-  existingImageUrls: string[];
-  newImages: File[];
+  name?: string;
+  description?: string;
+  category?: string;
   startPrice?: number;
   bidUnit?: number;
   auctionDuration?: number;
-  categoryId?: number;
-  condition?: string;
-  auctionMethod?: string;
+  itemCondition?: string;
   tags?: string[];
+  images?: File[];
 };
 
 export type UpdateItemResponse = {
   itemId: number;
-  title: string;
+  name: string;
   status: string;
 };
 
@@ -42,19 +40,20 @@ export type DeleteItemResponse = {
   status: string;
 };
 
-export type ProductStatus = 'WAITING' | 'AUCTION' | 'SOLD';
+export type ProductStatus = 'READY' | 'PENDING' | 'SOLD';
 
 export interface Product {
-  id: number;
-  status: ProductStatus;
-  title: string;
+  itemId: number;
+  name: string;
   description: string;
   tags: string[];
-  imageUrls: string[];
+  images: string[];
   startPrice: number;
   bidUnit: number;
-  auctionTime: number;
-  condition: string;
+  auctionDuration: number;
+  itemCondition: string;
   category: string;
-  auctionMethod: string;
+  auctionType: string;
+  status: ProductStatus;
+  createdAt?: string;
 }

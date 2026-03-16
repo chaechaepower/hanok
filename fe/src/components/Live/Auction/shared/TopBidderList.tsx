@@ -19,22 +19,22 @@ const FALLBACK_BIDDERS: BidderViewModel[] = [
 
 const rankStyles = {
   1: {
-    avatar: 'h-10 w-10 border-[#C5A059] bg-[rgba(197,160,89,.08)] text-[#C5A059]',
+    avatar: 'h-10 w-10 border-gold bg-gold/[0.08] text-gold',
     name: 'text-white',
-    price: 'text-[11px] text-[#C5A059]',
-    block: 'h-11 bg-[rgba(197,160,89,.12)] border border-b-0 border-[rgba(197,160,89,.25)] text-[#C5A059]',
+    price: 'text-[11px] text-gold',
+    block: 'h-11 bg-gold/12 border border-b-0 border-gold/25 text-gold',
   },
   2: {
-    avatar: 'h-[34px] w-[34px] border-[rgba(180,180,200,.3)] bg-[#27272a] text-[#c0c0c0]',
-    name: 'text-[#a1a1aa]',
-    price: 'text-[10px] text-[#71717a]',
-    block: 'h-[30px] bg-[rgba(180,180,200,.06)] border border-b-0 border-[rgba(180,180,200,.12)] text-[#c0c0c0]',
+    avatar: 'h-[34px] w-[34px] border-neutral-500/30 bg-neutral-800 text-neutral-300',
+    name: 'text-neutral-400',
+    price: 'text-[10px] text-neutral-500',
+    block: 'h-[30px] bg-neutral-500/6 border border-b-0 border-neutral-500/12 text-neutral-300',
   },
   3: {
-    avatar: 'h-[34px] w-[34px] border-[rgba(180,120,60,.3)] bg-[#27272a] text-[#b87040]',
-    name: 'text-[#a1a1aa]',
-    price: 'text-[10px] text-[#71717a]',
-    block: 'h-5 bg-[rgba(180,120,60,.06)] border border-b-0 border-[rgba(180,120,60,.12)] text-[#b87040]',
+    avatar: 'h-[34px] w-[34px] border-primary/30 bg-neutral-800 text-primary',
+    name: 'text-neutral-400',
+    price: 'text-[10px] text-neutral-500',
+    block: 'h-5 bg-primary/6 border border-b-0 border-primary/12 text-primary',
   },
 } as const;
 
@@ -60,8 +60,8 @@ export default function TopBidderList({ topBidders }: Props) {
   const podiumOrder = [bidders[1], bidders[0], bidders[2]].filter(Boolean);
 
   return (
-    <div className="border-b border-[rgba(255,255,255,.05)] bg-[rgba(24,24,27,.3)] px-4 pt-4">
-      <div className="mb-3.5 text-[10px] font-black uppercase text-[#C5A059]">상위 입찰자</div>
+    <div className="border-b border-white/5 bg-neutral-900/30 px-4 pt-4">
+      <div className="mb-3.5 text-[10px] font-black uppercase text-gold">상위 입찰자</div>
       <div className="flex items-end justify-center gap-1.5">
         {podiumOrder.map((bidder) => {
           const s = rankStyles[bidder.rank as keyof typeof rankStyles];

@@ -1,4 +1,3 @@
-// ─── User Settings / Me ───────────────────────────────────────────────────────
 export type GetMeResponse = {
   email: string;
   nickname: string;
@@ -34,7 +33,6 @@ export type PatchNotificationResponse = {
   followStreamAlert: boolean;
 };
 
-// ─── User / Withdraw ──────────────────────────────────────────────────────────
 export type WithdrawPayload = {
   password: string;
 };
@@ -47,7 +45,6 @@ export type WithdrawResponse = {
   };
 };
 
-// ─── Following List ──────────────────────────────────────────────────────────
 export type FollowingSeller = {
   sellerId: number;
   nickname: string;
@@ -70,25 +67,23 @@ export type GetFollowingResponse = {
   hasNext: boolean;
 };
 
-// ─── Shipping Address ─────────────────────────────────────────────────────────
 export type Address = {
   id: number;
-  label: string;
-  isDefault: boolean;
-  name: string;
-  zipCode: string;
+  addressName: string;
+  postalCode: number;
   address: string;
+  addressDetail: string;
   phone: string;
+  recipientName: string;
+  isDefault: boolean;
 };
 
-export type GetAddressesResponse = {
-  addresses: Address[];
-};
+export type GetAddressesResponse = Address[];
 
 export type AddressFormState = {
-  label: string;
-  name: string;
-  zipCode: string;
+  addressName: string;
+  recipientName: string;
+  postalCode: string;
   address: string;
   addressDetail: string;
   phone: string;
@@ -97,21 +92,37 @@ export type AddressFormState = {
 export type AddressModalMode = 'add' | 'edit';
 
 export type CreateAddressPayload = {
-  label: string;
-  name: string;
-  zipCode: string;
+  addressName: string;
+  postalCode: number;
   address: string;
+  addressDetail: string;
   phone: string;
+  recipientName: string;
+  isDefault: boolean;
 };
 
 export type UpdateAddressPayload = {
-  label: string;
-  name: string;
-  zipCode: string;
+  addressName: string;
+  postalCode: number;
   address: string;
+  addressDetail: string;
   phone: string;
+  recipientName: string;
+  isDefault: boolean;
 };
 
-export type SetDefaultAddressPayload = {
-  isDefault: boolean;
+export type AccountData = {
+  bankCode: string;
+  accountNum: string;
+  accountName: string;
+};
+
+export type JusoResult = {
+  roadAddr: string;
+  jibunAddr: string;
+  zipNo: string;
+  bdNm: string;
+  siNm: string;
+  sggNm: string;
+  emdNm: string;
 };

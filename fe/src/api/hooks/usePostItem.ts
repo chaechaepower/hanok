@@ -7,24 +7,12 @@ const postItemPath = () => '/v1/items';
 export const usePostItem = () => {
   return useMutation<CreateItemResponse, Error, CreateItemPayload>({
     mutationFn: async (payload) => {
+      const { images, ...request } = payload;
       const formData = new FormData();
-      formData.append('title', payload.title);
-      formData.append('description', payload.description);
-      formData.append('startPrice', String(payload.startPrice));
-      formData.append('auctionDuration', String(payload.auctionDuration));
-      formData.append('bidUnit', String(payload.bidUnit));
-      formData.append('categoryId', String(payload.categoryId));
+      formData.append('request', new Blob([JSON.stringify(request)], { type: 'application/json' }));
 
-      if (payload.newImages && payload.newImages.length > 0) {
-        payload.newImages.forEach((file) => {
-          formData.append('newImages', file);
-        });
-      }
-
-      if (payload.tags && payload.tags.length > 0) {
-        payload.tags.forEach((tag) => {
-          formData.append('tags', tag);
-        });
+      if (images) {
+        images.forEach((file) => formData.append('images', file));
       }
 
       const response = await getFetchInstance().post(postItemPath(), formData, {
