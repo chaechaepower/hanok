@@ -450,7 +450,12 @@ public class AuctionService {
         return ItemSyncResponse.ItemInfo.builder()
                 .auctionId(auction.getId())
                 .itemName(auction.getItem().getName())
-                .image(auction.getItem().getImage1())
+                .description(auction.getItem().getDescription())
+                .images(List.of(
+                        auction.getItem().getImage1(),
+                        auction.getItem().getImage2(),
+                        auction.getItem().getImage3()
+                ))
                 .startPrice(auction.getItem().getStartPrice())
                 .auctionType(auction.getItem().getAuctionType())
                 .auctionStatus(auction.getAuctionStatus())

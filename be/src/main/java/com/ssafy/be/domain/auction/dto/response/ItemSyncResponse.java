@@ -16,7 +16,8 @@ public record ItemSyncResponse(
     public record ItemInfo(
             Long auctionId,
             String itemName,
-            String image,
+            String description,
+            List<String> images,
             Long startPrice,
             AuctionType auctionType,
             AuctionStatus auctionStatus,
