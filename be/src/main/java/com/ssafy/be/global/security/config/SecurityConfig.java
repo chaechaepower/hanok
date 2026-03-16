@@ -59,7 +59,7 @@ public class SecurityConfig {
                         OPTIONS.name()));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setMaxAge(3600L); // Cache preflight
-        configuration.setExposedHeaders(List.of(SET_COOKIE, AUTHORIZATION));
+        configuration.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
