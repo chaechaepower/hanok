@@ -16,6 +16,7 @@ import com.ssafy.be.global.common.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,7 @@ public class UserProfileController implements UserProfileApi {
     private final SellerService sellerService;
 
     @Override
+    @PatchMapping(value = "/me/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<String>> uploadProfileImage(
             @RequestPart("image") MultipartFile file,
             @AuthenticationPrincipal String principal) throws IOException {
@@ -43,6 +45,7 @@ public class UserProfileController implements UserProfileApi {
     }
 
     @Override
+    @PatchMapping("/me/account")
     public ResponseEntity<ApiResponse<AccountRegisterResponse>> registerAccount(
             @AuthenticationPrincipal String principal,
             @RequestBody @Valid AccountRegisterRequest request) {
@@ -69,6 +72,7 @@ public class UserProfileController implements UserProfileApi {
     }
 
     @Override
+    @GetMapping("/me/seller-status")
     public ResponseEntity<ApiResponse<SellerStatusResponse>> getSellerStatus(
             @AuthenticationPrincipal String principal) {
 
@@ -77,6 +81,7 @@ public class UserProfileController implements UserProfileApi {
     }
 
     @Override
+    @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserProfileResponse>> getMyProfile(
             @AuthenticationPrincipal String principal) {
         Long userId = getUserId(principal);
@@ -84,6 +89,7 @@ public class UserProfileController implements UserProfileApi {
     }
 
     @Override
+    @GetMapping("/me/account")
     public ResponseEntity<ApiResponse<AccountRegisterResponse>> getAccount(
             @AuthenticationPrincipal String principal) {
         Long userId = getUserId(principal);
@@ -91,6 +97,7 @@ public class UserProfileController implements UserProfileApi {
     }
 
     @Override
+    @PatchMapping("/me/password")
     public ResponseEntity<ApiResponse<Void>> updatePassword(
             @AuthenticationPrincipal String principal,
             @RequestBody PasswordUpdateRequest request) {
