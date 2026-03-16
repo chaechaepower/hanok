@@ -289,10 +289,6 @@ export type BroadcastStreamEvent =
       payload?: BidSyncPayload | null;
     }
   | {
-      eventType: 'UNIQUE_BID_SYNC';
-      payload?: UniqueBidSyncPayload | null;
-    }
-  | {
       eventType: 'AUCTION_STATISTICS';
       payload?: AuctionStatisticsPayload;
     }
@@ -340,6 +336,10 @@ export type PrivateStreamEvent =
   | {
       eventType: 'BID_WINNER';
       payload?: BidWinnerPayload;
+    }
+  | {
+      eventType: 'UNIQUE_BID_SYNC';
+      payload?: UniqueBidSyncPayload | null;
     }
   | {
       eventType: 'UNIQUE_BID_ACK';

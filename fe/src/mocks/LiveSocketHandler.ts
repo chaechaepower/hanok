@@ -525,7 +525,7 @@ const createUniqueBidSyncPayload = (streamId: string, nowMs: number) => {
 };
 
 const broadcastUniqueBidSync = (streamId: string) => {
-  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+  broadcastToDestination(`/user/private/streams/${streamId}`, {
     eventType: 'UNIQUE_BID_SYNC',
     payload: createUniqueBidSyncPayload(streamId, Date.now()),
   });

@@ -55,10 +55,6 @@ const isBidSyncEvent = (
   event: BroadcastStreamEvent,
 ): event is Extract<BroadcastStreamEvent, { eventType: 'BID_SYNC' }> => event.eventType === 'BID_SYNC';
 
-const isUniqueBidSyncEvent = (
-  event: BroadcastStreamEvent,
-): event is Extract<BroadcastStreamEvent, { eventType: 'UNIQUE_BID_SYNC' }> => event.eventType === 'UNIQUE_BID_SYNC';
-
 const isItemSyncEvent = (
   event: BroadcastStreamEvent,
 ): event is Extract<BroadcastStreamEvent, { eventType: 'ITEM_SYNC' }> => event.eventType === 'ITEM_SYNC';
@@ -108,6 +104,10 @@ const isBidWinnerEvent = (
 const isUniqueBidAckEvent = (
   event: PrivateStreamEvent,
 ): event is Extract<PrivateStreamEvent, { eventType: 'UNIQUE_BID_ACK' }> => event.eventType === 'UNIQUE_BID_ACK';
+
+const isUniqueBidSyncEvent = (
+  event: PrivateStreamEvent,
+): event is Extract<PrivateStreamEvent, { eventType: 'UNIQUE_BID_SYNC' }> => event.eventType === 'UNIQUE_BID_SYNC';
 
 const isStompErrorEvent = (event: ErrorStreamEvent): event is Extract<ErrorStreamEvent, { eventType: 'ERROR' }> =>
   event.eventType === 'ERROR';
@@ -367,14 +367,6 @@ export default function LivePage() {
         return;
       }
 
-      if (isUniqueBidSyncEvent(event)) {
-        setUniqueBidSync(event.payload ?? null);
-        if (event.payload?.timer) {
-          setTimer(createSyncedTimer(event.payload.timer));
-        }
-        return;
-      }
-
       if (isItemSyncEvent(event)) {
         setItemSync(event.payload ?? null);
         return;
@@ -431,6 +423,14 @@ export default function LivePage() {
     };
 
     const handlePrivateEvent = (event: PrivateStreamEvent) => {
+      if (isUniqueBidSyncEvent(event)) {
+        setUniqueBidSync(event.payload ?? null);
+        if (event.payload?.timer) {
+          setTimer(createSyncedTimer(event.payload.timer));
+        }
+        return;
+      }
+
       if (isBidWinnerEvent(event) && event.payload) {
         setWinnerInfo({
           payload: event.payload,
