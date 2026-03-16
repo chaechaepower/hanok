@@ -18,11 +18,6 @@ java {
     }
 }
 
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
-}
 
 repositories {
     mavenCentral()
@@ -106,6 +101,10 @@ dependencies {
 
     // openvidu livekit
     implementation 'io.livekit:livekit-server:0.12.0'
+
+    // flyway
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
 }
 
 dependencyManagement {
