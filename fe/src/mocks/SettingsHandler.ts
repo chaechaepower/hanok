@@ -216,28 +216,28 @@ export const settingsHandlers = [
 
   http.get(`${BASE_URL}/v1/users/me/addresses`, () =>
     HttpResponse.json(
-      {
-        addresses: [
-          {
-            id: 1,
-            label: 'Home',
-            isDefault: true,
-            name: 'Mock User',
-            zipCode: '43123',
-            address: '17 Mock Street, Seoul',
-            phone: '010-0000-5678',
-          },
-          {
-            id: 2,
-            label: 'Office',
-            isDefault: false,
-            name: 'Mock User',
-            zipCode: '12312',
-            address: '123 Test Avenue, Seoul',
-            phone: '010-0000-5678',
-          },
-        ],
-      },
+      [
+        {
+          id: 1,
+          addressName: 'Home',
+          postalCode: 43123,
+          address: '서울특별시 강남구 테헤란로 17',
+          addressDetail: '101동 1001호',
+          phone: '010-0000-5678',
+          recipientName: 'Mock User',
+          isDefault: true,
+        },
+        {
+          id: 2,
+          addressName: 'Office',
+          postalCode: 12312,
+          address: '서울특별시 서초구 서초대로 123',
+          addressDetail: '5층',
+          phone: '010-0000-5678',
+          recipientName: 'Mock User',
+          isDefault: false,
+        },
+      ],
       { status: 200 },
     ),
   ),
