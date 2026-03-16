@@ -15,7 +15,7 @@ const CUSTOM_UNIT_OPTIONS = [
   { label: '1천원', value: 1000 },
   { label: '5천원', value: 5000 },
   { label: '5만원', value: 50000 },
-  { label: '자유', value: 0 },
+  { label: '직접입력', value: 0 },
 ];
 
 type BidTab = 'quick' | 'custom';
@@ -46,26 +46,37 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
 
   const balance = wallet?.balance ?? 0;
   const isUniqueAuction = auctionType === 'UNIQUE_TOP';
-  const currentPrice = isUniqueAuction ? uniqueBidSync?.bidRange.minPrice ?? 0 : bidSync?.item.currentPrice ?? 0;
-  const baseBidUnit = isUniqueAuction ? uniqueBidSync?.bidRange.bidUnit ?? 1000 : bidSync?.item.bidUnit ?? 1000;
+  const activeTab: BidTab = isUniqueAuction ? 'custom' : tab;
+  const activeCustomUnit = isUniqueAuction ? 0 : customUnit;
+  const currentPrice = isUniqueAuction ? (uniqueBidSync?.bidRange.minPrice ?? 0) : (bidSync?.item.currentPrice ?? 0);
+  const baseBidUnit = isUniqueAuction ? (uniqueBidSync?.bidRange.bidUnit ?? 1000) : (bidSync?.item.bidUnit ?? 1000);
   const uniqueMinPrice = uniqueBidSync?.bidRange.minPrice ?? 0;
   const uniqueMaxPrice = uniqueBidSync?.bidRange.maxPrice ?? 0;
   const uniqueBidUnit = uniqueBidSync?.bidRange.bidUnit ?? 1000;
   const hasPlacedUniqueBid = uniqueBidSync?.hasBid ?? false;
   const hasActiveAuction = isUniqueAuction ? Boolean(uniqueBidSync) : Boolean(bidSync);
-  const isFreeMode = tab === 'custom' && customUnit === 0;
-  const quickUnit = tab === 'quick' ? baseBidUnit : customUnit;
+  const uniqueInputAmount = freeInput ? Number(freeInput) : 0;
+  const isFreeMode = activeTab === 'custom' && activeCustomUnit === 0;
+  const quickUnit = activeTab === 'quick' ? baseBidUnit : activeCustomUnit;
   const minimumBidAmount = isUniqueAuction ? uniqueMinPrice : currentPrice + quickUnit;
   const displayedBidAmount = isFreeMode ? bidAmount : Math.max(bidAmount, minimumBidAmount);
-  const effectiveBidAmount = hasActiveAuction ? Math.max(displayedBidAmount, minimumBidAmount) : displayedBidAmount;
+  const effectiveBidAmount = isUniqueAuction
+    ? uniqueInputAmount
+    : hasActiveAuction
+      ? Math.max(displayedBidAmount, minimumBidAmount)
+      : displayedBidAmount;
   const increment = isUniqueAuction || !hasActiveAuction ? 0 : effectiveBidAmount - currentPrice;
   const isInsufficientBalance = isLoggedIn && hasActiveAuction && effectiveBidAmount > balance;
-  const isBidDisabled = isInsufficientBalance || (isUniqueAuction && hasPlacedUniqueBid);
+  const isBidDisabled =
+    !hasActiveAuction ||
+    isInsufficientBalance ||
+    (isUniqueAuction && (hasPlacedUniqueBid || freeInput.trim().length === 0));
   const hasRegisteredShippingAddress = true;
   // TODO: replace hasRegisteredShippingAddress with the shipping address lookup API result.
 
   const handleBidPlace = useCallback(() => {
     if (!hasActiveAuction) {
+      showToast({ message: '진행 중인 경매 정보를 불러오는 중입니다.' });
       return;
     }
 
@@ -99,6 +110,11 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
         return;
       }
 
+      if (freeInput.trim().length === 0) {
+        showToast({ message: '입찰 금액을 직접 입력해주세요.' });
+        return;
+      }
+
       if (effectiveBidAmount < uniqueMinPrice || effectiveBidAmount > uniqueMaxPrice) {
         showToast({
           message: `입찰가는 ${uniqueMinPrice.toLocaleString()}원 ~ ${uniqueMaxPrice.toLocaleString()}원 범위여야 합니다.`,
@@ -107,7 +123,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
       }
 
       if ((effectiveBidAmount - uniqueMinPrice) % uniqueBidUnit !== 0) {
-        showToast({ message: `${uniqueBidUnit.toLocaleString()}원 단위로만 입찰할 수 있습니다.` });
+        showToast({ message: `${uniqueBidUnit.toLocaleString()}원 단위로 입찰해야 합니다.` });
         return;
       }
     }
@@ -122,19 +138,20 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
       console.error('[stream] failed to send bid', error);
     });
   }, [
+    activeAuctionId,
+    effectiveBidAmount,
+    freeInput,
     hasActiveAuction,
-    isLoggedIn,
+    hasPlacedUniqueBid,
     hasRegisteredShippingAddress,
     isInsufficientBalance,
-    streamId,
-    activeAuctionId,
+    isLoggedIn,
     isUniqueAuction,
-    hasPlacedUniqueBid,
-    effectiveBidAmount,
-    uniqueMinPrice,
-    uniqueMaxPrice,
-    uniqueBidUnit,
     showToast,
+    streamId,
+    uniqueBidUnit,
+    uniqueMaxPrice,
+    uniqueMinPrice,
   ]);
 
   const handleBidAccessAction = () => {
@@ -148,30 +165,25 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
   };
 
   const handleDecrease = useCallback(() => {
-    if (isFreeMode) {
+    if (isFreeMode || isUniqueAuction) {
       return;
     }
 
     setBidAmount((prev) => Math.max(minimumBidAmount, Math.max(prev, minimumBidAmount) - quickUnit));
-  }, [isFreeMode, minimumBidAmount, quickUnit]);
+  }, [isFreeMode, isUniqueAuction, minimumBidAmount, quickUnit]);
 
   const handleIncrease = useCallback(() => {
-    if (isFreeMode) {
+    if (isFreeMode || isUniqueAuction) {
       return;
     }
 
-    const upperBound = isUniqueAuction ? uniqueMaxPrice : balance;
-    setBidAmount((prev) => Math.min(upperBound, Math.max(prev, minimumBidAmount) + quickUnit));
-  }, [isFreeMode, isUniqueAuction, uniqueMaxPrice, balance, minimumBidAmount, quickUnit]);
+    setBidAmount((prev) => Math.min(balance, Math.max(prev, minimumBidAmount) + quickUnit));
+  }, [balance, isFreeMode, isUniqueAuction, minimumBidAmount, quickUnit]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      if (
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        target.isContentEditable
-      ) {
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target.isContentEditable) {
         return;
       }
 
@@ -179,6 +191,9 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
 
       switch (event.key) {
         case 'Tab':
+          if (isUniqueAuction) {
+            return;
+          }
           event.preventDefault();
           setTab((prev) => (prev === 'quick' ? 'custom' : 'quick'));
           break;
@@ -195,22 +210,28 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
           handleDecrease();
           break;
         case 'ArrowLeft': {
+          if (isUniqueAuction) {
+            return;
+          }
           event.preventDefault();
-          const currentIndex = CUSTOM_UNIT_OPTIONS.findIndex((option) => option.value === customUnit);
+          const currentIndex = CUSTOM_UNIT_OPTIONS.findIndex((option) => option.value === activeCustomUnit);
           const prevIndex = (currentIndex - 1 + CUSTOM_UNIT_OPTIONS.length) % CUSTOM_UNIT_OPTIONS.length;
           setCustomUnit(CUSTOM_UNIT_OPTIONS[prevIndex].value);
           break;
         }
         case 'ArrowRight': {
+          if (isUniqueAuction) {
+            return;
+          }
           event.preventDefault();
-          const currentIndex = CUSTOM_UNIT_OPTIONS.findIndex((option) => option.value === customUnit);
+          const currentIndex = CUSTOM_UNIT_OPTIONS.findIndex((option) => option.value === activeCustomUnit);
           const nextIndex = (currentIndex + 1) % CUSTOM_UNIT_OPTIONS.length;
           setCustomUnit(CUSTOM_UNIT_OPTIONS[nextIndex].value);
           break;
         }
       }
     },
-    [customUnit, handleBidPlace, handleIncrease, handleDecrease],
+    [activeCustomUnit, handleBidPlace, handleDecrease, handleIncrease, isUniqueAuction],
   );
 
   const handleKeyUp = useCallback((event: KeyboardEvent) => {
@@ -224,6 +245,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
@@ -254,30 +276,98 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
               style={{ opacity: panelOpacity / 100 }}
             >
               <div className="flex gap-1 rounded-lg bg-neutral-900 p-0.5">
-                <button
-                  type="button"
-                  className={`flex-1 rounded-md py-1.5 text-xs font-bold transition ${tab === 'quick' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'}`}
-                  onClick={() => setTab('quick')}
-                >
-                  빠른 입찰
-                </button>
-                <button
-                  type="button"
-                  className={`flex-1 rounded-md py-1.5 text-xs font-bold transition ${tab === 'custom' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'}`}
-                  onClick={() => setTab('custom')}
-                >
-                  직접 입찰
-                </button>
+                {isUniqueAuction ? (
+                  <div className="flex-1 rounded-md bg-neutral-800 py-1.5 text-center text-xs font-bold text-neutral-100">
+                    유일 최고가 경매
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      className={`flex-1 rounded-md py-1.5 text-xs font-bold transition ${
+                        activeTab === 'quick' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'
+                      }`}
+                      onClick={() => setTab('quick')}
+                    >
+                      빠른 입찰
+                    </button>
+                    <button
+                      type="button"
+                      className={`flex-1 rounded-md py-1.5 text-xs font-bold transition ${
+                        activeTab === 'custom' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'
+                      }`}
+                      onClick={() => setTab('custom')}
+                    >
+                      직접 입찰
+                    </button>
+                  </>
+                )}
               </div>
 
-              {tab === 'quick' ? (
+              {isUniqueAuction ? (
+                <div className="flex flex-1 gap-1">
+                  <div className="flex w-1/2 flex-col gap-2">
+                    <div className="flex-1 rounded-md bg-neutral-800 px-3 py-1.5 text-center text-[10px] font-bold text-neutral-100">
+                      {uniqueMinPrice.toLocaleString()} ~ {uniqueMaxPrice.toLocaleString()}원 /{' '}
+                      {uniqueBidUnit.toLocaleString()}원 단위
+                    </div>
+                    <div className="flex flex-1 items-center gap-2 rounded-lg bg-neutral-900 px-2.5 py-1">
+                      <div className="flex min-h-8 shrink-0 flex-col justify-center rounded-lg bg-neutral-900 px-2.5 py-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-neutral-500">잔고</span>
+                          <span className="text-xs font-bold tabular-nums text-neutral-100">
+                            {balance.toLocaleString()}원
+                          </span>
+                        </div>
+                        {isInsufficientBalance && (
+                          <span className="mt-1 text-[10px] font-bold text-accent-light">잔고 부족</span>
+                        )}
+                      </div>
+                      <div className="h-5 w-px bg-neutral-700" />
+
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={freeInput}
+                        onChange={(event) => handleFreeInput(event.target.value)}
+                        placeholder="입찰가 입력"
+                        className="min-w-0 flex-1 bg-transparent text-center text-sm font-black tabular-nums text-neutral-100 outline-none placeholder:text-neutral-600"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="flex flex-1 items-center rounded-xl bg-gold px-3 text-neutral-100 transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-45"
+                    onClick={handleBidPlace}
+                    disabled={isBidDisabled}
+                  >
+                    <div className="flex flex-1 flex-col items-center gap-0.5">
+                      <span className="text-lg font-black">{hasPlacedUniqueBid ? '완료' : '입찰'}</span>
+                      {freeInput ? (
+                        <span className="text-[10px] font-bold tabular-nums text-gold-light">
+                          {effectiveBidAmount.toLocaleString()}원
+                        </span>
+                      ) : null}
+                      <span className="text-[10px] font-bold text-gold">
+                        {hasPlacedUniqueBid ? '1회 입찰 완료' : `${uniqueBidUnit.toLocaleString()}원 단위`}
+                      </span>
+                    </div>
+                    <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">ENTER</span>
+                  </button>
+                </div>
+              ) : activeTab === 'quick' ? (
                 <div className="flex flex-1 gap-2">
                   <div className="flex flex-1 flex-col items-center justify-center rounded-lg bg-neutral-900 px-3 py-1">
                     <div className="flex items-center gap-4">
                       <span className="text-[10px] text-neutral-500">잔고</span>
-                      <span className="text-xs font-bold tabular-nums text-neutral-100">{balance.toLocaleString()}원</span>
+                      <span className="text-xs font-bold tabular-nums text-neutral-100">
+                        {balance.toLocaleString()}원
+                      </span>
                     </div>
-                    {isInsufficientBalance && <span className="mt-1 text-[10px] font-bold text-accent-light">잔고 부족</span>}
+                    {isInsufficientBalance && (
+                      <span className="mt-1 text-[10px] font-bold text-accent-light">잔고 부족</span>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -288,24 +378,13 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
                     <div className="flex flex-1 flex-col items-center gap-1">
                       <div className="flex items-center gap-2 text-sm font-black">
                         <IoCheckmark size={16} strokeWidth={4} />
-                        {hasPlacedUniqueBid
-                          ? '입찰 완료'
-                          : hasActiveAuction
-                            ? `${effectiveBidAmount.toLocaleString()}원으로 입찰`
-                            : '입찰'}
+                        {hasActiveAuction ? `${effectiveBidAmount.toLocaleString()}원으로 입찰` : '입찰'}
                       </div>
-                      {hasActiveAuction && !isUniqueAuction && (
+                      {hasActiveAuction && (
                         <span className="text-xs font-bold text-gold-light">(+{increment.toLocaleString()})</span>
                       )}
-                      {hasActiveAuction && isUniqueAuction && (
-                        <span className="text-xs font-bold text-gold-light">
-                          {uniqueMinPrice.toLocaleString()} ~ {uniqueMaxPrice.toLocaleString()}
-                        </span>
-                      )}
                     </div>
-                    <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">
-                      ENTER
-                    </span>
+                    <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">ENTER</span>
                   </button>
                 </div>
               ) : (
@@ -317,7 +396,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
                           key={option.label}
                           type="button"
                           className={`flex-1 rounded-md py-1.5 text-[10px] font-bold transition ${
-                            customUnit === option.value ? 'bg-gold text-neutral-100' : 'text-neutral-500'
+                            activeCustomUnit === option.value ? 'bg-gold text-neutral-100' : 'text-neutral-500'
                           }`}
                           onClick={() => setCustomUnit(option.value)}
                         >
@@ -330,14 +409,22 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
                       <div className="flex min-h-8 shrink-0 flex-col justify-center rounded-lg bg-neutral-900 px-2.5 py-1">
                         <div className="flex items-center gap-1.5">
                           <span className="text-[10px] text-neutral-500">잔고</span>
-                          <span className="text-xs font-bold tabular-nums text-neutral-100">{balance.toLocaleString()}원</span>
+                          <span className="text-xs font-bold tabular-nums text-neutral-100">
+                            {balance.toLocaleString()}원
+                          </span>
                         </div>
-                        {isInsufficientBalance && <span className="mt-1 text-[10px] font-bold text-accent-light">잔고 부족</span>}
+                        {isInsufficientBalance && (
+                          <span className="mt-1 text-[10px] font-bold text-accent-light">잔고 부족</span>
+                        )}
                       </div>
                       <div className="h-5 w-px bg-neutral-700" />
                       <button
                         type="button"
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${isFreeMode ? 'bg-neutral-900 text-neutral-600' : 'bg-neutral-800 text-neutral-100 hover:bg-neutral-700'}`}
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${
+                          isFreeMode
+                            ? 'bg-neutral-900 text-neutral-600'
+                            : 'bg-neutral-800 text-neutral-100 hover:bg-neutral-700'
+                        }`}
                         onClick={handleDecrease}
                         disabled={isFreeMode}
                       >
@@ -349,21 +436,26 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
                           inputMode="numeric"
                           value={freeInput}
                           onChange={(event) => handleFreeInput(event.target.value)}
-                          placeholder="금액 입력"
+                          placeholder="입찰가 입력"
                           className="min-w-0 flex-1 bg-transparent text-center text-sm font-black tabular-nums text-neutral-100 outline-none placeholder:text-neutral-600"
                         />
                       ) : (
                         <div className="min-w-0 flex-1 text-center text-sm font-black tabular-nums text-neutral-100">
                           {hasActiveAuction ? (
                             <>
-                              {effectiveBidAmount.toLocaleString()} <span className="text-xs font-normal text-neutral-400">원</span>
+                              {effectiveBidAmount.toLocaleString()}{' '}
+                              <span className="text-xs font-normal text-neutral-400">원</span>
                             </>
                           ) : null}
                         </div>
                       )}
                       <button
                         type="button"
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${isFreeMode ? 'bg-neutral-900 text-neutral-600' : 'bg-neutral-800 text-neutral-100 hover:bg-neutral-700'}`}
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${
+                          isFreeMode
+                            ? 'bg-neutral-900 text-neutral-600'
+                            : 'bg-neutral-800 text-neutral-100 hover:bg-neutral-700'
+                        }`}
                         onClick={handleIncrease}
                         disabled={isFreeMode}
                       >
@@ -379,25 +471,13 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
                     disabled={isBidDisabled}
                   >
                     <div className="flex flex-1 flex-col items-center gap-0.5">
-                      <span className="text-lg font-black">{hasPlacedUniqueBid ? '완료' : '입찰'}</span>
-                      {hasActiveAuction && !isUniqueAuction && (
-                        <>
-                          <span className="text-[10px] font-bold tabular-nums text-gold-light">{effectiveBidAmount.toLocaleString()}원</span>
-                          <span className="text-[10px] font-bold text-gold">+{increment.toLocaleString()}</span>
-                        </>
-                      )}
-                      {hasActiveAuction && isUniqueAuction && (
-                        <>
-                          <span className="text-[10px] font-bold tabular-nums text-gold-light">{effectiveBidAmount.toLocaleString()}원</span>
-                          <span className="text-[10px] font-bold text-gold">
-                            {hasPlacedUniqueBid ? '1회 입찰 완료' : `${uniqueBidUnit.toLocaleString()}원 단위`}
-                          </span>
-                        </>
-                      )}
+                      <span className="text-lg font-black">입찰</span>
+                      <span className="text-[10px] font-bold tabular-nums text-gold-light">
+                        {effectiveBidAmount.toLocaleString()}원
+                      </span>
+                      <span className="text-[10px] font-bold text-gold">+{increment.toLocaleString()}</span>
                     </div>
-                    <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">
-                      ENTER
-                    </span>
+                    <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">ENTER</span>
                   </button>
                 </div>
               )}

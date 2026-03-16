@@ -81,7 +81,6 @@ export const getInitialItemSyncPayloadForStream = (streamId: number): ItemSyncPa
       finalPrice: item.status === 'SOLD' ? Math.round(item.startPrice * 1.5) : null,
       itemCondition: item.itemCondition,
       description: item.description,
-      auctionType: item.auctionType,
       bidUnit: item.bidUnit,
       auctionTime: item.auctionTime,
       images: item.images,
@@ -300,9 +299,43 @@ const registeredLives: RegisteredLive[] = [
     items: createStreamItems([301], 'WATCHES', Logo),
     ...defaultSeedSellerSnapshot,
   },
+  {
+    streamId: 5,
+    title: 'Unique top test live',
+    category: 'SNEAKERS_SHOES',
+    thumbnail: Logo,
+    scheduledAt: null,
+    startType: 'IMMEDIATE',
+    notice: 'Unique auction buyer test room.',
+    isLive: true,
+    createdAt: new Date(Date.now() - 900000).toISOString(),
+    items: [
+      {
+        itemId: 501,
+        name: 'Unique test sneakers',
+        category: 'SNEAKERS_SHOES',
+        startPrice: 100000,
+        status: 'LIVE',
+        auctionType: 'UNIQUE_TOP',
+        itemCondition: 'BRAND_NEW',
+        image1: Logo,
+        createdAt: new Date(Date.now() - 900000).toISOString(),
+        description: 'Buyer-side unique auction test item.',
+        bidUnit: 5000,
+        auctionTime: 30,
+        images: [
+          'https://picsum.photos/seed/unique-test-1/400/400',
+          'https://picsum.photos/seed/unique-test-2/400/400',
+        ],
+      },
+    ],
+    sellerId: 12,
+    sellerNickname: 'sneaker_room',
+    sellerProfileImage: 'https://picsum.photos/seed/seller-12/120/120',
+  },
 ];
 
-let nextLiveId = 5;
+let nextLiveId = 6;
 
 const parseStreamRequest = async (request: Request) => {
   let body: StreamRequest;

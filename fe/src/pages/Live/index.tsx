@@ -309,6 +309,17 @@ export default function LivePage() {
       });
     };
 
+    const requestActiveAuctionSync = async (item: ItemSyncItem | null) => {
+      if (!item) {
+        return;
+      }
+
+      await sendStreamMessage(streamId, {
+        eventType: item.auctionType === 'UNIQUE_TOP' ? 'UNIQUE_BID_SYNC' : 'BID_SYNC',
+        payload: null,
+      });
+    };
+
     const handleBroadcastEvent = (event: BroadcastStreamEvent) => {
       if (isAuctionStartEvent(event) && event.payload?.timer) {
         setTimer(createSyncedTimer(event.payload.timer));
@@ -374,6 +385,11 @@ export default function LivePage() {
 
       if (isItemSyncEvent(event)) {
         setItemSync(event.payload ?? null);
+        const nextActiveItem =
+          event.payload?.items.find((item) => item.auctionStatus === 'LIVE') ??
+          event.payload?.items.find((item) => item.auctionStatus === 'INTRODUCING') ??
+          null;
+        void requestActiveAuctionSync(nextActiveItem);
         return;
       }
 

@@ -531,6 +531,48 @@ const broadcastUniqueBidSync = (streamId: string) => {
   });
 };
 
+const ensureSeededUniqueAuctionState = (streamId: string) => {
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
+  const activeUniqueItem = itemSyncPayload?.items.find(
+    (item) => item.auctionType === 'UNIQUE_TOP' && item.auctionStatus === 'LIVE',
+  );
+
+  if (!activeUniqueItem) {
+    return;
+  }
+
+  let initializedTimer = false;
+
+  if (!streamTimerStates.has(streamId)) {
+    streamTimerStates.set(streamId, {
+      durationSeconds: activeUniqueItem.auctionTime ?? AUCTION_DURATION_SECONDS,
+      startedAtMs: Date.now(),
+      finalPrice: activeUniqueItem.startPrice,
+    });
+    initializedTimer = true;
+  }
+
+  if (!streamUniqueBidSyncStates.has(streamId)) {
+    const bidUnit = activeUniqueItem.bidUnit ?? 1000;
+    streamUniqueBidSyncStates.set(streamId, {
+      bidRange: {
+        minPrice: activeUniqueItem.startPrice,
+        maxPrice: activeUniqueItem.startPrice + bidUnit * 99,
+        bidUnit,
+      },
+      participantCount: 0,
+    });
+  }
+
+  if (!streamUniqueBidAmountsStates.has(streamId)) {
+    streamUniqueBidAmountsStates.set(streamId, []);
+  }
+
+  if (initializedTimer) {
+    scheduleUniqueAuctionEnd(streamId);
+  }
+};
+
 const broadcastItemSync = (streamId: string) => {
   const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
 
@@ -562,6 +604,7 @@ const sendItemSyncToClient = (
   destination: string,
 ) => {
   const streamId = getStreamIdFromDestination(destination);
+  ensureSeededUniqueAuctionState(streamId);
   const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
 
   streamItemSyncStates.set(streamId, itemSyncPayload);
@@ -788,6 +831,7 @@ const handleUniqueAuctionStart = (destination: string, body: string) => {
 
 const handleUniqueBidPlace = (destination: string, body: string) => {
   const streamId = getStreamIdFromDestination(destination);
+  ensureSeededUniqueAuctionState(streamId);
   const payload = JSON.parse(body) as {
     payload?: {
       amount?: number;
@@ -901,11 +945,13 @@ const handleBidSync = (destination: string) => {
 
 const handleUniqueBidSync = (destination: string) => {
   const streamId = getStreamIdFromDestination(destination);
+  ensureSeededUniqueAuctionState(streamId);
   broadcastUniqueBidSync(streamId);
 };
 
 const handleItemSync = (destination: string) => {
   const streamId = getStreamIdFromDestination(destination);
+  ensureSeededUniqueAuctionState(streamId);
   broadcastItemSync(streamId);
 };
 
