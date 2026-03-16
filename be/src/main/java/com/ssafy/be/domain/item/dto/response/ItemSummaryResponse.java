@@ -13,7 +13,7 @@ public record ItemSummaryResponse(
         String name,
         String description,
         List<String> tags,
-        String image1,
+        List<String> images,
         Long startPrice,
         Long bidUnit,
         Integer auctionDuration,
