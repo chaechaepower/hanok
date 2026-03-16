@@ -1,4 +1,4 @@
-package com.ssafy.be.domain.auction.entity;
+package com.ssafy.be.domain.item.entity;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -42,6 +42,9 @@ public class Item {
     @Enumerated(EnumType.STRING)
     private ItemCondition itemCondition;
 
+    @Enumerated(EnumType.STRING)
+    private AuctionType auctionType;
+
     private String image1;
 
     private String image2;
@@ -70,6 +73,7 @@ public class Item {
                  Integer auctionDuration,
                  ItemStatus status,
                  ItemCondition itemCondition,
+                 AuctionType auctionType,
                  String image1,
                  String image2,
                  String image3,
@@ -84,6 +88,7 @@ public class Item {
         this.auctionDuration = auctionDuration;
         this.status = status;
         this.itemCondition = itemCondition;
+        this.auctionType = auctionType;
         this.image1 = image1;
         this.image2 = image2;
         this.image3 = image3;

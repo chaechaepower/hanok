@@ -7,6 +7,7 @@ import com.ssafy.be.domain.seller.dto.request.SellerRegisterRequest;
 import com.ssafy.be.domain.seller.dto.response.BiznoVerifyResponse;
 import com.ssafy.be.domain.seller.dto.response.SellerProfileResponse;
 import com.ssafy.be.domain.seller.dto.response.SellerRegisterResponse;
+import com.ssafy.be.domain.seller.dto.response.SellerReputationResponse;
 import com.ssafy.be.domain.seller.service.SellerService;
 import com.ssafy.be.global.common.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -63,5 +64,14 @@ public class SellerController implements SellerApi {
             @PathVariable Long sellerId
     ) {
         return ResponseEntity.ok(sellerService.getAllSoldAuctions(sellerId));
+    }
+
+    @GetMapping("/{sellerId}/reputation")
+    public ResponseEntity<ApiResponse<SellerReputationResponse>> getReputation(
+            @PathVariable Long sellerId,
+            @AuthenticationPrincipal String principal) {
+
+        Long requestUserId = principal != null ? Long.parseLong(principal) : null;
+        return ResponseEntity.ok(ApiResponse.success(sellerService.getReputation(sellerId, requestUserId)));
     }
 }

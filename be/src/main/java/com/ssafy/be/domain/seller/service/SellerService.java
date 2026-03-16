@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.client.RestClient;
+import com.ssafy.be.domain.escrow.entity.EscrowStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -183,5 +184,41 @@ public class SellerService {
                             .createdAt(escrow.getCreatedAt())
                             .build();
                 }).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public SellerReputationResponse getReputation(Long sellerId, Long requestUserId) {
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
+
+        long followerCount = followRepository.countBySellerId(sellerId);
+
+        // 본인 여부 확인
+        boolean isOwner = requestUserId != null && seller.getUser().getId().equals(requestUserId);
+
+        if (!isOwner) {
+            // 공개 응답
+            return SellerReputationResponse.builder()
+                    .followerCount(followerCount)
+                    .build();
+        }
+
+        // 상세 응답
+        long completedCount = escrowRepository.countBySellerIdAndEscrowStatus(
+                sellerId, EscrowStatus.COMPLETED);
+        long cancelCount = escrowRepository.countBySellerIdAndEscrowStatus(
+                sellerId, EscrowStatus.CANCELLED);
+        long totalTrades = completedCount + cancelCount;
+
+        double completionRate = totalTrades == 0 ? 100.0
+                : Math.round((double) completedCount / totalTrades * 1000.0) / 10.0;
+
+        return SellerReputationResponse.builder()
+                .followerCount(followerCount)
+                .totalTrades(totalTrades)
+                .completionRate(completionRate)
+                .cancelCount(cancelCount)
+                .avgShipDays(seller.getAvgShipDays())
+                .build();
     }
 }
