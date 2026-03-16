@@ -8,6 +8,8 @@ import com.ssafy.be.global.security.filter.JwtAuthenticationFilter;
 import com.ssafy.be.global.security.handler.CustomAccessDeniedHandler;
 import com.ssafy.be.global.security.handler.CustomAuthenticationEntryPoint;
 import java.util.List;
+
+import jakarta.servlet.DispatcherType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -76,7 +78,9 @@ public class SecurityConfig {
                 // URL별 인증 규칙
                 .authorizeHttpRequests(
                         auth ->
-                                auth.requestMatchers(
+                                auth
+                                        .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
+                                        .requestMatchers(
                                                 "/api/v1/auth/**",
                                                 "/api/v1/streams/**",
                                                 "/api/v1/sellers/*/profile",
