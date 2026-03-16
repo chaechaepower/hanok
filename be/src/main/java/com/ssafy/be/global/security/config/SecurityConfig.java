@@ -87,7 +87,9 @@ public class SecurityConfig {
                                                 "/error",
                                                 "/api/v1/wallet/charges/webhook",
                                                 "/api/v1/streams/webhook",
-                                                "/ws-connect/**")
+                                                "/ws-connect/**",
+                                                "/actuator/**"
+                                        )
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated())
