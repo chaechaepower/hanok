@@ -31,7 +31,7 @@ const toFallbackProduct = (item: LiveStreamItem): Product => ({
   name: item.name,
   description: '',
   tags: [],
-  image1: item.image1 ? item.image1 : '',
+  images: item.image1 ? [item.image1] : [],
   startPrice: item.startPrice,
   bidUnit: 0,
   auctionDuration: 0,
@@ -471,8 +471,8 @@ export default function LiveRegisterPage() {
                   <div
                     className="h-16 w-16 shrink-0 rounded-[14px] bg-[#27272A]"
                     style={
-                      item.image1
-                        ? { backgroundImage: `url(${item.image1})`, backgroundPosition: 'center', backgroundSize: 'cover' }
+                      item.images && item.images.length > 0
+                        ? { backgroundImage: `url(${item.images[0]})`, backgroundPosition: 'center', backgroundSize: 'cover' }
                         : undefined
                     }
                   />

@@ -66,9 +66,9 @@ export default function InventorySelectModal({
                     }`}
                   >
                     <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-[#222]">
-                      {item.image1 ? (
+                      {item.images && item.images.length > 0 ? (
                         <img
-                          src={item.image1}
+                          src={item.images[0]}
                           alt={item.name}
                           className="w-full h-full object-cover"
                         />
