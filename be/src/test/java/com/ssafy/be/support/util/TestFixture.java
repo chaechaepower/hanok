@@ -11,6 +11,7 @@ import com.ssafy.be.domain.wallet.model.WalletCharge;
 
 import java.util.UUID;
 
+import static com.ssafy.be.domain.item.entity.AuctionType.BOTTOM_UP;
 import static com.ssafy.be.domain.item.entity.Category.CLOTHING;
 import static com.ssafy.be.domain.seller.entity.SellerType.BUSINESS;
 
@@ -50,11 +51,12 @@ public class TestFixture {
 
     public static Item createItem(String name) {
         return Item.builder()
-                .name(name!=null ? name: "테스트 상품")
+                .name(name != null ? name : "테스트 상품")
                 .category(CLOTHING)
                 .startPrice(10000L)
                 .bidUnit(1000L)
                 .auctionDuration(60)
+                .auctionType(BOTTOM_UP)
                 .build();
     }
 
