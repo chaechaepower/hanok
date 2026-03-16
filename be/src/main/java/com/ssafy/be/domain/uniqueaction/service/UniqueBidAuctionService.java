@@ -1,5 +1,6 @@
 package com.ssafy.be.domain.uniqueaction.service;
 
+import com.ssafy.be.domain.auction.dto.response.AuctionCommentResponse;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
 import com.ssafy.be.domain.shippingaddress.exception.ShippingAddressErrorCode;
 import com.ssafy.be.domain.shippingaddress.repository.ShippingAddressRepository;
@@ -19,6 +20,9 @@ import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.exception.UserErrorCode;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.common.util.TimeUtils;
+import com.ssafy.be.global.websocket.dto.StreamPublishTask;
+import com.ssafy.be.global.websocket.enums.DestType;
+import com.ssafy.be.global.websocket.enums.StreamEventType;
 import com.ssafy.be.global.websocket.exception.StompException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +30,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+
+import static com.ssafy.be.domain.auction.enums.Comment.AUCTION_START;
+import static com.ssafy.be.global.websocket.enums.DestType.BROADCAST;
+import static com.ssafy.be.global.websocket.enums.StreamEventType.AUCTION_COMMENT;
+import static com.ssafy.be.global.websocket.enums.StreamEventType.UNIQUE_AUCTION_START;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +44,6 @@ public class UniqueBidAuctionService {
     private final UniqueBidRepository uniqueBidRepository;
     private final UserRepository userRepository;
     private final ShippingAddressRepository shippingAddressRepository;
-
 
 
     // TODO : 이제 분기가 나뉘면 auctiontype 리턴필요하지 않나?
@@ -51,9 +59,8 @@ public class UniqueBidAuctionService {
     }
 
 
-
     @Transactional
-    public UniqueBidStartResponse startAuction(UniqueBidStartRequest request, Long userId) {
+    public List<StreamPublishTask> startAuction(Long streamId, UniqueBidStartRequest request, Long userId) {
         UniqueBidAuction uniqueAuction = findByAuctionId(request.auctionId());
 
         if (!uniqueAuction.isSeller(userId))
@@ -62,7 +69,23 @@ public class UniqueBidAuctionService {
         String serverNow = TimeUtils.nowAsString();
         uniqueAuction.start(serverNow); // 이제 INTRODUCING 검증
 
-        return buildStartResponse(uniqueAuction, serverNow);
+        StreamPublishTask uniqueAuctionStartPublishTask =buildStreamPublishTask(
+                BROADCAST,
+                streamId,
+                null,
+                UNIQUE_AUCTION_START,
+                buildStartResponse(uniqueAuction, serverNow)
+        );
+
+        StreamPublishTask auctionCommentPublishTask =buildStreamPublishTask(
+                BROADCAST,
+                streamId,
+                null,
+                AUCTION_COMMENT,
+                buildAuctionCommentResponse(AUCTION_START.getValue())
+        );
+
+        return List.of(uniqueAuctionStartPublishTask, auctionCommentPublishTask);
     }
 
     @Transactional
@@ -99,7 +122,7 @@ public class UniqueBidAuctionService {
     public UniqueAuctionResult aggregate(UniqueBidCalculateRequest request) {
 
         Long auctionId = request.auctionId();
-        UniqueBidAuction uniqueAuction = findByAuctionId(auctionId );
+        UniqueBidAuction uniqueAuction = findByAuctionId(auctionId);
 
         if (!uniqueAuction.isLive())
             throw new StompException(UniqueBidAuctionErrorCode.INVALID_STATUS);
@@ -109,10 +132,10 @@ public class UniqueBidAuctionService {
         uniqueAuction.startCalculating();
 
         // 유일 최고가
-        Optional<Long> winnerPrice = uniqueBidRepository.findHighestUniqueBid(auctionId );
+        Optional<Long> winnerPrice = uniqueBidRepository.findHighestUniqueBid(auctionId);
 
         // TODO : top 개수 및 기준 변경 필요
-        List<DuplicatePriceInfo> topDuplicates = uniqueBidRepository.findTopPriceDuplicate(auctionId , 3);
+        List<DuplicatePriceInfo> topDuplicates = uniqueBidRepository.findTopPriceDuplicate(auctionId, 3);
 
         // 유찰
         if (winnerPrice.isEmpty()) {
@@ -230,6 +253,22 @@ public class UniqueBidAuctionService {
                 .serverStartedAt(uniqueAuction.getStartedAt())
                 .participantCount(uniqueBidRepository.countParticipants(uniqueAuction.getAuctionId()))
                 .hasBid(uniqueBidRepository.existsBid(uniqueAuction.getAuctionId(), userId))
+                .build();
+    }
+
+    private static AuctionCommentResponse buildAuctionCommentResponse(String message) {
+        return AuctionCommentResponse.builder()
+                .message(message)
+                .build();
+    }
+
+    public <T> StreamPublishTask buildStreamPublishTask(DestType destType, Long streamId, Long userId, StreamEventType eventType, T payload) {
+        return StreamPublishTask.builder()
+                .destType(destType)
+                .streamId(streamId)
+                .userId(userId)
+                .eventType(eventType)
+                .payload(payload)
                 .build();
     }
 }

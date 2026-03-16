@@ -1,9 +1,9 @@
 package com.ssafy.be.domain.uniqueaction.handler;
 
 import com.ssafy.be.domain.uniqueaction.dto.request.UniqueBidStartRequest;
-import com.ssafy.be.domain.uniqueaction.dto.response.UniqueBidStartResponse;
 import com.ssafy.be.domain.uniqueaction.service.UniqueBidAuctionService;
 import com.ssafy.be.global.common.response.JsonConverter;
+import com.ssafy.be.global.websocket.dto.StreamPublishTask;
 import com.ssafy.be.global.websocket.dto.request.StompRequest;
 import com.ssafy.be.global.websocket.enums.StreamEventType;
 import com.ssafy.be.global.websocket.handler.StreamEventHandler;
@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.security.Principal;
+import java.util.List;
 
 
 @RequiredArgsConstructor
@@ -31,9 +32,9 @@ public class UniqueBidStartHandler implements StreamEventHandler {
         UniqueBidStartRequest payload = jsonConverter.convert(
                 request.getPayload(), UniqueBidStartRequest.class);
 
-        UniqueBidStartResponse response = uniqueBidAuctionService
-                .startAuction(payload, Long.parseLong(principal.getName()));
+        List<StreamPublishTask> streamPublishTasks = uniqueBidAuctionService
+                .startAuction(streamId, payload, Long.parseLong(principal.getName()));
 
-        streamPublisher.broadcast(streamId, StreamEventType.UNIQUE_AUCTION_START, response);
+        streamPublishTasks.forEach(streamPublisher::publish);
     }
 }
