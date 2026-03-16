@@ -60,13 +60,13 @@
   /* ── 타이포그래피 ── */
 
   /* 제목 전용 (Pretendard — 모던, 웨이트 풍부) */
-  --font-heading: 'Pretendard Variable', 'Pretendard', 'NanumGothic', sans-serif;
+  --font-heading: 'Pretendard Variable', 'Pretendard', sans-serif;
 
-  /* 본문/UI 전용 (나눔고딕 — 로컬 TTF, 친근하고 가독성 높음) */
-  --font-base: 'NanumGothic', 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  /* 본문/UI 전용 */
+  --font-base: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
 
   /* 가격/숫자 전용 (Noto Sans KR — 숫자 자간이 균일, 가격 표시에 최적) */
-  --font-mono-num: 'Noto Sans KR', 'NanumGothic', sans-serif;
+  --font-mono-num: 'Noto Sans KR', sans-serif;
 
   /* 제목 (Heading) — 800 ExtraBold */
   --text-h1: 28px;
@@ -188,37 +188,6 @@
   }
 }
 
-/* ══════════════════════════════════════════════════════════
-   폰트 로딩 — 나눔고딕 로컬 TTF (본문/UI)
-   ══════════════════════════════════════════════════════════ */
-
-@font-face {
-  font-family: 'NanumGothic';
-  src: url('./assets/fonts/NanumFontSetup_TTF_GOTHIC/NanumGothicLight.ttf') format('truetype');
-  font-weight: 300;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'NanumGothic';
-  src: url('./assets/fonts/NanumFontSetup_TTF_GOTHIC/NanumGothic.ttf') format('truetype');
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'NanumGothic';
-  src: url('./assets/fonts/NanumFontSetup_TTF_GOTHIC/NanumGothicBold.ttf') format('truetype');
-  font-weight: 700;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'NanumGothic';
-  src: url('./assets/fonts/NanumFontSetup_TTF_GOTHIC/NanumGothicExtraBold.ttf') format('truetype');
-  font-weight: 800;
-  font-display: swap;
-}
 
 /* ══════════════════════════════════════════════════════════
    글로벌 리셋 & 베이스

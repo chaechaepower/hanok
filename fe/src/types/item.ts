@@ -49,7 +49,7 @@ export interface Product {
   name: string;
   description: string;
   tags: string[];
-  image1: string;
+  images: string[];
   startPrice: number;
   bidUnit: number;
   auctionDuration: number;

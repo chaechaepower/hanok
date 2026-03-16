@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { FaArrowLeft, FaCalendarAlt, FaCamera, FaCircle, FaSave, FaTimes } from 'react-icons/fa';
+import { FaArrowLeft, FaCalendarAlt, FaCamera, FaCircle, FaTimes } from 'react-icons/fa';
 import { MdLiveTv } from 'react-icons/md';
 import { CATEGORY_MACROS } from '@/constants/macro';
 import { useGetItemsByCategory } from '@/api/hooks/useGetItems';
@@ -23,7 +23,7 @@ const toFallbackProduct = (item: LiveStreamItem): Product => ({
   name: item.name,
   description: '',
   tags: [],
-  image1: item.image1 ? item.image1 : '',
+  images: item.image1 ? [item.image1] : [],
   startPrice: item.startPrice,
   bidUnit: 0,
   auctionDuration: 0,
@@ -205,9 +205,6 @@ export default function LiveRegisterPage() {
       answer: macroAnswers[macro.questionType] ?? '',
     }));
 
-  const [macrosSaved, setMacrosSaved] = useState(false);
-  const [macrosDirty, setMacrosDirty] = useState(false);
-
   const validateStreamForm = () => {
     if (!title.trim()) {
       showToast({ message: '방송 제목을 입력해주세요.' });
@@ -216,11 +213,6 @@ export default function LiveRegisterPage() {
 
     if (selectedItems.length === 0) {
       showToast({ message: '방송에 등록할 물품을 선택해주세요.' });
-      return false;
-    }
-
-    if (macrosDirty && !macrosSaved) {
-      showToast({ message: '매크로를 저장해주세요.' });
       return false;
     }
 
@@ -282,18 +274,25 @@ export default function LiveRegisterPage() {
           ).streamId;
 
       if (isEditMode) {
-        await patchStream.mutateAsync(payload);
+        await Promise.all([
+          patchStream.mutateAsync(payload),
+          postMacros.mutateAsync({
+            streamId: targetStreamId,
+            body: { macros: buildMacrosPayload() },
+          }),
+        ]);
+      } else {
+        await postMacros.mutateAsync({
+          streamId: targetStreamId,
+          body: { macros: buildMacrosPayload() },
+        });
       }
-
-      await postMacros.mutateAsync({
-        streamId: targetStreamId,
-        body: { macros: buildMacrosPayload() },
-      });
 
       navigate(`/live/${targetStreamId}`, {
         state: { autoOpenStartModal: true },
       });
-    } catch {
+    } catch (err) {
+      console.error('[submitReadyEntry]', err);
       showToast({ message: isEditMode ? '방송 수정에 실패했습니다.' : '방송 등록에 실패했습니다.' });
     } finally {
       setIsSubmitting(false);
@@ -314,12 +313,13 @@ export default function LiveRegisterPage() {
       };
 
       if (isEditMode) {
-        await patchStream.mutateAsync(payload);
-
-        await postMacros.mutateAsync({
-          streamId,
-          body: { macros: buildMacrosPayload() },
-        });
+        await Promise.all([
+          patchStream.mutateAsync(payload),
+          postMacros.mutateAsync({
+            streamId,
+            body: { macros: buildMacrosPayload() },
+          }),
+        ]);
 
         if (startType === 'IMMEDIATE') {
           navigate(`/live/${streamId}`);
@@ -357,8 +357,9 @@ export default function LiveRegisterPage() {
       } else {
         navigate('/lives');
       }
-    } catch {
-      showToast({ message: '방송 등록에 실패했습니다.' });
+    } catch (err) {
+      console.error('[submitStream]', err);
+      showToast({ message: isEditMode ? '방송 수정에 실패했습니다.' : '방송 등록에 실패했습니다.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -439,8 +440,7 @@ export default function LiveRegisterPage() {
 
       <div className="flex gap-4 flex-1 min-h-0">
         <aside
-          className="w-[340px] shrink-0 flex flex-col rounded-2xl bg-[#050505] px-4 py-6"
-          style={{ borderRight: '1px solid rgba(255,255,255,0.05)' }}
+          className="w-[340px] shrink-0 flex flex-col rounded-2xl bg-[#050505] px-4 py-6 border-r border-white/5"
         >
           <div className="mb-4 flex items-center justify-between">
             <span className="text-xs font-bold text-[#A1A1AA]">경매 물품 목록</span>
@@ -457,21 +457,13 @@ export default function LiveRegisterPage() {
               return (
                 <div
                   key={item.itemId}
-                  className="flex gap-3 rounded-[20px] p-3.5 transition-all duration-200"
-                  style={{
-                    background: 'rgba(255,255,255,0.02)',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                  }}
+                  className="flex gap-3 rounded-[20px] p-3.5 transition-all duration-200 bg-white/[0.02] border border-white/[0.06]"
                 >
                   <div
                     className="h-16 w-16 shrink-0 rounded-[14px] bg-[#27272A]"
                     style={
-                      item.image1
-                        ? {
-                            backgroundImage: `url(${item.image1})`,
-                            backgroundPosition: 'center',
-                            backgroundSize: 'cover',
-                          }
+                      item.images && item.images.length > 0
+                        ? { backgroundImage: `url(${item.images[0]})`, backgroundPosition: 'center', backgroundSize: 'cover' }
                         : undefined
                     }
                   />
@@ -482,8 +474,7 @@ export default function LiveRegisterPage() {
                         {item.startPrice.toLocaleString()}원
                       </span>
                       <span
-                        className="rounded-full px-1.5 py-0.5 text-[9px] font-extrabold"
-                        style={{ color: 'rgba(255,220,140,0.95)', background: 'rgba(197,160,89,0.08)' }}
+                        className="rounded-full px-1.5 py-0.5 text-[9px] font-extrabold text-[rgba(255,220,140,0.95)] bg-[rgba(197,160,89,0.08)]"
                       >
                         {conditionLabel}
                       </span>
@@ -491,12 +482,7 @@ export default function LiveRegisterPage() {
                   </div>
                   <div className="flex shrink-0 flex-col items-end justify-center">
                     <span
-                      className="rounded-full px-1.5 py-0.5 text-[9px] font-extrabold"
-                      style={{
-                        color: '#71717A',
-                        background: 'rgba(113,113,122,0.15)',
-                        border: '1px solid rgba(113,113,122,0.3)',
-                      }}
+                      className="rounded-full px-1.5 py-0.5 text-[9px] font-extrabold text-[#71717A] bg-[rgba(113,113,122,0.15)] border border-[rgba(113,113,122,0.3)]"
                     >
                       대기
                     </span>
@@ -543,8 +529,7 @@ export default function LiveRegisterPage() {
         </div>
 
         <aside
-          className="w-[300px] shrink-0 flex flex-col rounded-2xl bg-[#050505] overflow-hidden"
-          style={{ borderLeft: '1px solid rgba(255,255,255,0.05)' }}
+          className="w-[300px] shrink-0 flex flex-col rounded-2xl bg-[#050505] overflow-hidden border-l border-white/5"
         >
           <div className="px-4 py-4 border-b border-[rgba(255,255,255,0.05)]">
             <span className="text-xs font-bold text-white">방송 기본 설정</span>
@@ -603,14 +588,6 @@ export default function LiveRegisterPage() {
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-bold text-[#52525B] uppercase tracking-wider">카테고리 매크로</label>
-                <button
-                  type="button"
-                  onClick={handleSaveMacros}
-                  className="flex items-center gap-1 text-[#C5A059] text-[11px] font-bold hover:text-[#f0e6c8] transition-colors"
-                >
-                  <FaSave size={10} />
-                  저장
-                </button>
               </div>
               <div className="flex flex-col gap-2">
                 {macroFields.map((macro) => {
@@ -636,7 +613,7 @@ export default function LiveRegisterPage() {
                       <input
                         type="text"
                         value={macroAnswers[macro.questionType] ?? ''}
-                        onChange={(e) => {
+                        onChange={(e) => { 
                           setMacroAnswers((prev) => ({ ...prev, [macro.questionType]: e.target.value }));
                           setMacrosSaved(false);
                           setMacrosDirty(true);

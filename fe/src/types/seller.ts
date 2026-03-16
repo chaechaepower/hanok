@@ -43,6 +43,7 @@ export type RegisterSellerResponse = {
 
 export type SellerStatusResponse = {
   isSeller: boolean;
+  sellerId: number | null;
 };
 
 export type SellerProfileStats = {

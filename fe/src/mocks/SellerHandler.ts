@@ -38,8 +38,11 @@ export const sellerHandlers = [
   }),
 
   http.get(`${BASE_URL}/v1/users/me/seller-status`, async () => {
+    const user = getCurrentMockUser();
+    const isSeller = user?.isSeller ?? false;
     return HttpResponse.json({
-      isSeller: getCurrentMockUser()?.isSeller ?? false,
+      isSeller,
+      sellerId: isSeller ? 1 : null,
     });
   }),
 ];

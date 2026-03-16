@@ -10,3 +10,4 @@ export * from './seller';
 export * from './wallet';
 export * from './settings';
 export * from './stompChat';
+export * from './notification';

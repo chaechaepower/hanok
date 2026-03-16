@@ -31,16 +31,7 @@ export default function SellerOnboardingPage() {
 
   if (isLoading || isAccountLoading) {
     return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          backgroundColor: '#0B0C10',
-          color: 'white',
-        }}
-      >
+      <div className="flex items-center justify-center text-white">
         로딩 중...
       </div>
     );
@@ -51,23 +42,10 @@ export default function SellerOnboardingPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: '#0B0C10',
-        color: 'white',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        paddingTop: '40px',
-        paddingBottom: '80px',
-        paddingLeft: '16px',
-        paddingRight: '16px',
-      }}
-    >
-      <div style={{ width: '100%', maxWidth: '720px' }}>
+    <div className="text-white flex flex-col items-center pt-10 pb-20 px-4">
+      <div className="w-full max-w-[720px]">
         <StepIndicator current={currentStep} />
-        <hr style={{ borderColor: '#2C2C2E', marginBottom: '40px' }} />
+        <hr className="border-[#2C2C2E] mb-10" />
 
         {currentStep === 1 && (
           <Step1

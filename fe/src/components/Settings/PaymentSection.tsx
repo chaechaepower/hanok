@@ -62,7 +62,7 @@ export default function PaymentSection() {
         <p className="text-[#888] text-[15px]">카드 및 계좌를 간편하게 관리하세요.</p>
       </div>
 
-      <div className="border border-[#2e2e40] rounded-xl p-8 mb-12 flex items-center justify-between bg-transparent">
+      <div className="border border-[#d9b36d]/30 rounded-xl p-8 mb-12 flex items-center justify-between bg-[#050505]">
         <div className="flex items-center gap-6">
           <div className="flex items-center justify-center">
             <FaCreditCard size={32} className="text-[#ccc]" />
@@ -95,7 +95,7 @@ export default function PaymentSection() {
             <button
               type="button"
               onClick={() => setShowBankModal(true)}
-              className="w-[180px] h-[52px] bg-transparent border border-[#2e2e40] rounded-lg px-4 text-left outline-none cursor-pointer flex items-center justify-between hover:border-[#d9b36d] transition-colors"
+              className="w-[180px] h-[52px] bg-transparent border border-white/5 rounded-lg px-4 text-left outline-none cursor-pointer flex items-center justify-between hover:border-[#d9b36d] transition-colors"
             >
               <span className={form.bankCode ? 'text-white' : 'text-[#aaa]'}>
                 {form.bankCode ? form.bankName : '은행 선택'}
@@ -108,7 +108,7 @@ export default function PaymentSection() {
               placeholder="계좌번호 - 없이 숫자만 입력"
               value={form.accountNum}
               onChange={(e) => setForm({ ...form, accountNum: e.target.value.replace(/[^0-9]/g, '') })}
-              className="flex-1 h-[52px] bg-transparent border border-[#2e2e40] rounded-lg px-5 text-white placeholder-[#555] outline-none focus:border-[#d9b36d] transition-colors"
+              className="flex-1 h-[52px] bg-transparent border border-white/5 rounded-lg px-5 text-white placeholder-[#555] outline-none focus:border-[#d9b36d] transition-colors"
             />
 
             <input
@@ -116,7 +116,7 @@ export default function PaymentSection() {
               placeholder="예금주명"
               value={form.accountName}
               onChange={(e) => setForm({ ...form, accountName: e.target.value })}
-              className="w-[140px] h-[52px] bg-transparent border border-[#2e2e40] rounded-lg px-5 text-white placeholder-[#555] outline-none focus:border-[#d9b36d] transition-colors"
+              className="w-[140px] h-[52px] bg-transparent border border-white/5 rounded-lg px-5 text-white placeholder-[#555] outline-none focus:border-[#d9b36d] transition-colors"
             />
 
             <button
@@ -132,8 +132,7 @@ export default function PaymentSection() {
 
       {showBankModal && (
         <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center"
-          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60"
           onClick={() => setShowBankModal(false)}
         >
           <div

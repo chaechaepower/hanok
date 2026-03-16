@@ -21,7 +21,7 @@ export default function StreamOverlay({ viewerCount = 0, isSeller = false }: Pro
   const { data: wallet } = useGetWallet();
   const { data: account } = useGetAccount();
   const balance = wallet?.balance ?? 0;
-  const registeredWithdrawAccount = account ? `${account.bankName} ${account.accountNumber}(등록됨)` : '';
+  const registeredWithdrawAccount = account ? `${account.bankName} ${account.accountNum}(등록됨)` : '';
 
   const [isPointModalOpen, setIsPointModalOpen] = useState(false);
   const [pointModalType, setPointModalType] = useState<PointModalType>('charge');
