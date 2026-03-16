@@ -35,3 +35,4 @@ management:
   metrics:
     tags:
       application: hanok-backend
+      namespace: production
