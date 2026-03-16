@@ -277,7 +277,7 @@ export default function ProfilePage() {
 
   return (
     <div className="w-full box-border max-w-[1200px] mx-auto py-10 px-5 flex flex-col gap-8">
-      <div className="w-full box-border border border-[#2e2e40] rounded-2xl py-11 px-14 bg-[#0c0c14]">
+      <div className="w-full box-border border border-[#d9b36d]/30 rounded-2xl py-11 px-14 bg-[#050505]">
         <div className="flex items-start gap-10">
           <div
             className={`relative group ${isMyProfile ? 'cursor-pointer' : ''}`}
@@ -389,7 +389,7 @@ export default function ProfilePage() {
             </div>
 
             {isOwner && data?.stats !== undefined && (
-              <div className="mt-3 border border-[#2e2e40] rounded-xl py-6 flex items-center w-[420px]">
+              <div className="mt-3 border border-white/5 rounded-xl py-6 flex items-center w-[420px]">
                 <div className="flex-1 flex flex-col items-center gap-[6px]">
                   <span className="text-[22px] font-bold text-white">{data.stats.followerCount}</span>
                   <span className="text-[13px] text-[#888]">팔로워수</span>
@@ -410,8 +410,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="w-full box-border border border-[#2e2e40] rounded-2xl py-11 px-14 bg-[#0c0c14]">
-        <div className="flex gap-6 border-b border-[#2e2e40] mb-8">
+      <div className="w-full box-border border border-[#d9b36d]/30 rounded-2xl py-11 px-14 bg-[#050505]">
+        <div className="flex gap-6 border-b border-white/5 mb-8">
           <button
             className={`flex items-center gap-[6px] bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-base font-bold cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${
               activeTab === 'posts' ? 'text-[#d9b36d] border-[#d9b36d]' : 'text-[#888] border-transparent'
@@ -458,7 +458,7 @@ export default function ProfilePage() {
                 return (
                 <div
                   key={post.noticeId}
-                  className="border border-[#2e2e40] rounded-xl py-7 px-8 bg-[#0f0f16] flex flex-col gap-3 cursor-pointer hover:border-[#d9b36d]/40 transition-colors"
+                  className="border border-white/[0.06] rounded-xl py-7 px-8 bg-white/[0.02] flex flex-col gap-3 cursor-pointer hover:border-[#d9b36d]/40 transition-colors"
                   onClick={() => setViewNoticeId(post.noticeId)}
                 >
                   <div className="flex justify-between items-start">
@@ -544,18 +544,18 @@ export default function ProfilePage() {
 
       {isModalOpen && (
         <div className="fixed top-0 left-0 w-full h-full bg-black/70 z-[999] flex items-center justify-center">
-          <div className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[500px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+          <div className="bg-[#0a0a0a] border border-white/5 rounded-2xl w-[500px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
             <h2 className="m-0 text-white text-xl font-bold">
               {modalMode === 'create' ? '공지사항 등록' : '공지사항 수정'}
             </h2>
             <input
-              className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg p-[14px] text-[15px]"
+              className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg p-[14px] text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
               placeholder="제목을 입력하세요"
               value={noticeTitle}
               onChange={(e) => setNoticeTitle(e.target.value)}
             />
             <textarea
-              className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg p-[14px] text-[15px] min-h-[140px] resize-none"
+              className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg p-[14px] text-[15px] min-h-[140px] resize-none outline-none focus:border-[#d9b36d] transition-colors"
               placeholder="내용을 입력하세요"
               value={noticeContent}
               onChange={(e) => setNoticeContent(e.target.value)}
@@ -581,7 +581,7 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <select
-                    className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg p-[14px] text-[15px] outline-none focus:border-[#d9b36d] transition-colors appearance-none cursor-pointer"
+                    className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg p-[14px] text-[15px] outline-none focus:border-[#d9b36d] transition-colors appearance-none cursor-pointer"
                     value=""
                     onChange={(e) => {
                       const id = Number(e.target.value);
@@ -589,9 +589,9 @@ export default function ProfilePage() {
                       setSelectedStream(stream);
                     }}
                   >
-                    <option value="">방송을 선택하세요</option>
+                    <option value="" className="bg-[#111] text-white">방송을 선택하세요</option>
                     {scheduledStreamsData.streams.map((stream) => (
-                      <option key={stream.streamId} value={stream.streamId}>
+                      <option key={stream.streamId} value={stream.streamId} className="bg-[#111] text-white">
                         {stream.title}
                         {stream.scheduledAt
                           ? ` - ${new Date(stream.scheduledAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
@@ -628,7 +628,7 @@ export default function ProfilePage() {
           onClick={() => setViewNoticeId(null)}
         >
           <div
-            className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[520px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+            className="bg-[#0a0a0a] border border-white/5 rounded-2xl w-[520px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -646,7 +646,7 @@ export default function ProfilePage() {
 
             <p className="m-0 text-[15px] text-[#ddd] leading-relaxed whitespace-pre-wrap">{noticeDetail.content}</p>
 
-            <div className="flex items-center gap-4 text-[13px] text-[#888] border-t border-[#2e2e40] pt-4">
+            <div className="flex items-center gap-4 text-[13px] text-[#888] border-t border-white/5 pt-4">
               <div className="flex items-center gap-[6px]">
                 <CalendarIcon />
                 <span>작성일 {formatDate(noticeDetail.createdAt).split(' ')[0]}</span>
@@ -677,7 +677,7 @@ export default function ProfilePage() {
           onClick={() => setIsProfileEditOpen(false)}
         >
           <div
-            className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[500px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+            className="bg-[#0a0a0a] border border-white/5 rounded-2xl w-[500px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="m-0 text-white text-xl font-bold">프로필 수정</h2>
@@ -685,7 +685,7 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-2">
               <label className="text-[14px] text-[#aaa] font-medium">닉네임</label>
               <input
-                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
                 value={profileForm.nickname}
                 onChange={(e) => setProfileForm((prev) => ({ ...prev, nickname: e.target.value }))}
               />
@@ -694,7 +694,7 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-2">
               <label className="text-[14px] text-[#aaa] font-medium">소개</label>
               <textarea
-                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors min-h-[100px] resize-none"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors min-h-[100px] resize-none"
                 value={profileForm.intro}
                 onChange={(e) => setProfileForm((prev) => ({ ...prev, intro: e.target.value }))}
               />
@@ -703,7 +703,7 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-2">
               <label className="text-[14px] text-[#aaa] font-medium">Instagram URL</label>
               <input
-                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
                 placeholder="https://instagram.com/..."
                 value={profileForm.instaUrl}
                 onChange={(e) => setProfileForm((prev) => ({ ...prev, instaUrl: e.target.value }))}
@@ -713,7 +713,7 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-2">
               <label className="text-[14px] text-[#aaa] font-medium">YouTube URL</label>
               <input
-                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
                 placeholder="https://youtube.com/..."
                 value={profileForm.youtubeUrl}
                 onChange={(e) => setProfileForm((prev) => ({ ...prev, youtubeUrl: e.target.value }))}
@@ -723,7 +723,7 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-2">
               <label className="text-[14px] text-[#aaa] font-medium">TikTok URL</label>
               <input
-                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
                 placeholder="https://tiktok.com/..."
                 value={profileForm.tiktokUrl}
                 onChange={(e) => setProfileForm((prev) => ({ ...prev, tiktokUrl: e.target.value }))}

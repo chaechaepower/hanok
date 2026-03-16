@@ -31,7 +31,7 @@ export default function FollowedStoresSection() {
           <div className="w-8 h-8 border-4 border-[#333] border-t-[#d9b36d] rounded-full animate-spin" />
         </div>
       ) : followedList.length === 0 ? (
-        <div className="w-full box-border border border-[#2e2e40] rounded-2xl p-12 bg-[#0c0c14] flex flex-col items-center gap-4">
+        <div className="w-full box-border border border-[#d9b36d]/30 rounded-2xl p-12 bg-[#050505] flex flex-col items-center gap-4">
           <FaStore size={40} className="text-[#333]" />
           <p className="m-0 text-[#555] text-[15px]">팔로우한 스토어가 없습니다.</p>
         </div>
@@ -41,7 +41,7 @@ export default function FollowedStoresSection() {
             <div
               key={followId}
               onClick={() => navigate(`/profile/${seller.sellerId}`)}
-              className="w-full box-border border border-[#2e2e40] rounded-2xl p-6 bg-[#0c0c14] flex items-center gap-5 hover:border-[#3a3a50] transition-colors cursor-pointer"
+              className="w-full box-border border border-[#d9b36d]/30 rounded-2xl p-6 bg-[#050505] flex items-center gap-5 hover:border-[#d9b36d]/60 transition-colors cursor-pointer"
             >
               <div className="relative flex-shrink-0">
                 {seller.profileImageUri ? (

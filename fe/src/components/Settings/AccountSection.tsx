@@ -103,7 +103,7 @@ export default function AccountSection() {
         <p className="m-0 text-[15px] text-[#aaa]">계정을 관리합니다.</p>
       </div>
 
-      <div className="w-full box-border border border-[#2e2e40] rounded-2xl p-8 bg-[#0c0c14] flex flex-col gap-8">
+      <div className="w-full box-border border border-[#d9b36d]/30 rounded-2xl p-8 bg-[#050505] flex flex-col gap-8">
         <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
             <FaUserAlt size={18} className="text-[#aaa]" />
@@ -133,7 +133,7 @@ export default function AccountSection() {
         </div>
       </div>
 
-      <div className="w-full box-border border border-[#2e2e40] rounded-2xl p-8 bg-[#0c0c14] flex flex-col gap-6">
+      <div className="w-full box-border border border-[#d9b36d]/30 rounded-2xl p-8 bg-[#050505] flex flex-col gap-6">
         <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
           <FiBell size={20} className="text-[#d9b36d]" />
           알림 설정
@@ -150,7 +150,7 @@ export default function AccountSection() {
         </div>
       </div>
 
-      <div className="w-full box-border border border-[#2e2e40] rounded-2xl p-8 bg-[#0c0c14] flex flex-col gap-6">
+      <div className="w-full box-border border border-[#d9b36d]/30 rounded-2xl p-8 bg-[#050505] flex flex-col gap-6">
         <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
           <FiAlertTriangle size={20} className="text-red-500" />
           회원 탈퇴
@@ -180,7 +180,7 @@ export default function AccountSection() {
           onClick={() => setIsWithdrawModalOpen(false)}
         >
           <div
-            className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[460px] p-8 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+            className="bg-[#0a0a0a] border border-white/5 rounded-2xl w-[460px] p-8 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -210,7 +210,7 @@ export default function AccountSection() {
                 onChange={(e) => setWithdrawPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmitWithdraw()}
                 placeholder="현재 비밀번호를 입력하세요"
-                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-red-500 transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-red-500 transition-colors"
               />
             </div>
 
@@ -240,7 +240,7 @@ export default function AccountSection() {
           onClick={() => setIsPasswordModalOpen(false)}
         >
           <div
-            className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[460px] p-8 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+            className="bg-[#0a0a0a] border border-white/5 rounded-2xl w-[460px] p-8 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
@@ -260,7 +260,7 @@ export default function AccountSection() {
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="현재 비밀번호를 입력하세요"
-                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
               />
             </div>
 
@@ -271,7 +271,7 @@ export default function AccountSection() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="새 비밀번호를 입력하세요 (8자 이상)"
-                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
               />
             </div>
 
@@ -283,7 +283,7 @@ export default function AccountSection() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmitPassword()}
                 placeholder="새 비밀번호를 다시 입력하세요"
-                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
               />
             </div>
 
