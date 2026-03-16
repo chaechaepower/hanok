@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useToast } from '@/components/common/Toast';
 import { useGetSellerProfile } from '@/api/hooks/useGetSellerProfile';
@@ -14,8 +14,9 @@ import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
 import ReportModal from '@/components/Profile/ReportModal';
 import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
 import { usePatchSellerProfile } from '@/api/hooks/usePatchSellerProfile';
+import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
 import type { EscrowState } from '@/types';
-import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2, FiX } from 'react-icons/fi';
+import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2, FiX, FiCamera } from 'react-icons/fi';
 
 const InstagramIcon = () => (
   <>
@@ -106,6 +107,25 @@ export default function ProfilePage() {
   const { data, isLoading, isError } = useGetSellerProfile(sellerId);
   const { data: mySellerStatus } = useGetSellerStatus();
   const { mutate: patchProfile, isPending: isProfilePending } = usePatchSellerProfile(sellerId);
+  const { mutate: patchProfileImage } = usePatchProfileImage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleProfileImageClick = () => {
+    if (isMyProfile) fileInputRef.current?.click();
+  };
+
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    patchProfileImage(file, {
+      onSuccess: () => {
+        showToast({ message: '프로필 이미지가 변경되었습니다.' });
+      },
+      onError: () => {
+        showToast({ message: '프로필 이미지 변경에 실패했습니다.' });
+      },
+    });
+  };
 
   const { data: notices = [] } = useGetSellerNotice(sellerId);
   const { mutate: postNotice } = usePostSellerNotice(sellerId);
@@ -231,7 +251,17 @@ export default function ProfilePage() {
     <div className="w-full box-border max-w-[1200px] mx-auto py-10 px-5 flex flex-col gap-8">
       <div className="w-full box-border border border-[#2e2e40] rounded-2xl py-11 px-14 bg-[#0c0c14]">
         <div className="flex items-start gap-10">
-          <div>
+          <div
+            className={`relative group ${isMyProfile ? 'cursor-pointer' : ''}`}
+            onClick={handleProfileImageClick}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleProfileImageChange}
+            />
             {profileImage ? (
               <>
                 <img
@@ -251,6 +281,11 @@ export default function ProfilePage() {
             ) : (
               <div className="w-[140px] h-[140px] min-w-[140px] min-h-[140px] flex-shrink-0 rounded-full bg-[#1e1e2d] text-[#d9b36d] text-[48px] flex items-center justify-center font-bold">
                 {nickname.charAt(0)}
+              </div>
+            )}
+            {isMyProfile && (
+              <div className="absolute inset-0 w-[140px] h-[140px] rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <FiCamera size={28} className="text-white" />
               </div>
             )}
           </div>

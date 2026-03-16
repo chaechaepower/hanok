@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
-import type { UpdateAddressPayload, SetDefaultAddressPayload } from '@/types';
+import type { UpdateAddressPayload } from '@/types';
 
 export const patchAddressPath = (id: number) => `/v1/users/me/addresses/${id}`;
 
-export const patchAddress = async (id: number, payload: UpdateAddressPayload | SetDefaultAddressPayload) => {
+export const patchAddress = async (id: number, payload: Partial<UpdateAddressPayload>) => {
   const response = await getFetchInstance().patch(patchAddressPath(id), payload);
   return response.data;
 };
@@ -14,7 +14,7 @@ export const usePatchAddress = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, ...payload }: (UpdateAddressPayload | SetDefaultAddressPayload) & { id: number }) =>
+    mutationFn: ({ id, ...payload }: Partial<UpdateAddressPayload> & { id: number }) =>
       patchAddress(id, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['addresses'] });

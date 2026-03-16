@@ -9,7 +9,7 @@ type MockItem = {
   name: string;
   description: string;
   tags: string[];
-  image1: string;
+  images: string[];
   startPrice: number;
   bidUnit: number;
   auctionDuration: number;
@@ -26,7 +26,7 @@ let mockItems: MockItem[] = [
     name: '나이키 에어포스 1',
     description: '상태 좋은 265mm',
     tags: ['nike', 'sneakers'],
-    image1: Logo,
+    images: [Logo, Logo, Logo],
     startPrice: 100000,
     bidUnit: 5000,
     auctionDuration: 30,
@@ -41,7 +41,7 @@ let mockItems: MockItem[] = [
     name: '나이키 조던 1 하이 시카고',
     description: '박스 풀구성 깔끔해요',
     tags: ['jordan', 'chicago'],
-    image1: Logo,
+    images: [Logo, Logo, Logo],
     startPrice: 500000,
     bidUnit: 10000,
     auctionDuration: 60,
@@ -56,7 +56,7 @@ let mockItems: MockItem[] = [
     name: '아디다스 이지 부스트 350',
     description: '실착 5회 미만',
     tags: ['adidas', 'yeezy'],
-    image1: Logo,
+    images: [Logo, Logo, Logo],
     startPrice: 200000,
     bidUnit: 5000,
     auctionDuration: 30,
@@ -71,7 +71,7 @@ let mockItems: MockItem[] = [
     name: '롤렉스 서브마리너 데이트',
     description: '2021년식 풀세트 보증서 유',
     tags: ['rolex', 'submariner'],
-    image1: Logo,
+    images: [Logo, Logo, Logo],
     startPrice: 15000000,
     bidUnit: 100000,
     auctionDuration: 60,
@@ -86,7 +86,7 @@ let mockItems: MockItem[] = [
     name: '에르메스 버킨 30',
     description: '금장 토고 레더',
     tags: ['hermes', 'birkin'],
-    image1: Logo,
+    images: [Logo, Logo, Logo],
     startPrice: 20000000,
     bidUnit: 200000,
     auctionDuration: 60,
@@ -118,7 +118,7 @@ export const itemHandlers = [
       name: (body.name as string) || 'Mock Item',
       description: (body.description as string) || 'Mock Description',
       tags: (body.tags as string[]) || [],
-      image1: Logo,
+      images: [Logo, Logo, Logo],
       startPrice: Number(body.startPrice) || 0,
       bidUnit: Number(body.bidUnit) || 1000,
       auctionDuration: Number(body.auctionDuration) || 60,

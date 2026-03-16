@@ -10,12 +10,12 @@ import { useDeleteAddress } from '@/api/hooks/useDeleteAddress';
 const JUSO_API_KEY = import.meta.env.VITE_JUSO_API_KEY as string;
 
 const EMPTY_FORM: AddressFormState = {
-  label: '',
-  name: '',
-  zipCode: '',
+  addressName: '',
+  recipientName: '',
+  postalCode: '',
   address: '',
   addressDetail: '',
-  phone: '',
+  phone: '010',
 };
 
 export default function ShippingSection() {
@@ -24,6 +24,7 @@ export default function ShippingSection() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState<AddressFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [addressSearchOpen, setAddressSearchOpen] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searchResults, setSearchResults] = useState<JusoResult[]>([]);
@@ -37,11 +38,12 @@ export default function ShippingSection() {
   const { mutate: updateAddress } = usePatchAddress();
   const { mutate: removeAddress } = useDeleteAddress();
 
-  const addresses = data?.addresses ?? [];
+  const addresses = data ?? [];
 
   const openAddModal = () => {
     setForm(EMPTY_FORM);
     setFormError('');
+    setPhoneError('');
     setModalMode('add');
     setEditId(null);
     setModalOpen(true);
@@ -49,14 +51,15 @@ export default function ShippingSection() {
 
   const openEditModal = (addr: Address) => {
     setForm({
-      label: addr.label,
-      name: addr.name,
-      zipCode: addr.zipCode,
+      addressName: addr.addressName,
+      recipientName: addr.recipientName,
+      postalCode: String(addr.postalCode),
       address: addr.address,
-      addressDetail: '',
+      addressDetail: addr.addressDetail || '',
       phone: addr.phone,
     });
     setFormError('');
+    setPhoneError('');
     setModalMode('edit');
     setEditId(addr.id);
     setModalOpen(true);
@@ -71,20 +74,25 @@ export default function ShippingSection() {
   };
 
   const handleSubmit = () => {
-    if (!form.name || !form.zipCode || !form.address || !form.phone || !form.label) {
+    if (!form.recipientName || !form.postalCode || !form.address || !form.phone || !form.addressName) {
       setFormError('모든 항목을 입력해주세요.');
       return;
     }
-    const fullAddress = form.addressDetail ? `${form.address} ${form.addressDetail}` : form.address;
+    if (!/^01[016789]-?\d{3,4}-?\d{4}$/.test(form.phone)) {
+      setPhoneError('유효하지 않은 휴대폰 번호입니다.');
+      return;
+    }
 
     if (modalMode === 'add') {
       createAddress(
         {
-          label: form.label,
-          name: form.name,
-          zipCode: form.zipCode,
-          address: fullAddress,
+          addressName: form.addressName,
+          postalCode: Number(form.postalCode),
+          address: form.address,
+          addressDetail: form.addressDetail,
           phone: form.phone,
+          recipientName: form.recipientName,
+          isDefault: addresses.length === 0,
         },
         { onSuccess: () => setModalOpen(false) },
       );
@@ -92,11 +100,12 @@ export default function ShippingSection() {
       updateAddress(
         {
           id: editId!,
-          label: form.label,
-          name: form.name,
-          zipCode: form.zipCode,
-          address: fullAddress,
+          addressName: form.addressName,
+          postalCode: Number(form.postalCode),
+          address: form.address,
+          addressDetail: form.addressDetail,
           phone: form.phone,
+          recipientName: form.recipientName,
         },
         { onSuccess: () => setModalOpen(false) },
       );
@@ -157,7 +166,7 @@ export default function ShippingSection() {
   const selectAddress = (juso: JusoResult) => {
     setForm((prev) => ({
       ...prev,
-      zipCode: juso.zipNo,
+      postalCode: juso.zipNo,
       address: juso.roadAddr,
       addressDetail: '',
     }));
@@ -201,16 +210,18 @@ export default function ShippingSection() {
             .map((addr, idx) => (
               <div key={addr.id} className={`p-8 flex flex-col gap-2 ${idx !== 0 ? 'border-t border-[#2e2e40]' : ''}`}>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-white font-bold text-[16px]">{addr.label}</span>
+                  <span className="text-white font-bold text-[16px]">{addr.addressName}</span>
                   {addr.isDefault && (
                     <span className="px-2.5 py-0.5 bg-white text-[#111] text-xs font-bold rounded-full">기본</span>
                   )}
                 </div>
 
                 <p className="m-0 text-[15px] text-[#ddd]">
-                  {addr.name}&nbsp;&nbsp;({addr.zipCode})
+                  {addr.recipientName}&nbsp;&nbsp;({addr.postalCode})
                 </p>
-                <p className="m-0 text-[15px] text-[#ddd]">{addr.address}</p>
+                <p className="m-0 text-[15px] text-[#ddd]">
+                  {addr.address}{addr.addressDetail ? ` ${addr.addressDetail}` : ''}
+                </p>
                 <p className="m-0 text-[15px] text-[#ddd]">{addr.phone}</p>
 
                 <div className="flex items-center gap-4 mt-2 justify-end">
@@ -263,11 +274,11 @@ export default function ShippingSection() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[14px] text-[#aaa] font-medium">이름</label>
+              <label className="text-[14px] text-[#aaa] font-medium">받는 분</label>
               <input
                 type="text"
-                value={form.name}
-                onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                value={form.recipientName}
+                onChange={(e) => setForm((prev) => ({ ...prev, recipientName: e.target.value }))}
                 placeholder="받는 분 이름"
                 className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
               />
@@ -277,8 +288,8 @@ export default function ShippingSection() {
               <label className="text-[14px] text-[#aaa] font-medium">배송지 별칭</label>
               <input
                 type="text"
-                value={form.label}
-                onChange={(e) => setForm((prev) => ({ ...prev, label: e.target.value }))}
+                value={form.addressName}
+                onChange={(e) => setForm((prev) => ({ ...prev, addressName: e.target.value }))}
                 placeholder="예: 집, 회사"
                 className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
               />
@@ -289,7 +300,7 @@ export default function ShippingSection() {
               <div className="flex gap-2">
                 <input
                   type="text"
-                  value={form.zipCode}
+                  value={form.postalCode}
                   readOnly
                   placeholder="주소 검색을 이용해주세요"
                   className="flex-1 box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none cursor-default"
@@ -332,10 +343,26 @@ export default function ShippingSection() {
               <input
                 type="tel"
                 value={form.phone}
-                onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
-                placeholder="010-0000-0000"
-                className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/^010-?/, '').replace(/[^0-9]/g, '');
+                  let formatted = '010';
+                  if (raw.length <= 4) {
+                    formatted = raw.length > 0 ? `010-${raw}` : '010';
+                  } else {
+                    formatted = `010-${raw.slice(0, 4)}-${raw.slice(4, 8)}`;
+                  }
+                  setForm((prev) => ({ ...prev, phone: formatted }));
+                  if (phoneError) setPhoneError('');
+                }}
+                onBlur={() => {
+                  if (form.phone && !/^01[016789]-?\d{3,4}-?\d{4}$/.test(form.phone)) {
+                    setPhoneError('유효하지 않은 휴대폰 번호입니다.');
+                  }
+                }}
+                placeholder="0000-0000"
+                className={`w-full box-border bg-[#0f0f16] text-white border rounded-lg px-4 py-3 text-[15px] outline-none transition-colors ${phoneError ? 'border-red-500' : 'border-[#2e2e40] focus:border-[#d9b36d]'}`}
               />
+              {phoneError && <p className="m-0 text-[13px] text-red-400">{phoneError}</p>}
             </div>
 
             {formError && <p className="m-0 text-[13px] text-red-400">{formError}</p>}

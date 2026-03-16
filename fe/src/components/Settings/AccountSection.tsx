@@ -6,6 +6,7 @@ import { useGetMe } from '@/api/hooks/useGetMe';
 import { useGetNotification } from '@/api/hooks/useGetNotification';
 import { usePatchNotification } from '@/api/hooks/usePatchNotification';
 import { useDeleteWithdraw } from '@/api/hooks/useDeleteWithdraw';
+import { usePatchPassword } from '@/api/hooks/usePatchPassword';
 
 export default function AccountSection() {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
@@ -22,6 +23,7 @@ export default function AccountSection() {
   const { data: notiData } = useGetNotification();
   const { mutate: patchNotification } = usePatchNotification();
   const { mutate: deleteWithdraw, isPending: isWithdrawPending } = useDeleteWithdraw();
+  const { mutate: patchPassword, isPending: isPasswordPending } = usePatchPassword();
   const { showToast } = useToast();
 
   const user = meData;
@@ -57,10 +59,18 @@ export default function AccountSection() {
       setPasswordError('새 비밀번호가 일치하지 않습니다.');
       return;
     }
-    // TODO: 비밀번호 변경 API 연결
-    console.log('비밀번호 변경 요청:', { currentPassword, newPassword });
-    setIsPasswordModalOpen(false);
-    showToast({ message: '비밀번호가 변경되었습니다.' });
+    patchPassword(
+      { currentPassword, newPassword },
+      {
+        onSuccess: () => {
+          setIsPasswordModalOpen(false);
+          showToast({ message: '비밀번호가 변경되었습니다.' });
+        },
+        onError: () => {
+          setPasswordError('비밀번호 변경에 실패했습니다. 현재 비밀번호를 확인해주세요.');
+        },
+      },
+    );
   };
 
   const handleOpenWithdrawModal = () => {
@@ -288,9 +298,10 @@ export default function AccountSection() {
               </button>
               <button
                 onClick={handleSubmitPassword}
-                className="py-3 px-6 bg-[#d9b36d] text-[#111] font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-[#c8a45c] transition-colors"
+                disabled={isPasswordPending}
+                className="py-3 px-6 bg-[#d9b36d] text-[#111] font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-[#c8a45c] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                변경
+                {isPasswordPending ? '변경 중…' : '변경'}
               </button>
             </div>
           </div>

@@ -1,4 +1,5 @@
-import { FaImage } from 'react-icons/fa';
+import { useState } from 'react';
+import { FaImage, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import type { Product } from '@/types';
 import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
 
@@ -24,19 +25,59 @@ interface ProductCardProps {
 export default function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
   const currentStatus = statusClassMap[product.status] || { label: product.status, bg: 'bg-[#555]' };
 
+  const images = product.images.filter((img) => !!img);
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+  };
+
   return (
     <div className="flex bg-[#1C1C1E] rounded-2xl p-6 gap-6 mb-4 border border-[#2C2C2E] hover:bg-[#242426] transition-colors">
-      <div className="relative w-[160px] h-[160px] rounded-xl overflow-hidden shrink-0 bg-white">
+      <div className="relative w-[160px] h-[160px] rounded-xl overflow-hidden shrink-0 bg-white group">
         <div className={`absolute top-3 left-3 ${currentStatus.bg} text-white px-3 py-1 rounded-full text-xs font-semibold z-10`}>
           {currentStatus.label}
         </div>
 
-        {product.image1 ? (
-          <img
-            src={product.image1}
-            alt={product.name}
-            className="w-full h-full object-cover"
-          />
+        {images.length > 0 ? (
+          <>
+            <img
+              src={images[currentIndex]}
+              alt={product.name}
+              className="w-full h-full object-cover"
+            />
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={handlePrev}
+                  className="absolute left-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none z-10"
+                >
+                  <FaChevronLeft size={12} />
+                </button>
+                <button
+                  onClick={handleNext}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none z-10"
+                >
+                  <FaChevronRight size={12} />
+                </button>
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+                  {images.map((_, idx) => (
+                    <div
+                      key={idx}
+                      className={`w-1.5 h-1.5 rounded-full ${idx === currentIndex ? 'bg-white' : 'bg-white/40'}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center bg-[#2C2C2E] text-[#8E8E93] text-[13px]">
             <FaImage size={28} className="opacity-50 mb-2" />

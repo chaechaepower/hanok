@@ -56,8 +56,8 @@ export default function ProductRegistrationModal({ isOpen, onClose, onSuccess, i
         setAuctionType('');
         setHashtags('');
 
-        if (initialData.image1) {
-          setExistingImages([initialData.image1]);
+        if (initialData.images && initialData.images.length > 0) {
+          setExistingImages(initialData.images);
         } else {
           setExistingImages([]);
         }

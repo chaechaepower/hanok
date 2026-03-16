@@ -69,22 +69,21 @@ export type GetFollowingResponse = {
 
 export type Address = {
   id: number;
-  label: string;
-  isDefault: boolean;
-  name: string;
-  zipCode: string;
+  addressName: string;
+  postalCode: number;
   address: string;
+  addressDetail: string;
   phone: string;
+  recipientName: string;
+  isDefault: boolean;
 };
 
-export type GetAddressesResponse = {
-  addresses: Address[];
-};
+export type GetAddressesResponse = Address[];
 
 export type AddressFormState = {
-  label: string;
-  name: string;
-  zipCode: string;
+  addressName: string;
+  recipientName: string;
+  postalCode: string;
   address: string;
   addressDetail: string;
   phone: string;
@@ -93,22 +92,22 @@ export type AddressFormState = {
 export type AddressModalMode = 'add' | 'edit';
 
 export type CreateAddressPayload = {
-  label: string;
-  name: string;
-  zipCode: string;
+  addressName: string;
+  postalCode: number;
   address: string;
+  addressDetail: string;
   phone: string;
+  recipientName: string;
+  isDefault: boolean;
 };
 
 export type UpdateAddressPayload = {
-  label: string;
-  name: string;
-  zipCode: string;
+  addressName: string;
+  postalCode: number;
   address: string;
+  addressDetail: string;
   phone: string;
-};
-
-export type SetDefaultAddressPayload = {
+  recipientName: string;
   isDefault: boolean;
 };
 
