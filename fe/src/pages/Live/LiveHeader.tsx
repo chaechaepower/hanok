@@ -18,15 +18,16 @@ function formatElapsed(seconds: number): string {
 }
 
 function useElapsedTimer(isLive: boolean, startedAt: string | null) {
-  const [elapsed, setElapsed] = useState(0);
+  const [elapsed, setElapsed] = useState(() => {
+    if (!isLive || !startedAt) return 0;
+    return Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000));
+  });
+
+  const isActive = isLive && !!startedAt;
+  const startMs = isActive ? new Date(startedAt).getTime() : 0;
 
   useEffect(() => {
-    if (!isLive || !startedAt) {
-      setElapsed(0);
-      return;
-    }
-
-    const startMs = new Date(startedAt).getTime();
+    if (!isActive) return;
 
     const tick = () => {
       setElapsed(Math.max(0, Math.floor((Date.now() - startMs) / 1000)));
@@ -38,7 +39,7 @@ function useElapsedTimer(isLive: boolean, startedAt: string | null) {
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [isLive, startedAt]);
+  }, [isActive, startMs]);
 
   return elapsed;
 }
