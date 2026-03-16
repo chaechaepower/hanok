@@ -232,4 +232,7 @@ public class User {
         this.password = encodedPassword;
     }
 
+    public void updateNotificationSetting(Boolean notificationSetting) {
+        this.notificationSetting = notificationSetting;
+    }
 }

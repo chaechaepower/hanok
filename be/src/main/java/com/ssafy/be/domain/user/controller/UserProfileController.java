@@ -2,6 +2,8 @@ package com.ssafy.be.domain.user.controller;
 
 import com.ssafy.be.domain.follow.dto.response.FollowResponse;
 import com.ssafy.be.domain.follow.service.FollowService;
+import com.ssafy.be.domain.notification.dto.request.NotificationSettingRequest;
+import com.ssafy.be.domain.notification.dto.response.NotificationSettingResponse;
 import com.ssafy.be.domain.seller.dto.response.SellerStatusResponse;
 import com.ssafy.be.domain.seller.service.SellerService;
 import com.ssafy.be.domain.user.controller.api.UserProfileApi;
@@ -96,5 +98,22 @@ public class UserProfileController implements UserProfileApi {
         Long userId = getUserId(principal);
         userService.updatePassword(userId, request);
         return ResponseEntity.ok(ApiResponse.success());
+    }
+
+    // 알림 설정 조회
+    @GetMapping("/me/notification")
+    public ResponseEntity<ApiResponse<NotificationSettingResponse>> getNotificationSetting(
+            @AuthenticationPrincipal String principal) {
+        Long userId = getUserId(principal);
+        return ResponseEntity.ok(ApiResponse.success(userService.getNotificationSetting(userId)));
+    }
+
+    // 알림 설정 수정
+    @PatchMapping("/me/notification")
+    public ResponseEntity<ApiResponse<NotificationSettingResponse>> updateNotificationSetting(
+            @AuthenticationPrincipal String principal,
+            @RequestBody @Valid NotificationSettingRequest request) {
+        Long userId = getUserId(principal);
+        return ResponseEntity.ok(ApiResponse.success(userService.updateNotificationSetting(userId, request)));
     }
 }

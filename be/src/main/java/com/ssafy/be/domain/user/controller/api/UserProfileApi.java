@@ -2,6 +2,8 @@ package com.ssafy.be.domain.user.controller.api;
 
 
 import com.ssafy.be.domain.follow.dto.response.FollowResponse;
+import com.ssafy.be.domain.notification.dto.request.NotificationSettingRequest;
+import com.ssafy.be.domain.notification.dto.response.NotificationSettingResponse;
 import com.ssafy.be.domain.user.dto.request.AccountRegisterRequest;
 import com.ssafy.be.domain.user.dto.request.PasswordUpdateRequest;
 import com.ssafy.be.domain.user.dto.response.AccountRegisterResponse;
@@ -60,4 +62,15 @@ public interface UserProfileApi {
     ResponseEntity<ApiResponse<Void>> updatePassword(
             @AuthenticationPrincipal String principal,
             @RequestBody PasswordUpdateRequest request);
+
+    @Operation(summary = "알림 설정 조회")
+    @GetMapping("/me/notification")
+    ResponseEntity<ApiResponse<NotificationSettingResponse>> getNotificationSetting(
+            @AuthenticationPrincipal String principal);
+
+    @Operation(summary = "알림 설정 수정")
+    @PatchMapping("/me/notification")
+    ResponseEntity<ApiResponse<NotificationSettingResponse>> updateNotificationSetting(
+            @AuthenticationPrincipal String principal,
+            @RequestBody NotificationSettingRequest request);
 }

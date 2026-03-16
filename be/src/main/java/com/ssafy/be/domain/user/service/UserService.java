@@ -1,6 +1,8 @@
 package com.ssafy.be.domain.user.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.ssafy.be.domain.notification.dto.request.NotificationSettingRequest;
+import com.ssafy.be.domain.notification.dto.response.NotificationSettingResponse;
 import com.ssafy.be.domain.user.dto.request.*;
 import com.ssafy.be.domain.user.dto.response.*;
 import com.ssafy.be.domain.user.entity.BankCode;
@@ -304,5 +306,29 @@ public class UserService {
 
         // 새 비밀번호 암호화 후 저장
         user.updatePassword(passwordEncoder.encode(request.newPassword()));
+    }
+
+    // -----------------------------------------------
+    // 알림 설정 조회
+    // GET /api/v1/users/me/notification
+    // -----------------------------------------------
+    @Transactional(readOnly = true)
+    public NotificationSettingResponse getNotificationSetting(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GlobalException(UserErrorCode.USER_NOT_FOUND));
+        return NotificationSettingResponse.from(user.getNotificationSetting());
+    }
+
+    // -----------------------------------------------
+    // 알림 설정 수정
+    // PATCH /api/v1/users/me/notification
+    // -----------------------------------------------
+    @Transactional
+    public NotificationSettingResponse updateNotificationSetting(
+            Long userId, NotificationSettingRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new GlobalException(UserErrorCode.USER_NOT_FOUND));
+        user.updateNotificationSetting(request.notificationSetting());
+        return NotificationSettingResponse.from(user.getNotificationSetting());
     }
 }
