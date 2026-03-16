@@ -84,6 +84,7 @@ public class UserService {
                 .balance(0L)
                 .depositedEscrowBalance(0L)
                 .depositedWithdrawBalance(0L)
+                .depositedBidBalance(0L)
                 .notificationSetting(true)
                 .build();
 
