@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
 import Logo from '@/assets/Logo.png';
+import type { ItemAuctionType } from '@/types';
 
 type MockItem = {
   itemId: number;
@@ -15,7 +16,7 @@ type MockItem = {
   auctionDuration: number;
   itemCondition: string;
   category: string;
-  auctionType: string;
+  auctionType: ItemAuctionType;
   createdAt: string;
 };
 
@@ -32,7 +33,7 @@ let mockItems: MockItem[] = [
     auctionDuration: 30,
     itemCondition: 'BRAND_NEW',
     category: 'SNEAKERS_SHOES',
-    auctionType: 'ENGLISH',
+    auctionType: 'BOTTOM_UP',
     createdAt: '2026-03-13T05:25:50.043Z',
   },
   {
@@ -47,7 +48,7 @@ let mockItems: MockItem[] = [
     auctionDuration: 60,
     itemCondition: 'OPEN_BOX',
     category: 'SNEAKERS_SHOES',
-    auctionType: 'ENGLISH',
+    auctionType: 'BOTTOM_UP',
     createdAt: '2026-03-13T05:25:50.043Z',
   },
   {
@@ -62,7 +63,7 @@ let mockItems: MockItem[] = [
     auctionDuration: 30,
     itemCondition: 'USED',
     category: 'SNEAKERS_SHOES',
-    auctionType: 'ENGLISH',
+    auctionType: 'BOTTOM_UP',
     createdAt: '2026-03-13T05:25:50.043Z',
   },
   {
@@ -77,7 +78,7 @@ let mockItems: MockItem[] = [
     auctionDuration: 60,
     itemCondition: 'BRAND_NEW',
     category: 'WATCHES',
-    auctionType: 'ENGLISH',
+    auctionType: 'BOTTOM_UP',
     createdAt: '2026-03-13T05:25:50.043Z',
   },
   {
@@ -92,7 +93,7 @@ let mockItems: MockItem[] = [
     auctionDuration: 60,
     itemCondition: 'BRAND_NEW',
     category: 'BAGS_FASHION_ACCESSORIES',
-    auctionType: 'ENGLISH',
+    auctionType: 'BOTTOM_UP',
     createdAt: '2026-03-13T05:25:50.043Z',
   },
 ];
@@ -101,16 +102,14 @@ export const itemHandlers = [
   http.get(`${BASE_URL}/v1/items`, async ({ request }) => {
     const url = new URL(request.url);
     const statusFilter = url.searchParams.get('status');
-    const filtered = statusFilter
-      ? mockItems.filter((item) => item.status === statusFilter)
-      : mockItems;
+    const filtered = statusFilter ? mockItems.filter((item) => item.status === statusFilter) : mockItems;
     return HttpResponse.json(filtered);
   }),
 
   http.post(`${BASE_URL}/v1/items`, async ({ request }) => {
     const formData = await request.formData();
     const requestBlob = formData.get('request');
-    const body = requestBlob ? JSON.parse(await (requestBlob as Blob).text()) as Record<string, unknown> : {};
+    const body = requestBlob ? (JSON.parse(await (requestBlob as Blob).text()) as Record<string, unknown>) : {};
 
     const newItem: MockItem = {
       itemId: Date.now() + Math.floor(Math.random() * 1000),
@@ -124,7 +123,7 @@ export const itemHandlers = [
       auctionDuration: Number(body.auctionDuration) || 60,
       itemCondition: (body.itemCondition as string) || 'USED',
       category: (body.category as string) || 'ETC',
-      auctionType: (body.auctionType as string) || 'ENGLISH',
+      auctionType: (body.auctionType as ItemAuctionType) || 'BOTTOM_UP',
       createdAt: new Date().toISOString(),
     };
 
@@ -147,7 +146,7 @@ export const itemHandlers = [
 
     const formData = await request.formData();
     const requestBlob = formData.get('request');
-    const body = requestBlob ? JSON.parse(await (requestBlob as Blob).text()) as Record<string, unknown> : {};
+    const body = requestBlob ? (JSON.parse(await (requestBlob as Blob).text()) as Record<string, unknown>) : {};
     const currentItem = mockItems[itemIndex];
 
     mockItems[itemIndex] = {

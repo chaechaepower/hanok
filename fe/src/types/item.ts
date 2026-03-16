@@ -1,3 +1,5 @@
+export type ItemAuctionType = 'BOTTOM_UP' | 'UNIQUE_TOP';
+
 export type CreateItemPayload = {
   name: string;
   description: string;
@@ -6,7 +8,7 @@ export type CreateItemPayload = {
   bidUnit: number;
   auctionDuration: number;
   itemCondition: string;
-  auctionType: string;
+  auctionType: ItemAuctionType;
   tags?: string[];
   images?: File[];
 };
@@ -53,7 +55,7 @@ export interface Product {
   auctionDuration: number;
   itemCondition: string;
   category: string;
-  auctionType: string;
+  auctionType: ItemAuctionType;
   status: ProductStatus;
   createdAt?: string;
 }
