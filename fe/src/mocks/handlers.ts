@@ -9,6 +9,7 @@ import { walletHandlers } from './WalletHandler';
 import { settingsHandlers } from './SettingsHandler';
 import { macroHandlers } from './MacroHandler';
 import { LiveCreateHandlers } from './LiveCreateHandler';
+import { notificationHandlers } from './NotificationHandler';
 
 export const handlers = [
   ...authHandlers,
@@ -22,4 +23,5 @@ export const handlers = [
   liveSocketHandler,
   ...LiveCreateHandlers,
   ...macroHandlers,
+  ...notificationHandlers,
 ];

@@ -55,7 +55,7 @@ export default function SettingsPage() {
 
   return (
     <div className="w-full box-border max-w-[1200px] mx-auto py-10 px-5 flex flex-col gap-8">
-      <div className="w-full box-border border border-[#2e2e40] rounded-2xl py-8 px-10 bg-[#0c0c14] flex items-center justify-between">
+      <div className="w-full box-border rounded-2xl py-8 px-10 bg-[#050505] border border-[#d9b36d]/30 flex items-center justify-between">
         <div className="flex items-center gap-6">
           {user?.profileImage ? (
             <img
@@ -85,7 +85,7 @@ export default function SettingsPage() {
 
         <button
           onClick={() => navigate('/wallet')}
-          className="flex items-center justify-between border border-[#2e2e40] bg-[#1a1a24] rounded-xl py-5 px-8 min-w-[320px] cursor-pointer hover:bg-[#20202c] transition-colors"
+          className="flex items-center justify-between border border-[#d9b36d]/30 bg-[#050505] rounded-xl py-5 px-8 min-w-[320px] cursor-pointer hover:bg-[#111] transition-colors"
         >
           <span className="text-[#aaa] text-[17px] font-medium">보유머니</span>
           <div className="flex items-center gap-3">

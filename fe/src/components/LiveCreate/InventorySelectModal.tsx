@@ -27,8 +27,7 @@ export default function InventorySelectModal({
       <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-        <div className="relative w-full max-w-[420px] bg-[#0f0f13] rounded-3xl overflow-hidden shadow-2xl flex flex-col"
-          style={{ maxHeight: '85vh' }}
+        <div className="relative w-full max-w-[420px] max-h-[85vh] bg-[#0f0f13] rounded-3xl overflow-hidden shadow-2xl flex flex-col"
         >
           <div className="flex items-center justify-between px-6 pt-6 pb-4">
             <h2 className="text-white text-xl font-bold">내 인벤토리</h2>

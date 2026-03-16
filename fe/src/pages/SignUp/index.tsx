@@ -101,40 +101,15 @@ export default function SignUpPage() {
   const iconClass = 'w-5 h-5 text-[#8E8E93]';
 
   return (
-    <div
-      style={{
-        width: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '40px 16px',
-      }}
-    >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '480px',
-          textAlign: 'center',
-          marginBottom: '40px',
-          marginLeft: 'auto',
-          marginRight: 'auto',
-        }}
-      >
-        <h1 style={{ color: '#F5F2EB', fontSize: '32px', fontWeight: 'bold', marginBottom: '16px' }}>회원가입</h1>
-        <p style={{ color: '#E5E5EA', fontSize: '15px' }}>한옥에 가입하고 경매에 참여해 보세요!</p>
+    <div className="w-full flex flex-col items-center px-4 py-10">
+      <div className="w-full max-w-[480px] text-center mb-10 mx-auto">
+        <h1 className="text-[#F5F2EB] text-[32px] font-bold mb-4">회원가입</h1>
+        <p className="text-[#E5E5EA] text-[15px]">한옥에 가입하고 경매에 참여해 보세요!</p>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        style={{
-          width: '100%',
-          maxWidth: '480px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '24px',
-          marginLeft: 'auto',
-          marginRight: 'auto',
-        }}
+        className="w-full max-w-[480px] flex flex-col gap-6 mx-auto"
       >
         <div className="flex flex-col gap-2">
           <label className="text-[13px] font-medium text-[#E5E5EA] ml-1">이메일</label>
@@ -267,32 +242,22 @@ export default function SignUpPage() {
           {isIdentityVerified && <p className="text-[#32D74B] text-xs px-1">본인인증이 완료되었습니다. ({verifiedName})</p>}
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+        <div className="flex flex-col gap-3 mt-4">
+          <label className="flex items-center gap-3 cursor-pointer">
             <div
-              style={{
-                width: '20px',
-                height: '20px',
-                minWidth: '20px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderRadius: '4px',
-                border: `2px solid ${termsAgreed ? '#CEAF82' : '#888'}`,
-                backgroundColor: termsAgreed ? '#CEAF82' : 'transparent',
-                position: 'relative',
-                transition: 'all 0.15s',
-              }}
+              className={`w-5 h-5 min-w-5 flex justify-center items-center rounded border-2 relative transition-all duration-150 ${
+                termsAgreed ? 'border-[#CEAF82] bg-[#CEAF82]' : 'border-[#888] bg-transparent'
+              }`}
             >
               <input
                 type="checkbox"
                 checked={termsAgreed}
                 onChange={(e) => setTermsAgreed(e.target.checked)}
-                style={{ appearance: 'none', position: 'absolute', inset: 0, cursor: 'pointer' }}
+                className="appearance-none absolute inset-0 cursor-pointer"
               />
               {termsAgreed && (
                 <svg
-                  style={{ width: '12px', height: '12px', color: 'black', pointerEvents: 'none' }}
+                  className="w-3 h-3 text-black pointer-events-none"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -304,33 +269,23 @@ export default function SignUpPage() {
                 </svg>
               )}
             </div>
-            <span style={{ fontSize: '14px', color: '#E5E5EA' }}>온라인 경매 약관 동의 [필수]</span>
+            <span className="text-sm text-[#E5E5EA]">온라인 경매 약관 동의 [필수]</span>
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+          <label className="flex items-center gap-3 cursor-pointer">
             <div
-              style={{
-                width: '20px',
-                height: '20px',
-                minWidth: '20px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderRadius: '4px',
-                border: `2px solid ${privacyAgreed ? '#CEAF82' : '#888'}`,
-                backgroundColor: privacyAgreed ? '#CEAF82' : 'transparent',
-                position: 'relative',
-                transition: 'all 0.15s',
-              }}
+              className={`w-5 h-5 min-w-5 flex justify-center items-center rounded border-2 relative transition-all duration-150 ${
+                privacyAgreed ? 'border-[#CEAF82] bg-[#CEAF82]' : 'border-[#888] bg-transparent'
+              }`}
             >
               <input
                 type="checkbox"
                 checked={privacyAgreed}
                 onChange={(e) => setPrivacyAgreed(e.target.checked)}
-                style={{ appearance: 'none', position: 'absolute', inset: 0, cursor: 'pointer' }}
+                className="appearance-none absolute inset-0 cursor-pointer"
               />
               {privacyAgreed && (
                 <svg
-                  style={{ width: '12px', height: '12px', color: 'black', pointerEvents: 'none' }}
+                  className="w-3 h-3 text-black pointer-events-none"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -342,7 +297,7 @@ export default function SignUpPage() {
                 </svg>
               )}
             </div>
-            <span style={{ fontSize: '14px', color: '#E5E5EA' }}>개인정보 수집 및 이용 동의 [필수]</span>
+            <span className="text-sm text-[#E5E5EA]">개인정보 수집 및 이용 동의 [필수]</span>
           </label>
         </div>
 

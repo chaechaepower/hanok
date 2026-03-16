@@ -92,9 +92,9 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
 
   return (
     <>
-      <p style={{ fontSize: '15px', color: '#E5E5EA', marginBottom: '20px' }}>개인/법인 사업자 인증을 해주세요.</p>
+      <p className="text-[15px] text-[#E5E5EA] mb-5">개인/법인 사업자 인증을 해주세요.</p>
 
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px' }}>
+      <div className="flex gap-4 mb-6">
         <BusinessTypeCard
           label="개인 사업자"
           selected={businessType === 'INDIVIDUAL'}
@@ -117,7 +117,7 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
         />
       </div>
 
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '8px' }}>
+      <div className="flex gap-2.5 mb-2">
         <input
           type="text"
           value={bizNumber || ''}
@@ -126,18 +126,9 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
             businessType === 'BUSINESS' ? '법인등록번호 -없이 숫자만 입력' : '사업자등록번호 -없이 숫자만 입력'
           }
           disabled={isVerified}
-          style={{
-            flex: 1,
-            height: '48px',
-            backgroundColor: '#1C1C1E',
-            border: `1px solid ${isVerified ? '#CEAF82' : '#3A3A3C'}`,
-            borderRadius: '8px',
-            color: isVerified ? '#CEAF82' : 'white',
-            fontSize: '14px',
-            padding: '0 16px',
-            outline: 'none',
-            fontFamily: 'inherit',
-          }}
+          className={`flex-1 h-12 bg-[#1C1C1E] border rounded-lg text-sm px-4 outline-none font-[inherit] ${
+            isVerified ? 'border-[#CEAF82] text-[#CEAF82]' : 'border-[#3A3A3C] text-white'
+          }`}
         />
         <Button
           variant={isVerified ? 'yellowOutline' : 'yellow'}
@@ -150,15 +141,15 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
       </div>
 
       {verifyError && (
-        <p style={{ color: '#FF453A', fontSize: '13px', paddingLeft: '4px', marginBottom: '8px' }}>{verifyError}</p>
+        <p className="text-[#FF453A] text-[13px] pl-1 mb-2">{verifyError}</p>
       )}
       {isVerified && (
-        <p style={{ color: '#32D74B', fontSize: '13px', paddingLeft: '4px', marginBottom: '8px' }}>
+        <p className="text-[#32D74B] text-[13px] pl-1 mb-2">
           사업자 인증이 완료되었습니다.
         </p>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', position: 'sticky', bottom: 0, paddingTop: '24px', paddingBottom: '24px' }}>
+      <div className="flex justify-end sticky bottom-0 pt-6 pb-6">
         <Button onClick={handleNext} className="w-30!">
           다음
         </Button>
