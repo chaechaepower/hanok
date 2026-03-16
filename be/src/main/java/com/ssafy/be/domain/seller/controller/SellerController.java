@@ -36,6 +36,7 @@ public class SellerController implements SellerApi {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+
     @GetMapping("/{sellerId}/profile")
     public ResponseEntity<SellerProfileResponse> getProfile(@PathVariable Long sellerId) {
         return ResponseEntity.ok(sellerService.getProfile(sellerId));

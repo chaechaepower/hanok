@@ -29,7 +29,7 @@ public interface SellerApi {
             responseCode = "409",
             description = "이미 판매자로 등록된 사용자",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    ResponseEntity<SellerRegisterResponse> register(Long userId, SellerRegisterRequest request);
+    ResponseEntity<SellerRegisterResponse> register(String userId, SellerRegisterRequest request);
 
     @Operation(summary = "판매자 프로필 조회")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
