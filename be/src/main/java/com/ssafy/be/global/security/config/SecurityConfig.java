@@ -88,8 +88,7 @@ public class SecurityConfig {
                                                 "/api/v1/wallet/charges/webhook",
                                                 "/api/v1/streams/webhook",
                                                 "/ws-connect/**",
-                                                "/actuator/**",
-                                                "/api/v1/sse/subscribe"
+                                                "/actuator/**"
                                         )
                                         .permitAll()
                                         .anyRequest()
