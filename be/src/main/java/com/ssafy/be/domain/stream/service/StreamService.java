@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
@@ -101,7 +102,9 @@ public class StreamService {
                                 item.getName(),
                                 item.getDescription(),
                                 item.getTags().stream().map(Tag::getName).toList(),
-                                item.getImage1(),
+                                java.util.stream.Stream.of(item.getImage1(), item.getImage2(), item.getImage3())
+                                        .filter(Objects::nonNull)
+                                        .toList(),
                                 item.getStartPrice(),
                                 item.getBidUnit(),
                                 item.getAuctionDuration(),
@@ -170,7 +173,9 @@ public class StreamService {
                             item.getName(),
                             item.getDescription(),
                             item.getTags().stream().map(Tag::getName).toList(),
-                            item.getImage1(),
+                            java.util.stream.Stream.of(item.getImage1(), item.getImage2(), item.getImage3())
+                                    .filter(Objects::nonNull)
+                                    .toList(),
                             item.getStartPrice(),
                             item.getBidUnit(),
                             item.getAuctionDuration(),
@@ -249,7 +254,9 @@ public class StreamService {
                             item.getName(),
                             item.getDescription(),
                             item.getTags().stream().map(Tag::getName).toList(),
-                            item.getImage1(),
+                            java.util.stream.Stream.of(item.getImage1(), item.getImage2(), item.getImage3())
+                                    .filter(Objects::nonNull)
+                                    .toList(),
                             item.getStartPrice(),
                             item.getBidUnit(),
                             item.getAuctionDuration(),

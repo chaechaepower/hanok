@@ -26,6 +26,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -110,7 +112,9 @@ public class ItemService {
                         i.getName(),
                         i.getDescription(),
                         i.getTags().stream().map(Tag::getName).toList(),
-                        i.getImage1(),
+                        Stream.of(i.getImage1(), i.getImage2(), i.getImage3())  // 변경
+                                .filter(Objects::nonNull)
+                                .toList(),
                         i.getStartPrice(),
                         i.getBidUnit(),
                         i.getAuctionDuration(),
