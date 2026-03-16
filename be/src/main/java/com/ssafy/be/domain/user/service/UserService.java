@@ -281,7 +281,7 @@ public class UserService {
                 .orElseThrow(() -> new GlobalException(UserErrorCode.USER_NOT_FOUND));
 
         if (user.getBankCode() == null) {
-            throw new GlobalException(UserErrorCode.ACCOUNT_NOT_FOUND);
+            return null;
         }
 
         BankCode bankCode = BankCode.fromCode(user.getBankCode());
