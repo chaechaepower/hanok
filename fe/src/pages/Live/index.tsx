@@ -44,6 +44,7 @@ export default function LivePage() {
 
   const {
     isStreamLive,
+    liveStartedAt,
     timer,
     bidSync,
     uniqueBidSync,
@@ -169,7 +170,7 @@ export default function LivePage() {
 
   return (
     <div className="flex h-screen w-full flex-col bg-surface p-3">
-      <LiveHeader streamTitle={streamTitle} isLive={isStreamLive} startedAt={activeStreamEnter?.createdAt ?? null} />
+      <LiveHeader streamTitle={streamTitle} isLive={isStreamLive} startedAt={liveStartedAt ?? activeStreamEnter?.createdAt ?? null} />
 
       <div className="flex min-h-0 flex-1 gap-3">
         <div className="min-w-0 flex-1 overflow-hidden rounded-2xl">

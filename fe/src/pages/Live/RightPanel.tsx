@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { usePostFollow } from '@/api/hooks/usePostFollow';
+import { useStompChat } from '@/hooks/useStompChat';
 import AuctionPanel from '@/components/Live/Auction/shared/AuctionPanel';
 import ChatPanel from '@/components/Live/Chat/ChatPanel';
 import type { AuctionStatisticsPayload, LiveAuctionType, StreamEnterResponse, UniqueBidSyncPayload } from '@/types';
@@ -17,6 +18,7 @@ const getSellerInitial = (nickname?: string) => nickname?.trim().charAt(0).toUpp
 
 export default function RightPanel({ isSeller, auctionType, auctionStatistics, uniqueBidSync, streamEnter }: Props) {
   const [activeTab, setActiveTab] = useState<'chat' | 'auction'>('chat');
+  const { messages, sendMessage, sendMacro, connectionState } = useStompChat();
   const [followStateOverride, setFollowStateOverride] = useState<{ sellerId: number; value: boolean } | null>(null);
   const { mutate: postFollow, isPending: isFollowPending } = usePostFollow();
   const sellerId = streamEnter?.seller.sellerId ?? 0;
@@ -97,7 +99,7 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
             uniqueBidSync={uniqueBidSync}
           />
         ) : (
-          <ChatPanel />
+          <ChatPanel messages={messages} connectionState={connectionState} onSendMessage={sendMessage} onSendMacro={sendMacro} />
         )}
       </div>
     </div>

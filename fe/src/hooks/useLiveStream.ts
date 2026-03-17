@@ -135,6 +135,7 @@ const createSyncedTimer = (timer: StreamTimerPayload): SyncedAuctionTimer => ({
 export type UseLiveStreamReturn = {
   // state
   isStreamLive: boolean;
+  liveStartedAt: string | null;
   timer: SyncedAuctionTimer | null;
   bidSync: BidSyncPayload | null;
   uniqueBidSync: UniqueBidSyncPayload | null;
@@ -164,6 +165,7 @@ export function useLiveStream(
   const { showToast } = useToast();
 
   const [liveStateOverride, setLiveStateOverride] = useState<boolean | null>(null);
+  const [liveStartedAt, setLiveStartedAt] = useState<string | null>(null);
   const [timer, setTimer] = useState<SyncedAuctionTimer | null>(null);
   const [bidSync, setBidSync] = useState<BidSyncPayload | null>(null);
   const [uniqueBidSync, setUniqueBidSync] = useState<UniqueBidSyncPayload | null>(null);
@@ -413,6 +415,7 @@ export function useLiveStream(
 
       if ((event as { eventType?: string }).eventType === 'SYSTEM_STREAM_START') {
         setLiveStateOverride(true);
+        setLiveStartedAt((prev) => prev ?? new Date().toISOString());
         void requestItemSync();
         return;
       }
@@ -508,6 +511,8 @@ export function useLiveStream(
 
   const confirmStreamStart = useCallback(() => {
     setLiveStateOverride(true);
+    setLiveStartedAt((prev) => prev ?? new Date().toISOString());
+    void requestItemSyncRef.current?.();
   }, []);
 
   const markStreamEnded = useCallback(() => {
@@ -524,6 +529,7 @@ export function useLiveStream(
 
   return {
     isStreamLive,
+    liveStartedAt,
     timer,
     bidSync,
     uniqueBidSync,
