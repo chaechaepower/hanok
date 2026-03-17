@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import { FaUser } from 'react-icons/fa';
 import { GoBellFill } from 'react-icons/go';
 import { HiMiniHome } from 'react-icons/hi2';
-import { IoMdSettings } from 'react-icons/io';
 import { TbCircleLetterMFilled } from 'react-icons/tb';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -62,9 +61,8 @@ export default function Header() {
     navigate(isLoggedIn ? sellerButtonPath : '/login');
   };
 
-  const handleProfileClick = () => {
-    const userId = localStorage.getItem('userId');
-    navigate(userId ? `/profile/${userId}` : '/login');
+  const handleMyPageClick = () => {
+    navigate('/settings');
   };
 
   const handleSearch = (keyword: string) => {
@@ -130,20 +128,9 @@ export default function Header() {
             </HeaderIcon>
             {isNotifOpen && <NotificationPanel onClose={() => setIsNotifOpen(false)} />}
           </div>
-          <HeaderIcon onClick={() => navigate('/settings')} ariaLabel="Go to settings" tooltip="설정">
-            <IoMdSettings className="h-5 w-5" />
+          <HeaderIcon onClick={handleMyPageClick} ariaLabel="Go to my page" tooltip="마이페이지">
+            <FaUser className="h-5 w-5" />
           </HeaderIcon>
-
-          <div className="mx-1.5 h-6 w-px shrink-0 bg-warm/5" />
-
-          <button
-            type="button"
-            onClick={handleProfileClick}
-            aria-label="Go to profile"
-            className="ml-1 flex h-8 w-8 items-center justify-center overflow-hidden rounded-[10px] border border-primary/20 bg-primary/10 text-primary transition-all hover:border-primary/40 hover:bg-primary/20"
-          >
-            <FaUser className="h-4 w-4" />
-          </button>
         </div>
       ) : (
         <div className="flex shrink-0 items-center gap-2">

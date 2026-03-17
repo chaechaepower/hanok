@@ -14,6 +14,7 @@ const mockMeData = {
   bankCode: '088',
   accountName: 'Hong Gil Dong',
   accountNum: '110-123-456789',
+  sellerId: 1 as number | null,
 };
 
 const mockAccountData = {
@@ -130,6 +131,7 @@ export const settingsHandlers = [
           bankCode: mockMeData.bankCode,
           accountName: mockMeData.accountName,
           accountNum: mockMeData.accountNum,
+          sellerId: mockMeData.sellerId,
         }
       : mockMeData;
 

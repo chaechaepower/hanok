@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUserAlt, FaHeart, FaMapMarkerAlt, FaCreditCard } from 'react-icons/fa';
+import { FiCamera } from 'react-icons/fi';
 import { useToast } from '@/components/common/Toast';
 import { useGetMe } from '@/api/hooks/useGetMe';
+import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
 import { useGetNotification } from '@/api/hooks/useGetNotification';
 import { useGetWallet } from '@/api/hooks/useGetWallet';
 import { useLogout } from '@/api/hooks/usePostLogout';
+import { FaStore } from 'react-icons/fa';
 import AccountSection from '@/components/Settings/AccountSection';
 import FollowedStoresSection from '@/components/Settings/FollowedStoresSection';
 import ShippingSection from '@/components/Settings/ShippingSection';
@@ -19,7 +22,26 @@ export default function SettingsPage() {
   const { isLoading: isNotiLoading } = useGetNotification();
   const { data: walletData, isLoading: isWalletLoading } = useGetWallet();
   const { mutate: logout, isPending: isLogoutPending } = useLogout();
+  const { mutate: patchProfileImage } = usePatchProfileImage();
   const { showToast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleProfileImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    patchProfileImage(file, {
+      onSuccess: () => {
+        showToast({ message: '프로필 이미지가 변경되었습니다.' });
+      },
+      onError: () => {
+        showToast({ message: '프로필 이미지 변경에 실패했습니다.' });
+      },
+    });
+  };
 
   const handleLogout = () => {
     logout(undefined, {
@@ -57,17 +79,32 @@ export default function SettingsPage() {
     <div className="w-full box-border max-w-[1200px] mx-auto py-10 px-5 flex flex-col gap-8">
       <div className="w-full box-border rounded-2xl py-8 px-10 bg-[#050505] border border-[#d9b36d]/30 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          {user?.profileImage ? (
-            <img
-              src={user.profileImage}
-              alt={user.nickname}
-              className="w-[100px] h-[100px] rounded-full object-cover"
+          <div
+            className="relative group cursor-pointer"
+            onClick={handleProfileImageClick}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleProfileImageChange}
             />
-          ) : (
-            <div className="w-[100px] h-[100px] rounded-full bg-[#1e1e2d] text-[#d9b36d] text-4xl flex items-center justify-center font-bold">
-              {user?.nickname?.charAt(0) || 'U'}
+            {user?.profileImage ? (
+              <img
+                src={user.profileImage}
+                alt={user.nickname}
+                className="w-[100px] h-[100px] rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-[100px] h-[100px] rounded-full bg-[#1e1e2d] text-[#d9b36d] text-4xl flex items-center justify-center font-bold">
+                {user?.nickname?.charAt(0) || 'U'}
+              </div>
+            )}
+            <div className="absolute inset-0 w-[100px] h-[100px] rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <FiCamera size={24} className="text-white" />
             </div>
-          )}
+          </div>
           <div className="flex flex-col gap-1">
             <h1 className="m-0 text-3xl font-bold text-white tracking-tight">{user?.nickname}</h1>
             <div className="flex items-center gap-3">
@@ -83,18 +120,29 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <button
-          onClick={() => navigate('/wallet')}
-          className="flex items-center justify-between border border-[#d9b36d]/30 bg-[#050505] rounded-xl py-5 px-8 min-w-[320px] cursor-pointer hover:bg-[#111] transition-colors"
-        >
-          <span className="text-[#aaa] text-[17px] font-medium">보유머니</span>
-          <div className="flex items-center gap-3">
-            <span className="text-[#d9b36d] text-2xl font-bold">
-              {formatPrice(walletData?.balance)} <span className="text-xl">원</span>
-            </span>
-            <span className="text-[#d9b36d] text-xl font-bold">&gt;</span>
-          </div>
-        </button>
+        <div className="flex flex-col gap-3">
+          {user?.sellerId && (
+            <button
+              onClick={() => navigate(`/profile/${user.sellerId}`)}
+              className="flex items-center justify-center gap-2 border border-[#d9b36d]/30 bg-[#050505] rounded-xl py-4 px-8 min-w-[320px] cursor-pointer hover:bg-[#111] transition-colors"
+            >
+              <FaStore className="text-[#d9b36d]" size={18} />
+              <span className="text-[#d9b36d] text-[17px] font-bold">내 상점 보기</span>
+            </button>
+          )}
+          <button
+            onClick={() => navigate('/wallet')}
+            className="flex items-center justify-between border border-[#d9b36d]/30 bg-[#050505] rounded-xl py-5 px-8 min-w-[320px] cursor-pointer hover:bg-[#111] transition-colors"
+          >
+            <span className="text-[#aaa] text-[17px] font-medium">보유머니</span>
+            <div className="flex items-center gap-3">
+              <span className="text-[#d9b36d] text-2xl font-bold">
+                {formatPrice(walletData?.balance)} <span className="text-xl">원</span>
+              </span>
+              <span className="text-[#d9b36d] text-xl font-bold">&gt;</span>
+            </div>
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-10 mt-2">

@@ -8,6 +8,7 @@ export type GetMeResponse = {
   bankCode: string;
   accountName: string;
   accountNum: string;
+  sellerId: number | null;
 };
 
 export type PatchMeSettingsPayload = {
