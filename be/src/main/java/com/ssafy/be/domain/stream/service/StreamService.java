@@ -386,10 +386,11 @@ public class StreamService {
     }
 
     @Transactional(readOnly = true)
-    public ScheduledStreamListResponse getScheduledStreamList(int page, int size) {
+    public ScheduledStreamListResponse getScheduledStreamList(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Slice<Stream> slice = streamRepository.findByStatusIn(
+        Slice<Stream> slice = streamRepository.findByStatusInAndSellerUserId(
                 List.of(StreamStatus.LIVE, StreamStatus.SCHEDULED),
+                userId,
                 pageable
         );
 

@@ -80,9 +80,10 @@ public class StreamController implements StreamApi {
 
     @GetMapping("/scheduled")
     public ResponseEntity<ScheduledStreamListResponse> getScheduledStreamList(
+            @AuthenticationPrincipal String userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(streamService.getScheduledStreamList(page, size));
+        return ResponseEntity.ok(streamService.getScheduledStreamList(Long.parseLong(userId), page, size));
     }
 
     @GetMapping("/{streamId}/enter")
