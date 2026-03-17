@@ -1,4 +1,9 @@
 port: 7880
+rtc:
+  tcp_port: 7881
+  udp_port: 7882
+  node_ip: 13.124.238.68
+
 keys:
   devkey: devsecretkeythatisatleast32characters
 
