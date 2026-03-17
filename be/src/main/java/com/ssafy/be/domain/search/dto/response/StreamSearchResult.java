@@ -11,8 +11,11 @@ public record StreamSearchResult(
         String title,
         String thumbnail,
         StreamStatus status,
+        String scheduledAt,
+        Integer viewerCount,
+        String category,
+        SellerInfo seller,
         List<MatchReason> matchReasons
-
 ) {
     public void addReason(MatchReason reason) {
         matchReasons.add(reason);
