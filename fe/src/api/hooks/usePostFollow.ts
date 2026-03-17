@@ -1,19 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFetchInstance } from '../instance';
-import type { FollowPayload, FollowResponse } from '@/types';
+import type { ApiResponse,FollowPayload, FollowResponse } from '@/types';
 
-export const patchFollowPath = (userId: string | number) => `/v1/users/${userId}/follow`;
+export const postFollowPath = (userId: string | number) => `/v1/users/${userId}/follow`;
 
-export const patchFollow = async (req: FollowPayload): Promise<FollowResponse> => {
-  const response = await getFetchInstance().patch<FollowResponse>(patchFollowPath(req.userId), req);
-  return response.data;
+export const postFollow = async (req: FollowPayload): Promise<FollowResponse> => {
+  const response = await getFetchInstance().post<ApiResponse<FollowResponse>>(postFollowPath(req.userId), req);
+  return response.data.data;
 };
 
-export const usePatchFollow = () => {
+export const usePostFollow = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: patchFollow,
+    mutationFn: postFollow,
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['sellerReputation', variables.userId] });
       queryClient.invalidateQueries({ queryKey: ['liveCards'] });

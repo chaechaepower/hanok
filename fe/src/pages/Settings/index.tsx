@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaUserAlt, FaHeart, FaMapMarkerAlt, FaCreditCard } from 'react-icons/fa';
+import { BiSolidPurchaseTag } from "react-icons/bi";
 import { FiCamera } from 'react-icons/fi';
 import { useToast } from '@/components/common/Toast';
 import { useGetMe } from '@/api/hooks/useGetMe';
@@ -13,6 +14,7 @@ import AccountSection from '@/components/Settings/AccountSection';
 import FollowedStoresSection from '@/components/Settings/FollowedStoresSection';
 import ShippingSection from '@/components/Settings/ShippingSection';
 import PaymentSection from '@/components/Settings/PaymentSection';
+import OrderHistorySection from '@/components/Settings/OrderHistorySection';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -73,6 +75,8 @@ export default function SettingsPage() {
     { id: 'stores', label: '팔로우한 스토어', icon: <FaHeart size={20} className="text-[#ec4899]" /> },
     { id: 'shipping', label: '배송지 관리', icon: <FaMapMarkerAlt size={20} className="text-[#eab308]" /> },
     { id: 'payment', label: '결제수단 관리', icon: <FaCreditCard size={20} className="text-[#3b82f6]" /> },
+    { id: 'order', label: '구매 내역', icon: <BiSolidPurchaseTag size={20} className="text-[#4ef63b]" /> },
+
   ];
 
   return (
@@ -169,6 +173,7 @@ export default function SettingsPage() {
           {activeTab === 'stores' && <FollowedStoresSection />}
           {activeTab === 'shipping' && <ShippingSection />}
           {activeTab === 'payment' && <PaymentSection />}
+          {activeTab === 'order' && <OrderHistorySection />}
           {activeTab !== 'account' && activeTab !== 'stores' && activeTab !== 'shipping' && activeTab !== 'payment' && (
             <div className="flex items-center justify-center p-20 text-[#888]">해당 메뉴는 준비 중입니다.</div>
           )}
