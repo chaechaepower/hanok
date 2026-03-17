@@ -110,7 +110,7 @@ export default function LiveRegisterPage() {
     }
 
     const inventoryById = new Map(filteredInventory.map((item) => [item.itemId, item]));
-    const items = streamData.items.map((item) => inventoryById.get(item.itemId) ?? toFallbackProduct(item));
+    const items = (streamData.items ?? []).map((item) => inventoryById.get(item.itemId) ?? toFallbackProduct(item));
     setSelectedItems(items);
     initializedItemsStreamIdRef.current = streamId;
   }, [filteredInventory, inventoryLoading, isEditMode, streamData, streamId]);

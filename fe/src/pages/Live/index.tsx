@@ -220,7 +220,7 @@ export default function LivePage() {
             startType: activeStreamEnter.startType,
             scheduledAt: activeStreamEnter.scheduledAt ?? undefined,
             notice: activeStreamEnter.notice ?? undefined,
-            itemIds: activeStreamEnter.items.map((item) => item.itemId),
+            itemIds: (activeStreamEnter.items ?? []).map((item) => item.itemId),
           }
         : null,
     [activeStreamEnter],

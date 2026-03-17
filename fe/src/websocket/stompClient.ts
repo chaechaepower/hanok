@@ -78,7 +78,7 @@ const createClient = () => {
     reconnectDelay: 5_000,
     heartbeatIncoming: 10_000,
     heartbeatOutgoing: 10_000,
-    debug: import.meta.env.DEV ? (message) => console.debug(`[stomp] ${message}`) : undefined,
+    debug: import.meta.env.DEV ? (message) => console.debug(`[stomp] ${message}`) : () => {},
   });
 
   nextClient.onConnect = () => {
