@@ -38,7 +38,6 @@ export type RegisterSellerPayload = {
 export type RegisterSellerResponse = {
   sellerId: number;
   nickname: string;
-  grade: string;
 };
 
 export type SellerStatusResponse = {
