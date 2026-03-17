@@ -194,10 +194,7 @@ export default function LivePage() {
   const activeBidAuctionId = liveAuctionItem?.auctionId ?? introducingAuctionItem?.auctionId ?? null;
   const activeAuctionType = liveAuctionItem?.auctionType ?? introducingAuctionItem?.auctionType ?? null;
   const activeStreamEnter: StreamEnterResponse | null = streamEnter ?? null;
-  const storedUserId =
-    typeof window === 'undefined' ? 0 : Number.parseInt(window.localStorage.getItem('userId') ?? '0', 10);
-  const currentUserId = Number.isFinite(storedUserId) ? storedUserId : 0;
-  const isSeller = activeStreamEnter?.seller.sellerId === currentUserId;
+  const isSeller = activeStreamEnter?.isHost ?? false;
   const isStreamLive = liveStateOverride ?? Boolean(activeStreamEnter?.isLive);
 
   const livekitUrl = import.meta.env.VITE_LIVEKIT_URL ?? '';
