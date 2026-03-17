@@ -1,5 +1,6 @@
 package com.ssafy.be.support.annotation;
 
+import com.ssafy.be.config.ExternalApiMockConfig;
 import com.ssafy.be.config.TestContainersConfig;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -19,6 +20,6 @@ import java.lang.annotation.Target;
                 "com.google.cloud.spring.autoconfigure.storage.GcpStorageAutoConfiguration," +
                 "com.google.cloud.spring.autoconfigure.core.GcpContextAutoConfiguration"
 })
-@Import({TestContainersConfig.class})
+@Import({TestContainersConfig.class, ExternalApiMockConfig.class})
 public @interface IntegrationTest {
 }

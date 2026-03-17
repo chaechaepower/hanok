@@ -55,18 +55,6 @@ public class UserProfileController implements UserProfileApi {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Override
-    @PostMapping("/{userId}/follow")
-    public ResponseEntity<ApiResponse<FollowResponse>> toggleFollow(
-            @AuthenticationPrincipal String principal,
-            @PathVariable("userId") Long targetUserId) {
-
-        Long loginUserId = getUserId(principal);
-
-        FollowResponse response = followService.toggleFollow(loginUserId, targetUserId);
-        return ResponseEntity.ok(ApiResponse.success(response));
-    }
-
     private Long getUserId(String principal) {
         return Long.parseLong(principal);
     }

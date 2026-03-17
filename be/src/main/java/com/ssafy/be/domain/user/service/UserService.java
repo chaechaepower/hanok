@@ -266,10 +266,14 @@ public class UserService {
                 .map(seller -> seller.getId())
                 .orElse(null);
 
+        String profileImage = user.getProfileImage() != null
+                ? user.getProfileImage()
+                : gcsClient.getDefaultProfileImageUrl();
+
         return UserProfileResponse.builder()
                 .email(user.getEmail())
                 .nickname(user.getNickname())
-                .profileImage(user.getProfileImage())
+                .profileImage(profileImage)
                 .phone(user.getPhone())
                 .balance(user.getBalance())
                 .depositedBalance(user.getDepositedBidBalance()

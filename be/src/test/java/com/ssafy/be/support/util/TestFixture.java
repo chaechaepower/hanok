@@ -4,6 +4,7 @@ import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.seller.entity.Seller;
+import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
 import com.ssafy.be.domain.stream.entity.Stream;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.wallet.model.PaymentStatus;
@@ -16,7 +17,7 @@ import static com.ssafy.be.domain.item.entity.Category.CLOTHING;
 import static com.ssafy.be.domain.seller.entity.SellerType.BUSINESS;
 
 public class TestFixture {
-    public static User createTestUser(String name) {
+    public static User createUser(String name) {
         return User.createUser(
                 "test" + UUID.randomUUID() + "@test.com",
                 "password",
@@ -65,6 +66,19 @@ public class TestFixture {
                 .auctionStatus(status)
                 .stream(stream)
                 .item(item)
+                .build();
+    }
+
+    public static ShippingAddress createShippingAddress(User user) {
+        return ShippingAddress.builder()
+                .user(user)
+                .addressName("기본 배송지")
+                .postalCode(12345)
+                .address("서울시 테스트구 테스트로 123")
+                .addressDetail("101동 202호")
+                .phone("010-1111-2222")
+                .recipientName("테스트 수령인")
+                .isDefault(true)
                 .build();
     }
 }

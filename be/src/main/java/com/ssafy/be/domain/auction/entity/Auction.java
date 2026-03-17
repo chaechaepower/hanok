@@ -48,19 +48,6 @@ public class Auction {
         this.item = item;
     }
 
-    public boolean isLive() {
-        return this.auctionStatus == LIVE;
-    }
-
-    public boolean isSeller(Long userId) {
-        Long sellerId = stream.getSeller().getUser().getId();
-        return Objects.equals(sellerId, userId);
-    }
-
-    public boolean isBelowStartPrice(Long amount) {
-        return this.item.getStartPrice() > amount;
-    }
-
     public void startAuction(String startedAt) {
         if (auctionStatus != INTRODUCING) {
             throw new IllegalArgumentException("상품 설명 단계가 아닙니다.");
@@ -85,5 +72,26 @@ public class Auction {
 
     public void unsold() {
         this.auctionStatus = UNSOLD;
+    }
+
+    public boolean isLive() {
+        return this.auctionStatus == LIVE;
+    }
+
+    public boolean isReady() {
+        return this.auctionStatus == READY;
+    }
+
+    public boolean isIntroducing() {
+        return this.auctionStatus == INTRODUCING;
+    }
+
+    public boolean isSeller(Long userId) {
+        Long sellerId = stream.getSeller().getUser().getId();
+        return Objects.equals(sellerId, userId);
+    }
+
+    public boolean isBelowStartPrice(Long amount) {
+        return this.item.getStartPrice() > amount;
     }
 }

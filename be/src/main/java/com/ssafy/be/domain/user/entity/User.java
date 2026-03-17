@@ -18,7 +18,7 @@ import java.util.List;
 @Table(name = "user")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA 기본 생성자 (외부 직접 생성 방지)
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 public class User {
     @Id
@@ -87,6 +87,7 @@ public class User {
                 .password(encodedPassword)
                 .nickname(nickname)
                 .phone(phone)
+                .profileImage(null)
                 .profileImage("https://storage.googleapis.com/hanok-storage/profiles/default/default-profile.png")   // GCS 기본 프로필 이미지   // GCS 연동 후 default 이미지 URL로 교체 예정
                 .isActive(true)
                 .balance(0L)
