@@ -44,33 +44,33 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
       onClick={onClose}
     >
       <div
-        className="bg-[#1a1a28] border border-[#2e2e40] rounded-2xl w-[500px] max-h-[90vh] overflow-y-auto p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+        className="bg-surface border border-neutral-800 rounded-2xl w-[500px] max-h-[90vh] overflow-y-auto p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
           <h2 className="m-0 text-white text-xl font-bold">신고하기</h2>
           <button
-            className="bg-transparent border-none text-[#888] cursor-pointer hover:text-white transition-colors p-0"
+            className="bg-transparent border-none text-neutral-600 cursor-pointer hover:text-white transition-colors p-0"
             onClick={onClose}
           >
             <FiX size={22} />
           </button>
         </div>
 
-        <p className="m-0 text-[14px] text-[#aaa]">
-          <span className="text-[#d9b36d] font-bold">{sellerNickname}</span> 스토어를 신고합니다.
+        <p className="m-0 text-[14px] text-neutral-400">
+          <span className="text-gold-light font-bold">{sellerNickname}</span> 스토어를 신고합니다.
         </p>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[14px] text-[#ccc] font-semibold">신고 사유</label>
+          <label className="text-[14px] text-neutral-300 font-semibold">신고 사유</label>
           <div className="flex flex-col gap-2">
             {REPORT_REASONS.map((r) => (
               <label
                 key={r}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-colors ${
                   reason === r
-                    ? 'border-[#d9b36d] bg-[#1e1a14]'
-                    : 'border-[#2e2e40] bg-[#0f0f16] hover:border-[#3a3a50]'
+                    ? 'border-gold-light bg-gold-muted/30'
+                    : 'border-neutral-800 bg-background hover:border-neutral-700'
                 }`}
               >
                 <input
@@ -79,7 +79,7 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
                   value={r}
                   checked={reason === r}
                   onChange={() => setReason(r)}
-                  className="accent-[#d9b36d]"
+                  className="accent-gold-light"
                 />
                 <span className="text-[14px] text-white">{r}</span>
               </label>
@@ -88,9 +88,9 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[14px] text-[#ccc] font-semibold">상세 설명</label>
+          <label className="text-[14px] text-neutral-300 font-semibold">상세 설명</label>
           <textarea
-            className="w-full box-border bg-[#0f0f16] text-white border border-[#2e2e40] rounded-lg p-[14px] text-[15px] min-h-[120px] resize-none focus:border-[#d9b36d] focus:outline-none transition-colors"
+            className="w-full box-border bg-background text-white border border-neutral-800 rounded-lg p-[14px] text-[15px] min-h-[120px] resize-none focus:border-gold-light focus:outline-none transition-colors"
             placeholder="신고 내용을 상세히 작성해주세요."
             value={detail}
             onChange={(e) => setDetail(e.target.value)}
@@ -98,14 +98,14 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[14px] text-[#ccc] font-semibold">
-            스크린샷 첨부 <span className="text-[#888] font-normal">({images.length}/3)</span>
+          <label className="text-[14px] text-neutral-300 font-semibold">
+            스크린샷 첨부 <span className="text-neutral-600 font-normal">({images.length}/3)</span>
           </label>
 
           {images.length > 0 && (
             <div className="flex gap-3">
               {images.map((img, i) => (
-                <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-[#2e2e40]">
+                <div key={i} className="relative w-20 h-20 rounded-lg overflow-hidden border border-neutral-800">
                   <img src={URL.createObjectURL(img)} alt={`screenshot-${i}`} className="w-full h-full object-cover" />
                   <button
                     className="absolute top-1 right-1 bg-black/70 text-white border-none rounded-full w-5 h-5 flex items-center justify-center cursor-pointer p-0"
@@ -119,7 +119,7 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
           )}
 
           {images.length < 3 && (
-            <label className="flex items-center justify-center gap-2 py-3 border border-dashed border-[#2e2e40] rounded-lg text-[#888] text-[14px] cursor-pointer hover:border-[#d9b36d] hover:text-[#d9b36d] transition-colors">
+            <label className="flex items-center justify-center gap-2 py-3 border border-dashed border-neutral-800 rounded-lg text-neutral-600 text-[14px] cursor-pointer hover:border-gold-light hover:text-gold-light transition-colors">
               <FiUpload size={16} />
               이미지 업로드
               <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
@@ -129,13 +129,13 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
 
         <div className="flex justify-end gap-3 mt-[10px]">
           <button
-            className="py-[10px] px-6 bg-[#333] text-[#ddd] border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-[#444] transition-colors"
+            className="py-[10px] px-6 bg-neutral-700 text-neutral-200 border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-neutral-600 transition-colors"
             onClick={onClose}
           >
             취소
           </button>
           <button
-            className="py-[10px] px-6 bg-[#d9b36d] text-[#111] font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-[#c4a162] transition-colors"
+            className="py-[10px] px-6 bg-gold-light text-background font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-gold-dark transition-colors"
             onClick={handleSubmit}
           >
             신고하기

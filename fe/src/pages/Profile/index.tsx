@@ -17,7 +17,7 @@ import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
 import { usePatchSellerProfile } from '@/api/hooks/usePatchSellerProfile';
 import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
 import type { EscrowState, ScheduledStream } from '@/types';
-import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2, FiX, FiCamera, FiTv } from 'react-icons/fi';
+import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2, FiX, FiCamera, FiTv, FiChevronDown } from 'react-icons/fi';
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
 import React from 'react';
 
@@ -39,10 +39,10 @@ const InstagramIcon = () => (
 const YoutubeIcon = () => <FaYoutube size={20} color="#FF0000" />;
 const TiktokIcon = () => <FaTiktok size={20} color="#FFFFFF" />;
 
-const BellIcon = () => <FiBell size={20} color="#D9B36D" />;
-const CalendarIcon = () => <FiCalendar size={16} color="#888" />;
+const BellIcon = () => <FiBell size={20} className="text-gold-light" />;
+const CalendarIcon = () => <FiCalendar size={16} className="text-neutral-600" />;
 const HistoryIcon = () => <FiClock size={18} color="currentColor" />;
-const GiftIcon = () => <FiGift size={32} color="#D9B36D" />;
+const GiftIcon = () => <FiGift size={32} className="text-gold-light" />;
 
 
 const formatDate = (iso: string) => {
@@ -62,23 +62,23 @@ const getEscrowStateUI = (state: EscrowState) => {
     case 'INVOICE_SUBMITTED':
       return {
         label: '배송중',
-        badgeClass: 'self-start bg-[#1b4a3c] text-[#4ade80] px-2 py-1 text-[11px] font-bold rounded-[20px]',
+        badgeClass: 'self-start badge badge-ember-outline',
       };
     case 'COMPLETED':
       return {
         label: '배송완료',
-        badgeClass: 'self-start bg-[#183b5f] text-[#60a5fa] px-2 py-1 text-[11px] font-bold rounded-[20px]',
+        badgeClass: 'self-start badge badge-primary-outline',
       };
     case 'CANCELLED':
       return {
         label: '취소됨',
-        badgeClass: 'self-start bg-[#333] text-[#999] px-2 py-1 text-[11px] font-bold rounded-[20px]',
+        badgeClass: 'self-start badge badge-neutral',
       };
     case 'DEPOSITED':
     default:
       return {
         label: '결제완료',
-        badgeClass: 'self-start bg-[#3a2b16] text-[#d9b36d] px-2 py-1 text-[11px] font-bold rounded-[20px]',
+        badgeClass: 'self-start badge badge-gold-outline',
       };
   }
 };
@@ -140,6 +140,26 @@ export default function ProfilePage() {
   const { data: noticeDetail } = useGetSellerNoticeDetail(sellerId, viewNoticeId);
 
   const [selectedStream, setSelectedStream] = useState<ScheduledStream | null>(null);
+  const [streamDropdownOpen, setStreamDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!streamDropdownOpen) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setStreamDropdownOpen(false);
+    };
+    const handleClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setStreamDropdownOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    document.addEventListener('mousedown', handleClick);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.removeEventListener('mousedown', handleClick);
+    };
+  }, [streamDropdownOpen]);
   const { data: scheduledStreamsData } = useGetScheduledStreams(0, 50);
 
   const { mutate: postFollow, isPending: isFollowPending } = usePostFollow();
@@ -265,8 +285,8 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <div className="w-10 h-10 border-4 border-[#333] border-t-[#d9b36d] rounded-full animate-spin" />
-        <p className="text-[#aaa] mt-3">판매자 정보를 불러오는 중…</p>
+        <div className="w-10 h-10 border-4 border-neutral-700 border-t-gold-light rounded-full animate-spin" />
+        <p className="text-neutral-400 mt-3">판매자 정보를 불러오는 중…</p>
       </div>
     );
   }
@@ -274,7 +294,7 @@ export default function ProfilePage() {
   if (isError || !data) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <p className="text-red-400 text-base">판매자 정보를 불러오지 못했습니다.</p>
+        <p className="text-accent-light text-base">판매자 정보를 불러오지 못했습니다.</p>
       </div>
     );
   }
@@ -284,144 +304,145 @@ export default function ProfilePage() {
 
   return (
     <div className="w-full box-border max-w-[1200px] mx-auto py-10 px-5 flex flex-col gap-8">
-      <div className="w-full box-border border border-[#d9b36d]/30 rounded-2xl py-11 px-14 bg-[#050505]">
-        <div className="flex items-start gap-10">
-          <div
-            className={`relative group ${isMyProfile ? 'cursor-pointer' : ''}`}
-            onClick={handleProfileImageClick}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleProfileImageChange}
-            />
-            {profileImage ? (
-              <>
-                <img
-                  src={profileImage}
-                  alt={nickname}
-                  className="w-[140px] h-[140px] min-w-[140px] min-h-[140px] flex-shrink-0 rounded-full object-contain object-center bg-[#1e1e2d]"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                    (e.target as HTMLImageElement).nextElementSibling?.classList.add('flex');
-                  }}
-                />
-                <div className="hidden w-[140px] h-[140px] min-w-[140px] min-h-[140px] flex-shrink-0 rounded-full bg-[#1e1e2d] text-[#d9b36d] text-[48px] items-center justify-center font-bold">
+      <div className="w-full box-border border border-gold-light/30 rounded-2xl py-12 px-12 bg-surface">
+        <div className="flex items-center justify-between gap-12">
+          {/* 좌측: 프로필 이미지 + 정보 */}
+          <div className="flex items-center gap-8 flex-1 min-w-0">
+            <div
+              className={`relative group ${isMyProfile ? 'cursor-pointer' : ''}`}
+              onClick={handleProfileImageClick}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleProfileImageChange}
+              />
+              {profileImage ? (
+                <>
+                  <img
+                    src={profileImage}
+                    alt={nickname}
+                    className="w-[120px] h-[120px] min-w-[120px] min-h-[120px] flex-shrink-0 rounded-full object-contain object-center bg-surface"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                      (e.target as HTMLImageElement).nextElementSibling?.classList.add('flex');
+                    }}
+                  />
+                  <div className="hidden w-[120px] h-[120px] min-w-[120px] min-h-[120px] flex-shrink-0 rounded-full bg-surface text-gold-light text-[44px] items-center justify-center font-bold">
+                    {nickname.charAt(0)}
+                  </div>
+                </>
+              ) : (
+                <div className="w-[120px] h-[120px] min-w-[120px] min-h-[120px] flex-shrink-0 rounded-full bg-surface text-gold-light text-[44px] flex items-center justify-center font-bold">
                   {nickname.charAt(0)}
                 </div>
-              </>
-            ) : (
-              <div className="w-[140px] h-[140px] min-w-[140px] min-h-[140px] flex-shrink-0 rounded-full bg-[#1e1e2d] text-[#d9b36d] text-[48px] flex items-center justify-center font-bold">
-                {nickname.charAt(0)}
+              )}
+              {isMyProfile && (
+                <div className="absolute inset-0 w-[120px] h-[120px] rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <FiCamera size={24} className="text-white" />
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-3 min-w-0">
+              <h2 className="m-0 text-neutral-100">{nickname}상점</h2>
+              <p className="m-0 text-body-lg text-neutral-300 leading-relaxed">{intro}</p>
+
+              <div className="flex gap-2 mt-1">
+                {instagramUrl && (
+                  <a
+                    href={instagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/5 transition-colors"
+                    title="Instagram"
+                  >
+                    <InstagramIcon />
+                  </a>
+                )}
+                {youtubeUrl && (
+                  <a
+                    href={youtubeUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/5 transition-colors"
+                    title="YouTube"
+                  >
+                    <YoutubeIcon />
+                  </a>
+                )}
+                {tiktokUrl && (
+                  <a
+                    href={tiktokUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/5 transition-colors"
+                    title="TikTok"
+                  >
+                    <TiktokIcon />
+                  </a>
+                )}
               </div>
-            )}
-            {isMyProfile && (
-              <div className="absolute inset-0 w-[140px] h-[140px] rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <FiCamera size={28} className="text-white" />
-              </div>
-            )}
+            </div>
           </div>
 
-          <div className="flex-1 flex flex-col gap-3">
-            <div className="flex items-center gap-4">
-              <h1 className="m-0 text-[26px] font-bold text-white">{nickname}상점</h1>
-              {!isMyProfile && (
-                <button
-                  className={`py-2 px-[22px] rounded-3xl bg-white text-gray-900 text-sm font-bold border-none cursor-pointer ${isFollowPending ? 'opacity-70' : 'opacity-100'}`}
-                  onClick={handleFollowToggle}
-                  disabled={isFollowPending}
-                >
-                  {isFollowing ? '언팔로우' : '팔로우'}
-                </button>
-              )}
-              <div className="ml-auto flex gap-4">
-                {isMyProfile && (
-                  <button
-                    onClick={handleOpenProfileEdit}
-                    className="border-none bg-transparent text-[#888] text-sm cursor-pointer hover:text-[var(--color-point)] transition-colors"
-                  >
-                    수정
-                  </button>
-                )}
-                {!isMyProfile && (
-                  <button
-                    onClick={() => setIsReportModalOpen(true)}
-                    className="border-none bg-transparent text-[#888] text-sm cursor-pointer hover:text-[var(--color-point)] transition-colors"
-                  >
-                    신고
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <p className="m-0 text-[15px] text-[#ddd] leading-relaxed">{intro}</p>
-
-            <div className="flex gap-5 mt-1">
-              {instagramUrl && (
-                <a
-                  href={instagramUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-[6px] text-white no-underline text-base font-semibold"
-                >
-                  <InstagramIcon />
-                  <span>{instagramUrl.replace('https://instagram.com/', '@')}</span>
-                </a>
-              )}
-              {youtubeUrl && (
-                <a
-                  href={youtubeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-[6px] text-white no-underline text-base font-semibold"
-                >
-                  <YoutubeIcon />
-                  <span>{youtubeUrl.replace('https://youtube.com/', '')}</span>
-                </a>
-              )}
-              {tiktokUrl && (
-                <a
-                  href={tiktokUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-[6px] text-white no-underline text-base font-semibold"
-                >
-                  <TiktokIcon />
-                  <span>{tiktokUrl.replace('https://tiktok.com/', '')}</span>
-                </a>
-              )}
-            </div>
+          {/* 우측: 수정/신고 + 통계 + 팔로우 */}
+          <div className="flex flex-col items-center gap-2 shrink-0 -mt-4">
+            {isMyProfile && (
+              <button
+                onClick={handleOpenProfileEdit}
+                className="self-end border-none bg-transparent text-neutral-500 text-body-sm cursor-pointer rounded-lg px-3 py-1 hover:bg-white/5 hover:text-neutral-200 transition-colors"
+              >
+                수정
+              </button>
+            )}
+            {!isMyProfile && (
+              <button
+                onClick={() => setIsReportModalOpen(true)}
+                className="self-end border-none bg-transparent text-neutral-600 text-body-sm cursor-pointer rounded-lg px-3 py-1 hover:bg-white/5 hover:text-neutral-400 transition-colors"
+              >
+                신고
+              </button>
+            )}
 
             {isOwner && data?.stats !== undefined && (
-              <div className="mt-3 border border-white/5 rounded-xl py-6 flex items-center w-[420px]">
-                <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{data.stats.followerCount ?? '-'}</span>
-                  <span className="text-[13px] text-[#888]">팔로워수</span>
+              <div className="grid grid-cols-3 gap-[1px] bg-neutral-800 border border-white/5 rounded-xl overflow-hidden">
+                <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated">
+                  <span className="text-subtitle-sm text-neutral-500">팔로워</span>
+                  <span className="text-price-lg text-white">{data.stats.followerCount ?? '-'}</span>
                 </div>
-                <div className="w-[1px] h-10 bg-[#2e2e40]" />
-                <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{data.stats.rating ?? '-'}</span>
-                  <span className="text-[13px] text-[#888]">평점</span>
+                <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated">
+                  <span className="text-subtitle-sm text-neutral-500">평점</span>
+                  <span className="text-price-lg text-white">{data.stats.rating ?? '-'}</span>
                 </div>
-                <div className="w-[1px] h-10 bg-[#2e2e40]" />
-                <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{data.stats.avgShipDays != null ? `${data.stats.avgShipDays}일` : '-'}</span>
-                  <span className="text-[13px] text-[#888]">평균 배송일</span>
+                <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated">
+                  <span className="text-subtitle-sm text-neutral-500">평균 배송</span>
+                  <span className="text-price-lg text-white">{data.stats.avgShipDays != null ? `${data.stats.avgShipDays}일` : '-'}</span>
                 </div>
               </div>
+            )}
+
+            {!isMyProfile && (
+              <button
+                className={`w-full py-3 rounded-xl bg-neutral-100 text-background text-subtitle-sm border-none cursor-pointer hover:bg-neutral-200 transition-colors ${isFollowPending ? 'opacity-70' : 'opacity-100'}`}
+                onClick={handleFollowToggle}
+                disabled={isFollowPending}
+              >
+                {isFollowing ? '언팔로우' : '팔로우'}
+              </button>
             )}
           </div>
         </div>
       </div>
 
-      <div className="w-full box-border border border-[#d9b36d]/30 rounded-2xl py-11 px-14 bg-[#050505]">
-        <div className="flex gap-6 border-b border-white/5 mb-8">
+      <div className="w-full box-border border border-gold-light/30 rounded-2xl py-11 px-14 bg-surface min-h-[calc(100vh-320px)]">
+        <div className="flex items-center gap-6 border-b border-white/5 mb-8">
           <button
-            className={`flex items-center gap-[6px] bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-base font-bold cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${
-              activeTab === 'posts' ? 'text-[#d9b36d] border-[#d9b36d]' : 'text-[#888] border-transparent'
+            className={`flex items-center gap-2 bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-subtitle-lg cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${
+              activeTab === 'posts' ? 'text-gold-light border-gold-light' : 'text-neutral-600 border-transparent'
             }`}
             onClick={() => setActiveTab('posts')}
           >
@@ -429,31 +450,30 @@ export default function ProfilePage() {
           </button>
 
           <button
-            className={`flex items-center gap-[6px] bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-base font-bold cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${
-              activeTab === 'sales' ? 'text-[#d9b36d] border-[#d9b36d]' : 'text-[#888] border-transparent'
+            className={`flex items-center gap-2 bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-subtitle-lg cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${
+              activeTab === 'sales' ? 'text-gold-light border-gold-light' : 'text-neutral-600 border-transparent'
             }`}
             onClick={() => setActiveTab('sales')}
           >
             <HistoryIcon />
             판매 내역
           </button>
+
+          {isMyProfile && (
+            <button
+              className="ml-auto bg-transparent text-gold-light border-none cursor-pointer rounded-lg w-8 h-8 flex items-center justify-center hover:bg-white/5 transition-colors -mb-[1px]"
+              onClick={handleOpenCreateModal}
+              aria-label="공지사항 등록"
+            >
+              <FiEdit2 size={18} />
+            </button>
+          )}
         </div>
 
         {activeTab === 'posts' && (
           <div className="flex flex-col gap-5">
-            {isMyProfile && (
-              <div className="flex justify-end mt-[-15px] mb-[-5px]">
-                <button
-                  className="flex items-center justify-center bg-transparent text-[#d9b36d] border-none cursor-pointer hover:text-[#c4a162] transition-colors p-0"
-                  onClick={handleOpenCreateModal}
-                  aria-label="공지사항 등록"
-                >
-                  <FiEdit2 size={20} />
-                </button>
-              </div>
-            )}
             {notices.length === 0 ? (
-              <p className="text-center text-[#888] py-[60px] text-[15px]">등록된 공지사항이 없습니다.</p>
+              <p className="text-center text-neutral-600 py-16 text-subtitle-lg">등록된 공지사항이 없습니다.</p>
             ) : (
               notices.map((post) => {
                 const streamMatch = post.content.match(/\[방송 안내\]\s*([\s\S]+)$/);
@@ -463,36 +483,36 @@ export default function ProfilePage() {
                 return (
                 <div
                   key={post.noticeId}
-                  className="border border-white/[0.06] rounded-xl py-7 px-8 bg-white/[0.02] flex flex-col gap-3 cursor-pointer hover:border-[#d9b36d]/40 transition-colors"
+                  className="border border-white/[0.06] rounded-xl py-7 px-8 bg-white/[0.02] flex flex-col gap-3 cursor-pointer hover:border-gold-light/40 transition-colors"
                   onClick={() => setViewNoticeId(post.noticeId)}
                 >
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <div className="flex items-center gap-[10px]">
+                      <div className="flex items-center gap-3">
                         <BellIcon />
-                        <h3 className="m-0 text-lg font-bold text-white">{post.title}</h3>
+                        <h3 className="m-0 text-neutral-100">{post.title}</h3>
                       </div>
                       {mainContent && (
-                        <p className="m-0 mt-1 ml-[30px] text-sm text-[#aaa] leading-relaxed">{mainContent}</p>
+                        <p className="m-0 mt-1 ml-8 text-body-md text-neutral-400 leading-relaxed">{mainContent}</p>
                       )}
                       {streamInfo && (
-                        <p className="m-0 mt-1 ml-[30px] text-sm text-[#aaa] leading-relaxed">{streamInfo}</p>
+                        <p className="m-0 mt-1 ml-8 text-body-md text-neutral-400 leading-relaxed">{streamInfo}</p>
                       )}
-                      <div className="flex items-center gap-[6px] mt-2 ml-[30px]">
+                      <div className="flex items-center gap-2 mt-2 ml-8">
                         <CalendarIcon />
-                        <span className="text-[13px] text-[#666]">{formatDate(post.createdAt).split(' ')[0]}</span>
+                        <span className="text-body-md text-neutral-600">{formatDate(post.createdAt).split(' ')[0]}</span>
                       </div>
                     </div>
                     {isMyProfile && (
                       <div className="flex gap-3">
                         <button
-                          className="bg-transparent border-none text-[#888] text-[13px] cursor-pointer hover:underline"
+                          className="bg-transparent border-none text-neutral-500 text-body-md cursor-pointer rounded-md px-2 py-1 hover:bg-white/5 hover:text-neutral-200 transition-colors"
                           onClick={(e) => { e.stopPropagation(); handleOpenEditModal(post.noticeId, post.title, post.content); }}
                         >
                           수정
                         </button>
                         <button
-                          className="bg-transparent border-none text-red-400 text-[13px] cursor-pointer hover:underline"
+                          className="bg-transparent border-none text-accent-light/70 text-body-md cursor-pointer rounded-md px-2 py-1 hover:bg-accent/10 hover:text-accent-light transition-colors"
                           onClick={(e) => { e.stopPropagation(); handleDeleteNotice(post.noticeId); }}
                         >
                           삭제
@@ -510,17 +530,17 @@ export default function ProfilePage() {
         {activeTab === 'sales' && (
           <div className="flex flex-col gap-5">
             {soldAuctions.length === 0 ? (
-              <p className="text-center text-[#888] py-[60px] text-[15px]">낙찰 이력이 없습니다.</p>
+              <p className="text-center text-neutral-600 py-16 text-subtitle-lg">낙찰 이력이 없습니다.</p>
             ) : (
               soldAuctions.map((sale, index) => {
                 const ui = getEscrowStateUI(sale.escrowStatus);
                 return (
                   <div
                     key={sale.itemName}
-                    className={`flex py-4 items-center justify-between ${index > 0 ? 'border-t border-[#1a1a26] mt-4 pt-8' : ''}`}
+                    className={`flex py-4 items-center justify-between ${index > 0 ? 'border-t border-neutral-800 mt-4 pt-8' : ''}`}
                   >
                     <div className="flex items-center gap-6 flex-1">
-                      <div className="w-16 h-16 rounded-full bg-[#1c1c28] border-[1.5px] border-[#d9b36d] flex items-center justify-center overflow-hidden">
+                      <div className="w-16 h-16 rounded-full bg-surface border-[1.5px] border-gold-light flex items-center justify-center overflow-hidden">
                         {sale.image ? (
                           <img src={sale.image} alt={sale.itemName} className="w-full h-full object-cover" />
                         ) : (
@@ -528,16 +548,16 @@ export default function ProfilePage() {
                         )}
                       </div>
 
-                      <div className="flex flex-col gap-[6px]">
+                      <div className="flex flex-col gap-2">
                         <span className={ui.badgeClass}>{ui.label}</span>
-                        <h4 className="m-0 mt-[2px] text-base font-bold text-white">{sale.itemName}</h4>
-                        <p className="m-0 text-[13px] text-[#888]">{formatDate(sale.createdAt)}</p>
+                        <h4 className="m-0 mt-1 text-neutral-100">{sale.itemName}</h4>
+                        <p className="m-0 text-body-md text-neutral-600">{formatDate(sale.createdAt)}</p>
                       </div>
                     </div>
 
-                    <div className="flex flex-col items-end gap-[6px] w-[140px]">
-                      <span className="text-base font-bold text-white">+ {formatPrice(sale.amount)}</span>
-                      <span className="text-[13px] text-[#888]">{ui.label}</span>
+                    <div className="flex flex-col items-end gap-2 w-[140px]">
+                      <span className="text-price-sm text-white">+ {formatPrice(sale.amount)}</span>
+                      <span className="text-body-md text-neutral-600">{ui.label}</span>
                     </div>
                   </div>
                 );
@@ -548,19 +568,19 @@ export default function ProfilePage() {
       </div>
 
       {isModalOpen && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black/70 z-[999] flex items-center justify-center">
-          <div className="bg-[#0a0a0a] border border-white/5 rounded-2xl w-[500px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
-            <h2 className="m-0 text-white text-xl font-bold">
+        <div className="fixed top-0 left-0 w-full h-full bg-black/90 z-[999] flex items-center justify-center backdrop-blur-sm">
+          <div className="bg-surface border border-neutral-800 rounded-2xl w-[600px] p-10 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
+            <h2 className="m-0 text-neutral-100">
               {modalMode === 'create' ? '공지사항 등록' : '공지사항 수정'}
             </h2>
             <input
-              className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg p-[14px] text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+              className="w-full box-border bg-background text-white border border-neutral-800 rounded-lg p-4 text-subtitle-lg outline-none focus:border-gold-light transition-colors"
               placeholder="제목을 입력하세요"
               value={noticeTitle}
               onChange={(e) => setNoticeTitle(e.target.value)}
             />
             <textarea
-              className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg p-[14px] text-[15px] min-h-[140px] resize-none outline-none focus:border-[#d9b36d] transition-colors"
+              className="w-full box-border bg-background text-white border border-neutral-800 rounded-lg p-4 text-subtitle-lg min-h-[140px] resize-none outline-none focus:border-gold-light transition-colors"
               placeholder="내용을 입력하세요"
               value={noticeContent}
               onChange={(e) => setNoticeContent(e.target.value)}
@@ -568,56 +588,69 @@ export default function ProfilePage() {
 
             {scheduledStreamsData?.streams && scheduledStreamsData.streams.length > 0 && (
               <div className="flex flex-col gap-2">
-                <label className="text-[13px] text-[#aaa] font-medium flex items-center gap-[6px]">
-                  <FiTv size={14} color="#d9b36d" />
+                <label className="text-subtitle-md text-neutral-400 font-medium flex items-center gap-2">
+                  <FiTv size={14} className="text-gold-light" />
                   예약된 방송 연결 (선택)
                 </label>
                 {selectedStream ? (
-                  <div className="flex items-center gap-2 bg-[#1a1a2e] border border-[#d9b36d]/30 rounded-lg px-3 py-2">
-                    <FiTv size={14} color="#d9b36d" />
-                    <span className="text-[13px] text-[#d9b36d] font-medium">{selectedStream.title}</span>
+                  <div className="flex items-center gap-2 bg-background border border-gold-light/30 rounded-lg px-4 py-3">
+                    <FiTv size={14} className="text-gold-light" />
+                    <span className="text-subtitle-md text-gold-light font-medium">{selectedStream.title}</span>
                     <button
                       type="button"
-                      className="ml-auto bg-transparent border-none text-[#888] cursor-pointer hover:text-white"
+                      className="ml-auto bg-transparent border-none text-neutral-600 cursor-pointer hover:text-white"
                       onClick={() => setSelectedStream(null)}
                     >
                       <FiX size={14} />
                     </button>
                   </div>
                 ) : (
-                  <select
-                    className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg p-[14px] text-[15px] outline-none focus:border-[#d9b36d] transition-colors appearance-none cursor-pointer"
-                    value=""
-                    onChange={(e) => {
-                      const id = Number(e.target.value);
-                      const stream = scheduledStreamsData.streams.find((s) => s.streamId === id) ?? null;
-                      setSelectedStream(stream);
-                    }}
-                  >
-                    <option value="" className="bg-[#111] text-white">방송을 선택하세요</option>
-                    {scheduledStreamsData.streams.map((stream) => (
-                      <option key={stream.streamId} value={stream.streamId} className="bg-[#111] text-white">
-                        {stream.title}
-                        {stream.scheduledAt
-                          ? ` - ${new Date(stream.scheduledAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
-                          : ''}
-                        {` [${stream.category}]`}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative" ref={dropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setStreamDropdownOpen(!streamDropdownOpen)}
+                      className="w-full box-border bg-background text-neutral-500 border border-neutral-800 rounded-lg p-4 text-subtitle-lg outline-none cursor-pointer flex items-center justify-between hover:border-neutral-700 transition-colors"
+                    >
+                      <span>방송을 선택하세요</span>
+                      <FiChevronDown size={16} className={`text-neutral-500 transition-transform ${streamDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {streamDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-surface-elevated border border-neutral-800 rounded-lg overflow-hidden z-10 shadow-[0_4px_20px_rgba(0,0,0,0.4)] max-h-[200px] overflow-y-auto custom-scrollbar">
+                        {scheduledStreamsData.streams.map((stream) => (
+                          <button
+                            key={stream.streamId}
+                            type="button"
+                            onClick={() => {
+                              setSelectedStream(stream);
+                              setStreamDropdownOpen(false);
+                            }}
+                            className="w-full text-left bg-transparent border-none px-4 py-3 text-body-md text-neutral-200 cursor-pointer hover:bg-white/5 transition-colors flex flex-col gap-1"
+                          >
+                            <span className="text-subtitle-md text-neutral-100">{stream.title}</span>
+                            <span className="text-body-sm text-neutral-500">
+                              {stream.scheduledAt
+                                ? new Date(stream.scheduledAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                                : ''}
+                              {` · ${stream.category}`}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             )}
 
-            <div className="flex justify-end gap-3 mt-[10px]">
+            <div className="flex justify-end gap-4 mt-4">
               <button
-                className="py-[10px] px-6 bg-[#333] text-[#ddd] border-none rounded-lg cursor-pointer text-sm font-semibold"
+                className="py-3 px-8 bg-neutral-700 text-neutral-200 border-none rounded-lg cursor-pointer text-subtitle-sm hover:bg-neutral-600 transition-colors"
                 onClick={() => setIsModalOpen(false)}
               >
                 취소
               </button>
               <button
-                className="py-[10px] px-6 bg-[#d9b36d] text-[#111] font-bold border-none rounded-lg cursor-pointer text-sm"
+                className="py-3 px-8 bg-gold-light text-background font-bold border-none rounded-lg cursor-pointer text-subtitle-sm hover:bg-gold-dark transition-colors"
                 onClick={handleSubmitNotice}
               >
                 {modalMode === 'create' ? '등록' : '저장'}
@@ -629,35 +662,35 @@ export default function ProfilePage() {
 
       {viewNoticeId !== null && noticeDetail && (
         <div
-          className="fixed top-0 left-0 w-full h-full bg-black/70 z-[999] flex items-center justify-center"
+          className="fixed top-0 left-0 w-full h-full bg-black/90 z-[999] flex items-center justify-center backdrop-blur-sm"
           onClick={() => setViewNoticeId(null)}
         >
           <div
-            className="bg-[#0a0a0a] border border-white/5 rounded-2xl w-[520px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+            className="bg-surface border border-neutral-800 rounded-2xl w-[600px] p-10 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-[10px]">
+              <div className="flex items-center gap-3">
                 <BellIcon />
-                <h2 className="m-0 text-white text-xl font-bold">{noticeDetail.title}</h2>
+                <h2 className="m-0 text-neutral-100">{noticeDetail.title}</h2>
               </div>
               <button
                 onClick={() => setViewNoticeId(null)}
-                className="bg-transparent border-none text-[#888] cursor-pointer hover:text-white transition-colors"
+                className="bg-transparent border-none text-neutral-600 cursor-pointer hover:text-white transition-colors"
               >
                 <FiX size={22} />
               </button>
             </div>
 
-            <p className="m-0 text-[15px] text-[#ddd] leading-relaxed whitespace-pre-wrap">{noticeDetail.content}</p>
+            <p className="m-0 text-subtitle-lg text-neutral-200 leading-relaxed whitespace-pre-wrap">{noticeDetail.content}</p>
 
-            <div className="flex items-center gap-4 text-[13px] text-[#888] border-t border-white/5 pt-4">
-              <div className="flex items-center gap-[6px]">
+            <div className="flex items-center gap-4 text-body-md text-neutral-600 border-t border-white/5 pt-4">
+              <div className="flex items-center gap-2">
                 <CalendarIcon />
                 <span>작성일 {formatDate(noticeDetail.createdAt).split(' ')[0]}</span>
               </div>
               {noticeDetail.updatedAt && noticeDetail.updatedAt !== noticeDetail.createdAt && (
-                <div className="flex items-center gap-[6px]">
+                <div className="flex items-center gap-2">
                   <CalendarIcon />
                   <span>수정일 {formatDate(noticeDetail.updatedAt).split(' ')[0]}</span>
                 </div>
@@ -667,7 +700,7 @@ export default function ProfilePage() {
             <div className="flex justify-end">
               <button
                 onClick={() => setViewNoticeId(null)}
-                className="py-3 px-8 bg-[#333] text-[#ddd] border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-[#444] transition-colors"
+                className="py-3 px-8 bg-neutral-700 text-neutral-200 border-none rounded-lg cursor-pointer text-subtitle-sm hover:bg-neutral-600 transition-colors"
               >
                 닫기
               </button>
@@ -678,37 +711,37 @@ export default function ProfilePage() {
 
       {isProfileEditOpen && (
         <div
-          className="fixed top-0 left-0 w-full h-full bg-black/70 z-[999] flex items-center justify-center"
+          className="fixed top-0 left-0 w-full h-full bg-black/90 z-[999] flex items-center justify-center backdrop-blur-sm"
           onClick={() => setIsProfileEditOpen(false)}
         >
           <div
-            className="bg-[#0a0a0a] border border-white/5 rounded-2xl w-[500px] p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+            className="bg-surface border border-neutral-800 rounded-2xl w-[600px] p-10 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="m-0 text-white text-xl font-bold">프로필 수정</h2>
+            <h2 className="m-0 text-neutral-100">프로필 수정</h2>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[14px] text-[#aaa] font-medium">닉네임</label>
+              <label className="text-body-lg text-neutral-400 font-medium">닉네임</label>
               <input
-                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-background text-white border border-neutral-800 rounded-lg px-4 py-3 text-subtitle-lg outline-none focus:border-gold-light transition-colors"
                 value={profileForm.nickname}
                 onChange={(e) => setProfileForm((prev) => ({ ...prev, nickname: e.target.value }))}
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[14px] text-[#aaa] font-medium">소개</label>
+              <label className="text-body-lg text-neutral-400 font-medium">소개</label>
               <textarea
-                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors min-h-[100px] resize-none"
+                className="w-full box-border bg-background text-white border border-neutral-800 rounded-lg px-4 py-3 text-subtitle-lg outline-none focus:border-gold-light transition-colors min-h-[100px] resize-none"
                 value={profileForm.intro}
                 onChange={(e) => setProfileForm((prev) => ({ ...prev, intro: e.target.value }))}
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[14px] text-[#aaa] font-medium">Instagram URL</label>
+              <label className="text-body-lg text-neutral-400 font-medium">Instagram URL</label>
               <input
-                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-background text-white border border-neutral-800 rounded-lg px-4 py-3 text-subtitle-lg outline-none focus:border-gold-light transition-colors"
                 placeholder="https://instagram.com/..."
                 value={profileForm.instaUrl}
                 onChange={(e) => setProfileForm((prev) => ({ ...prev, instaUrl: e.target.value }))}
@@ -716,9 +749,9 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[14px] text-[#aaa] font-medium">YouTube URL</label>
+              <label className="text-body-lg text-neutral-400 font-medium">YouTube URL</label>
               <input
-                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-background text-white border border-neutral-800 rounded-lg px-4 py-3 text-subtitle-lg outline-none focus:border-gold-light transition-colors"
                 placeholder="https://youtube.com/..."
                 value={profileForm.youtubeUrl}
                 onChange={(e) => setProfileForm((prev) => ({ ...prev, youtubeUrl: e.target.value }))}
@@ -726,24 +759,24 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[14px] text-[#aaa] font-medium">TikTok URL</label>
+              <label className="text-body-lg text-neutral-400 font-medium">TikTok URL</label>
               <input
-                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-background text-white border border-neutral-800 rounded-lg px-4 py-3 text-subtitle-lg outline-none focus:border-gold-light transition-colors"
                 placeholder="https://tiktok.com/..."
                 value={profileForm.tiktokUrl}
                 onChange={(e) => setProfileForm((prev) => ({ ...prev, tiktokUrl: e.target.value }))}
               />
             </div>
 
-            <div className="flex justify-end gap-3 mt-2">
+            <div className="flex justify-end gap-4 mt-4">
               <button
-                className="py-[10px] px-6 bg-[#333] text-[#ddd] border-none rounded-lg cursor-pointer text-sm font-semibold"
+                className="py-3 px-8 bg-neutral-700 text-neutral-200 border-none rounded-lg cursor-pointer text-subtitle-sm hover:bg-neutral-600 transition-colors"
                 onClick={() => setIsProfileEditOpen(false)}
               >
                 취소
               </button>
               <button
-                className="py-[10px] px-6 bg-[#d9b36d] text-[#111] font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-[#c8a45c] transition-colors disabled:opacity-50"
+                className="py-3 px-8 bg-gold-light text-background font-bold border-none rounded-lg cursor-pointer text-subtitle-sm hover:bg-gold-dark transition-colors disabled:opacity-50"
                 onClick={handleSubmitProfileEdit}
                 disabled={isProfilePending}
               >
