@@ -31,7 +31,7 @@ export default function SellerOnboardingPage() {
 
   if (isLoading || isAccountLoading) {
     return (
-      <div className="flex items-center justify-center text-white">
+      <div className="flex items-center justify-center text-neutral-200">
         로딩 중...
       </div>
     );
@@ -42,10 +42,10 @@ export default function SellerOnboardingPage() {
   }
 
   return (
-    <div className="text-white flex flex-col items-center pt-10 pb-20 px-4">
+    <div className="text-neutral-200 flex flex-col items-center pt-10 pb-20 px-4">
       <div className="w-full max-w-[720px]">
         <StepIndicator current={currentStep} />
-        <hr className="border-[#2C2C2E] mb-10" />
+        <hr className="border-neutral-800 mb-10" />
 
         {currentStep === 1 && (
           <Step1

@@ -16,10 +16,10 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
         <h2 className="text-lg font-bold text-white mb-2.5">
           경매 판매자 이용약관 동의
         </h2>
-        <p className="text-sm text-[#C7B282] leading-[1.7] mb-1">
+        <p className="text-sm text-primary-light leading-[1.7] mb-1">
           한옥(한반도 옥션)에서 판매자로 활동하기 위해서는 아래 약관에 동의해야 합니다.
         </p>
-        <p className="text-sm text-[#C7B282] leading-[1.7]">
+        <p className="text-sm text-primary-light leading-[1.7]">
           판매자는 플랫폼 내 경매 진행 및 상품 판매에 대한 책임을 지며, 본 약관을 준수해야 합니다.
         </p>
       </div>
@@ -30,7 +30,7 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
           return (
             <div
               key={idx}
-              className="border border-[#2C2C2E] rounded-xl overflow-hidden"
+              className="border border-neutral-800 rounded-xl overflow-hidden"
             >
               <button
                 type="button"
@@ -41,7 +41,7 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
                   {idx + 1}. {term.title}
                 </span>
                 <svg
-                  className={`w-4 h-4 text-[#636366] shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
+                  className={`w-4 h-4 text-neutral-600 shrink-0 transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -52,7 +52,7 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
               </button>
               {isOpen && (
                 <div className="px-5 pb-4">
-                  <p className="text-sm text-[#C8C8C8] leading-[1.8]">{term.body}</p>
+                  <p className="text-sm text-neutral-300 leading-[1.8]">{term.body}</p>
                 </div>
               )}
             </div>
@@ -63,7 +63,7 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
       <label className="flex items-center gap-3 cursor-pointer mb-10">
         <div
           className={`w-5 h-5 min-w-5 rounded border-2 flex items-center justify-center transition-all duration-150 relative ${
-            agreed ? 'border-[#CEAF82] bg-[#CEAF82]' : 'border-[#636366] bg-transparent'
+            agreed ? 'border-primary-light bg-primary-light' : 'border-neutral-600 bg-transparent'
           }`}
         >
           <input
@@ -86,7 +86,7 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
             </svg>
           )}
         </div>
-        <span className="text-sm text-[#E5E5EA]">
+        <span className="text-sm text-neutral-200">
           판매자 이용약관 및 경매 정책을 모두 확인하고 동의합니다.
         </span>
       </label>

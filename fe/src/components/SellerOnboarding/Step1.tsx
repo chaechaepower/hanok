@@ -12,7 +12,7 @@ function BusinessTypeCard({ label, selected, onClick }: { label: string; selecte
         ${
           selected
             ? 'bg-point border-2 border-transparent text-background'
-            : 'bg-background border border-[#848484] text-[#848484]'
+            : 'bg-background border border-neutral-500 text-neutral-500'
         }
       `}
     >
@@ -92,7 +92,7 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
 
   return (
     <>
-      <p className="text-[15px] text-[#E5E5EA] mb-5">개인/법인 사업자 인증을 해주세요.</p>
+      <p className="text-[15px] text-neutral-200 mb-5">개인/법인 사업자 인증을 해주세요.</p>
 
       <div className="flex gap-4 mb-6">
         <BusinessTypeCard
@@ -126,8 +126,8 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
             businessType === 'BUSINESS' ? '법인등록번호 -없이 숫자만 입력' : '사업자등록번호 -없이 숫자만 입력'
           }
           disabled={isVerified}
-          className={`flex-1 h-12 bg-[#1C1C1E] border rounded-lg text-sm px-4 outline-none font-[inherit] ${
-            isVerified ? 'border-[#CEAF82] text-[#CEAF82]' : 'border-[#3A3A3C] text-white'
+          className={`flex-1 h-12 bg-surface border rounded-lg text-sm px-4 outline-none font-[inherit] ${
+            isVerified ? 'border-primary-light text-primary-light' : 'border-neutral-700 text-white'
           }`}
         />
         <Button
@@ -141,10 +141,10 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
       </div>
 
       {verifyError && (
-        <p className="text-[#FF453A] text-[13px] pl-1 mb-2">{verifyError}</p>
+        <p className="text-accent-light text-[13px] pl-1 mb-2">{verifyError}</p>
       )}
       {isVerified && (
-        <p className="text-[#32D74B] text-[13px] pl-1 mb-2">
+        <p className="text-ember text-[13px] pl-1 mb-2">
           사업자 인증이 완료되었습니다.
         </p>
       )}

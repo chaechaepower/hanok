@@ -11,8 +11,8 @@ export default function StepIndicator({ current }: { current: number }) {
                 step.id === current
                   ? 'bg-gold text-background'
                   : step.id < current
-                    ? 'bg-[#CEAF8299] text-background'
-                    : 'bg-[#2C2C2E] text-[#636366]'
+                    ? 'bg-primary-light/60 text-background'
+                    : 'bg-neutral-800 text-neutral-600'
               }`}
             >
               {step.id < current ? (
@@ -29,7 +29,7 @@ export default function StepIndicator({ current }: { current: number }) {
                   ? 'text-white font-semibold'
                   : step.id < current
                     ? 'text-point font-semibold'
-                    : 'text-[#636366]'
+                    : 'text-neutral-600'
               }`}
             >
               {step.label}
@@ -37,7 +37,7 @@ export default function StepIndicator({ current }: { current: number }) {
           </div>
           {idx < STEPS.length - 1 && (
             <svg
-              className="w-5 h-5 mx-3 text-[#3A3A3C] shrink-0"
+              className="w-5 h-5 mx-3 text-neutral-700 shrink-0"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
