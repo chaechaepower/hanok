@@ -179,7 +179,7 @@ export const profileHandlers = [
         youtubeUrl: (overrides.youtubeUrl as string) ?? 'https://youtube.com/@im_rerak',
         tiktokUrl: (overrides.tiktokUrl as string) ?? 'https://tiktok.com/@seller123',
         stats: {
-          rating: 4.7,
+          rating: null,
           avgShipDays: 1.8,
           followerCount: 342,
         },

@@ -397,17 +397,17 @@ export default function ProfilePage() {
             {isOwner && data?.stats !== undefined && (
               <div className="mt-3 border border-white/5 rounded-xl py-6 flex items-center w-[420px]">
                 <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{data.stats.followerCount}</span>
+                  <span className="text-[22px] font-bold text-white">{data.stats.followerCount ?? '-'}</span>
                   <span className="text-[13px] text-[#888]">팔로워수</span>
                 </div>
                 <div className="w-[1px] h-10 bg-[#2e2e40]" />
                 <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{data.stats.rating}</span>
+                  <span className="text-[22px] font-bold text-white">{data.stats.rating ?? '-'}</span>
                   <span className="text-[13px] text-[#888]">평점</span>
                 </div>
                 <div className="w-[1px] h-10 bg-[#2e2e40]" />
                 <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{data.stats.avgShipDays}일</span>
+                  <span className="text-[22px] font-bold text-white">{data.stats.avgShipDays != null ? `${data.stats.avgShipDays}일` : '-'}</span>
                   <span className="text-[13px] text-[#888]">평균 배송일</span>
                 </div>
               </div>

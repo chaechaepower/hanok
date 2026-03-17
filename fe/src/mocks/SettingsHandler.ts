@@ -222,9 +222,13 @@ export const settingsHandlers = [
   http.get(`${BASE_URL}/v1/users/me/account`, () =>
     HttpResponse.json(
       {
-        bankName: mockAccountData.bankName,
-        accountNum: mockAccountData.accountNum,
-        accountName: mockAccountData.accountName,
+        status: 'SUCCESS',
+        message: 'Account fetched successfully.',
+        data: {
+          bankName: mockAccountData.bankName,
+          accountNum: mockAccountData.accountNum,
+          accountName: mockAccountData.accountName,
+        },
       },
       { status: 200 },
     ),
