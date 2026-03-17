@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
-import type { UserAccountResponse } from '@/types';
+import type { ApiResponse, UserAccountResponse } from '@/types';
 
 export const getAccountPath = () => '/v1/users/me/account';
 
 export const getAccount = async () => {
-  const response = await getFetchInstance().get<UserAccountResponse>(getAccountPath());
+  const response = await getFetchInstance().get<ApiResponse<UserAccountResponse>>(getAccountPath());
   return response.data;
 };
 

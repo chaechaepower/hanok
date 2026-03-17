@@ -90,19 +90,21 @@ const FOLLOWED_SELLER_CATALOG = [
 export const settingsHandlers = [
   http.post(`${BASE_URL}/v1/auth/logout`, () => HttpResponse.json({ success: true }, { status: 200 })),
 
-  http.get(`${BASE_URL}/v1/users/me/seller-status`, () =>
-    HttpResponse.json(
+  http.get(`${BASE_URL}/v1/users/me/seller-status`, () => {
+    const currentUser = getCurrentMockUser();
+    const isSeller = currentUser?.isSeller ?? false;
+    return HttpResponse.json(
       {
         status: 'SUCCESS',
         message: 'Seller status fetched successfully.',
         data: {
-          isSeller: false,
-          sellerId: null,
+          isSeller,
+          sellerId: isSeller ? (currentUser?.userId ?? null) : null,
         },
       },
       { status: 200 },
-    ),
-  ),
+    );
+  }),
 
   http.get(`${BASE_URL}/v1/users/me/notification`, () =>
     HttpResponse.json(mockNotification, { status: 200 }),
@@ -131,7 +133,7 @@ export const settingsHandlers = [
           bankCode: mockMeData.bankCode,
           accountName: mockMeData.accountName,
           accountNum: mockMeData.accountNum,
-          sellerId: mockMeData.sellerId,
+          sellerId: currentUser.isSeller ? currentUser.userId : null,
         }
       : mockMeData;
 

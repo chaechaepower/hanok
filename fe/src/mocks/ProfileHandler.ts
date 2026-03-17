@@ -4,10 +4,11 @@ import { BASE_URL } from '@/api/instance';
 import LogoImage from '@/assets/Logo.png';
 
 import {
-  decrementMockFollowerCount,
-  followSeller,
   getMockFollowerCount,
   incrementMockFollowerCount,
+  decrementMockFollowerCount,
+  isSellerFollowed,
+  followSeller,
   unfollowSeller,
 } from './mockState';
 
@@ -72,21 +73,32 @@ export const profileHandlers = [
     ]);
   }),
 
-  http.patch(`${BASE_URL}/v1/users/:userId/follow`, async ({ params }) => {
-    followSeller(Number(params.userId));
-    return HttpResponse.json({
-      following: true,
-      followerCount: incrementMockFollowerCount(),
-      followingCount: 12,
-    });
-  }),
+  http.post(`${BASE_URL}/v1/users/:userId/follow`, async ({ params }) => {
+    const userId = Number(params.userId);
+    const wasFollowing = isSellerFollowed(userId);
 
-  http.delete(`${BASE_URL}/v1/users/:userId/unfollow`, async ({ params }) => {
-    unfollowSeller(Number(params.userId));
+    if (wasFollowing) {
+      unfollowSeller(userId);
+      return HttpResponse.json({
+        status: 'SUCCESS',
+        message: 'Unfollowed successfully.',
+        data: {
+          following: false,
+          followerCount: decrementMockFollowerCount(),
+          followingCount: 11,
+        },
+      });
+    }
+
+    followSeller(userId);
     return HttpResponse.json({
-      following: false,
-      followerCount: decrementMockFollowerCount(),
-      followingCount: 11,
+      status: 'SUCCESS',
+      message: 'Followed successfully.',
+      data: {
+        following: true,
+        followerCount: incrementMockFollowerCount(),
+        followingCount: 12,
+      },
     });
   }),
 

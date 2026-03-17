@@ -1,10 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { getFetchInstance } from '@/api/instance';
-
-type PatchPasswordPayload = {
-  currentPassword: string;
-  newPassword: string;
-};
+import type { PatchPasswordPayload } from '@/types/settings';
 
 const patchPasswordPath = () => `/v1/users/me/password`;
 

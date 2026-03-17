@@ -101,6 +101,15 @@ export type PostSellerNoticeResponse = {
   updatedAt: string;
 };
 
+export type PatchSellerProfilePayload = {
+  nickname?: string;
+  profileImage?: string;
+  intro?: string;
+  instaUrl?: string;
+  youtubeUrl?: string;
+  tiktokUrl?: string;
+};
+
 export type PatchSellerNoticePayload = {
   title?: string;
   content?: string;

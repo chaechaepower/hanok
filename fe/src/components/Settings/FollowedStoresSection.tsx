@@ -1,13 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { FaStore } from 'react-icons/fa';
 import { useGetFollowedStores } from '@/api/hooks/useGetFollowedStores';
-import { useDeleteFollow } from '@/api/hooks/useDeleteFollow';
+import { usePostFollow } from '@/api/hooks/usePostFollow';
 import type { FollowingItem } from '@/types';
 
 export default function FollowedStoresSection() {
   const navigate = useNavigate();
   const { data, isLoading } = useGetFollowedStores();
-  const { mutate: unfollow, isPending } = useDeleteFollow();
+  const { mutate: unfollow, isPending } = usePostFollow();
 
   const followedList: FollowingItem[] = data?.content ?? [];
   const totalStores = data?.totalElements ?? 0;

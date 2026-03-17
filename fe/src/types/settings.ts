@@ -37,6 +37,11 @@ export type PatchNotificationResponse = {
   followStreamAlert: boolean;
 };
 
+export type PatchPasswordPayload = {
+  currentPassword: string;
+  newPassword: string;
+};
+
 export type WithdrawPayload = {
   password: string;
 };
