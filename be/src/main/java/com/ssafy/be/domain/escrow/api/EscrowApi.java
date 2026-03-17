@@ -28,9 +28,14 @@ public interface EscrowApi {
     @ApiResponse(responseCode = "404", description = "에스크로 없음")
     ResponseEntity<?> completeEscrow(Long escrowId, String principal);
 
-    @Operation(summary = "에스크로 목록 조회(배송 이력 조회)", description = "판매자 전용 - 본인의 에스크로 거래 목록을 조회합니다.")
+    @Operation(summary = "판매자 에스크로 목록 조회", description = "판매자 본인이 판매한 거래(에스크로) 목록을 조회합니다. GET /api/v1/escrows/seller")
     @ApiResponse(responseCode = "200", description = "조회 성공")
-    ResponseEntity<?> getAllEscrows(String principal);
+    @ApiResponse(responseCode = "404", description = "판매자로 등록되지 않음")
+    ResponseEntity<?> getAllSellerEscrows(String principal);
+
+    @Operation(summary = "구매자 에스크로 목록 조회", description = "본인이 구매한 거래(에스크로) 목록을 조회합니다. GET /api/v1/escrows/buyer")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    ResponseEntity<?> getAllBuyerEscrows(String principal);
 
     @Operation(summary = "에스크로 상세 조회", description = "에스크로 거래 상세 정보를 조회합니다.")
     @ApiResponse(responseCode = "200", description = "조회 성공")

@@ -12,6 +12,8 @@ import com.ssafy.be.domain.escrow.repository.EscrowRepository;
 import com.ssafy.be.domain.escrow.scheduler.EscrowShipmentScheduler;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.notification.service.NotificationService;
+import com.ssafy.be.domain.seller.exception.SellerErrorCode;
+import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
 import com.ssafy.be.domain.tradereport.entity.TradeReport;
 import com.ssafy.be.domain.tradereport.entity.TradeType;
@@ -38,6 +40,7 @@ public class EscrowService {
     private final EscrowRepository escrowRepository;
     private final TradeReportRepository tradeReportRepository;
     private final UserRepository userRepository;
+    private final SellerRepository sellerRepository;
     private final NotificationService notificationService;
     private final EscrowShipmentScheduler escrowShipmentScheduler;
 
@@ -219,8 +222,30 @@ public class EscrowService {
     }
 
     @Transactional(readOnly = true)
-    public List<EscrowListResponse> getAllEscrows(Long userId) {
+    public List<EscrowListResponse> getAllSellerEscrows(Long userId) {
+        // seller로 등록되있는지 여부확인
+        if (!sellerRepository.existsByUserId(userId)) {
+            throw new GlobalException(SellerErrorCode.SELLER_NOT_FOUND);
+        }
+
         return escrowRepository.findAllBySellerUserId(userId).stream()
+                .map(escrow -> {
+                    Item item = escrow.getAuction().getItem();
+
+                    return EscrowListResponse.builder()
+                            .escrowId(escrow.getId())
+                            .image(item.getImage1())
+                            .itemName(item.getName())
+                            .amount(escrow.getWinningPrice())
+                            .escrowStatus(escrow.getEscrowStatus())
+                            .createdAt(escrow.getCreatedAt())
+                            .build();
+                }).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<EscrowListResponse> getAllBuyerEscrows(Long userId) {
+        return escrowRepository.findAllByBuyerUserId(userId).stream()
                 .map(escrow -> {
                     Item item = escrow.getAuction().getItem();
 
