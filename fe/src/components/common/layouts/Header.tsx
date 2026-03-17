@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
-import { FaUser } from 'react-icons/fa';
-import { GoBellFill } from 'react-icons/go';
-import { HiMiniHome } from 'react-icons/hi2';
-import { TbCircleLetterMFilled } from 'react-icons/tb';
+import { User, Bell, Home, CircleDollarSign } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -75,8 +72,8 @@ export default function Header() {
   };
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-[1000] flex h-16 items-center gap-4 border-b border-white/5 bg-background/94 px-6 backdrop-blur-[20px]">
-      <div className="flex shrink-0 items-center gap-5">
+    <nav className="fixed left-0 right-0 top-0 z-[1000] flex h-16 items-center gap-4 border-b border-white/5 bg-background/94 backdrop-blur-[20px]">
+      <div className="flex w-[240px] shrink-0 items-center justify-between pl-6">
         <button
           type="button"
           onClick={() => navigate('/')}
@@ -86,23 +83,14 @@ export default function Header() {
           <img
             src={Logo}
             alt="Logo"
-            className="h-9 w-auto object-contain brightness-0 invert sepia saturate-50 hue-rotate-[350deg]"
+            className="h-12 w-auto object-contain brightness-0 invert sepia saturate-50 hue-rotate-[350deg]"
           />
         </button>
 
         <div className="h-7 w-px shrink-0 bg-warm/6" />
-
-        <button
-          type="button"
-          onClick={handleSellerButtonClick}
-          className="flex items-center gap-1.5 whitespace-nowrap rounded-[10px] border border-primary/35 bg-primary/15 px-3.5 py-[7px] text-subtitle-sm text-primary-light transition-all hover:border-primary/50 hover:bg-primary/25 hover:text-neutral-100"
-        >
-          <HiMiniHome className="h-3.5 w-3.5 opacity-85" />
-          <span>{sellerButtonLabel}</span>
-        </button>
       </div>
 
-      <div className="flex min-w-0 flex-1 justify-center px-5">
+      <div className="flex min-w-0 flex-1 justify-start pl-2">
         <SearchBar
           key={location.pathname === '/search' ? location.search : location.pathname}
           defaultValue={searchKeyword}
@@ -111,47 +99,58 @@ export default function Header() {
         />
       </div>
 
-      {isLoggedIn ? (
-        <div className="flex shrink-0 items-center gap-1">
-          <HeaderIcon onClick={() => navigate('/wallet')} ariaLabel="Go to wallet" tooltip="가상머니">
-            <TbCircleLetterMFilled className="h-5 w-5 fill-current stroke-none" />
-          </HeaderIcon>
-          <div className="relative">
-            <HeaderIcon
-              onClick={() => setIsNotifOpen((prev) => !prev)}
-              ariaLabel="Open alerts"
-              tooltip="알림"
-              badgeCount={unreadCount > 0 ? unreadCount : undefined}
-              hasNoti
-            >
-              <GoBellFill className="h-5 w-5" />
+      <div className="flex shrink-0 items-center gap-2 pr-6">
+        <button
+          type="button"
+          onClick={handleSellerButtonClick}
+          className="flex items-center gap-1.5 whitespace-nowrap rounded-[10px] border border-primary/35 bg-primary/15 px-3.5 py-[7px] text-subtitle-sm text-primary-light transition-all hover:border-primary/50 hover:bg-primary/25 hover:text-neutral-100"
+        >
+          <Home size={14} className="opacity-85" />
+          <span>{sellerButtonLabel}</span>
+        </button>
+
+        {isLoggedIn ? (
+          <>
+            <HeaderIcon onClick={() => navigate('/wallet')} ariaLabel="Go to wallet" tooltip="가상머니">
+              <CircleDollarSign size={20} />
             </HeaderIcon>
-            {isNotifOpen && <NotificationPanel onClose={() => setIsNotifOpen(false)} />}
-          </div>
-          <HeaderIcon onClick={handleMyPageClick} ariaLabel="Go to my page" tooltip="마이페이지">
-            <FaUser className="h-5 w-5" />
-          </HeaderIcon>
-        </div>
-      ) : (
-        <div className="flex shrink-0 items-center gap-2">
-          <Button
-            variant="navSignup"
-            size="small"
-            onClick={() => navigate('/signup')}
-            className="px-[18px] py-2"
-          >
-            회원가입
-          </Button>
-          <Button
-            variant="navLogin"
-            size="small"
-            onClick={() => navigate('/login')}
-            className="px-[18px] py-2"
-          >
-            로그인
-          </Button>
-        </div>
-      )}
+            <div className="relative">
+              <HeaderIcon
+                onClick={() => setIsNotifOpen((prev) => !prev)}
+                ariaLabel="Open alerts"
+                tooltip="알림"
+                badgeCount={unreadCount > 0 ? unreadCount : undefined}
+                hasNoti
+              >
+                <Bell size={20} />
+              </HeaderIcon>
+              {isNotifOpen && <NotificationPanel onClose={() => setIsNotifOpen(false)} />}
+            </div>
+            <HeaderIcon onClick={handleMyPageClick} ariaLabel="Go to my page" tooltip="마이페이지">
+              <User size={20} />
+            </HeaderIcon>
+          </>
+        ) : (
+          <>
+            <Button
+              variant="navSignup"
+              size="small"
+              onClick={() => navigate('/signup')}
+              className="px-[18px] py-2"
+            >
+              회원가입
+            </Button>
+            <Button
+              variant="navLogin"
+              size="small"
+              onClick={() => navigate('/login')}
+              className="px-[18px] py-2"
+            >
+              로그인
+            </Button>
+          </>
+        )}
+      </div>
     </nav>
   );
 }
