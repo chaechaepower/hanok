@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
-import type { LiveCardData, PageResponse, SearchMatchReason, SearchStreamResult } from '@/types';
+import type { LiveCardData, PageResponse, SearchMatchReason, SearchStreamResult, SearchStreamStatus } from '@/types';
 
 import { getRegisteredLiveById, getRegisteredLiveCards } from './LiveCreateHandler';
 import { getCurrentMockUser, isSellerFollowed } from './mockState';
@@ -28,6 +28,9 @@ const SELLERS = [
   { sellerId: 14, nickname: 'card_deck' },
   { sellerId: 15, nickname: 'bag_corner' },
 ];
+
+const isActiveStreamStatus = (streamStatus: SearchStreamStatus) =>
+  streamStatus === 'LIVE' || streamStatus === 'PAUSED';
 
 type SearchMockEntry = SearchStreamResult & {
   itemNames: string[];
@@ -143,16 +146,19 @@ const MAIN_LIVE_STREAMS: LiveCardData[] = Array.from({ length: 60 }, (_, index) 
   const id = index + 1;
   const seller = SELLERS[index % SELLERS.length];
   const category = CATEGORY_CODES[index % CATEGORY_CODES.length];
-  const isLive = index % 8 !== 0;
-  const startedAt = isLive ? new Date(Date.now() - index * 12 * 60 * 1000).toISOString() : null;
-  const scheduledAt = isLive ? null : new Date(Date.now() + (index + 1) * 30 * 60 * 1000).toISOString();
+  const streamStatus: SearchStreamStatus =
+    index % 8 === 0 ? 'SCHEDULED' : index % 11 === 0 ? 'PAUSED' : index % 15 === 0 ? 'ENDED' : 'LIVE';
+  const hasStarted = streamStatus !== 'SCHEDULED';
+  const startedAt = hasStarted ? new Date(Date.now() - index * 12 * 60 * 1000).toISOString() : null;
+  const scheduledAt =
+    streamStatus === 'SCHEDULED' ? new Date(Date.now() + (index + 1) * 30 * 60 * 1000).toISOString() : null;
 
   return {
     streamId: id,
     title: `Live auction #${id}`,
     category,
     thumbnailUri: null,
-    isLive,
+    streamStatus,
     viewerCount: ((id * 53) % 900) + 20,
     scheduledAt,
     startedAt,
@@ -252,10 +258,10 @@ export const mainHandlers = [
       category: stream?.category ?? 'ELECTRONICS',
       thumbnail: stream?.thumbnailUri ?? null,
       scheduledAt: stream?.scheduledAt ?? null,
-      startType: stream?.isLive ? 'IMMEDIATE' : 'SCHEDULED',
-      status: stream?.isLive ? 'LIVE' : 'SCHEDULED',
+      startType: stream?.streamStatus === 'SCHEDULED' ? 'SCHEDULED' : 'IMMEDIATE',
+      status: stream?.streamStatus ?? 'LIVE',
       notice: 'Welcome to the live auction.',
-      isLive: stream?.isLive ?? true,
+      isLive: stream ? isActiveStreamStatus(stream.streamStatus) : true,
       createdAt: stream?.startedAt ?? new Date().toISOString(),
       items: [],
       seller: {
@@ -297,7 +303,9 @@ export const mainHandlers = [
     }
 
     streams =
-      status === 'SCHEDULED' ? streams.filter((stream) => !stream.isLive) : streams.filter((stream) => stream.isLive);
+      status === 'SCHEDULED'
+        ? streams.filter((stream) => stream.streamStatus === 'SCHEDULED')
+        : streams.filter((stream) => isActiveStreamStatus(stream.streamStatus));
 
     streams.sort((a, b) => {
       if (sort === 'VIEWER_COUNT') {

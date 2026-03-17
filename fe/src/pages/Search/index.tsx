@@ -3,13 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 
 import { useGetSearch } from '@/api/hooks/useGetSearch';
 import LiveCard from '@/components/Main/LiveCard';
-import type {
-  LiveCardData,
-  SearchMatchReason,
-  SearchMatchType,
-  SearchStreamResult,
-  SearchStreamStatus,
-} from '@/types';
+import type { LiveCardData, SearchMatchReason, SearchMatchType, SearchStreamResult } from '@/types';
 
 const KEYWORD_MIN_LENGTH = 2;
 const KEYWORD_MAX_LENGTH = 50;
@@ -19,32 +13,6 @@ const MATCH_REASON_LABEL_MAP: Record<SearchMatchType, string> = {
   STREAM_TITLE: '라이브',
   ITEM_NAME: '물품명',
   TAG: '해시태그',
-};
-
-const STATUS_META_MAP: Record<
-  SearchStreamStatus,
-  { label: string; badgeClassName: string; canEnter: boolean }
-> = {
-  LIVE: {
-    label: 'LIVE',
-    badgeClassName: 'bg-[#EF4444] text-white',
-    canEnter: true,
-  },
-  SCHEDULED: {
-    label: '예정',
-    badgeClassName: 'bg-gold/20 text-gold-light',
-    canEnter: false,
-  },
-  PAUSED: {
-    label: '일시중지',
-    badgeClassName: 'bg-ember/20 text-ember-light',
-    canEnter: true,
-  },
-  ENDED: {
-    label: '종료됨',
-    badgeClassName: 'bg-white/12 text-white/70',
-    canEnter: false,
-  },
 };
 
 const getValidationMessage = (keyword: string) => {
@@ -70,9 +38,9 @@ const toLiveCardStream = (result: SearchStreamResult): LiveCardData => ({
   title: result.title,
   category: result.category,
   thumbnailUri: result.thumbnail,
-  isLive: result.status === 'LIVE',
+  streamStatus: result.status,
   viewerCount: result.viewerCount,
-  scheduledAt: result.status === 'SCHEDULED' ? result.scheduledAt : null,
+  scheduledAt: result.scheduledAt,
   startedAt: null,
   seller: result.seller,
 });
@@ -199,46 +167,28 @@ export default function SearchPage() {
               <p className="text-[13px] text-white/45">최신 검색 결과를 확인하는 중입니다.</p>
             )}
             <div className={RESULT_GRID_CLASS_NAME}>
-              {results.map((result) => {
-                const statusMeta = STATUS_META_MAP[result.status];
-                const shouldUseCustomStatusBadge =
-                  result.status === 'PAUSED' || result.status === 'ENDED';
+              {results.map((result) => (
+                <div key={result.streamId} className="flex flex-col gap-4">
+                  <LiveCard stream={toLiveCardStream(result)} className="max-w-none" />
 
-                return (
-                  <div key={result.streamId} className="flex flex-col gap-4">
-                    <LiveCard
-                      stream={toLiveCardStream(result)}
-                      className="max-w-none"
-                      statusBadge={
-                        shouldUseCustomStatusBadge
-                          ? {
-                              label: statusMeta.label,
-                              className: statusMeta.badgeClassName,
-                            }
-                          : undefined
-                      }
-                      isNavigable={statusMeta.canEnter}
-                    />
-
-                    <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
-                      <div className="mb-3 flex items-center justify-between gap-3">
-                        <p className="text-[14px] font-semibold text-point">검색된 이유</p>
-                        <p className="text-[12px] text-white/45">{result.matchReasons.length}건 일치</p>
-                      </div>
-
-                      <ul className="flex flex-wrap gap-2">
-                        {result.matchReasons.map((reason) => (
-                          <SearchResultReasonChip
-                            key={`${result.streamId}-${reason.type}-${reason.matchedValue}`}
-                            reason={reason}
-                            keyword={keywordParam}
-                          />
-                        ))}
-                      </ul>
+                  <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p className="text-[14px] font-semibold text-point">검색된 이유</p>
+                      <p className="text-[12px] text-white/45">{result.matchReasons.length}건 일치</p>
                     </div>
+
+                    <ul className="flex flex-wrap gap-2">
+                      {result.matchReasons.map((reason) => (
+                        <SearchResultReasonChip
+                          key={`${result.streamId}-${reason.type}-${reason.matchedValue}`}
+                          reason={reason}
+                          keyword={keywordParam}
+                        />
+                      ))}
+                    </ul>
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </>
         )}

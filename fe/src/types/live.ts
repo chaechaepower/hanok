@@ -39,12 +39,14 @@ export type StreamEnterResponse = {
   isHost: boolean;
 };
 
+export type SearchStreamStatus = 'LIVE' | 'SCHEDULED' | 'PAUSED' | 'ENDED';
+
 export type LiveCardData = {
   streamId: number;
   title: string;
   category: string;
   thumbnailUri: string | null;
-  isLive: boolean;
+  streamStatus: SearchStreamStatus;
   viewerCount: number;
   scheduledAt: string | null;
   startedAt: string | null;
@@ -52,8 +54,6 @@ export type LiveCardData = {
 };
 
 export type SearchMatchType = 'STREAM_TITLE' | 'ITEM_NAME' | 'TAG';
-
-export type SearchStreamStatus = 'LIVE' | 'SCHEDULED' | 'PAUSED' | 'ENDED';
 
 export type SearchMatchReason = {
   type: SearchMatchType;

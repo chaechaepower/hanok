@@ -1,4 +1,4 @@
-import type { LiveCardData } from '@/types';
+import type { LiveCardData, SearchStreamStatus } from '@/types';
 import { useNavigate } from 'react-router-dom';
 
 type LiveCardProps = {
@@ -29,6 +29,32 @@ const CATEGORY_LABEL_MAP: Record<string, string> = {
 
 const SCHEDULED_BADGE_LABEL = '방송예정';
 
+const STREAM_STATUS_META_MAP: Record<
+  SearchStreamStatus,
+  { label: string; badgeClassName: string; canEnter: boolean }
+> = {
+  LIVE: {
+    label: 'LIVE',
+    badgeClassName: 'bg-[#EF4444] text-white',
+    canEnter: true,
+  },
+  SCHEDULED: {
+    label: SCHEDULED_BADGE_LABEL,
+    badgeClassName: 'bg-gold/20 text-gold-light',
+    canEnter: false,
+  },
+  PAUSED: {
+    label: '일시정지',
+    badgeClassName: 'bg-ember/20 text-ember-light',
+    canEnter: true,
+  },
+  ENDED: {
+    label: '종료됨',
+    badgeClassName: 'bg-white/12 text-white/70',
+    canEnter: false,
+  },
+};
+
 const formatScheduledAt = (scheduledAt: string | null) => {
   if (!scheduledAt) return null;
 
@@ -52,11 +78,21 @@ export default function LiveCard({
   metaText,
 }: LiveCardProps) {
   const navigate = useNavigate();
+  const statusMeta = STREAM_STATUS_META_MAP[stream.streamStatus];
   const sellerInitial = stream.seller.nickname.trim().charAt(0) || '?';
   const categoryLabel = CATEGORY_LABEL_MAP[stream.category] ?? stream.category;
-  const isScheduledCard = stream.scheduledAt !== null;
+  const isScheduledCard = stream.streamStatus === 'SCHEDULED';
+  const isLiveStream = stream.streamStatus === 'LIVE';
   const scheduledAtLabel = formatScheduledAt(stream.scheduledAt);
-  const canNavigate = isNavigable ?? (stream.isLive && !isScheduledCard);
+  const resolvedStatusBadge =
+    statusBadge ??
+    (stream.streamStatus === 'PAUSED' || stream.streamStatus === 'ENDED'
+      ? {
+          label: statusMeta.label,
+          className: statusMeta.badgeClassName,
+        }
+      : undefined);
+  const canNavigate = isNavigable ?? statusMeta.canEnter;
   const canNavigateToProfile = !disableSellerNavigation && stream.seller.sellerId > 0;
   const containerClassName = `group w-full max-w-[230px] ${className}`.trim();
   const livePreviewClassName = `relative aspect-3/4 w-full overflow-hidden rounded-2xl bg-neutral-900 ${
@@ -111,7 +147,7 @@ export default function LiveCard({
           </div>
         )}
 
-        {!statusBadge && isScheduledCard && scheduledAtLabel && (
+        {!resolvedStatusBadge && isScheduledCard && scheduledAtLabel && (
           <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-linear-to-b from-black/70 via-black/45 to-black/75">
             <div className="px-4 text-center text-warm">
               <p className="text-[36px] font-semibold leading-none tracking-[-0.02em] drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
@@ -124,14 +160,14 @@ export default function LiveCard({
           </div>
         )}
 
-        {statusBadge ? (
+        {resolvedStatusBadge ? (
           <span
-            className={`absolute left-3 top-3 rounded-md px-2.5 py-1.5 text-[12px] font-semibold ${statusBadge.className}`}
+            className={`absolute left-3 top-3 rounded-md px-2.5 py-1.5 text-[12px] font-semibold ${resolvedStatusBadge.className}`}
           >
-            {statusBadge.label}
+            {resolvedStatusBadge.label}
           </span>
         ) : (
-          stream.isLive &&
+          isLiveStream &&
           !isScheduledCard && (
             <span className="absolute left-3 top-3 rounded-md bg-accent px-2.5 py-1.5 text-[12px] font-semibold text-white">
               Live · {stream.viewerCount.toLocaleString()}

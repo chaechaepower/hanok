@@ -62,8 +62,8 @@ export default function SettingsPage() {
   if (isMeLoading || isNotiLoading || isWalletLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <div className="w-10 h-10 border-4 border-[#333] border-t-[#d9b36d] rounded-full animate-spin" />
-        <p className="text-[#aaa] mt-3">정보를 불러오는 중…</p>
+        <div className="w-10 h-10 border-4 border-neutral-700 border-t-gold-light rounded-full animate-spin" />
+        <p className="text-neutral-400 mt-3">정보를 불러오는 중…</p>
       </div>
     );
   }
@@ -71,17 +71,17 @@ export default function SettingsPage() {
   const user = meData;
 
   const tabs = [
-    { id: 'account', label: '계정 관리', icon: <FaUserAlt size={20} className="text-[#3b82f6]" /> },
-    { id: 'stores', label: '팔로우한 스토어', icon: <FaHeart size={20} className="text-[#ec4899]" /> },
-    { id: 'shipping', label: '배송지 관리', icon: <FaMapMarkerAlt size={20} className="text-[#eab308]" /> },
-    { id: 'payment', label: '결제수단 관리', icon: <FaCreditCard size={20} className="text-[#3b82f6]" /> },
-    { id: 'order', label: '구매 내역', icon: <BiSolidPurchaseTag size={20} className="text-[#4ef63b]" /> },
+    { id: 'account', label: '계정 관리', icon: <FaUserAlt size={20} className="text-primary-light" /> },
+    { id: 'stores', label: '팔로우한 스토어', icon: <FaHeart size={20} className="text-accent-light" /> },
+    { id: 'shipping', label: '배송지 관리', icon: <FaMapMarkerAlt size={20} className="text-gold-light" /> },
+    { id: 'payment', label: '결제수단 관리', icon: <FaCreditCard size={20} className="text-primary-light" /> },
+    { id: 'order', label: '구매 내역', icon: <BiSolidPurchaseTag size={20} className="text-ember-light" /> },
 
   ];
 
   return (
     <div className="w-full box-border max-w-[1200px] mx-auto py-10 px-5 flex flex-col gap-8">
-      <div className="w-full box-border rounded-2xl py-8 px-10 bg-[#050505] border border-[#d9b36d]/30 flex items-center justify-between">
+      <div className="w-full box-border rounded-2xl py-8 px-10 bg-background border border-gold-light/30 flex items-center justify-between">
         <div className="flex items-center gap-6">
           <div
             className="relative group cursor-pointer"
@@ -101,7 +101,7 @@ export default function SettingsPage() {
                 className="w-[100px] h-[100px] rounded-full object-cover"
               />
             ) : (
-              <div className="w-[100px] h-[100px] rounded-full bg-[#1e1e2d] text-[#d9b36d] text-4xl flex items-center justify-center font-bold">
+              <div className="w-[100px] h-[100px] rounded-full bg-surface text-gold-light text-4xl flex items-center justify-center font-bold">
                 {user?.nickname?.charAt(0) || 'U'}
               </div>
             )}
@@ -112,11 +112,11 @@ export default function SettingsPage() {
           <div className="flex flex-col gap-1">
             <h1 className="m-0 text-3xl font-bold text-white tracking-tight">{user?.nickname}</h1>
             <div className="flex items-center gap-3">
-              <span className="text-lg text-[#aaa]">({user?.email?.split('@')[0]})</span>
+              <span className="text-lg text-neutral-400">({user?.email?.split('@')[0]})</span>
               <button
                 onClick={handleLogout}
                 disabled={isLogoutPending}
-                className="px-3 py-1 bg-transparent border border-[#555] text-[#aaa] text-sm rounded-md hover:bg-[#2e2e40] hover:text-white transition-colors"
+                className="px-3 py-1 bg-transparent border border-neutral-500 text-neutral-400 text-sm rounded-md hover:bg-neutral-800 hover:text-white transition-colors"
               >
                 {isLogoutPending ? '로그아웃 중...' : '로그아웃'}
               </button>
@@ -128,22 +128,22 @@ export default function SettingsPage() {
           {user?.sellerId && (
             <button
               onClick={() => navigate(`/profile/${user.sellerId}`)}
-              className="flex items-center justify-center gap-2 border border-[#d9b36d]/30 bg-[#050505] rounded-xl py-4 px-8 min-w-[320px] cursor-pointer hover:bg-[#111] transition-colors"
+              className="flex items-center justify-center gap-2 border border-gold-light/30 bg-background rounded-xl py-4 px-8 min-w-[320px] cursor-pointer hover:bg-surface transition-colors"
             >
-              <FaStore className="text-[#d9b36d]" size={18} />
-              <span className="text-[#d9b36d] text-[17px] font-bold">내 상점 보기</span>
+              <FaStore className="text-gold-light" size={18} />
+              <span className="text-gold-light text-[17px] font-bold">내 상점 보기</span>
             </button>
           )}
           <button
             onClick={() => navigate('/wallet')}
-            className="flex items-center justify-between border border-[#d9b36d]/30 bg-[#050505] rounded-xl py-5 px-8 min-w-[320px] cursor-pointer hover:bg-[#111] transition-colors"
+            className="flex items-center justify-between border border-gold-light/30 bg-background rounded-xl py-5 px-8 min-w-[320px] cursor-pointer hover:bg-surface transition-colors"
           >
-            <span className="text-[#aaa] text-[17px] font-medium">보유머니</span>
+            <span className="text-neutral-400 text-[17px] font-medium">보유머니</span>
             <div className="flex items-center gap-3">
-              <span className="text-[#d9b36d] text-2xl font-bold">
+              <span className="text-gold-light text-2xl font-bold">
                 {formatPrice(walletData?.balance)} <span className="text-xl">원</span>
               </span>
-              <span className="text-[#d9b36d] text-xl font-bold">&gt;</span>
+              <span className="text-gold-light text-xl font-bold">&gt;</span>
             </div>
           </button>
         </div>
@@ -159,11 +159,11 @@ export default function SettingsPage() {
             >
               <div className="flex items-center gap-4">
                 {tab.icon}
-                <span className={`text-[17px] font-medium ${activeTab === tab.id ? 'text-white' : 'text-[#888]'}`}>
+                <span className={`text-[17px] font-medium ${activeTab === tab.id ? 'text-white' : 'text-neutral-600'}`}>
                   {tab.label}
                 </span>
               </div>
-              {activeTab === tab.id && <div className="w-[4px] h-[20px] bg-[#d9b36d] rounded-full" />}
+              {activeTab === tab.id && <div className="w-[4px] h-[20px] bg-gold-light rounded-full" />}
             </button>
           ))}
         </div>
@@ -175,7 +175,7 @@ export default function SettingsPage() {
           {activeTab === 'payment' && <PaymentSection />}
           {activeTab === 'order' && <OrderHistorySection />}
           {activeTab !== 'account' && activeTab !== 'stores' && activeTab !== 'shipping' && activeTab !== 'payment' && (
-            <div className="flex items-center justify-center p-20 text-[#888]">해당 메뉴는 준비 중입니다.</div>
+            <div className="flex items-center justify-center p-20 text-neutral-600">해당 메뉴는 준비 중입니다.</div>
           )}
         </div>
       </div>

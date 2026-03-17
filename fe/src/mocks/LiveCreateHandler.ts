@@ -94,7 +94,7 @@ export const getRegisteredLiveCards = (): LiveCardData[] =>
     title: live.title,
     category: live.category,
     thumbnailUri: live.thumbnail,
-    isLive: live.isLive,
+    streamStatus: live.isLive ? 'LIVE' : 'SCHEDULED',
     viewerCount: 0,
     scheduledAt: live.isLive ? null : live.scheduledAt,
     startedAt: live.isLive ? live.createdAt : null,

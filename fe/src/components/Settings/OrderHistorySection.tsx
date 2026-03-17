@@ -23,23 +23,23 @@ const getEscrowStateUI = (state: EscrowState) => {
     case 'INVOICE_SUBMITTED':
       return {
         label: '배송중',
-        badgeClass: 'self-start bg-[#1b4a3c] text-[#4ade80] px-2 py-1 text-[11px] font-bold rounded-[20px]',
+        badgeClass: 'self-start badge badge-ember-outline',
       };
     case 'COMPLETED':
       return {
         label: '배송완료',
-        badgeClass: 'self-start bg-[#183b5f] text-[#60a5fa] px-2 py-1 text-[11px] font-bold rounded-[20px]',
+        badgeClass: 'self-start badge badge-primary-outline',
       };
     case 'CANCELLED':
       return {
         label: '취소됨',
-        badgeClass: 'self-start bg-[#333] text-[#999] px-2 py-1 text-[11px] font-bold rounded-[20px]',
+        badgeClass: 'self-start badge badge-neutral',
       };
     case 'DEPOSITED':
     default:
       return {
         label: '결제완료',
-        badgeClass: 'self-start bg-[#3a2b16] text-[#d9b36d] px-2 py-1 text-[11px] font-bold rounded-[20px]',
+        badgeClass: 'self-start badge badge-gold-outline',
       };
   }
 };
@@ -60,7 +60,7 @@ export default function OrderHistorySection() {
     <>
       <div className="flex flex-col gap-5">
         {items.length === 0 ? (
-          <p className="text-center text-[#888] py-15 text-[15px]">구매 내역이 없습니다.</p>
+          <p className="text-center text-neutral-600 py-15 text-[15px]">구매 내역이 없습니다.</p>
         ) : (
           items.map((item, index) => {
             const ui = getEscrowStateUI(item.escrowStatus);
@@ -70,29 +70,29 @@ export default function OrderHistorySection() {
                 key={item.escrowId}
                 type="button"
                 onClick={() => item.escrowId && setSelectedItemId(String(item.escrowId))}
-                className={`flex py-4 items-center justify-between text-left bg-transparent border-none cursor-pointer rounded-2xl px-2 transition-colors hover:bg-[#111118] ${
-                  index > 0 ? 'border-t border-[#1a1a26] mt-4 pt-8' : ''
+                className={`flex py-4 items-center justify-between text-left bg-transparent border-none cursor-pointer rounded-2xl px-2 transition-colors hover:bg-surface ${
+                  index > 0 ? 'border-t border-neutral-800 mt-4 pt-8' : ''
                 }`}
               >
                 <div className="flex items-center gap-6 flex-1">
-                  <div className="w-16 h-16 rounded-full bg-[#1c1c28] border-[1.5px] border-[#d9b36d] flex items-center justify-center overflow-hidden">
+                  <div className="w-16 h-16 rounded-full bg-surface border-[1.5px] border-gold-light flex items-center justify-center overflow-hidden">
                     {item.image ? (
                       <img src={item.image} alt={item.itemName} className="w-full h-full object-cover" />
                     ) : (
-                      <FiGift size={32} color="#D9B36D" />
+                      <FiGift size={32} className="text-gold-light" />
                     )}
                   </div>
 
                   <div className="flex flex-col gap-1.5">
                     <span className={ui.badgeClass}>{ui.label}</span>
                     <h4 className="m-0 mt-0.5 text-base font-bold text-white">{item.itemName}</h4>
-                    <p className="m-0 text-[13px] text-[#888]">{formatDate(item.createdAt)}</p>
+                    <p className="m-0 text-[13px] text-neutral-600">{formatDate(item.createdAt)}</p>
                   </div>
                 </div>
 
                 <div className="flex flex-col items-end gap-1.5 w-35">
                   <span className="text-base font-bold text-white">- {formatPrice(item.amount)}</span>
-                  <span className="text-[13px] text-[#888]">{ui.label}</span>
+                  <span className="text-[13px] text-neutral-600">{ui.label}</span>
                 </div>
               </button>
             );
@@ -110,8 +110,8 @@ export default function OrderHistorySection() {
             onClick={(event) => event.stopPropagation()}
           >
             {isDetailLoading || !selectedItemDetail ? (
-              <div className="bg-[#1C1C1E] rounded-3xl p-8 border border-[#3A3A3C] min-h-[320px] flex items-center justify-center">
-                <div className="w-10 h-10 border-4 border-[#333] border-t-[#d9b36d] rounded-full animate-spin" />
+              <div className="bg-surface-elevated rounded-3xl p-8 border border-neutral-700 min-h-[320px] flex items-center justify-center">
+                <div className="w-10 h-10 border-4 border-neutral-700 border-t-gold-light rounded-full animate-spin" />
               </div>
             ) : (
               <EscrowDetailCard
