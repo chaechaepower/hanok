@@ -7,7 +7,7 @@ export const getNotificationPath = () => '/v1/users/me/notification';
 
 export const getNotification = async () => {
   const response = await getFetchInstance().get<ApiResponse<GetNotificationResponse>>(getNotificationPath());
-  return response.data;
+  return response.data.data;
 };
 
 export const useGetNotification = () => {
