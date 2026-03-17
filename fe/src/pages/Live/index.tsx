@@ -35,7 +35,7 @@ import type {
   UniqueAuctionEndPayload,
   UniqueBidSyncPayload,
 } from '@/types';
-import { disconnectStompClient, sendStreamMessage, subscribeStream } from '@/websocket/stompClient';
+import { sendStreamMessage, subscribeStream } from '@/websocket/stompClient';
 
 import LeftPanel from './LeftPanel';
 import LiveHeader from './LiveHeader';
@@ -565,7 +565,6 @@ export default function LivePage() {
     return () => {
       isDisposed = true;
       unsubscribeStream();
-      void disconnectStompClient();
     };
   }, [showToast, streamId]);
 
