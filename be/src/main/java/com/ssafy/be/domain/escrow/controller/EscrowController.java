@@ -50,11 +50,11 @@ public class EscrowController implements EscrowApi {
         return ResponseEntity.ok(ApiResponse.success());
     }
 
-    @GetMapping
-    public ResponseEntity<?> getAllEscrows(
+    @GetMapping("/seller")
+    public ResponseEntity<?> getAllSellerEscrows(
             @AuthenticationPrincipal String principal
     ) {
-        List<EscrowListResponse> response = escrowService.getAllEscrows(getUserId(principal));
+        List<EscrowListResponse> response = escrowService.getAllSellerEscrows(getUserId(principal));
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
