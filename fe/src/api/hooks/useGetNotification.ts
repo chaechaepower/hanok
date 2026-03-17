@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
-import type { GetNotificationResponse } from '@/types';
+import type { ApiResponse,GetNotificationResponse } from '@/types';
 
 export const getNotificationPath = () => '/v1/users/me/notification';
 
 export const getNotification = async () => {
-  const response = await getFetchInstance().get<GetNotificationResponse>(getNotificationPath());
+  const response = await getFetchInstance().get<ApiResponse<GetNotificationResponse>>(getNotificationPath());
   return response.data;
 };
 

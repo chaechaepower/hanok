@@ -35,7 +35,7 @@ import type {
   UniqueAuctionEndPayload,
   UniqueBidSyncPayload,
 } from '@/types';
-import { disconnectStompClient, sendStreamMessage, subscribeStream } from '@/websocket/stompClient';
+import { sendStreamMessage, subscribeStream } from '@/websocket/stompClient';
 
 import LeftPanel from './LeftPanel';
 import LiveHeader from './LiveHeader';
@@ -194,10 +194,7 @@ export default function LivePage() {
   const activeBidAuctionId = liveAuctionItem?.auctionId ?? introducingAuctionItem?.auctionId ?? null;
   const activeAuctionType = liveAuctionItem?.auctionType ?? introducingAuctionItem?.auctionType ?? null;
   const activeStreamEnter: StreamEnterResponse | null = streamEnter ?? null;
-  const storedUserId =
-    typeof window === 'undefined' ? 0 : Number.parseInt(window.localStorage.getItem('userId') ?? '0', 10);
-  const currentUserId = Number.isFinite(storedUserId) ? storedUserId : 0;
-  const isSeller = activeStreamEnter?.seller.sellerId === currentUserId;
+  const isSeller = activeStreamEnter?.isHost ?? false;
   const isStreamLive = liveStateOverride ?? Boolean(activeStreamEnter?.isLive);
 
   const livekitUrl = import.meta.env.VITE_LIVEKIT_URL ?? '';
@@ -220,7 +217,7 @@ export default function LivePage() {
             startType: activeStreamEnter.startType,
             scheduledAt: activeStreamEnter.scheduledAt ?? undefined,
             notice: activeStreamEnter.notice ?? undefined,
-            itemIds: activeStreamEnter.items.map((item) => item.itemId),
+            itemIds: (activeStreamEnter.items ?? []).map((item) => item.itemId),
           }
         : null,
     [activeStreamEnter],
@@ -565,7 +562,6 @@ export default function LivePage() {
     return () => {
       isDisposed = true;
       unsubscribeStream();
-      void disconnectStompClient();
     };
   }, [showToast, streamId]);
 

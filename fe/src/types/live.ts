@@ -36,6 +36,7 @@ export type StreamEnterResponse = {
   token: string;
   identity: string;
   isFollowing: boolean;
+  isHost: boolean;
 };
 
 export type LiveCardData = {
