@@ -38,8 +38,11 @@ public class ChatMessageHandler implements StreamEventHandler {
 
         ChatMessageRequest requestPayload = jsonConverter.convert(request.getPayload(), ChatMessageRequest.class);
 
-        ChatMessagePayload responsePayload = chatService.handleMessage(userId, nickname, requestPayload);
+        ChatMessagePayload responsePayload = chatService.handleMessage(userId, nickname, streamId, requestPayload);  // streamId 넘김
 
         streamPublisher.broadcast(streamId, CHAT_MESSAGE, responsePayload);
     }
+
+
+
 }
