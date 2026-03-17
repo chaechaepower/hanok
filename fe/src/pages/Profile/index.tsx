@@ -421,7 +421,6 @@ export default function ProfilePage() {
             # 공지사항
           </button>
 
-          {isMyProfile && (
           <button
             className={`flex items-center gap-[6px] bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-base font-bold cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${
               activeTab === 'sales' ? 'text-[#d9b36d] border-[#d9b36d]' : 'text-[#888] border-transparent'
@@ -431,7 +430,6 @@ export default function ProfilePage() {
             <HistoryIcon />
             판매 내역
           </button>
-          )}
         </div>
 
         {activeTab === 'posts' && (
