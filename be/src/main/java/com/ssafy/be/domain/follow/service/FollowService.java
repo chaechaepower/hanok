@@ -28,14 +28,15 @@ public class FollowService {
     private final SellerRepository sellerRepository;
 
     @Transactional
-    public FollowResponse toggleFollow(Long loginUserId, Long targetUserId) {
+    public FollowResponse toggleFollow(Long loginUserId, Long targetSellerId) {
+
         User me = userRepository.findById(loginUserId)
                 .orElseThrow(() -> new GlobalException(FollowErrorCode.USER_NOT_FOUND));
 
-        Seller targetSeller = sellerRepository.findByUserId(targetUserId)
+        Seller targetSeller = sellerRepository.findById(targetSellerId)
                 .orElseThrow(() -> new GlobalException(FollowErrorCode.SELLER_NOT_FOUND));
 
-        if (me.getId().equals(targetUserId)) {
+        if (me.getId().equals(targetSeller.getUser().getId())) {
             throw new GlobalException(FollowErrorCode.SELF_FOLLOW_NOT_ALLOWED);
         }
 

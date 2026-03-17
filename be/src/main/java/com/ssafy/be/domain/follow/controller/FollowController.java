@@ -21,13 +21,13 @@ public class FollowController implements FollowApi {
     private final FollowService followService;
 
     @Override
-    @PostMapping("/follow/{targetUserId}")
+    @PostMapping("/follow/{targetSellerId}")
     public ResponseEntity<FollowResponse> toggleFollow(
-            @PathVariable Long targetUserId,
+            @PathVariable Long targetSellerId,
             @AuthenticationPrincipal String principal
     ) {
         return ResponseEntity.ok(
-                followService.toggleFollow(Long.parseLong(principal), targetUserId)
+                followService.toggleFollow(Long.parseLong(principal), targetSellerId)
         );
     }
 
