@@ -60,14 +60,9 @@ public class Seller {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private SellerGrade grade;
-
     @Builder
     private Seller(String intro,
                    Integer penaltyCount,
-                   SellerGrade grade,
                    SellerType type,
                    String businessNumber,
                    String instaUrl,
@@ -77,7 +72,6 @@ public class Seller {
                    User user) {
         this.intro = intro;
         this.penaltyCount = penaltyCount;
-        this.grade = grade != null ? grade : SellerGrade.GENERAL;
         this.type = type;
         this.businessNumber = businessNumber;
         this.instaUrl = instaUrl;
