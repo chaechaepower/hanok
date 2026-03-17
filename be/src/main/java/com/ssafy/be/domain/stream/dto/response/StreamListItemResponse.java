@@ -1,6 +1,8 @@
 package com.ssafy.be.domain.stream.dto.response;
 
 import com.ssafy.be.domain.item.entity.Category;
+import com.ssafy.be.domain.stream.entity.StreamStatus;
+
 import java.time.LocalDateTime;
 
 public record StreamListItemResponse(
@@ -8,7 +10,7 @@ public record StreamListItemResponse(
         String title,
         Category category,
         String thumbnailUri,
-        boolean isLive,
+        StreamStatus streamStatus,
         long viewerCount,
         LocalDateTime scheduledAt,
         LocalDateTime startedAt,

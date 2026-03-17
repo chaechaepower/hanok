@@ -334,9 +334,9 @@ public class StreamService {
                                         stream.getTitle(),
                                         stream.getCategory(),
                                         stream.getThumbnail(),
-                                        stream.getStatus() == StreamStatus.LIVE,
+                                        stream.getStatus() ,
                                         streamViewerService.getViewerCount(stream.getId()),
-                                        stream.getScheduledAt(),
+                                        (stream.getStatus() == StreamStatus.SCHEDULED)? stream.getScheduledAt() : null ,
                                         stream.getStartedAt(),
                                         new StreamSellerResponse(
                                                 sel.getId(),
@@ -374,9 +374,9 @@ public class StreamService {
                     stream.getTitle(),
                     stream.getCategory(),
                     stream.getThumbnail(),
-                    stream.getStatus() == StreamStatus.LIVE,
+                    stream.getStatus() ,
                     streamViewerService.getViewerCount(stream.getId()),
-                    stream.getScheduledAt(),
+                    (stream.getStatus() == StreamStatus.SCHEDULED)? stream.getScheduledAt() : null ,
                     stream.getStartedAt(),
                     new StreamSellerResponse(
                             sel.getId(),
