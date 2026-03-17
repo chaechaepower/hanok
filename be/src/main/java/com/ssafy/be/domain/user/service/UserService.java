@@ -3,6 +3,7 @@ package com.ssafy.be.domain.user.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.ssafy.be.domain.notification.dto.request.NotificationSettingRequest;
 import com.ssafy.be.domain.notification.dto.response.NotificationSettingResponse;
+import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.user.dto.request.*;
 import com.ssafy.be.domain.user.dto.response.*;
 import com.ssafy.be.domain.user.entity.BankCode;
@@ -39,6 +40,7 @@ public class UserService {
     private final RedisService redisService;
     private final JwtUtil jwtUtil;
     private final GcsClient gcsClient;
+    private final SellerRepository sellerRepository;
 
     private static final String REFRESH_TOKEN_PREFIX = "refresh:";
     private static final String BLACKLIST_PREFIX = "blacklist:";
@@ -260,6 +262,10 @@ public class UserService {
     }
 
     private UserProfileResponse toUserProfileResponse(User user) {
+        Long sellerId = sellerRepository.findByUserId(user.getId())
+                .map(seller -> seller.getId())
+                .orElse(null);
+
         return UserProfileResponse.builder()
                 .email(user.getEmail())
                 .nickname(user.getNickname())
@@ -272,6 +278,7 @@ public class UserService {
                 .bankCode(user.getBankCode())
                 .accountName(user.getAccountName())
                 .accountNum(user.getAccountNum())
+                .sellerId(sellerId)
                 .build();
     }
 

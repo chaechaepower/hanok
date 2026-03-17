@@ -15,4 +15,5 @@ public class UserProfileResponse {
     private final String bankCode;
     private final String accountName;
     private final String accountNum;
+    private final Long sellerId;
 }
