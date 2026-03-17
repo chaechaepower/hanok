@@ -5,6 +5,9 @@ export type GetMeResponse = {
   phone: string;
   balance: number;
   depositedBalance: number;
+  bankCode: string;
+  accountName: string;
+  accountNum: string;
 };
 
 export type PatchMeSettingsPayload = {

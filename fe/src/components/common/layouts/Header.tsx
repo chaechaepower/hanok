@@ -1,29 +1,34 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { FaUser } from 'react-icons/fa';
 import { GoBellFill } from 'react-icons/go';
+import { HiMiniHome } from 'react-icons/hi2';
 import { IoMdSettings } from 'react-icons/io';
 import { TbCircleLetterMFilled } from 'react-icons/tb';
-import { HiMiniHome } from 'react-icons/hi2';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
 import { useGetUnreadCount } from '@/api/hooks/useGetUnreadCount';
-import { useSSE } from '@/hooks/useSSE';
 import { useToast } from '@/components/common/Toast/useToast';
+import { useSSE } from '@/hooks/useSSE';
 import Logo from '@/assets/Logo.png';
-import SearchBar from '../SearchBar';
 import Button from '../Button';
 import NotificationPanel from '../NotificationPanel';
+import SearchBar from '../SearchBar';
 
 export default function Header() {
+  const location = useLocation();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
   const { data: sellerStatus } = useGetSellerStatus(isLoggedIn);
   const sellerButtonLabel = sellerStatus?.isSeller ? '판매자 센터' : '판매자 등록';
   const sellerButtonPath = sellerStatus?.isSeller ? '/products' : '/seller/register';
+  const searchKeyword =
+    location.pathname === '/search'
+      ? new URLSearchParams(location.search).get('keyword')?.trim() ?? ''
+      : '';
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const { data: unreadData } = useGetUnreadCount();
@@ -33,9 +38,13 @@ export default function Header() {
 
   useEffect(() => {
     if (!isNotifOpen) return;
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsNotifOpen(false);
+
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsNotifOpen(false);
+      }
     };
+
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
   }, [isNotifOpen]);
@@ -58,9 +67,17 @@ export default function Header() {
     navigate(userId ? `/profile/${userId}` : '/login');
   };
 
+  const handleSearch = (keyword: string) => {
+    if (!keyword) {
+      navigate('/search');
+      return;
+    }
+
+    navigate(`/search?keyword=${encodeURIComponent(keyword)}`);
+  };
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[1000] flex h-16 items-center gap-4 border-b border-white/5 bg-background/94 px-6 backdrop-blur-[20px]">
-      {/* ── 좌측: 로고 + 디바이더 + 판매자 버튼 ── */}
+    <nav className="fixed left-0 right-0 top-0 z-[1000] flex h-16 items-center gap-4 border-b border-white/5 bg-background/94 px-6 backdrop-blur-[20px]">
       <div className="flex shrink-0 items-center gap-5">
         <button
           type="button"
@@ -68,7 +85,11 @@ export default function Header() {
           className="flex items-center gap-2.5 transition-opacity hover:opacity-85"
           aria-label="Go to home"
         >
-          <img src={Logo} alt="Logo" className="h-9 w-auto object-contain brightness-0 invert sepia saturate-50 hue-rotate-[350deg]" />
+          <img
+            src={Logo}
+            alt="Logo"
+            className="h-9 w-auto object-contain brightness-0 invert sepia saturate-50 hue-rotate-[350deg]"
+          />
         </button>
 
         <div className="h-7 w-px shrink-0 bg-warm/6" />
@@ -83,19 +104,28 @@ export default function Header() {
         </button>
       </div>
 
-      {/* ── 중앙: 검색바 ── */}
       <div className="flex min-w-0 flex-1 justify-center px-5">
-        <SearchBar />
+        <SearchBar
+          key={location.pathname === '/search' ? location.search : location.pathname}
+          defaultValue={searchKeyword}
+          onSearch={handleSearch}
+          maxLength={50}
+        />
       </div>
 
-      {/* ── 우측 ── */}
       {isLoggedIn ? (
         <div className="flex shrink-0 items-center gap-1">
           <HeaderIcon onClick={() => navigate('/wallet')} ariaLabel="Go to wallet" tooltip="가상머니">
             <TbCircleLetterMFilled className="h-5 w-5 fill-current stroke-none" />
           </HeaderIcon>
           <div className="relative">
-            <HeaderIcon onClick={() => setIsNotifOpen((prev) => !prev)} ariaLabel="Open alerts" tooltip="알림" badgeCount={unreadCount > 0 ? unreadCount : undefined} hasNoti>
+            <HeaderIcon
+              onClick={() => setIsNotifOpen((prev) => !prev)}
+              ariaLabel="Open alerts"
+              tooltip="알림"
+              badgeCount={unreadCount > 0 ? unreadCount : undefined}
+              hasNoti
+            >
               <GoBellFill className="h-5 w-5" />
             </HeaderIcon>
             {isNotifOpen && <NotificationPanel onClose={() => setIsNotifOpen(false)} />}
@@ -117,10 +147,20 @@ export default function Header() {
         </div>
       ) : (
         <div className="flex shrink-0 items-center gap-2">
-          <Button variant="navSignup" size="small" onClick={() => navigate('/signup')} className="px-[18px] py-2">
+          <Button
+            variant="navSignup"
+            size="small"
+            onClick={() => navigate('/signup')}
+            className="px-[18px] py-2"
+          >
             회원가입
           </Button>
-          <Button variant="navLogin" size="small" onClick={() => navigate('/login')} className="px-[18px] py-2">
+          <Button
+            variant="navLogin"
+            size="small"
+            onClick={() => navigate('/login')}
+            className="px-[18px] py-2"
+          >
             로그인
           </Button>
         </div>
@@ -149,7 +189,7 @@ function HeaderIcon({ children, onClick, ariaLabel, tooltip, badgeCount, hasNoti
       >
         {children}
         {badgeCount != null && badgeCount > 0 && (
-          <span className="pointer-events-none absolute top-0.5 right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-background bg-accent px-[5px] text-[10px] font-[800] text-white animate-badge-pulse">
+          <span className="animate-badge-pulse pointer-events-none absolute right-0.5 top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full border-2 border-background bg-accent px-[5px] text-[10px] font-[800] text-white">
             {badgeCount}
           </span>
         )}

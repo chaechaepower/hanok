@@ -1,13 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
-import type { GetMeResponse } from '@/types';
+import type { ApiResponse, GetMeResponse } from '@/types';
 
 export const getMePath = () => '/v1/users/me';
 
 export const getMe = async () => {
-  const response = await getFetchInstance().get<GetMeResponse>(getMePath());
-  return response.data;
+  const response = await getFetchInstance().get<ApiResponse<GetMeResponse>>(getMePath());
+  return response.data.data;
 };
 
 export const useGetMe = (options?: { enabled?: boolean }) => {

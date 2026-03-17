@@ -11,6 +11,16 @@ const mockMeData = {
   phone: '01012345678',
   balance: 10000,
   depositedBalance: 5000,
+  bankCode: '088',
+  accountName: 'Hong Gil Dong',
+  accountNum: '110-123-456789',
+};
+
+const mockAccountData = {
+  bankCode: '088',
+  bankName: 'Shinhan Bank',
+  accountNum: '110-123-456789',
+  accountName: 'Hong Gil Dong',
 };
 
 const mockNotification = {
@@ -79,9 +89,23 @@ const FOLLOWED_SELLER_CATALOG = [
 export const settingsHandlers = [
   http.post(`${BASE_URL}/v1/auth/logout`, () => HttpResponse.json({ success: true }, { status: 200 })),
 
-  http.get(`${BASE_URL}/v1/users/me/seller-status`, () => HttpResponse.json({ isSeller: false }, { status: 200 })),
+  http.get(`${BASE_URL}/v1/users/me/seller-status`, () =>
+    HttpResponse.json(
+      {
+        status: 'SUCCESS',
+        message: 'Seller status fetched successfully.',
+        data: {
+          isSeller: false,
+          sellerId: null,
+        },
+      },
+      { status: 200 },
+    ),
+  ),
 
-  http.get(`${BASE_URL}/v1/users/me/notification`, () => HttpResponse.json(mockNotification, { status: 200 })),
+  http.get(`${BASE_URL}/v1/users/me/notification`, () =>
+    HttpResponse.json(mockNotification, { status: 200 }),
+  ),
 
   http.patch(`${BASE_URL}/v1/users/me/notification`, async ({ request }) => {
     const body = (await request.json()) as { followStreamAlert: boolean };
@@ -95,22 +119,28 @@ export const settingsHandlers = [
 
   http.get(`${BASE_URL}/v1/users/me`, () => {
     const currentUser = getCurrentMockUser();
-
-    if (currentUser) {
-      return HttpResponse.json(
-        {
+    const data = currentUser
+      ? {
           email: currentUser.email,
           nickname: currentUser.nickname,
           profileImage: currentUser.profileImage,
           phone: currentUser.phone,
           balance: currentUser.balance,
           depositedBalance: currentUser.depositedBalance,
-        },
-        { status: 200 },
-      );
-    }
+          bankCode: mockMeData.bankCode,
+          accountName: mockMeData.accountName,
+          accountNum: mockMeData.accountNum,
+        }
+      : mockMeData;
 
-    return HttpResponse.json(mockMeData, { status: 200 });
+    return HttpResponse.json(
+      {
+        status: 'SUCCESS',
+        message: 'User info fetched successfully.',
+        data,
+      },
+      { status: 200 },
+    );
   }),
 
   http.patch(`${BASE_URL}/v1/users/me/settings`, async ({ request }) => {
@@ -182,19 +212,16 @@ export const settingsHandlers = [
     );
   }),
 
-  // GET /v1/users/me/account
-  // 계좌 없는 상태로 테스트: bankName, accountNum, accountName을 빈 값으로 설정
-  // 계좌 있는 상태로 테스트하려면 아래 값을 채우세요
-  http.get(`${BASE_URL}/v1/users/me/account`, () => {
-    return HttpResponse.json(
+  http.get(`${BASE_URL}/v1/users/me/account`, () =>
+    HttpResponse.json(
       {
-        bankName: '신한은행',
-        accountNum: '110-123-456789',
-        accountName: '홍길동',
+        bankName: mockAccountData.bankName,
+        accountNum: mockAccountData.accountNum,
+        accountName: mockAccountData.accountName,
       },
       { status: 200 },
-    );
-  }),
+    ),
+  ),
 
   http.patch(`${BASE_URL}/v1/users/me/account`, async ({ request }) => {
     const body = (await request.json()) as {
@@ -203,12 +230,18 @@ export const settingsHandlers = [
       accountName: string;
     };
 
-    console.log('Mock: account registered', body);
+    mockMeData.bankCode = body.bankCode;
+    mockMeData.accountNum = body.accountNum;
+    mockMeData.accountName = body.accountName;
+    mockAccountData.bankCode = body.bankCode;
+    mockAccountData.accountNum = body.accountNum;
+    mockAccountData.accountName = body.accountName;
+
     return HttpResponse.json(
       {
-        bankName: '신한은행',
-        accountNum: body.accountNum,
-        accountName: body.accountName,
+        bankName: mockAccountData.bankName,
+        accountNum: mockAccountData.accountNum,
+        accountName: mockAccountData.accountName,
       },
       { status: 200 },
     );
@@ -221,8 +254,8 @@ export const settingsHandlers = [
           id: 1,
           addressName: 'Home',
           postalCode: 43123,
-          address: '서울특별시 강남구 테헤란로 17',
-          addressDetail: '101동 1001호',
+          address: 'Seoul Gangnam-daero 17',
+          addressDetail: '101-1001',
           phone: '010-0000-5678',
           recipientName: 'Mock User',
           isDefault: true,
@@ -231,8 +264,8 @@ export const settingsHandlers = [
           id: 2,
           addressName: 'Office',
           postalCode: 12312,
-          address: '서울특별시 서초구 서초대로 123',
-          addressDetail: '5층',
+          address: 'Seoul Teheran-ro 123',
+          addressDetail: '5F',
           phone: '010-0000-5678',
           recipientName: 'Mock User',
           isDefault: false,
@@ -254,21 +287,21 @@ export const settingsHandlers = [
     HttpResponse.json({ message: 'Address deleted successfully.' }, { status: 200 }),
   ),
 
-  http.patch(`${BASE_URL}/v1/users/me/password`, async () => {
-    return HttpResponse.json(
-      { status: 'SUCCESS', message: '비밀번호가 변경되었습니다.', data: {} },
+  http.patch(`${BASE_URL}/v1/users/me/password`, async () =>
+    HttpResponse.json(
+      { status: 'SUCCESS', message: 'Password updated successfully.', data: {} },
       { status: 200 },
-    );
-  }),
+    ),
+  ),
 
-  http.patch(`${BASE_URL}/v1/users/me/profile-image`, async () => {
-    return HttpResponse.json(
+  http.patch(`${BASE_URL}/v1/users/me/profile-image`, async () =>
+    HttpResponse.json(
       {
         status: 'SUCCESS',
-        message: '프로필 이미지가 업로드되었습니다.',
+        message: 'Profile image updated successfully.',
         data: 'https://api.dicebear.com/7.x/adventurer/svg?seed=updated',
       },
       { status: 200 },
-    );
-  }),
+    ),
+  ),
 ];

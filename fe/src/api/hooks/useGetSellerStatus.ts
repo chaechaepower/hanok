@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { getFetchInstance } from '../instance';
-import type { SellerStatusResponse } from '@/types';
+import type { ApiResponse, SellerStatusResponse } from '@/types';
 
 export const getSellerStatusPath = () => `/v1/users/me/seller-status`;
 
 export const getSellerStatus = async () => {
-  const response = await getFetchInstance().get<SellerStatusResponse>(
+  const response = await getFetchInstance().get<ApiResponse<SellerStatusResponse>>(
     getSellerStatusPath()
   );
-  return response.data;
+  return response.data.data;
 };
 
 export const useGetSellerStatus = (enabled = true) => {

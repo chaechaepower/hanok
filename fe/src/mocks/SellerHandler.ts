@@ -40,9 +40,16 @@ export const sellerHandlers = [
   http.get(`${BASE_URL}/v1/users/me/seller-status`, async () => {
     const user = getCurrentMockUser();
     const isSeller = user?.isSeller ?? false;
-    return HttpResponse.json({
-      isSeller,
-      sellerId: isSeller ? 1 : null,
-    });
+    return HttpResponse.json(
+      {
+        status: 'SUCCESS',
+        message: 'Seller status fetched successfully.',
+        data: {
+          isSeller,
+          sellerId: isSeller ? 1 : null,
+        },
+      },
+      { status: 200 },
+    );
   }),
 ];

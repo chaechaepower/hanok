@@ -4,6 +4,13 @@ import { useNavigate } from 'react-router-dom';
 type LiveCardProps = {
   stream: LiveCardData;
   className?: string;
+  statusBadge?: {
+    label: string;
+    className: string;
+  };
+  isNavigable?: boolean;
+  disableSellerNavigation?: boolean;
+  metaText?: string;
 };
 
 const CATEGORY_LABEL_MAP: Record<string, string> = {
@@ -36,14 +43,21 @@ const formatScheduledAt = (scheduledAt: string | null) => {
   return `${month}/${day} ${hour}:${minute}`;
 };
 
-export default function LiveCard({ stream, className = '' }: LiveCardProps) {
+export default function LiveCard({
+  stream,
+  className = '',
+  statusBadge,
+  isNavigable,
+  disableSellerNavigation = false,
+  metaText,
+}: LiveCardProps) {
   const navigate = useNavigate();
   const sellerInitial = stream.seller.nickname.trim().charAt(0) || '?';
   const categoryLabel = CATEGORY_LABEL_MAP[stream.category] ?? stream.category;
   const isScheduledCard = stream.scheduledAt !== null;
   const scheduledAtLabel = formatScheduledAt(stream.scheduledAt);
-  const canNavigate = stream.isLive && !isScheduledCard;
-  const canNavigateToProfile = stream.seller.sellerId > 0;
+  const canNavigate = isNavigable ?? (stream.isLive && !isScheduledCard);
+  const canNavigateToProfile = !disableSellerNavigation && stream.seller.sellerId > 0;
   const containerClassName = `group w-full max-w-[230px] ${className}`.trim();
   const livePreviewClassName = `relative aspect-3/4 w-full overflow-hidden rounded-2xl bg-[#111827] ${
     canNavigate ? 'cursor-pointer' : ''
@@ -97,7 +111,7 @@ export default function LiveCard({ stream, className = '' }: LiveCardProps) {
           </div>
         )}
 
-        {isScheduledCard && scheduledAtLabel && (
+        {!statusBadge && isScheduledCard && scheduledAtLabel && (
           <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-linear-to-b from-black/70 via-black/45 to-black/75">
             <div className="px-4 text-center text-point">
               <p className="text-[36px] font-semibold leading-none tracking-[-0.02em] drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
@@ -110,10 +124,19 @@ export default function LiveCard({ stream, className = '' }: LiveCardProps) {
           </div>
         )}
 
-        {stream.isLive && !isScheduledCard && (
-          <span className="absolute left-3 top-3 rounded-md bg-[#EF4444] px-2.5 py-1.5 text-[12px] font-semibold text-white">
-            Live ∙ {stream.viewerCount.toLocaleString()}
+        {statusBadge ? (
+          <span
+            className={`absolute left-3 top-3 rounded-md px-2.5 py-1.5 text-[12px] font-semibold ${statusBadge.className}`}
+          >
+            {statusBadge.label}
           </span>
+        ) : (
+          stream.isLive &&
+          !isScheduledCard && (
+            <span className="absolute left-3 top-3 rounded-md bg-[#EF4444] px-2.5 py-1.5 text-[12px] font-semibold text-white">
+              Live · {stream.viewerCount.toLocaleString()}
+            </span>
+          )
         )}
       </div>
 
@@ -141,11 +164,15 @@ export default function LiveCard({ stream, className = '' }: LiveCardProps) {
           <h3 className="overflow-hidden text-ellipsis whitespace-nowrap text-[16px] font-normal leading-none text-point">
             {stream.title}
           </h3>
-          <p className="text-[14px] font-light leading-none text-point">
-            <span>{stream.seller.nickname}</span>
-            <span className="mx-1 text-gold">|</span>
-            <span className="text-gold">{categoryLabel}</span>
-          </p>
+          {metaText ? (
+            <p className="text-[14px] font-light leading-none text-point">{metaText}</p>
+          ) : (
+            <p className="text-[14px] font-light leading-none text-point">
+              <span>{stream.seller.nickname}</span>
+              <span className="mx-1 text-gold">|</span>
+              <span className="text-gold">{categoryLabel}</span>
+            </p>
+          )}
         </div>
       </button>
     </article>

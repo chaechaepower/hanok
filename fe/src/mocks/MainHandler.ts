@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
-import type { LiveCardData, PageResponse } from '@/types';
+import type { LiveCardData, PageResponse, SearchMatchReason, SearchStreamResult } from '@/types';
 
 import { getRegisteredLiveById, getRegisteredLiveCards } from './LiveCreateHandler';
 import { getCurrentMockUser, isSellerFollowed } from './mockState';
@@ -27,6 +27,116 @@ const SELLERS = [
   { sellerId: 13, nickname: 'gallery_31' },
   { sellerId: 14, nickname: 'card_deck' },
   { sellerId: 15, nickname: 'bag_corner' },
+];
+
+type SearchMockEntry = SearchStreamResult & {
+  itemNames: string[];
+  tags: string[];
+};
+
+const SEARCH_STREAMS: SearchMockEntry[] = [
+  {
+    streamId: 1,
+    title: '나이키 한정판 경매 방송',
+    thumbnail: '',
+    category: 'SNEAKERS',
+    status: 'LIVE',
+    viewerCount: 142,
+    scheduledAt: null,
+    seller: {
+      sellerId: 10,
+      nickname: '판매왕',
+      profileImageUri: '',
+    },
+    itemNames: ['나이키 덩크 로우', '오프화이트 티셔츠'],
+    tags: ['#나이키', '#한정판', '#스니커즈'],
+    matchReasons: [],
+  },
+  {
+    streamId: 7,
+    title: '오늘의 패션 경매',
+    thumbnail: null,
+    category: 'APPAREL',
+    status: 'ENDED',
+    viewerCount: 87,
+    scheduledAt: null,
+    seller: {
+      sellerId: 11,
+      nickname: '패션딜러',
+      profileImageUri: null,
+    },
+    itemNames: ['에어포스 1', '빈티지 데님 자켓'],
+    tags: ['#나이키', '#패션', '#빈티지'],
+    matchReasons: [],
+  },
+  {
+    streamId: 12,
+    title: '롤렉스 빈티지 컬렉션 라이브',
+    thumbnail: '',
+    category: 'WATCH',
+    status: 'LIVE',
+    viewerCount: 56,
+    scheduledAt: null,
+    seller: {
+      sellerId: 12,
+      nickname: '워치스튜디오',
+      profileImageUri: '',
+    },
+    itemNames: ['롤렉스 데이저스트', '오메가 씨마스터'],
+    tags: ['#시계', '#롤렉스', '#빈티지'],
+    matchReasons: [],
+  },
+  {
+    streamId: 18,
+    title: '카드 수집가 야간 경매',
+    thumbnail: null,
+    category: 'CARD',
+    status: 'PAUSED',
+    viewerCount: 33,
+    scheduledAt: null,
+    seller: {
+      sellerId: 14,
+      nickname: '카드수집러',
+      profileImageUri: null,
+    },
+    itemNames: ['포켓몬 카드 리자몽', '원피스 카드 부스터'],
+    tags: ['#트레이딩카드', '#포켓몬', '#원피스'],
+    matchReasons: [],
+  },
+  {
+    streamId: 24,
+    title: '명품 가방 셀렉션',
+    thumbnail: '',
+    category: 'BAG',
+    status: 'SCHEDULED',
+    viewerCount: 0,
+    scheduledAt: new Date(Date.now() + 1000 * 60 * 90).toISOString(),
+    seller: {
+      sellerId: 15,
+      nickname: '럭셔리셀러',
+      profileImageUri: '',
+    },
+    itemNames: ['샤넬 클래식 플랩백', '프라다 리에디션'],
+    tags: ['#명품', '#가방', '#샤넬'],
+    matchReasons: [],
+  },
+  {
+    streamId: 31,
+    title: '피규어 오픈박스 라이브',
+    thumbnail: null,
+    category: 'FIGURE',
+    status: 'LIVE',
+    viewerCount: 219,
+    scheduledAt: null,
+    seller: {
+      sellerId: 13,
+      nickname: '피규어존',
+      profileImageUri: null,
+    },
+    itemNames: ['드래곤볼 손오공 피규어', '원피스 조로 피규어'],
+    tags: ['#피규어', '#애니', '#한정판'],
+    matchReasons: [],
+  },
 ];
 
 const MAIN_LIVE_STREAMS: LiveCardData[] = Array.from({ length: 60 }, (_, index) => {
@@ -61,6 +171,42 @@ const toNumber = (value: string | null, fallback: number) => {
 
   const parsed = Number(value);
   return Number.isNaN(parsed) ? fallback : parsed;
+};
+
+const buildSearchMatchReasons = (entry: SearchMockEntry, keyword: string) => {
+  const normalizedKeyword = keyword.trim().toLowerCase();
+  const reasons: SearchMatchReason[] = [];
+
+  if (!normalizedKeyword) {
+    return reasons;
+  }
+
+  if (entry.title.toLowerCase().includes(normalizedKeyword)) {
+    reasons.push({
+      type: 'STREAM_TITLE',
+      matchedValue: entry.title,
+    });
+  }
+
+  entry.itemNames.forEach((itemName) => {
+    if (itemName.toLowerCase().includes(normalizedKeyword)) {
+      reasons.push({
+        type: 'ITEM_NAME',
+        matchedValue: itemName,
+      });
+    }
+  });
+
+  entry.tags.forEach((tag) => {
+    if (tag.toLowerCase().includes(normalizedKeyword)) {
+      reasons.push({
+        type: 'TAG',
+        matchedValue: tag,
+      });
+    }
+  });
+
+  return reasons;
 };
 
 export const mainHandlers = [
@@ -189,6 +335,22 @@ export const mainHandlers = [
       last: end >= totalElements,
       empty: content.length === 0,
     };
+
+    return HttpResponse.json(response);
+  }),
+
+  http.get(`${BASE_URL}/v1/search`, ({ request }) => {
+    const url = new URL(request.url);
+    const keyword = url.searchParams.get('keyword')?.trim() ?? '';
+
+    if (keyword.length < 2 || keyword.length > 50) {
+      return HttpResponse.json([], { status: 200 });
+    }
+
+    const response: SearchStreamResult[] = SEARCH_STREAMS.map((entry) => ({
+      ...entry,
+      matchReasons: buildSearchMatchReasons(entry, keyword),
+    })).filter((entry) => entry.matchReasons.length > 0);
 
     return HttpResponse.json(response);
   }),
