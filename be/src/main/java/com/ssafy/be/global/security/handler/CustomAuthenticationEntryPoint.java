@@ -37,7 +37,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         response.setCharacterEncoding("UTF-8");
 
         // 3. 공통 에러 응답 객체 생성 (GlobalErrorCode.UNAUTHORIZED → 401 + 에러 메시지)
-        ErrorResponse errorResponse = ErrorResponse.from(GlobalErrorCode.UNAUTHORIZED);
+        ErrorResponse errorResponse = ErrorResponse.from(GlobalErrorCode.ENTRY_POINT_ERROR);
 
         // 4. ObjectMapper로 직접 직렬화 후 응답 스트림에 작성
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));

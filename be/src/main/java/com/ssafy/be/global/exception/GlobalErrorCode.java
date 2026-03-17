@@ -12,7 +12,9 @@ public enum GlobalErrorCode implements ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G001", "서버 내부 오류가 발생했습니다."),
     INVALID_PARAMETER(HttpStatus.BAD_REQUEST, "G002", "잘못된 파라미터입니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "인증이 필요합니다."),
-    FORBIDDEN(HttpStatus.FORBIDDEN, "A002", "접근 권한이 없습니다.");
+    FORBIDDEN(HttpStatus.FORBIDDEN, "A002", "접근 권한이 없습니다."),
+    DENIED_HANDLER_ERROR(HttpStatus.FORBIDDEN, "HANDLER", "DeniedHandler."),
+    ENTRY_POINT_ERROR(HttpStatus.FORBIDDEN, "ENTRYPOINT", "EntryPointError");
 
     private final HttpStatus httpStatus;
     private final String code;
