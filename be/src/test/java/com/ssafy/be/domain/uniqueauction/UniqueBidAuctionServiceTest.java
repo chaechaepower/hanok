@@ -16,7 +16,6 @@ import com.ssafy.be.domain.uniqueaction.dto.model.UniqueAuctionResult;
 import com.ssafy.be.domain.uniqueaction.dto.request.UniqueBidCalculateRequest;
 import com.ssafy.be.domain.uniqueaction.dto.request.UniqueBidPlaceRequest;
 import com.ssafy.be.domain.uniqueaction.dto.request.UniqueBidStartRequest;
-import com.ssafy.be.domain.uniqueaction.dto.response.UniqueBidStartResponse;
 import com.ssafy.be.domain.uniqueaction.dto.response.UniqueBidSyncResponse;
 import com.ssafy.be.domain.uniqueaction.entity.UniqueBidAuction;
 import com.ssafy.be.domain.uniqueaction.entity.UniqueBidStatus;
@@ -59,9 +58,7 @@ class UniqueBidAuctionServiceTest {
     private Auction auction;
     private UniqueBidAuction uniqueBidAuction;
 
-    @MockitoBean
-    private BiznoClient biznoClient;
-
+    @MockitoBean private BiznoClient biznoClient;
     @MockitoBean private PortoneClient portoneClient;
 
     @BeforeEach
@@ -143,7 +140,7 @@ class UniqueBidAuctionServiceTest {
     @Test
     @DisplayName("1-3. READY가 아닌 상태에서 introduceItem 호출 시 예외")
     void introduceItem_invalidStatus() {
-        uniqueBidAuctionService.introduceItem(auction.getId(), sellerUser.getId()); // READY → INTRODUCING
+        uniqueBidAuctionService.introduceItem(auction.getId(), sellerUser.getId());
 
         assertThatThrownBy(() ->
                 uniqueBidAuctionService.introduceItem(auction.getId(), sellerUser.getId())
@@ -159,27 +156,23 @@ class UniqueBidAuctionServiceTest {
     void startAuction_success() {
         uniqueBidAuctionService.introduceItem(auction.getId(), sellerUser.getId());
 
+        Long streamId = auction.getStream().getId();
         UniqueBidStartRequest request = new UniqueBidStartRequest(auction.getId());
-        UniqueBidStartResponse response = uniqueBidAuctionService.startAuction(request, sellerUser.getId());
+        uniqueBidAuctionService.startAuction(streamId, request, sellerUser.getId());
 
         UniqueBidAuction result = uniqueBidAuctionRepository.findByAuction_Id(auction.getId()).orElseThrow();
         assertThat(result.getStatus()).isEqualTo(UniqueBidStatus.LIVE);
         assertThat(result.getStartedAt()).isNotNull();
-
-        assertThat(response.minPrice()).isEqualTo(10000L);
-        assertThat(response.maxPrice()).isEqualTo(100000L);
-        assertThat(response.serverNow()).isNotNull();
-        assertThat(response.serverStartedAt()).isEqualTo(result.getStartedAt());
     }
 
     @Test
     @DisplayName("2-2. INTRODUCING 상태 아닐 때 startAuction 호출 시 예외")
     void startAuction_invalidStatus() {
-        // READY 상태에서 바로 start 시도
+        Long streamId = auction.getStream().getId();
         UniqueBidStartRequest request = new UniqueBidStartRequest(auction.getId());
 
         assertThatThrownBy(() ->
-                uniqueBidAuctionService.startAuction(request, sellerUser.getId())
+                uniqueBidAuctionService.startAuction(streamId, request, sellerUser.getId())
         ).isInstanceOf(StompException.class);
     }
 
@@ -314,7 +307,6 @@ class UniqueBidAuctionServiceTest {
         placeBid(bidder1, bidder1Amount);
         placeBid(bidder2, bidder2Amount);
 
-        long bidder1BalanceBefore = userRepository.findById(bidder1.getId()).orElseThrow().getBalance();
         long bidder2BalanceBefore = userRepository.findById(bidder2.getId()).orElseThrow().getBalance();
 
         UniqueBidCalculateRequest request = new UniqueBidCalculateRequest(auction.getId());
@@ -377,8 +369,9 @@ class UniqueBidAuctionServiceTest {
 
     private void startLive() {
         uniqueBidAuctionService.introduceItem(auction.getId(), sellerUser.getId());
+        Long streamId = auction.getStream().getId();
         uniqueBidAuctionService.startAuction(
-                new UniqueBidStartRequest(auction.getId()), sellerUser.getId());
+                streamId, new UniqueBidStartRequest(auction.getId()), sellerUser.getId());
     }
 
     private void placeBid(User bidder, Long amount) {
