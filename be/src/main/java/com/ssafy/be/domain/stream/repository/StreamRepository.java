@@ -51,10 +51,12 @@ public interface StreamRepository extends JpaRepository<Stream, Long> {
     List<Stream> findTop10BySellerIdAndStatusAndScheduledAtAfterOrderByScheduledAtAsc(
             Long sellerId, StreamStatus status, LocalDateTime now);
 
-    // scheduled API용 - LIVE + SCHEDULED 둘 다 조회
-    @Query("SELECT s FROM Stream s "
-            + "WHERE s.status IN :statuses "
+    // scheduled API용 - 특정 userId(seller의 user.id)에 해당하는 LIVE + SCHEDULED 스트림만 조회
+    @Query("SELECT s FROM Stream s JOIN FETCH s.seller sel JOIN FETCH sel.user u "
+            + "WHERE s.status IN :statuses AND u.id = :userId "
             + "ORDER BY s.scheduledAt ASC")
-    Slice<Stream> findByStatusIn(
-            @Param("statuses") List<StreamStatus> statuses, Pageable pageable);
+    Slice<Stream> findByStatusInAndSellerUserId(
+            @Param("statuses") List<StreamStatus> statuses,
+            @Param("userId") Long userId,
+            Pageable pageable);
 }
