@@ -15,12 +15,12 @@ const sizeClass: Record<NonNullable<Props['size']>, string> = {
 };
 
 const variantClass: Record<NonNullable<Props['variant']>, string> = {
-  outline: 'bg-transparent text-white shadow-[0_0_0_1px_#ffffff_inset] hover:bg-zinc-900',
-  yellowOutline: 'bg-transparent text-[#C7B282] shadow-[0_0_0_1px_#C7B282_inset] hover:bg-zinc-900',
-  white: 'bg-[#F5F2EB] text-[#0A0C13] hover:bg-[#E4DFD6]',
-  black: 'bg-[#0A0C13] text-white hover:bg-black',
-  yellow: 'bg-[#C7B282] text-[#0A0C13] hover:bg-[#C09C57]',
-  red: 'bg-[#EF4444] text-white hover:bg-[#da001d]',
+  outline: 'bg-transparent text-neutral-100 shadow-[0_0_0_1px_var(--color-neutral-500)_inset] hover:bg-neutral-900',
+  yellowOutline: 'bg-transparent text-gold-light shadow-[0_0_0_1px_var(--color-gold)_inset] hover:bg-neutral-900',
+  white: 'bg-neutral-100 text-background hover:bg-neutral-200',
+  black: 'bg-background text-neutral-100 hover:bg-neutral-900',
+  yellow: 'bg-gold text-background hover:bg-gold-dark',
+  red: 'bg-accent text-white hover:bg-accent-dark',
   navLogin: 'bg-primary text-white rounded-[10px] hover:bg-primary-light',
   navSignup:
     'bg-transparent text-neutral-300 border border-warm/12 rounded-[10px] hover:border-warm/25 hover:text-neutral-100',

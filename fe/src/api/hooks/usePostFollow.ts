@@ -14,7 +14,7 @@ export const usePostFollow = () => {
 
   return useMutation({
     mutationFn: postFollow,
-    onSuccess: (data, variables) => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['sellerReputation', variables.targetSellerId] });
       queryClient.invalidateQueries({ queryKey: ['liveCards'] });
       queryClient.invalidateQueries({ queryKey: ['followedStores'] });
