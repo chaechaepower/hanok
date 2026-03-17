@@ -7,11 +7,13 @@ import com.ssafy.be.domain.auction.dto.response.AuctionStartResponse;
 import com.ssafy.be.domain.auction.dto.response.BidPlaceResponse;
 import com.ssafy.be.domain.auction.dto.response.BidWinnerResponse;
 import com.ssafy.be.domain.auction.entity.Auction;
+import com.ssafy.be.domain.auction.exception.AuctionErrorCode;
 import com.ssafy.be.domain.auction.model.Bid;
 import com.ssafy.be.domain.auction.repository.AuctionBidRepository;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.auction.repository.AuctionTimerRepository;
 import com.ssafy.be.domain.auction.service.AuctionService;
+import com.ssafy.be.domain.auction.util.AuctionRedisKeys;
 import com.ssafy.be.domain.escrow.service.EscrowService;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.repository.ItemRepository;
@@ -25,6 +27,7 @@ import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.infra.portone.PortoneClient;
 import com.ssafy.be.global.websocket.dto.StreamPublishTask;
+import com.ssafy.be.global.websocket.exception.StompException;
 import com.ssafy.be.support.annotation.IntegrationTest;
 import com.ssafy.be.support.util.TestFixture;
 import org.junit.jupiter.api.AfterEach;
@@ -40,6 +43,7 @@ import java.util.List;
 
 import static com.ssafy.be.domain.auction.entity.AuctionStatus.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -76,25 +80,31 @@ class AuctionServiceTest {
 
     @BeforeEach
     void setUp() {
-        sellerUser = TestFixture.createUser("판매자");
-        userRepository.save(sellerUser);
+        sellerUser = userRepository.save(
+                TestFixture.createUser("판매자")
+        );
 
-        seller = TestFixture.createSeller(sellerUser);
-        sellerRepository.save(seller);
+        seller = sellerRepository.save(
+                TestFixture.createSeller(sellerUser)
+        );
 
-        stream = TestFixture.createStream("테스트 라이브 방송", seller);
-        streamRepository.save(stream);
+        stream = streamRepository.save(
+                TestFixture.createStream("테스트 라이브 방송", seller)
+        );
 
-        item = TestFixture.createItem("테스트 상품");
-        itemRepository.save(item);
+        item = itemRepository.save(
+                TestFixture.createItem("테스트 상품")
+        );
     }
 
     @AfterEach
     void cleanup() {
-//        redisTemplate.delete(AuctionRedisKeys.getTimerKey(introductingAuction.getId()));
-//        redisTemplate.delete(AuctionRedisKeys.getTimerKey(liveAuction.getId()));
-//        redisTemplate.delete(AuctionRedisKeys.getBidKey(introductingAuction.getId()));
-//        redisTemplate.delete(AuctionRedisKeys.getBidKey(liveAuction.getId()));
+        auctionRepository.findAll().forEach(auction -> {
+            Long auctionId = auction.getId();
+            redisTemplate.delete(AuctionRedisKeys.getTimerKey(auctionId));
+            redisTemplate.delete(AuctionRedisKeys.getBidKey(auctionId));
+            redisTemplate.delete(AuctionRedisKeys.getLockKey(auctionId));
+        });
 
         shippingAddressRepository.deleteAllInBatch();
         auctionRepository.deleteAllInBatch();
@@ -226,6 +236,106 @@ class AuctionServiceTest {
 
         // 2. 스나이핑 구간이 아닌 상황(충분히 여유 있는 시간)이라면 snipingTimer는 null이어야 함
         assertThat(response.snipingTimer()).isNull();
+    }
+
+    @DisplayName("입찰 금액은 시작가보다 높아야한다.")
+    @Test
+    void placeBidWithAmountBelowStartPrice() {
+        // given
+        Auction liveAuction = auctionRepository.save(
+                TestFixture.createAuction(LIVE, stream, item)
+        );
+
+        User bidder = userRepository.save(
+                TestFixture.createUser("입찰자").toBuilder()
+                        .balance(50_000L)
+                        .depositedBidBalance(0L)
+                        .build()
+        );
+
+        // 시작가보다 1원 낮게
+        long bidAmount = item.getStartPrice() - 1;
+
+        BidPlaceRequest request = BidPlaceRequest.builder()
+                .auctionId(liveAuction.getId())
+                .amount(bidAmount)
+                .build();
+
+        // when // then
+        assertThatThrownBy(() -> auctionService.placeBid(request, stream.getId(), bidder.getId()))
+                .isInstanceOf(StompException.class)
+                .extracting("errorType")
+                .isEqualTo(AuctionErrorCode.AUCTION_BID_BELOW_START_PRICE);
+    }
+
+    @DisplayName("사용자 잔액이 부족하면 입찰에 실패한다.")
+    @Test
+    void placeBidWithInsufficientBalance() {
+        // given
+        Auction liveAuction = auctionRepository.save(
+                TestFixture.createAuction(LIVE, stream, item)
+        );
+
+        User bidder = userRepository.save(
+                TestFixture.createUser("입찰자").toBuilder()
+                        .balance(100L)  // 잔액 부족 유발
+                        .depositedBidBalance(0L)
+                        .build()
+        );
+
+        long bidAmount = item.getStartPrice() + item.getBidUnit(); // 10000L + 1000L
+
+        BidPlaceRequest request = BidPlaceRequest.builder()
+                .auctionId(liveAuction.getId())
+                .amount(bidAmount)
+                .build();
+
+        // when & then
+        assertThatThrownBy(() -> auctionService.placeBid(request, stream.getId(), bidder.getId()))
+                .isInstanceOf(StompException.class)
+                .extracting("errorType")
+                .isEqualTo(AuctionErrorCode.AUCTION_BID_INSUFFICIENT_BALANCE);
+    }
+
+    @DisplayName("남은 시간이 스나이핑 구간이면 타이머가 연장되고 snipingTimer가 응답에 포함된다.")
+    @Test
+    void placeBidWhenSnipingExtendsTimer() {
+        // given
+        Auction liveAuction = auctionRepository.save(
+                TestFixture.createAuction(LIVE, stream, item)
+        );
+
+        User bidder = userRepository.save(
+                TestFixture.createUser("입찰자").toBuilder()
+                        .balance(50000L)
+                        .depositedBidBalance(0L)
+                        .build()
+        );
+
+        long bidAmount = item.getStartPrice() + item.getBidUnit();
+
+        BidPlaceRequest request = BidPlaceRequest.builder()
+                .auctionId(liveAuction.getId())
+                .amount(bidAmount)
+                .build();
+
+        // 스나이핑 구간(5초 이하)에 들어오도록, 남은 시간이 3초가 되게 타이머 설정
+        auctionTimerRepository.save(liveAuction.getId(), 3);
+
+        // when
+        List<StreamPublishTask> tasks = auctionService.placeBid(request, stream.getId(), bidder.getId());
+
+        // then
+        BidPlaceResponse response = tasks.stream()
+                .map(StreamPublishTask::getPayload)
+                .filter(BidPlaceResponse.class::isInstance)
+                .map(BidPlaceResponse.class::cast)
+                .findFirst()
+                .orElseThrow();
+
+        // 스나이핑 구간이므로 snipingTimer가 있어야 함
+        assertThat(response.snipingTimer()).isNotNull();
+        assertThat(response.snipingTimer().durationSeconds()).isEqualTo(5); // SNIPING_THRESHOLD_SECONDS
     }
 
     // ======================== 경매 종료 ========================
