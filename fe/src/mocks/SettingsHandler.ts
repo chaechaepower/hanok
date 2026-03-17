@@ -90,7 +90,17 @@ export const settingsHandlers = [
   http.post(`${BASE_URL}/v1/auth/logout`, () => HttpResponse.json({ success: true }, { status: 200 })),
 
   http.get(`${BASE_URL}/v1/users/me/seller-status`, () =>
-    HttpResponse.json({ isSeller: false }, { status: 200 }),
+    HttpResponse.json(
+      {
+        status: 'SUCCESS',
+        message: 'Seller status fetched successfully.',
+        data: {
+          isSeller: false,
+          sellerId: null,
+        },
+      },
+      { status: 200 },
+    ),
   ),
 
   http.get(`${BASE_URL}/v1/users/me/notification`, () =>
