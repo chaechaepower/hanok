@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useToast } from '@/components/common/Toast';
 import { useGetSellerProfile } from '@/api/hooks/useGetSellerProfile';
@@ -19,6 +19,7 @@ import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
 import type { EscrowState, ScheduledStream } from '@/types';
 import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2, FiX, FiCamera, FiTv } from 'react-icons/fi';
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
+import React from 'react';
 
 const InstagramIcon = () => (
   <>
@@ -154,7 +155,7 @@ export default function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followInitialized, setFollowInitialized] = useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!followInitialized && followedData) {
       setIsFollowing(initialFollowing);
       setFollowInitialized(true);
