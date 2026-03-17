@@ -59,7 +59,6 @@ export type FollowingSeller = {
   nickname: string;
   profileImageUri: string | null;
   rating: number;
-  isLive: boolean;
 };
 
 export type FollowingItem = {

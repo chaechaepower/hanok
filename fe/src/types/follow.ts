@@ -1,5 +1,5 @@
 export type FollowPayload = {
-  userId: number;
+  targetSellerId: number;
 };
 
 export type FollowResponse = {

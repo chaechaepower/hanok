@@ -520,8 +520,34 @@ export default function ProductRegistrationModal({
             className={inputClass}
             placeholder="#해시태그 #입력 #해주세요"
             value={hashtags}
-            onChange={(e) => setHashtags(e.target.value)}
+            onChange={(e) => {
+              const parsed = e.target.value
+                .split(/\s+/)
+                .map((tag) => tag.replace(/^#/, '').trim())
+                .filter((tag) => tag.length > 0);
+              if (parsed.length > 7) return;
+              setHashtags(e.target.value);
+            }}
           />
+          {hashtags.trim() && (() => {
+            const parsed = hashtags
+              .split(/\s+/)
+              .map((tag) => tag.replace(/^#/, '').trim())
+              .filter((tag) => tag.length > 0);
+            return (
+              <div className="flex flex-wrap items-center gap-2 mt-3">
+                {parsed.map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="bg-[#2C2A26] text-[#d9b36d] text-[13px] font-medium px-3 py-1.5 rounded-full border border-[#d9b36d]/20"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+                <span className="text-[12px] text-[#8E8E93]">{parsed.length}/7</span>
+              </div>
+            );
+          })()}
         </div>
 
         {error && <div className="text-[#FF3B30] text-sm mb-4">{error}</div>}

@@ -56,7 +56,7 @@ export const mockLoginUsers: MockLoginUser[] = [
 
 let currentMockUser: MockLoginUser | null = null;
 let mockFollowerCount = 342;
-const followedSellerIds = new Set<number>([1, 4, 10, 12, 14]);
+const followedSellerIds = new Set<number>([2, 4, 5, 10, 12, 14]);
 
 export const getCurrentMockUser = () => currentMockUser;
 

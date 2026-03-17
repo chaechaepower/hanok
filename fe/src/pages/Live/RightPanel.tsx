@@ -32,7 +32,7 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
     }
 
     postFollow(
-      { userId: sellerId },
+      { targetSellerId: sellerId },
       {
         onSuccess: (response) => setFollowStateOverride({ sellerId, value: response.following }),
       },

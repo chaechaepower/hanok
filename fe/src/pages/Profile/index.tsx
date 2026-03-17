@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useToast } from '@/components/common/Toast';
 import { useGetSellerProfile } from '@/api/hooks/useGetSellerProfile';
@@ -8,7 +8,9 @@ import { usePatchSellerNotice } from '@/api/hooks/usePatchSellerNotice';
 import { useDeleteSellerNotice } from '@/api/hooks/useDeleteSellerNotice';
 import { useGetSellerNoticeDetail } from '@/api/hooks/useGetSellerNoticeDetail';
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
+import { useGetMe } from '@/api/hooks/useGetMe';
 import { usePostFollow } from '@/api/hooks/usePostFollow';
+import { useGetFollowedStores } from '@/api/hooks/useGetFollowedStores';
 import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
 import ReportModal from '@/components/Profile/ReportModal';
 import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
@@ -106,6 +108,7 @@ export default function ProfilePage() {
 
   const { data, isLoading, isError } = useGetSellerProfile(sellerId);
   const { data: mySellerStatus } = useGetSellerStatus();
+  const { data: meData } = useGetMe();
   const { mutate: patchProfile, isPending: isProfilePending } = usePatchSellerProfile(sellerId);
   const { mutate: patchProfileImage } = usePatchProfileImage();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -139,17 +142,31 @@ export default function ProfilePage() {
   const { data: scheduledStreamsData } = useGetScheduledStreams(0, 50);
 
   const { mutate: postFollow, isPending: isFollowPending } = usePostFollow();
+  const { data: followedData } = useGetFollowedStores();
 
   const { showToast } = useToast();
-  const [isFollowing, setIsFollowing] = useState(false);
 
-  const myUserId = localStorage.getItem('userId');
-  const isMyProfile = myUserId !== null && Number(myUserId) === sellerId;
+  const initialFollowing = useMemo(() => {
+    if (!followedData?.pages) return false;
+    return followedData.pages.some((page) => page.content.some((item) => item.seller.sellerId === sellerId));
+  }, [followedData, sellerId]);
+
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followInitialized, setFollowInitialized] = useState(false);
+
+  useEffect(() => {
+    if (!followInitialized && followedData) {
+      setIsFollowing(initialFollowing);
+      setFollowInitialized(true);
+    }
+  }, [initialFollowing, followedData, followInitialized]);
+
+  const isMyProfile = meData?.sellerId != null && meData.sellerId === sellerId;
   const isOwner = mySellerStatus?.isSeller || true;
 
   const handleFollowToggle = () => {
     postFollow(
-      { userId: sellerId },
+      { targetSellerId: sellerId },
       {
         onSuccess: (res) => setIsFollowing(res.following),
       },
@@ -380,17 +397,17 @@ export default function ProfilePage() {
             {isOwner && data?.stats !== undefined && (
               <div className="mt-3 border border-white/5 rounded-xl py-6 flex items-center w-[420px]">
                 <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{data.stats.followerCount}</span>
+                  <span className="text-[22px] font-bold text-white">{data.stats.followerCount ?? '-'}</span>
                   <span className="text-[13px] text-[#888]">팔로워수</span>
                 </div>
                 <div className="w-[1px] h-10 bg-[#2e2e40]" />
                 <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{data.stats.rating}</span>
+                  <span className="text-[22px] font-bold text-white">{data.stats.rating ?? '-'}</span>
                   <span className="text-[13px] text-[#888]">평점</span>
                 </div>
                 <div className="w-[1px] h-10 bg-[#2e2e40]" />
                 <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{data.stats.avgShipDays}일</span>
+                  <span className="text-[22px] font-bold text-white">{data.stats.avgShipDays != null ? `${data.stats.avgShipDays}일` : '-'}</span>
                   <span className="text-[13px] text-[#888]">평균 배송일</span>
                 </div>
               </div>

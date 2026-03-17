@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFetchInstance } from '../instance';
-import type { ApiResponse,FollowPayload, FollowResponse } from '@/types';
+import type { FollowPayload, FollowResponse } from '@/types';
 
-export const postFollowPath = (userId: string | number) => `/v1/users/${userId}/follow`;
+export const postFollowPath = (targetSellerId: number) => `/v1/follow/${targetSellerId}`;
 
 export const postFollow = async (req: FollowPayload): Promise<FollowResponse> => {
-  const response = await getFetchInstance().post<ApiResponse<FollowResponse>>(postFollowPath(req.userId), req);
-  return response.data.data;
+  const response = await getFetchInstance().post<FollowResponse>(postFollowPath(req.targetSellerId));
+  return response.data;
 };
 
 export const usePostFollow = () => {
@@ -15,11 +15,9 @@ export const usePostFollow = () => {
   return useMutation({
     mutationFn: postFollow,
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['sellerReputation', variables.userId] });
+      queryClient.invalidateQueries({ queryKey: ['sellerReputation', variables.targetSellerId] });
       queryClient.invalidateQueries({ queryKey: ['liveCards'] });
-      if (data.following) {
-        queryClient.invalidateQueries({ queryKey: ['followedStores'] });
-      }
+      queryClient.invalidateQueries({ queryKey: ['followedStores'] });
     },
   });
 };
