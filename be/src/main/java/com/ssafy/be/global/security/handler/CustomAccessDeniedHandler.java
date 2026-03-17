@@ -38,7 +38,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
         response.setCharacterEncoding("UTF-8");
 
         // 3. 공통 에러 응답 객체 생성 (GlobalErrorCode.FORBIDDEN → 403 + 에러 메시지)
-        ErrorResponse errorResponse = ErrorResponse.from(GlobalErrorCode.FORBIDDEN);
+        ErrorResponse errorResponse = ErrorResponse.from(GlobalErrorCode.DENIED_HANDLER_ERROR);
 
         // 4. ObjectMapper로 직접 직렬화 후 응답 스트림에 작성
         response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
