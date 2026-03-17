@@ -17,28 +17,28 @@ public interface StreamApi {
 
     @Operation(summary = "방송 등록", description = "판매자 전용 - 방송 등록 및 경매 물품 등록")
     ResponseEntity<StreamRegisterResponse> register(
-            Long userId, StreamRegisterRequest request, MultipartFile thumbnail);
+            String userId, StreamRegisterRequest request, MultipartFile thumbnail);
 
     @Operation(summary = "방송 수정", description = "판매자 전용 - 본인 방송만 수정 가능")
     ResponseEntity<StreamRegisterResponse> update(
-            Long userId, Long streamId, StreamUpdateRequest request, MultipartFile thumbnail);
+            String userId, Long streamId, StreamUpdateRequest request, MultipartFile thumbnail);
 
     @Operation(summary = "방송 삭제", description = "판매자 전용 - 본인 방송만 삭제 가능")
-    ResponseEntity<Void> delete(Long userId, Long streamId);
+    ResponseEntity<Void> delete(String userId, Long streamId);
 
     @Operation(summary = "방송 시작", description = "판매자 전용 - 방송 상태를 LIVE로 변경")
-    ResponseEntity<Void> startStream(Long userId, Long streamId);
+    ResponseEntity<Void> startStream(String userId, Long streamId);
 
     @Operation(summary = "방송 종료", description = "판매자 전용 - 방송 상태를 ENDED로 변경")
-    ResponseEntity<Void> endStream(Long userId, Long streamId);
+    ResponseEntity<Void> endStream(String userId, Long streamId);
 
     @Operation(summary = "방송 단건 조회", description = "판매자 전용 - 본인 방송 상세 조회")
-    ResponseEntity<StreamDetailResponse> getStream(Long userId, Long streamId);
+    ResponseEntity<StreamDetailResponse> getStream(String userId, Long streamId);
 
     // ===================== 공통 =====================
 
     @Operation(summary = "방송 입장", description = "판매자/시청자 공통 - 방송 상세 정보 + LiveKit 토큰 반환")
-    ResponseEntity<StreamEnterResponse> enterStream(Long userId, Long streamId);
+    ResponseEntity<StreamEnterResponse> enterStream(String userId, Long streamId);
 
     @Operation(summary = "방송 목록 조회", description = "LIVE/SCHEDULED 상태 필터, 카테고리/정렬 지원")
     ResponseEntity<Page<StreamListItemResponse>> getStreamList(StreamListRequest request);
@@ -47,5 +47,5 @@ public interface StreamApi {
     ResponseEntity<ScheduledStreamListResponse> getScheduledStreamList(int page, int size);
 
     @Operation(summary = "LiveKit 토큰 발급", description = "방송 입장 없이 토큰만 필요할 때 사용")
-    ResponseEntity<StreamTokenResponse> generateToken(Long userId, Long streamId);
+    ResponseEntity<StreamTokenResponse> generateToken(String userId, Long streamId);
 }
