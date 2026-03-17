@@ -19,7 +19,7 @@ export interface StompResponse<T> {
 }
 
 export interface ChatSendPayload {
-  message: string;
+  content: string;
 }
 
 export interface MacroPayload {

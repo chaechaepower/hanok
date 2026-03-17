@@ -58,14 +58,14 @@ export function useStompChat() {
         switch (response.eventType) {
           case 'CHAT_MESSAGE':
           case 'CHAT_FILTERED': {
-            const payload = response.payload as { nickname?: string; message?: string } | null;
+            const payload = response.payload as { nickname?: string; content?: string } | null;
 
-            if (payload?.message) {
+            if (payload?.content) {
               nextMessage = {
                 id: createMessageId(),
                 type: 'chat',
                 nickname: payload.nickname ?? '익명',
-                message: payload.message,
+                message: payload.content,
               };
             }
             break;
@@ -142,7 +142,7 @@ export function useStompChat() {
         return;
       }
 
-      const payload: ChatSendPayload = { message: message.trim() };
+      const payload: ChatSendPayload = { content: message.trim() };
       await sendStreamMessage(streamId, {
         eventType: 'CHAT_MESSAGE',
         payload,
