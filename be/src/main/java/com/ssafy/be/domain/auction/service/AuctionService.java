@@ -33,6 +33,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import static com.ssafy.be.domain.auction.enums.Comment.*;
 import static com.ssafy.be.domain.auction.enums.Comment.AUCTION_START;
@@ -447,15 +449,19 @@ public class AuctionService {
     }
 
     private ItemSyncResponse.ItemInfo buildItemSyncInfo(Auction auction) {
+        List<String> images = Stream.of(
+                        auction.getItem().getImage1(),
+                        auction.getItem().getImage2(),
+                        auction.getItem().getImage3()
+                )
+                .filter(Objects::nonNull)
+                .toList();
+
         return ItemSyncResponse.ItemInfo.builder()
                 .auctionId(auction.getId())
                 .itemName(auction.getItem().getName())
                 .description(auction.getItem().getDescription())
-                .images(List.of(
-                        auction.getItem().getImage1(),
-                        auction.getItem().getImage2(),
-                        auction.getItem().getImage3()
-                ))
+                .images(images)  // null 제거된 리스트
                 .startPrice(auction.getItem().getStartPrice())
                 .auctionType(auction.getItem().getAuctionType())
                 .auctionStatus(auction.getAuctionStatus())
