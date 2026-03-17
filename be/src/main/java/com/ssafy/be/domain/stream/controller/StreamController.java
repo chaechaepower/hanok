@@ -24,51 +24,51 @@ public class StreamController implements StreamApi {
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StreamRegisterResponse> register(
-            @AuthenticationPrincipal Long userId,
+            @AuthenticationPrincipal String userId,
             @RequestPart("request") @Valid StreamRegisterRequest request,
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail) {
-        return ResponseEntity.status(201).body(streamService.register(userId, request, thumbnail));
+        return ResponseEntity.status(201).body(streamService.register(Long.parseLong(userId), request, thumbnail));
     }
 
     @PatchMapping(value = "/{streamId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StreamRegisterResponse> update(
-            @AuthenticationPrincipal Long userId,
+            @AuthenticationPrincipal String userId,
             @PathVariable Long streamId,
             @RequestPart("request") @Valid StreamUpdateRequest request,
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail) {
-        return ResponseEntity.ok(streamService.updateStream(userId, streamId, request, thumbnail));
+        return ResponseEntity.ok(streamService.updateStream(Long.parseLong(userId), streamId, request, thumbnail));
     }
 
     @DeleteMapping("/{streamId}")
     public ResponseEntity<Void> delete(
-            @AuthenticationPrincipal Long userId, @PathVariable Long streamId) {
-        streamService.deleteStream(userId, streamId);
+            @AuthenticationPrincipal String userId, @PathVariable Long streamId) {
+        streamService.deleteStream(Long.parseLong(userId), streamId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{streamId}/token")
     public ResponseEntity<StreamTokenResponse> generateToken(
-            @AuthenticationPrincipal Long userId, @PathVariable Long streamId) {
-        return ResponseEntity.ok(streamService.generateToken(userId, streamId));
+            @AuthenticationPrincipal String userId, @PathVariable Long streamId) {
+        return ResponseEntity.ok(streamService.generateToken(Long.parseLong(userId), streamId));
     }
 
     @GetMapping("/{streamId}")
     public ResponseEntity<StreamDetailResponse> getStream(
-            @AuthenticationPrincipal Long userId, @PathVariable Long streamId) {
-        return ResponseEntity.ok(streamService.getStream(userId, streamId));
+            @AuthenticationPrincipal String userId, @PathVariable Long streamId) {
+        return ResponseEntity.ok(streamService.getStream(Long.parseLong(userId), streamId));
     }
 
     @PostMapping("/{streamId}/start")
     public ResponseEntity<Void> startStream(
-            @AuthenticationPrincipal Long userId, @PathVariable Long streamId) {
-        streamService.startStream(userId, streamId);
+            @AuthenticationPrincipal String userId, @PathVariable Long streamId) {
+        streamService.startStream(Long.parseLong(userId), streamId);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{streamId}/end")
     public ResponseEntity<Void> endStream(
-            @AuthenticationPrincipal Long userId, @PathVariable Long streamId) {
-        streamService.endStream(userId, streamId);
+            @AuthenticationPrincipal String userId, @PathVariable Long streamId) {
+        streamService.endStream(Long.parseLong(userId), streamId);
         return ResponseEntity.ok().build();
     }
 
@@ -87,9 +87,9 @@ public class StreamController implements StreamApi {
 
     @GetMapping("/{streamId}/enter")
     public ResponseEntity<StreamEnterResponse> enterStream(
-            @AuthenticationPrincipal Long userId,
+            @AuthenticationPrincipal String userId,
             @PathVariable Long streamId) {
-        return ResponseEntity.ok(streamService.enterStream(userId, streamId));
+        return ResponseEntity.ok(streamService.enterStream(Long.parseLong(userId), streamId));
     }
 
     @GetMapping("/{streamId}/items")
@@ -100,10 +100,10 @@ public class StreamController implements StreamApi {
 
     @PostMapping("/{streamId}/macros")
     public ResponseEntity<Void> saveMacros(
-            @AuthenticationPrincipal Long userId,
+            @AuthenticationPrincipal String userId,
             @PathVariable Long streamId,
             @RequestBody MacroSaveRequest request) {
-        streamService.saveMacros(userId, streamId, request);
+        streamService.saveMacros(Long.parseLong(userId), streamId, request);
         return ResponseEntity.ok().build();
     }
 
