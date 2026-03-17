@@ -1,20 +1,39 @@
+import { useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaStore } from 'react-icons/fa';
 import { useGetFollowedStores } from '@/api/hooks/useGetFollowedStores';
 import { usePostFollow } from '@/api/hooks/usePostFollow';
-import type { FollowingItem } from '@/types';
 
 export default function FollowedStoresSection() {
   const navigate = useNavigate();
-  const { data, isLoading } = useGetFollowedStores();
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useGetFollowedStores();
   const { mutate: unfollow, isPending } = usePostFollow();
+  const observerRef = useRef<HTMLDivElement>(null);
 
-  const followedList: FollowingItem[] = data?.content ?? [];
-  const totalStores = data?.totalElements ?? 0;
+  const followedList = data?.pages.flatMap((page) => page.content) ?? [];
+  const totalStores = data?.pages[0]?.totalElements ?? 0;
 
   const handleUnfollow = (sellerId: number) => {
     unfollow({ targetSellerId: sellerId });
   };
+
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    [fetchNextPage, hasNextPage, isFetchingNextPage],
+  );
+
+  useEffect(() => {
+    const el = observerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(handleObserver, { threshold: 0.1 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [handleObserver]);
 
   return (
     <>
@@ -73,6 +92,14 @@ export default function FollowedStoresSection() {
               </button>
             </div>
           ))}
+
+          <div ref={observerRef} className="h-1" />
+
+          {isFetchingNextPage && (
+            <div className="flex items-center justify-center py-4">
+              <div className="w-6 h-6 border-3 border-[#333] border-t-[#d9b36d] rounded-full animate-spin" />
+            </div>
+          )}
         </div>
       )}
     </>
