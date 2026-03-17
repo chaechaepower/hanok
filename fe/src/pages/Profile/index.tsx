@@ -410,7 +410,6 @@ export default function ProfilePage() {
             # 공지사항
           </button>
 
-          {isMyProfile && (
           <button
             className={`flex items-center gap-[6px] bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-base font-bold cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${
               activeTab === 'sales' ? 'text-[#d9b36d] border-[#d9b36d]' : 'text-[#888] border-transparent'
@@ -418,9 +417,8 @@ export default function ProfilePage() {
             onClick={() => setActiveTab('sales')}
           >
             <HistoryIcon />
-            낙찰 이력
+            판매 내역
           </button>
-          )}
         </div>
 
         {activeTab === 'posts' && (
@@ -500,7 +498,7 @@ export default function ProfilePage() {
                 const ui = getEscrowStateUI(sale.escrowStatus);
                 return (
                   <div
-                    key={sale.escrowId}
+                    key={sale.itemName}
                     className={`flex py-4 items-center justify-between ${index > 0 ? 'border-t border-[#1a1a26] mt-4 pt-8' : ''}`}
                   >
                     <div className="flex items-center gap-6 flex-1">
@@ -520,7 +518,7 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="flex flex-col items-end gap-[6px] w-[140px]">
-                      <span className="text-base font-bold text-white">- {formatPrice(sale.amount)}</span>
+                      <span className="text-base font-bold text-white">+ {formatPrice(sale.amount)}</span>
                       <span className="text-[13px] text-[#888]">{ui.label}</span>
                     </div>
                   </div>

@@ -2,17 +2,11 @@ export type EscrowState = 'DEPOSITED' | 'INVOICE_SUBMITTED' | 'COMPLETED' | 'CAN
 
 export type EscrowItem = {
   escrowId?: string | number;
-  imageUrl?: string;
+  image?: string;
   itemName: string;
   amount: number;
-  escrowState: EscrowState;
+  escrowStatus: EscrowState;
   createdAt: string;
-};
-
-export type EscrowListResponse = {
-  status: string;
-  message: string;
-  data: EscrowItem[];
 };
 
 export type EscrowDetailResponse = {
@@ -47,7 +41,6 @@ export type PostTrackingInfoPayload = {
 };
 
 export type SoldAuctionItem = {
-  escrowId: number;
   image: string;
   itemName: string;
   amount: number;
