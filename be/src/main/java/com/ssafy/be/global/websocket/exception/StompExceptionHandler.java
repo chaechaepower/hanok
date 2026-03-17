@@ -44,12 +44,13 @@ public class StompExceptionHandler {
     @MessageExceptionHandler(Exception.class)
     @SendToUser("/private/errors")
     public StompResponse<StompErrorPayload> handleException(Exception ex) {
-        log.error("[STOMP] 처리되지 않은 예외 발생", ex);
         return buildErrorResponse(GlobalErrorCode.INTERNAL_SERVER_ERROR);
     }
 
     // response 빌드
     private StompResponse<StompErrorPayload> buildErrorResponse(ErrorCode errorCode) {
+        log.error("[STOMP] 처리되지 않은 예외 발생", errorCode.getMessage());
+
         return StompResponse.<StompErrorPayload>builder()
                 .eventType(StreamEventType.ERROR)
                 .payload(buildErrorPayload(errorCode))
