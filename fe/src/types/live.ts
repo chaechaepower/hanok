@@ -50,6 +50,27 @@ export type LiveCardData = {
   seller: LiveSeller;
 };
 
+export type SearchMatchType = 'STREAM_TITLE' | 'ITEM_NAME' | 'TAG';
+
+export type SearchStreamStatus = 'LIVE' | 'SCHEDULED' | 'PAUSED' | 'ENDED';
+
+export type SearchMatchReason = {
+  type: SearchMatchType;
+  matchedValue: string;
+};
+
+export type SearchStreamResult = {
+  streamId: number;
+  title: string;
+  thumbnail: string | null;
+  category: string;
+  status: SearchStreamStatus;
+  viewerCount: number;
+  scheduledAt: string | null;
+  seller: LiveSeller;
+  matchReasons: SearchMatchReason[];
+};
+
 export type AuctionDuration = 10 | 30 | 60;
 
 export type TimerPhase = 'normal' | 'urgent' | 'ended';

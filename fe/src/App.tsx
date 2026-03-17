@@ -14,6 +14,7 @@ import SettingsPage from './pages/Settings';
 import MainLayout from '@/components/common/layouts/MainLayout';
 import SellerOnlyRoute from '@/components/common/layouts/SellerOnlyRoute';
 import LiveRegisterPage from './components/LiveCreate/LiveRegisterPage';
+import SearchPage from './pages/Search';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="profile/:id" element={<ProfilePage />} />
         <Route path="seller/register" element={<SellerOnboardingPage />} />
         <Route path="signup" element={<SignUpPage />} />
+        <Route path="search" element={<SearchPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="wallet" element={<WalletPage />} />
         <Route path="settings" element={<SettingsPage />} />
