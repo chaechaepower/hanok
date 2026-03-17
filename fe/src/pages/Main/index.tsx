@@ -96,7 +96,7 @@ const FollowingSection = ({ category, isLiveStatus, sortFilter, statusFilter }: 
     triggerRef: followingTriggerRef,
   });
 
-  const followingBroadcasts = followingLiveData.pages.flatMap((page) => page.content);
+  const followingBroadcasts = followingLiveData?.pages.flatMap((page) => page.content) ?? [];
   const sectionTitle = isLiveStatus ? `${meData?.nickname ?? '회원'}님의 단골 경매!` : '다음 경매를 기다려보세요!';
 
   return (
@@ -172,7 +172,7 @@ export default function MainPage() {
     };
   }, []);
 
-  const allBroadcasts = allLiveData.pages.flatMap((page) => page.content);
+  const allBroadcasts = allLiveData?.pages.flatMap((page) => page.content) ?? [];
   const isLiveStatus = statusFilter === 'LIVE';
 
   return (
