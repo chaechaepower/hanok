@@ -26,6 +26,8 @@ import com.ssafy.be.domain.uniqueaction.service.UniqueBidAuctionService;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.infra.portone.PortoneClient;
+import com.ssafy.be.global.websocket.dto.StreamPublishTask;
+import com.ssafy.be.global.websocket.enums.StreamEventType;
 import com.ssafy.be.global.websocket.exception.StompException;
 import com.ssafy.be.support.annotation.IntegrationTest;
 import com.ssafy.be.support.util.TestFixture;
@@ -33,6 +35,8 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -56,6 +60,7 @@ class UniqueBidAuctionServiceTest {
     private User bidder1;
     private User bidder2;
     private User bidder3;
+    private Stream stream;
     private Auction auction;
     private UniqueBidAuction uniqueBidAuction;
 
@@ -66,13 +71,13 @@ class UniqueBidAuctionServiceTest {
 
     @BeforeEach
     void setUp() {
-        sellerUser = TestFixture.createTestUser("판매자");
+        sellerUser = TestFixture.createUser("판매자");
         userRepository.save(sellerUser);
 
         Seller seller = TestFixture.createSeller(sellerUser);
         sellerRepository.save(seller);
 
-        Stream stream = TestFixture.createStream("테스트 방송", seller);
+        stream = TestFixture.createStream("테스트 방송", seller);
         streamRepository.save(stream);
 
         Item item = TestFixture.createItem("테스트 상품");
@@ -147,7 +152,7 @@ class UniqueBidAuctionServiceTest {
 
         assertThatThrownBy(() ->
                 uniqueBidAuctionService.introduceItem(auction.getId(), sellerUser.getId())
-        ).isInstanceOf(StompException.class);
+        ).isInstanceOf(IllegalStateException.class);
     }
 
     // ──────────────────────────────────────────────
@@ -160,11 +165,19 @@ class UniqueBidAuctionServiceTest {
         uniqueBidAuctionService.introduceItem(auction.getId(), sellerUser.getId());
 
         UniqueBidStartRequest request = new UniqueBidStartRequest(auction.getId());
-        UniqueBidStartResponse response = uniqueBidAuctionService.startAuction(request, sellerUser.getId());
+        Long streamId = auction.getStream().getId();
+        List<StreamPublishTask> tasks =
+                uniqueBidAuctionService.startAuction(streamId, request, sellerUser.getId());
 
         UniqueBidAuction result = uniqueBidAuctionRepository.findByAuction_Id(auction.getId()).orElseThrow();
         assertThat(result.getStatus()).isEqualTo(UniqueBidStatus.LIVE);
         assertThat(result.getStartedAt()).isNotNull();
+
+        StreamPublishTask<?> startTask = tasks.stream()
+                .filter(t -> t.getEventType() == StreamEventType.UNIQUE_AUCTION_START)
+                .findFirst()
+                .orElseThrow();
+        UniqueBidStartResponse response = (UniqueBidStartResponse) startTask.getPayload();
 
         assertThat(response.minPrice()).isEqualTo(10000L);
         assertThat(response.maxPrice()).isEqualTo(100000L);
@@ -179,8 +192,8 @@ class UniqueBidAuctionServiceTest {
         UniqueBidStartRequest request = new UniqueBidStartRequest(auction.getId());
 
         assertThatThrownBy(() ->
-                uniqueBidAuctionService.startAuction(request, sellerUser.getId())
-        ).isInstanceOf(StompException.class);
+                uniqueBidAuctionService.startAuction(auction.getStream().getId(), request, sellerUser.getId())
+        ).isInstanceOf(IllegalStateException.class);
     }
 
     // ──────────────────────────────────────────────
@@ -378,7 +391,7 @@ class UniqueBidAuctionServiceTest {
     private void startLive() {
         uniqueBidAuctionService.introduceItem(auction.getId(), sellerUser.getId());
         uniqueBidAuctionService.startAuction(
-                new UniqueBidStartRequest(auction.getId()), sellerUser.getId());
+                auction.getStream().getId(), new UniqueBidStartRequest(auction.getId()), sellerUser.getId());
     }
 
     private void placeBid(User bidder, Long amount) {

@@ -18,7 +18,7 @@ import java.util.List;
 @Table(name = "user")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA 기본 생성자 (외부 직접 생성 방지)
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 public class User {
     @Id

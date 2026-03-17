@@ -60,7 +60,7 @@ class WalletChargeServiceTest {
     void createWalletCharge() {
         // given
         User user = userRepository.save(
-                TestFixture.createTestUser("테스트 유저")
+                TestFixture.createUser("테스트 유저")
         );
 
         doNothing().when(portoneClient).preRegisterPayment(anyString(), anyLong());
@@ -87,7 +87,7 @@ class WalletChargeServiceTest {
         // given
         // 유저 생성
         User user = userRepository.save(
-                TestFixture.createTestUser("테스트 유저")
+                TestFixture.createUser("테스트 유저")
         );
 
         // 가상머니(결제 준비 상태) 생성

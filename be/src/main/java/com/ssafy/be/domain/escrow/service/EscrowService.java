@@ -61,7 +61,7 @@ public class EscrowService {
                 .shippingAddress(shippingAddress)
                 .build();
 
-        Escrow savedEscrow = escrowRepository.save(escrow);
+        escrowRepository.save(escrow);
 
         // 운송장번호 등록 72시간 타임아웃 스케줄러 예약
         escrowShipmentScheduler.scheduleEscrow(escrow.getId());
@@ -73,7 +73,7 @@ public class EscrowService {
                 ESCROW_STARTED_FOR_BUYER.name(),
                 ESCROW_STARTED_FOR_BUYER.getTitle(),
                 ESCROW_STARTED_FOR_BUYER.renderBody(auction.getItem().getName()),
-                "/escrows/" + savedEscrow.getId()
+                "/escrows/" + escrow.getId()
         );
 
         // 판매자
@@ -82,7 +82,7 @@ public class EscrowService {
                 ESCROW_STARTED_FOR_SELLER.name(),
                 ESCROW_STARTED_FOR_SELLER.getTitle(),
                 ESCROW_STARTED_FOR_SELLER.renderBody(buyer.getNickname(), auction.getItem().getName()),
-                "/escrows/" + savedEscrow.getId()
+                "/escrows/" + escrow.getId()
         );
     }
 

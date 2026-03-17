@@ -2,22 +2,29 @@ package com.ssafy.be.domain.auction;
 
 import com.ssafy.be.domain.auction.dto.request.AuctionStartRequest;
 import com.ssafy.be.domain.auction.dto.request.BidPlaceRequest;
+import com.ssafy.be.domain.auction.dto.request.ItemIntroduceRequest;
 import com.ssafy.be.domain.auction.dto.response.AuctionStartResponse;
 import com.ssafy.be.domain.auction.dto.response.BidPlaceResponse;
+import com.ssafy.be.domain.auction.dto.response.BidWinnerResponse;
 import com.ssafy.be.domain.auction.entity.Auction;
+import com.ssafy.be.domain.auction.model.Bid;
+import com.ssafy.be.domain.auction.repository.AuctionBidRepository;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.auction.repository.AuctionTimerRepository;
 import com.ssafy.be.domain.auction.service.AuctionService;
-import com.ssafy.be.domain.auction.util.AuctionRedisKeys;
+import com.ssafy.be.domain.escrow.service.EscrowService;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.repository.ItemRepository;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
+import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
+import com.ssafy.be.domain.shippingaddress.repository.ShippingAddressRepository;
 import com.ssafy.be.domain.stream.entity.Stream;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
-import com.ssafy.be.global.websocket.dto.StreamPublishTask; // 추가된 패키지 경로
+import com.ssafy.be.global.infra.portone.PortoneClient;
+import com.ssafy.be.global.websocket.dto.StreamPublishTask;
 import com.ssafy.be.support.annotation.IntegrationTest;
 import com.ssafy.be.support.util.TestFixture;
 import org.junit.jupiter.api.AfterEach;
@@ -26,11 +33,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.ssafy.be.domain.auction.entity.AuctionStatus.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 
 @IntegrationTest
 class AuctionServiceTest {
@@ -47,20 +59,24 @@ class AuctionServiceTest {
     @Autowired
     private AuctionRepository auctionRepository;
     @Autowired
+    private AuctionBidRepository auctionBidRepository;
+    @Autowired
     private AuctionTimerRepository auctionTimerRepository;
     @Autowired
+    ShippingAddressRepository shippingAddressRepository;
+    @Autowired
     private StringRedisTemplate redisTemplate;
+    @MockitoBean
+    private EscrowService escrowService;
 
     private User sellerUser;
     private Seller seller;
     private Stream stream;
     private Item item;
-    private Auction introductingAuction;
-    private Auction liveAuction;
 
     @BeforeEach
     void setUp() {
-        sellerUser = TestFixture.createTestUser("판매자");
+        sellerUser = TestFixture.createUser("판매자");
         userRepository.save(sellerUser);
 
         seller = TestFixture.createSeller(sellerUser);
@@ -71,21 +87,16 @@ class AuctionServiceTest {
 
         item = TestFixture.createItem("테스트 상품");
         itemRepository.save(item);
-
-        introductingAuction = TestFixture.createAuction(INTRODUCING, stream, item);
-        auctionRepository.save(introductingAuction);
-
-        liveAuction = TestFixture.createAuction(LIVE, stream, item);
-        auctionRepository.save(liveAuction);
     }
 
     @AfterEach
     void cleanup() {
-        redisTemplate.delete(AuctionRedisKeys.getTimerKey(introductingAuction.getId()));
-        redisTemplate.delete(AuctionRedisKeys.getTimerKey(liveAuction.getId()));
-        redisTemplate.delete(AuctionRedisKeys.getBidKey(introductingAuction.getId()));
-        redisTemplate.delete(AuctionRedisKeys.getBidKey(liveAuction.getId()));
+//        redisTemplate.delete(AuctionRedisKeys.getTimerKey(introductingAuction.getId()));
+//        redisTemplate.delete(AuctionRedisKeys.getTimerKey(liveAuction.getId()));
+//        redisTemplate.delete(AuctionRedisKeys.getBidKey(introductingAuction.getId()));
+//        redisTemplate.delete(AuctionRedisKeys.getBidKey(liveAuction.getId()));
 
+        shippingAddressRepository.deleteAllInBatch();
         auctionRepository.deleteAllInBatch();
         itemRepository.deleteAllInBatch();
         streamRepository.deleteAllInBatch();
@@ -93,10 +104,41 @@ class AuctionServiceTest {
         userRepository.deleteAllInBatch();
     }
 
+    // ======================== 경매 물품 설명 ========================
+
+    @DisplayName("라이브 스트림 호스트는 스트림에 등록된 경매 물품을 소개할 수 있다.")
+    @Test
+    void introduceItem() {
+        //given
+        Auction readyAuction = auctionRepository.save(
+                TestFixture.createAuction(READY, stream, item)
+        );
+
+        ItemIntroduceRequest request = ItemIntroduceRequest.builder()
+                .auctionId(readyAuction.getId())
+                .build();
+
+        //when
+        auctionService.introduceItem(request, stream.getId(), sellerUser.getId());
+
+        //then
+        Auction introducedAuction = auctionRepository.findById(readyAuction.getId()).orElseThrow();
+
+        // 1. 소개중 상태인지 확인
+        assertThat(introducedAuction.getAuctionStatus()).isEqualTo(INTRODUCING);
+    }
+
+
+    // ======================== 경매 시작 ========================
+
     @DisplayName("경매를 시작한다.")
     @Test
     void startAuction() {
         // given
+        Auction introductingAuction = auctionRepository.save(
+                TestFixture.createAuction(INTRODUCING, stream, item)
+        );
+
         AuctionStartRequest request = AuctionStartRequest.builder()
                 .auctionId(introductingAuction.getId())
                 .build();
@@ -104,19 +146,23 @@ class AuctionServiceTest {
         // when
         List<StreamPublishTask> streamPublishTasks = auctionService.startAuction(request, stream.getId(), sellerUser.getId());
 
+        // then
+        // 1. auction 엔티티의 상태가 경매중 상태로 변경됐는지 확인
+        Auction savedAuction = auctionRepository.findById(introductingAuction.getId()).orElseThrow();
+
+        assertThat(savedAuction.getAuctionStatus()).isEqualTo(LIVE);
+        assertThat(savedAuction.getStartedAt()).isNotNull();
+
+        // 2. 레디스에 타이머 세팅됐는지 확인
+        assertThat(auctionTimerRepository.existsByAuctionId(introductingAuction.getId())).isTrue();
+
+        // 3. 요청한 경매 물품으로 세팅됐는지 확인
         AuctionStartResponse response = streamPublishTasks.stream()
                 .map(StreamPublishTask::getPayload)
                 .filter(AuctionStartResponse.class::isInstance)
                 .map(AuctionStartResponse.class::cast)
                 .findFirst()
-                .orElse(null);
-
-        // then
-        Auction savedAuction = auctionRepository.findById(introductingAuction.getId()).orElseThrow();
-
-        assertThat(savedAuction.getAuctionStatus()).isEqualTo(LIVE);
-        assertThat(savedAuction.getStartedAt()).isNotNull();
-        assertThat(auctionTimerRepository.existsByAuctionId(introductingAuction.getId())).isTrue();
+                .orElseThrow();
 
         AuctionStartResponse.AuctionStartItemDto itemDto = response.item();
         assertThat(itemDto.name()).isEqualTo("테스트 상품");
@@ -126,52 +172,153 @@ class AuctionServiceTest {
         AuctionStartResponse.AuctionStartTimerDto timerDto = response.timer();
         assertThat(timerDto.durationSeconds()).isEqualTo(60);
         assertThat(timerDto.serverNow()).isNotNull();
-        assertThat(timerDto.serverNow()).isEqualTo(timerDto.serverStartedAt());
+        assertThat(timerDto.serverNow()).isEqualTo(timerDto.serverStartedAt()); // 경매 시작할 때 동일함
     }
+
+    // ======================== 경매 입찰 ========================
 
     @DisplayName("경매중인 상품에 대해 입찰을 한다.")
     @Test
     void placeBid() {
         // given
-        User bidder = User.builder()
-                .email("bidder@test.com")
-                .password("password")
-                .nickname("입찰자")
-                .phone("010-9999-8888")
-                .profileImage("https://storage.googleapis.com/hanok-storage/profiles/default/default-profile.png")
-                .isActive(true)
-                .balance(50000L)
-                .depositedEscrowBalance(0L)
-                .depositedWithdrawBalance(0L)
-                .depositedBidBalance(0L)
-                .notificationSetting(true)
-                .build();
-        userRepository.save(bidder);
+        // 1. 실시간 경매중인 auction 엔티티 생성
+        Auction liveAuction = auctionRepository.save(
+                TestFixture.createAuction(LIVE, stream, item)
+        );
 
+        // 2. 입찰자 생성
+        User bidder = userRepository.save(TestFixture.createUser("입찰자").toBuilder()
+                .balance(50000L)
+                .depositedBidBalance(0L)
+                .build());
+
+        // 3. 경매 타이머 설정
         auctionTimerRepository.save(liveAuction.getId(), item.getAuctionDuration());
 
-        long bidAmount = 15000L;
-        BidPlaceRequest request = new BidPlaceRequest(liveAuction.getId(), bidAmount);
+        // 4. request dto 생성
+        long bidAmount = liveAuction.getItem().getStartPrice() + item.getBidUnit(); // 시작가 + 입찰 단위
 
-        // when: 반환 타입 List<StreamPublishTask>로 받기
+        BidPlaceRequest request = BidPlaceRequest.builder()
+                .auctionId(liveAuction.getId())
+                .amount(bidAmount)
+                .build();
+
+        // when
         List<StreamPublishTask> tasks = auctionService.placeBid(request, stream.getId(), bidder.getId());
 
-        // then: Task 리스트가 비어있지 않은지 확인
+        // then
         assertThat(tasks).isNotEmpty();
 
-        // stream 필터를 사용해 안전하게 BidPlaceResponse 페이로드만 추출
-        BidPlaceResponse response = (BidPlaceResponse) tasks.stream()
-                .filter(task -> task.getPayload() instanceof BidPlaceResponse)
+        // 1. 입찰 정보 검증
+        BidPlaceResponse response = tasks.stream()
                 .map(StreamPublishTask::getPayload)
+                .filter(BidPlaceResponse.class::isInstance)
+                .map(BidPlaceResponse.class::cast)
                 .findFirst()
-                .orElseThrow(() -> new AssertionError("BidPlaceResponse payload not found in tasks"));
+                .orElseThrow();
 
         BidPlaceResponse.BidInfoDto bidInfo = response.bidInfo();
+
         assertThat(bidInfo).isNotNull();
         assertThat(bidInfo.nickname()).isEqualTo(bidder.getNickname());
         assertThat(bidInfo.amount()).isEqualTo(bidAmount);
         assertThat(bidInfo.placedAt()).isNotNull();
 
+        // 2. 스나이핑 구간이 아닌 상황(충분히 여유 있는 시간)이라면 snipingTimer는 null이어야 함
         assertThat(response.snipingTimer()).isNull();
     }
+
+    // ======================== 경매 종료 ========================
+
+    @DisplayName("입찰이 없으면 경매는 유찰 처리된다.")
+    @Test
+    void endUnsoldAuction() {
+        // given
+        Auction liveAuction = auctionRepository.save(
+                TestFixture.createAuction(LIVE, stream, item)
+        );
+
+        // Redis에는 타이머가 만료되었다고 가정하고, bids 도 넣지 않음 (findTopBid → empty)
+
+        // when
+        List<StreamPublishTask> tasks = auctionService.endAuction(liveAuction.getId());
+
+        // then
+        // 1. 엔티티 상태가 UNSOLD 로 변경되었는지
+        Auction endedAuction = auctionRepository.findById(liveAuction.getId()).orElseThrow();
+
+        assertThat(endedAuction.getAuctionStatus()).isEqualTo(UNSOLD);
+    }
+
+    @DisplayName("최고 입찰자가 있으면 낙찰 처리 및 에스크로가 시작된다.")
+    @Test
+    void endSoldAuction() {
+        // given
+        // 1. 실시간 경매중인 auction 엔티티 생성
+        Auction liveAuction = auctionRepository.save(
+                TestFixture.createAuction(LIVE, stream, item)
+        );
+
+        // 2. 최고 입찰자 생성 및 입찰 정보 저장
+        User bidder = userRepository.save(
+                TestFixture.createUser("입찰자").toBuilder()
+                        .balance(50000L)
+                        .depositedBidBalance(0L)
+                        .build()
+        );
+
+        long bidAmount = item.getStartPrice() + item.getBidUnit();
+
+        Bid topBid = new Bid(bidder.getId(), bidder.getNickname(), bidAmount, LocalDateTime.now());
+        auctionBidRepository.save(liveAuction.getId(), topBid);
+
+        // 3. 기본 배송지 (에스크로 시작 시 필요)
+        ShippingAddress shippingAddress = shippingAddressRepository.save(
+                TestFixture.createShippingAddress(bidder)
+        );
+
+        // when
+        List<StreamPublishTask> tasks = auctionService.endAuction(liveAuction.getId());
+
+        // then
+        // 1. 엔티티 상태와 최종 가격
+        Auction endedAuction = auctionRepository.findById(liveAuction.getId()).orElseThrow();
+
+        assertThat(endedAuction.getAuctionStatus()).isEqualTo(SOLD);
+        assertThat(endedAuction.getFinalPrice()).isEqualTo(bidAmount);
+
+        // 2. 에스크로 시작이 호출되었는지 (escrowService 는 mock)
+        verify(escrowService).startEscrow(
+                eq(topBid),
+                any(Auction.class),
+                any(ShippingAddress.class)
+        );
+
+        // 3. BID_WINNER payload 내용 검증
+        BidWinnerResponse winnerResponse = tasks.stream()
+                .map(StreamPublishTask::getPayload)
+                .filter(BidWinnerResponse.class::isInstance)
+                .map(BidWinnerResponse.class::cast)
+                .findFirst()
+                .orElseThrow();
+
+        BidWinnerResponse.ItemDto itemDto = winnerResponse.item();
+
+        assertThat(itemDto).isNotNull();
+        assertThat(itemDto.itemName()).isEqualTo(item.getName());
+        assertThat(itemDto.finalPrice()).isEqualTo(bidAmount);
+
+        BidWinnerResponse.ShippingDto shippingDto = winnerResponse.shipping();
+
+        assertThat(shippingDto).isNotNull();
+        assertThat(shippingDto.recipientName()).isEqualTo(shippingAddress.getRecipientName());
+        assertThat(shippingDto.address()).isEqualTo(shippingAddress.getAddress());
+    }
+
+    // ======================== 실시간 입찰 정보 동기화 ========================
+
+
+    // ======================== 실시간 물품 정보 동기화 ========================
+
+
 }
