@@ -466,7 +466,8 @@ public class StreamService {
                 topBidders,
                 accessToken.toJwt(),
                 identity,
-                isFollowing
+                isFollowing,
+                isHost
         );
     }
 

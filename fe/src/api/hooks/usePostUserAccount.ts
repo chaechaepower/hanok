@@ -1,12 +1,12 @@
 import { useMutation } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
-import type { RegisterAccountPayload, UserAccountResponse } from '@/types';
+import type { ApiResponse, RegisterAccountPayload, UserAccountResponse } from '@/types';
 
 export const patchUserAccountPath = () => `/v1/users/me/account`;
 
 export const patchUserAccount = async (payload: RegisterAccountPayload) => {
-  const response = await getFetchInstance().patch<UserAccountResponse>(
+  const response = await getFetchInstance().patch<ApiResponse<UserAccountResponse>>(
     patchUserAccountPath(),
     payload,
   );

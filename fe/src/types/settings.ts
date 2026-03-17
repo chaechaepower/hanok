@@ -37,6 +37,11 @@ export type PatchNotificationResponse = {
   followStreamAlert: boolean;
 };
 
+export type PatchPasswordPayload = {
+  currentPassword: string;
+  newPassword: string;
+};
+
 export type WithdrawPayload = {
   password: string;
 };
@@ -54,7 +59,6 @@ export type FollowingSeller = {
   nickname: string;
   profileImageUri: string | null;
   rating: number;
-  isLive: boolean;
 };
 
 export type FollowingItem = {

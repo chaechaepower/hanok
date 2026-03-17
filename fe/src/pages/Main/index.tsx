@@ -8,6 +8,7 @@ import LiveCard from '@/components/Main/LiveCard';
 import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
 import SideBar from '@/components/common/layouts/SideBar';
 import { MdKeyboardArrowDown } from 'react-icons/md';
+import { motion } from 'framer-motion';
 import type { SideBarItem } from '@/types';
 
 const PAGE_SIZE = 10;
@@ -95,12 +96,12 @@ const FollowingSection = ({ category, isLiveStatus, sortFilter, statusFilter }: 
     triggerRef: followingTriggerRef,
   });
 
-  const followingBroadcasts = followingLiveData.pages.flatMap((page) => page.content);
+  const followingBroadcasts = followingLiveData?.pages.flatMap((page) => page.content) ?? [];
   const sectionTitle = isLiveStatus ? `${meData?.nickname ?? '회원'}님의 단골 경매!` : '다음 경매를 기다려보세요!';
 
   return (
-    <section className="flex flex-1 flex-col gap-8 pb-10 pl-4 pr-8 pt-6">
-      <h2 className="text-[24px] font-semibold text-point">{sectionTitle}</h2>
+    <section className="mx-8 mt-6 flex flex-1 flex-col gap-8 rounded-2xl bg-surface-elevated px-8 pb-10 pt-6">
+      <h2 className="text-[24px] font-semibold text-warm">{sectionTitle}</h2>
       {followingBroadcasts.length > 0 ? (
         <>
           <div className={GRID_CLASS_NAME}>
@@ -109,10 +110,10 @@ const FollowingSection = ({ category, isLiveStatus, sortFilter, statusFilter }: 
             ))}
           </div>
           {hasFollowingNextPage && <div ref={followingTriggerRef} className="h-8 w-full" />}
-          {isFetchingFollowingNextPage && <p className="text-center text-[14px] text-white/60">불러오는 중...</p>}
+          {isFetchingFollowingNextPage && <p className="text-center text-body-md text-neutral-500">불러오는 중...</p>}
         </>
       ) : (
-        <p className="pt-12 text-center text-[16px] text-white/60">
+        <p className="pt-12 text-center text-body-lg text-neutral-500">
           {isLiveStatus ? '현재 진행중인 경매가 없습니다.' : '예약된 경매가 없습니다.'}
         </p>
       )}
@@ -171,7 +172,7 @@ export default function MainPage() {
     };
   }, []);
 
-  const allBroadcasts = allLiveData.pages.flatMap((page) => page.content);
+  const allBroadcasts = allLiveData?.pages.flatMap((page) => page.content) ?? [];
   const isLiveStatus = statusFilter === 'LIVE';
 
   return (
@@ -183,8 +184,8 @@ export default function MainPage() {
         className="min-h-[calc(100vh-108px)]"
       />
       <div className="flex w-full flex-col">
-        <div className="flex items-center justify-between gap-4 pb-0 pl-4 pr-8 pt-8">
-          <div className="inline-flex items-center rounded-xl bg-white/6 p-1">
+        <div className="flex items-center justify-between gap-4 pb-0 pl-8 pr-8 pt-8">
+          <div className="relative inline-flex items-center rounded-xl bg-warm/6 p-1">
             {STATUS_OPTIONS.map((option) => {
               const isSelected = statusFilter === option.value;
               return (
@@ -192,11 +193,19 @@ export default function MainPage() {
                   key={option.value}
                   type="button"
                   onClick={() => setStatusFilter(option.value)}
-                  className={`rounded-lg px-4 py-2 text-[13px] font-medium transition ${
-                    isSelected ? 'bg-white text-[#111827]' : 'text-point/75 hover:text-point'
-                  }`}
+                  className="relative z-10 rounded-lg px-4 py-2 text-subtitle-sm transition"
                 >
-                  {option.label}
+                  {isSelected && (
+                    <motion.span
+                      layoutId="statusTab"
+                      initial={false}
+                      className="absolute inset-0 rounded-lg bg-primary"
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                    />
+                  )}
+                  <span className={`relative z-10 ${isSelected ? 'text-neutral-100' : 'text-neutral-400 hover:text-neutral-200'}`}>
+                    {option.label}
+                  </span>
                 </button>
               );
             })}
@@ -206,20 +215,18 @@ export default function MainPage() {
             <button
               type="button"
               onClick={() => setIsSortDropdownOpen((prev) => !prev)}
-              className="inline-flex min-w-33 items-center justify-between gap-3 rounded-xl border border-white/15 px-3 py-2 shadow-[0_8px_20px_rgba(0,0,0,0.25)] transition hover:border-white/30"
+              className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-primary/15 px-3 py-2 transition hover:bg-primary/25"
             >
-              <div className="flex flex-col items-start leading-none">
-                <span className="mt-1 text-[14px] font-semibold text-point">{selectedSortLabel}</span>
-              </div>
+              <span className="text-body-md font-semibold text-primary-light">{selectedSortLabel}</span>
               <span
-                className={`text-[11px] text-point/70 transition-transform ${isSortDropdownOpen ? 'rotate-180' : ''}`}
+                className={`text-caption text-point/70 transition-transform ${isSortDropdownOpen ? 'rotate-180' : ''}`}
               >
                 <MdKeyboardArrowDown />
               </span>
             </button>
 
             {isSortDropdownOpen && (
-              <div className="absolute right-0 top-[calc(100%+8px)] z-30 w-33 overflow-hidden rounded-xl border border-white/15  p-1 shadow-[0_14px_30px_rgba(0,0,0,0.45)] backdrop-blur-md">
+              <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-full overflow-hidden rounded-[10px] bg-primary/15 p-1 shadow-primary-glow backdrop-blur-md">
                 {SORT_OPTIONS.map((option) => {
                   const isSelected = sortFilter === option.value;
                   return (
@@ -230,8 +237,8 @@ export default function MainPage() {
                         setSortFilter(option.value);
                         setIsSortDropdownOpen(false);
                       }}
-                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[14px] transition ${
-                        isSelected ? 'bg-white font-semibold text-[#111827]' : 'text-point/85 hover:bg-white/10'
+                      className={`flex w-full items-center justify-center rounded-lg px-3 py-2 text-center text-body-md transition ${
+                        isSelected ? 'bg-primary font-semibold text-neutral-100' : 'text-neutral-300 hover:bg-warm/10'
                       }`}
                     >
                       <span>{option.label}</span>
@@ -252,8 +259,8 @@ export default function MainPage() {
           />
         )}
 
-        <section className="flex flex-1 flex-col gap-8 py-10 pl-4 pr-8">
-          <h2 className="text-[24px] font-semibold text-point">
+        <section className="flex flex-1 flex-col gap-8 py-10 pl-8 pr-8">
+          <h2 className="text-[24px] font-semibold text-warm">
             {isLiveStatus ? '현재 진행 중인 경매!' : '예정된 경매를 살펴보세요'}
           </h2>
           {allBroadcasts.length > 0 ? (
@@ -264,10 +271,10 @@ export default function MainPage() {
                 ))}
               </div>
               {hasAllNextPage && <div ref={allTriggerRef} className="h-8 w-full" />}
-              {isFetchingAllNextPage && <p className="text-center text-[14px] text-white/60">불러오는 중...</p>}
+              {isFetchingAllNextPage && <p className="text-center text-body-md text-neutral-500">불러오는 중...</p>}
             </>
           ) : (
-            <p className="pt-12 text-center text-[16px] text-white/60">
+            <p className="pt-12 text-center text-body-lg text-neutral-500">
               {isLiveStatus ? '현재 진행중인 경매가 없습니다.' : '예약된 경매가 없습니다.'}
             </p>
           )}

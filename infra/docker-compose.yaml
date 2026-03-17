@@ -58,6 +58,7 @@ services:
     networks:
       - hanok-network
     environment:
+      TZ: Asia/Seoul
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST: hanok-mysql
       DB_PORT: 3306

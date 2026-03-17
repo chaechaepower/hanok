@@ -111,7 +111,7 @@ export default function ChatInput({ connectionState, onSendMessage, onSendMacro 
           placeholder={isConnected ? '메시지를 입력하세요..' : '채팅 연결 중입니다..'}
           onChange={(event) => setMessage(event.target.value)}
           onKeyDown={(event) => {
-            if (event.key === 'Enter') {
+            if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
               event.preventDefault();
               void handleSubmit();
             }

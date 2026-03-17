@@ -20,3 +20,17 @@ livekit:
   url: ws://hanok-livekit:7880
   api-key: ${LIVEKIT_API_KEY:testkey}
   api-secret: ${LIVEKIT_API_SECRET:testsecretkeythatisatleast32characters}
+
+bizno:
+  api:
+    key: test-bizno-key
+
+portone:
+  base-url: https://api.portone.io
+  store-id: test-store
+  secret:
+    key: test-secret
+    webhook: test-webhook
+
+was:
+  cors-allow-origins: http://localhost:3000

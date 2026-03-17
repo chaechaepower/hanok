@@ -1,4 +1,4 @@
-import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, keepPreviousData } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
 import type { LiveCardData, PageResponse } from '@/types';
@@ -48,7 +48,7 @@ export const useGetMain = (params: UseGetMainParams = {}) => {
   const sort = params.sort ?? 'LATEST';
   const size = params.size ?? 10;
 
-  return useSuspenseInfiniteQuery({
+  return useInfiniteQuery({
     queryKey: ['liveCards', type, category ?? null, status, sort, size],
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
@@ -62,5 +62,6 @@ export const useGetMain = (params: UseGetMainParams = {}) => {
       }),
     getNextPageParam: (lastPage) => (!lastPage.last ? lastPage.number + 1 : undefined),
     staleTime: 1000 * 60,
+    placeholderData: keepPreviousData,
   });
 };

@@ -14,7 +14,7 @@ type Step3Props = {
 const BANK_LIST = BANKS.filter((b) => Number(b.code) < 200);
 const STOCK_LIST = BANKS.filter((b) => Number(b.code) >= 200);
 
-const inputClass = 'w-full h-12 bg-[#0B0C10] border border-[#2C2C2E] rounded-lg text-white text-sm px-4 outline-none font-[inherit]';
+const inputClass = 'w-full h-12 bg-background border border-neutral-800 rounded-lg text-white text-sm px-4 outline-none font-[inherit]';
 
 export default function Step3({ onPrev, onNext, hasExistingAccount, existingAccount }: Step3Props) {
   const existingBankCode = existingAccount?.bankName
@@ -64,34 +64,34 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
         <h2 className="text-[17px] font-bold text-white mb-2">
           정산받을 은행 계좌 인증을 진행해주세요.
         </h2>
-        <p className="text-sm text-[#C8C8C8]">판매 금액이 정산되는 계좌입니다.</p>
+        <p className="text-sm text-neutral-300">판매 금액이 정산되는 계좌입니다.</p>
       </div>
 
       {hasExistingAccount ? (
-        <div className="bg-[#1C1C1E] border border-[#2C2C2E] rounded-xl p-6 mb-4">
+        <div className="bg-surface border border-neutral-800 rounded-xl p-6 mb-4">
           <div className="flex items-center gap-2 mb-5">
-            <p className="text-[15px] text-[#E5E5EA] font-semibold m-0">계좌 정보</p>
-            <span className="text-xs text-[#0B0C10] bg-[#CEAF82] rounded px-2 py-0.5 font-semibold">등록됨</span>
+            <p className="text-[15px] text-neutral-200 font-semibold m-0">계좌 정보</p>
+            <span className="text-xs text-background bg-primary-light rounded px-2 py-0.5 font-semibold">등록됨</span>
           </div>
           <div className="flex flex-col gap-3">
             <div className="flex justify-between">
-              <span className="text-sm text-[#8E8E93]">예금주</span>
+              <span className="text-sm text-neutral-500">예금주</span>
               <span className="text-sm text-white">{existingAccount?.accountName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-[#8E8E93]">은행</span>
+              <span className="text-sm text-neutral-500">은행</span>
               <span className="text-sm text-white">{existingAccount?.bankName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-[#8E8E93]">계좌번호</span>
+              <span className="text-sm text-neutral-500">계좌번호</span>
               <span className="text-sm text-white">{existingAccount?.accountNum}</span>
             </div>
           </div>
-          <p className="text-xs text-[#636366] mt-4 mb-0">계좌 변경은 설정에서 가능합니다.</p>
+          <p className="text-xs text-neutral-600 mt-4 mb-0">계좌 변경은 설정에서 가능합니다.</p>
         </div>
       ) : (
         <>
-          <p className="text-sm text-[#E5E5EA] mb-3 font-semibold">계좌 정보 입력</p>
+          <p className="text-sm text-neutral-200 mb-3 font-semibold">계좌 정보 입력</p>
 
           <div className="mb-4">
             <input
@@ -110,10 +110,10 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
             <button
               type="button"
               onClick={() => setShowBankModal(true)}
-              className={`${inputClass} text-left cursor-pointer flex items-center justify-between ${bank ? 'text-white' : 'text-[#636366]'}`}
+              className={`${inputClass} text-left cursor-pointer flex items-center justify-between ${bank ? 'text-white' : 'text-neutral-600'}`}
             >
               <span>{bank ? selectedBankName : '은행/증권사 선택'}</span>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-neutral-500">
                 <path d="M6 9l6 6 6-6" />
               </svg>
             </button>
@@ -125,7 +125,7 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
               onClick={() => setShowBankModal(false)}
             >
               <div
-                className="w-full max-w-[430px] max-h-[70vh] bg-[#1C1C1E] rounded-2xl flex flex-col overflow-hidden"
+                className="w-full max-w-[430px] max-h-[70vh] bg-surface rounded-2xl flex flex-col overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="px-5 pt-4 shrink-0">
@@ -134,12 +134,12 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
                     <button
                       type="button"
                       onClick={() => setShowBankModal(false)}
-                      className="bg-transparent border-none text-[#8E8E93] text-2xl cursor-pointer p-0"
+                      className="bg-transparent border-none text-neutral-500 text-2xl cursor-pointer p-0"
                     >
                       &times;
                     </button>
                   </div>
-                  <div className="flex border-b border-[#2C2C2E]">
+                  <div className="flex border-b border-neutral-800">
                     {(['bank', 'stock'] as const).map((tab) => (
                       <button
                         key={tab}
@@ -147,8 +147,8 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
                         onClick={() => setBankTab(tab)}
                         className={`flex-1 py-2.5 bg-transparent border-none text-sm font-semibold cursor-pointer ${
                           bankTab === tab
-                            ? 'text-[#CEAF82] border-b-2 border-[#CEAF82]'
-                            : 'text-[#8E8E93] border-b-2 border-transparent'
+                            ? 'text-primary-light border-b-2 border-primary-light'
+                            : 'text-neutral-500 border-b-2 border-transparent'
                         }`}
                       >
                         {tab === 'bank' ? '은행' : '증권사'}
@@ -165,8 +165,8 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
                         onClick={() => handleSelectBank(b.code)}
                         className={`py-3 px-1 border-none rounded-lg text-[13px] cursor-pointer text-center whitespace-nowrap overflow-hidden text-ellipsis ${
                           bank === b.code
-                            ? 'bg-[#CEAF82] text-[#0B0C10] font-bold'
-                            : 'bg-[#2C2C2E] text-[#E5E5EA] font-normal'
+                            ? 'bg-primary-light text-background font-bold'
+                            : 'bg-neutral-800 text-neutral-200 font-normal'
                         }`}
                       >
                         {b.name}
@@ -192,7 +192,7 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
             />
           </div>
 
-          {error && <p className="text-[#FF453A] text-[13px] pl-1 mb-2">{error}</p>}
+          {error && <p className="text-accent-light text-[13px] pl-1 mb-2">{error}</p>}
         </>
       )}
 

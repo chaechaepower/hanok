@@ -1,6 +1,6 @@
 port: 7880
 keys:
-  devkey: ${LIVEKIT_SECRET}
+  devkey: devsecretkeythatisatleast32characters
 
 webhook:
   urls:

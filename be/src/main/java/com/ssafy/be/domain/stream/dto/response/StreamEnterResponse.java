@@ -15,7 +15,8 @@ public record StreamEnterResponse(
         List<TopBidder> topBidders,
         String token,
         String identity,
-        boolean isFollowing
+        boolean isFollowing,
+        boolean isHost
 ) {
     public record SellerInfo(
             Long sellerId,

@@ -8,11 +8,11 @@ function BusinessTypeCard({ label, selected, onClick }: { label: string; selecte
     <button
       type="button"
       onClick={onClick}
-      className={`flex-1 h-30 rounded-xl text-xl font-semibold transition-all duration-200 cursor-pointer
+      className={`flex-1 h-28 rounded-xl text-subtitle-lg transition-all duration-200 cursor-pointer border
         ${
           selected
-            ? 'bg-point border-2 border-transparent text-background'
-            : 'bg-background border border-[#848484] text-[#848484]'
+            ? 'bg-primary-muted border-primary-light text-primary-light'
+            : 'bg-surface border-neutral-700 text-neutral-500 hover:border-neutral-500'
         }
       `}
     >
@@ -92,7 +92,7 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
 
   return (
     <>
-      <p className="text-[15px] text-[#E5E5EA] mb-5">개인/법인 사업자 인증을 해주세요.</p>
+      <p className="text-body-md text-neutral-400 mb-5">개인/법인 사업자 인증을 해주세요.</p>
 
       <div className="flex gap-4 mb-6">
         <BusinessTypeCard
@@ -126,31 +126,32 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
             businessType === 'BUSINESS' ? '법인등록번호 -없이 숫자만 입력' : '사업자등록번호 -없이 숫자만 입력'
           }
           disabled={isVerified}
-          className={`flex-1 h-12 bg-[#1C1C1E] border rounded-lg text-sm px-4 outline-none font-[inherit] ${
-            isVerified ? 'border-[#CEAF82] text-[#CEAF82]' : 'border-[#3A3A3C] text-white'
+          className={`flex-1 h-11 bg-surface border rounded-[10px] text-body-sm px-4 outline-none font-[inherit] placeholder:text-neutral-600 transition-colors ${
+            isVerified ? 'border-ember text-ember' : 'border-neutral-700 text-neutral-200 focus:border-primary-light'
           }`}
         />
         <Button
           variant={isVerified ? 'yellowOutline' : 'yellow'}
+          size="small"
           onClick={handleVerify}
           disabled={isVerifying || isVerified || (bizNumber || '').replace(/\D/g, '').length !== (businessType === 'BUSINESS' ? 13 : 10)}
-          className="h-12! w-auto! px-6"
+          className="h-11! w-auto! px-5 rounded-[10px]!"
         >
           {isVerifying ? '인증 중...' : isVerified ? '인증 완료' : '인증 하기'}
         </Button>
       </div>
 
       {verifyError && (
-        <p className="text-[#FF453A] text-[13px] pl-1 mb-2">{verifyError}</p>
+        <p className="text-accent-light text-body-xs pl-1 mb-2">{verifyError}</p>
       )}
       {isVerified && (
-        <p className="text-[#32D74B] text-[13px] pl-1 mb-2">
+        <p className="text-ember text-body-xs pl-1 mb-2">
           사업자 인증이 완료되었습니다.
         </p>
       )}
 
       <div className="flex justify-end sticky bottom-0 pt-6 pb-6">
-        <Button onClick={handleNext} className="w-30!">
+        <Button variant="white" onClick={handleNext} size="small" className="w-28! h-10! rounded-[10px]!">
           다음
         </Button>
       </div>

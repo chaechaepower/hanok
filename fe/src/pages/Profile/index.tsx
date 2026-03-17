@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useToast } from '@/components/common/Toast';
 import { useGetSellerProfile } from '@/api/hooks/useGetSellerProfile';
@@ -8,8 +8,9 @@ import { usePatchSellerNotice } from '@/api/hooks/usePatchSellerNotice';
 import { useDeleteSellerNotice } from '@/api/hooks/useDeleteSellerNotice';
 import { useGetSellerNoticeDetail } from '@/api/hooks/useGetSellerNoticeDetail';
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
-import { usePatchFollow } from '@/api/hooks/usePatchFollow';
-import { useDeleteFollow } from '@/api/hooks/useDeleteFollow';
+import { useGetMe } from '@/api/hooks/useGetMe';
+import { usePostFollow } from '@/api/hooks/usePostFollow';
+import { useGetFollowedStores } from '@/api/hooks/useGetFollowedStores';
 import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
 import ReportModal from '@/components/Profile/ReportModal';
 import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
@@ -18,6 +19,7 @@ import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
 import type { EscrowState, ScheduledStream } from '@/types';
 import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2, FiX, FiCamera, FiTv } from 'react-icons/fi';
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
+import React from 'react';
 
 const InstagramIcon = () => (
   <>
@@ -107,6 +109,7 @@ export default function ProfilePage() {
 
   const { data, isLoading, isError } = useGetSellerProfile(sellerId);
   const { data: mySellerStatus } = useGetSellerStatus();
+  const { data: meData } = useGetMe();
   const { mutate: patchProfile, isPending: isProfilePending } = usePatchSellerProfile(sellerId);
   const { mutate: patchProfileImage } = usePatchProfileImage();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -139,32 +142,36 @@ export default function ProfilePage() {
   const [selectedStream, setSelectedStream] = useState<ScheduledStream | null>(null);
   const { data: scheduledStreamsData } = useGetScheduledStreams(0, 50);
 
-  const { mutate: patchFollow, isPending: isFollowPending } = usePatchFollow();
-  const { mutate: deleteFollow, isPending: isUnfollowPending } = useDeleteFollow();
+  const { mutate: postFollow, isPending: isFollowPending } = usePostFollow();
+  const { data: followedData } = useGetFollowedStores();
 
   const { showToast } = useToast();
-  const [isFollowing, setIsFollowing] = useState(false);
 
-  const myUserId = localStorage.getItem('userId');
-  const isMyProfile = myUserId !== null && Number(myUserId) === sellerId;
+  const initialFollowing = useMemo(() => {
+    if (!followedData?.pages) return false;
+    return followedData.pages.some((page) => page.content.some((item) => item.seller.sellerId === sellerId));
+  }, [followedData, sellerId]);
+
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followInitialized, setFollowInitialized] = useState(false);
+
+  React.useEffect(() => {
+    if (!followInitialized && followedData) {
+      setIsFollowing(initialFollowing);
+      setFollowInitialized(true);
+    }
+  }, [initialFollowing, followedData, followInitialized]);
+
+  const isMyProfile = meData?.sellerId != null && meData.sellerId === sellerId;
   const isOwner = mySellerStatus?.isSeller || true;
 
   const handleFollowToggle = () => {
-    if (isFollowing) {
-      deleteFollow(
-        { userId: sellerId },
-        {
-          onSuccess: (res) => setIsFollowing(res.following),
-        },
-      );
-    } else {
-      patchFollow(
-        { userId: sellerId },
-        {
-          onSuccess: (res) => setIsFollowing(res.following),
-        },
-      );
-    }
+    postFollow(
+      { targetSellerId: sellerId },
+      {
+        onSuccess: (res) => setIsFollowing(res.following),
+      },
+    );
   };
 
   const handleOpenCreateModal = () => {
@@ -323,9 +330,9 @@ export default function ProfilePage() {
               <h1 className="m-0 text-[26px] font-bold text-white">{nickname}상점</h1>
               {!isMyProfile && (
                 <button
-                  className={`py-2 px-[22px] rounded-3xl bg-white text-gray-900 text-sm font-bold border-none cursor-pointer ${isFollowPending || isUnfollowPending ? 'opacity-70' : 'opacity-100'}`}
+                  className={`py-2 px-[22px] rounded-3xl bg-white text-gray-900 text-sm font-bold border-none cursor-pointer ${isFollowPending ? 'opacity-70' : 'opacity-100'}`}
                   onClick={handleFollowToggle}
-                  disabled={isFollowPending || isUnfollowPending}
+                  disabled={isFollowPending}
                 >
                   {isFollowing ? '언팔로우' : '팔로우'}
                 </button>
@@ -391,17 +398,17 @@ export default function ProfilePage() {
             {isOwner && data?.stats !== undefined && (
               <div className="mt-3 border border-white/5 rounded-xl py-6 flex items-center w-[420px]">
                 <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{data.stats.followerCount}</span>
+                  <span className="text-[22px] font-bold text-white">{data.stats.followerCount ?? '-'}</span>
                   <span className="text-[13px] text-[#888]">팔로워수</span>
                 </div>
                 <div className="w-[1px] h-10 bg-[#2e2e40]" />
                 <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{data.stats.rating}</span>
+                  <span className="text-[22px] font-bold text-white">{data.stats.rating ?? '-'}</span>
                   <span className="text-[13px] text-[#888]">평점</span>
                 </div>
                 <div className="w-[1px] h-10 bg-[#2e2e40]" />
                 <div className="flex-1 flex flex-col items-center gap-[6px]">
-                  <span className="text-[22px] font-bold text-white">{data.stats.avgShipDays}일</span>
+                  <span className="text-[22px] font-bold text-white">{data.stats.avgShipDays != null ? `${data.stats.avgShipDays}일` : '-'}</span>
                   <span className="text-[13px] text-[#888]">평균 배송일</span>
                 </div>
               </div>
@@ -421,7 +428,6 @@ export default function ProfilePage() {
             # 공지사항
           </button>
 
-          {isMyProfile && (
           <button
             className={`flex items-center gap-[6px] bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-base font-bold cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${
               activeTab === 'sales' ? 'text-[#d9b36d] border-[#d9b36d]' : 'text-[#888] border-transparent'
@@ -429,9 +435,8 @@ export default function ProfilePage() {
             onClick={() => setActiveTab('sales')}
           >
             <HistoryIcon />
-            낙찰 이력
+            판매 내역
           </button>
-          )}
         </div>
 
         {activeTab === 'posts' && (
@@ -511,7 +516,7 @@ export default function ProfilePage() {
                 const ui = getEscrowStateUI(sale.escrowStatus);
                 return (
                   <div
-                    key={sale.escrowId}
+                    key={sale.itemName}
                     className={`flex py-4 items-center justify-between ${index > 0 ? 'border-t border-[#1a1a26] mt-4 pt-8' : ''}`}
                   >
                     <div className="flex items-center gap-6 flex-1">
@@ -531,7 +536,7 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="flex flex-col items-end gap-[6px] w-[140px]">
-                      <span className="text-base font-bold text-white">- {formatPrice(sale.amount)}</span>
+                      <span className="text-base font-bold text-white">+ {formatPrice(sale.amount)}</span>
                       <span className="text-[13px] text-[#888]">{ui.label}</span>
                     </div>
                   </div>

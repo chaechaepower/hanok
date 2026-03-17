@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
-import { useDeleteFollow } from '@/api/hooks/useDeleteFollow';
-import { usePatchFollow } from '@/api/hooks/usePatchFollow';
+import { usePostFollow } from '@/api/hooks/usePostFollow';
 import AuctionPanel from '@/components/Live/Auction/shared/AuctionPanel';
 import ChatPanel from '@/components/Live/Chat/ChatPanel';
 import type { AuctionStatisticsPayload, LiveAuctionType, StreamEnterResponse, UniqueBidSyncPayload } from '@/types';
@@ -19,17 +18,11 @@ const getSellerInitial = (nickname?: string) => nickname?.trim().charAt(0).toUpp
 export default function RightPanel({ isSeller, auctionType, auctionStatistics, uniqueBidSync, streamEnter }: Props) {
   const [activeTab, setActiveTab] = useState<'chat' | 'auction'>('chat');
   const [followStateOverride, setFollowStateOverride] = useState<{ sellerId: number; value: boolean } | null>(null);
-  const { mutate: patchFollow, isPending: isFollowPending } = usePatchFollow();
-  const { mutate: deleteFollow, isPending: isUnfollowPending } = useDeleteFollow();
-  const storedUserId =
-    typeof window === 'undefined' ? 0 : Number.parseInt(window.localStorage.getItem('userId') ?? '0', 10);
-
+  const { mutate: postFollow, isPending: isFollowPending } = usePostFollow();
   const sellerId = streamEnter?.seller.sellerId ?? 0;
   const sellerNickname = streamEnter?.seller.nickname ?? 'seller';
   const sellerProfileImage = streamEnter?.seller.profileImage ?? null;
-  const currentUserId = Number.isFinite(storedUserId) ? storedUserId : 0;
-  const isOwnStore = sellerId > 0 && sellerId === currentUserId;
-  const isFollowActionPending = isFollowPending || isUnfollowPending;
+  const isFollowActionPending = isFollowPending;
   const isFollowing =
     followStateOverride?.sellerId === sellerId ? followStateOverride.value : (streamEnter?.isFollowing ?? false);
 
@@ -38,18 +31,8 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
       return;
     }
 
-    if (isFollowing) {
-      deleteFollow(
-        { userId: sellerId },
-        {
-          onSuccess: (response) => setFollowStateOverride({ sellerId, value: response.following }),
-        },
-      );
-      return;
-    }
-
-    patchFollow(
-      { userId: sellerId },
+    postFollow(
+      { targetSellerId: sellerId },
       {
         onSuccess: (response) => setFollowStateOverride({ sellerId, value: response.following }),
       },
@@ -70,7 +53,7 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
           <div className="min-w-0 truncate text-xs font-bold text-neutral-100">{sellerNickname}</div>
         </div>
 
-        {sellerId > 0 && !isSeller && !isOwnStore && (
+        {sellerId > 0 && !isSeller && (
           <button
             type="button"
             onClick={handleFollowToggle}

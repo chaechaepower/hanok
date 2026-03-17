@@ -125,7 +125,7 @@ export const walletHandlers = [
     return HttpResponse.json(mockAccount);
   }),
 
-  http.get(`${BASE_URL}/v1/trade/reports`, async ({ request }) => {
+  http.get(`${BASE_URL}/v1/trade-reports`, async ({ request }) => {
     const url = new URL(request.url);
     const type = (url.searchParams.get('type') ?? 'CHARGE').toUpperCase() as keyof typeof mockTradeReports;
 

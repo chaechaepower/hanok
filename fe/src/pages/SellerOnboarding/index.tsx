@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useToast } from '@/components/common/Toast';
 import type { AccountData, BusinessType } from '@/types';
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
@@ -16,9 +17,15 @@ export default function SellerOnboardingPage() {
   const { data: accountData, isLoading: isAccountLoading } = useGetAccount();
   const { showToast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
+  const [direction, setDirection] = useState(1);
   const [businessType, setBusinessType] = useState<BusinessType>('INDIVIDUAL');
   const [businessNumber, setBusinessNumber] = useState<string | null>(null);
   const [account, setAccount] = useState<AccountData | null>(null);
+
+  const goToStep = (next: number) => {
+    setDirection(next > currentStep ? 1 : -1);
+    setCurrentStep(next);
+  };
 
   useEffect(() => {
     if (sellerStatus?.isSeller) {
@@ -31,7 +38,7 @@ export default function SellerOnboardingPage() {
 
   if (isLoading || isAccountLoading) {
     return (
-      <div className="flex items-center justify-center text-white">
+      <div className="flex items-center justify-center text-neutral-200">
         로딩 중...
       </div>
     );
@@ -41,46 +48,64 @@ export default function SellerOnboardingPage() {
     return null;
   }
 
-  return (
-    <div className="text-white flex flex-col items-center pt-10 pb-20 px-4">
-      <div className="w-full max-w-[720px]">
-        <StepIndicator current={currentStep} />
-        <hr className="border-[#2C2C2E] mb-10" />
-
-        {currentStep === 1 && (
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
           <Step1
-            onNext={() => setCurrentStep(2)}
+            onNext={() => goToStep(2)}
             businessType={businessType}
             setBusinessType={setBusinessType}
             bizNumber={businessNumber}
             setBizNumber={setBusinessNumber}
           />
-        )}
-
-        {currentStep === 2 && (
-          <Step2 onPrev={() => setCurrentStep(1)} onNext={() => setCurrentStep(3)} />
-        )}
-
-        {currentStep === 3 && (
+        );
+      case 2:
+        return <Step2 onPrev={() => goToStep(1)} onNext={() => goToStep(3)} />;
+      case 3:
+        return (
           <Step3
-            onPrev={() => setCurrentStep(2)}
+            onPrev={() => goToStep(2)}
             onNext={(data) => {
               setAccount(data);
-              setCurrentStep(4);
+              goToStep(4);
             }}
             hasExistingAccount={hasExistingAccount}
             existingAccount={accountData ?? null}
           />
-        )}
-
-        {currentStep === 4 && (
+        );
+      case 4:
+        return (
           <Step4
-            onPrev={() => setCurrentStep(3)}
+            onPrev={() => goToStep(3)}
             businessType={businessType}
             businessNumber={businessNumber}
             account={account}
           />
-        )}
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="text-neutral-200 flex flex-col items-center pt-16 pb-20 px-4">
+      <div className="w-full max-w-[720px]">
+        <StepIndicator current={currentStep} />
+        <hr className="border-neutral-800 mb-10" />
+
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={currentStep}
+            custom={direction}
+            initial={{ x: direction * 60, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: direction * -60, opacity: 0 }}
+            transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            {renderStep()}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

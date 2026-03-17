@@ -59,7 +59,7 @@ export default function LiveCard({
   const canNavigate = isNavigable ?? (stream.isLive && !isScheduledCard);
   const canNavigateToProfile = !disableSellerNavigation && stream.seller.sellerId > 0;
   const containerClassName = `group w-full max-w-[230px] ${className}`.trim();
-  const livePreviewClassName = `relative aspect-3/4 w-full overflow-hidden rounded-2xl bg-[#111827] ${
+  const livePreviewClassName = `relative aspect-3/4 w-full overflow-hidden rounded-2xl bg-neutral-900 ${
     canNavigate ? 'cursor-pointer' : ''
   }`.trim();
 
@@ -106,14 +106,14 @@ export default function LiveCard({
             className="h-full w-full object-cover transition-transform duration-300 ease-out will-change-transform group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gray-500 text-[13px] font-medium tracking-[0.08em] text-white/50">
+          <div className="flex h-full w-full items-center justify-center bg-neutral-600 text-[13px] font-medium tracking-[0.08em] text-neutral-400">
             LIVE THUMBNAIL
           </div>
         )}
 
         {!statusBadge && isScheduledCard && scheduledAtLabel && (
           <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-linear-to-b from-black/70 via-black/45 to-black/75">
-            <div className="px-4 text-center text-point">
+            <div className="px-4 text-center text-warm">
               <p className="text-[36px] font-semibold leading-none tracking-[-0.02em] drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
                 {scheduledAtLabel}
               </p>
@@ -133,7 +133,7 @@ export default function LiveCard({
         ) : (
           stream.isLive &&
           !isScheduledCard && (
-            <span className="absolute left-3 top-3 rounded-md bg-[#EF4444] px-2.5 py-1.5 text-[12px] font-semibold text-white">
+            <span className="absolute left-3 top-3 rounded-md bg-accent px-2.5 py-1.5 text-[12px] font-semibold text-white">
               Live · {stream.viewerCount.toLocaleString()}
             </span>
           )
@@ -155,19 +155,19 @@ export default function LiveCard({
             className="h-12 w-12 rounded-full object-cover"
           />
         ) : (
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/15 text-[16px] font-semibold text-point">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-muted text-[16px] font-semibold text-primary-light">
             {sellerInitial}
           </div>
         )}
 
         <div className="min-w-0 flex flex-col gap-2">
-          <h3 className="overflow-hidden text-ellipsis whitespace-nowrap text-[16px] font-normal leading-none text-point">
+          <h3 className="overflow-hidden text-ellipsis whitespace-nowrap text-[16px] font-normal leading-none text-warm">
             {stream.title}
           </h3>
           {metaText ? (
-            <p className="text-[14px] font-light leading-none text-point">{metaText}</p>
+            <p className="text-[14px] font-light leading-none text-neutral-400">{metaText}</p>
           ) : (
-            <p className="text-[14px] font-light leading-none text-point">
+            <p className="text-[14px] font-light leading-none text-neutral-400">
               <span>{stream.seller.nickname}</span>
               <span className="mx-1 text-gold">|</span>
               <span className="text-gold">{categoryLabel}</span>
