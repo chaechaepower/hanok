@@ -7,7 +7,7 @@ export const getAccountPath = () => '/v1/users/me/account';
 
 export const getAccount = async () => {
   const response = await getFetchInstance().get<ApiResponse<UserAccountResponse>>(getAccountPath());
-  return response.data;
+  return response.data.data;
 };
 
 export const useGetAccount = (enabled = true) => {

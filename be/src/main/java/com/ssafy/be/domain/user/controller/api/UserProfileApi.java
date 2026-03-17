@@ -34,11 +34,6 @@ public interface UserProfileApi {
             String principal,
             AccountRegisterRequest request);
 
-    @Operation(summary = "판매자 팔로우/언팔로우")
-    @PostMapping("/{userId}/follow")
-    ResponseEntity<ApiResponse<FollowResponse>> toggleFollow(
-            String principal,
-            @PathVariable("userId") Long targetUserId);
 
     @Operation(summary = "판매자 여부 확인")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")

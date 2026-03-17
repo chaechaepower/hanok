@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
 import type { RegisterSellerPayload, RegisterSellerResponse } from '@/types';
@@ -14,8 +14,14 @@ export const registerSeller = async (payload: RegisterSellerPayload) => {
 };
 
 export const useRegisterSeller = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (payload: RegisterSellerPayload) => registerSeller(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['seller-status'] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+    },
     throwOnError: false,
   });
 };

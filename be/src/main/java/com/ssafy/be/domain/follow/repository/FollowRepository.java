@@ -3,7 +3,11 @@ package com.ssafy.be.domain.follow.repository;
 import com.ssafy.be.domain.follow.entity.Follow;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.user.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -19,4 +23,9 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
     long countBySellerId(Long sellerId);
 
+    @Query(
+            value = "SELECT f FROM Follow f JOIN FETCH f.seller s JOIN FETCH s.user WHERE f.user = :user",
+            countQuery = "SELECT COUNT(f) FROM Follow f WHERE f.user = :user"
+    )
+    Page<Follow> findByUserWithSeller(@Param("user") User user, Pageable pageable);
 }

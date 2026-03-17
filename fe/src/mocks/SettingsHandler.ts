@@ -34,56 +34,56 @@ const FOLLOWED_SELLER_CATALOG = [
     nickname: 'store_one',
     profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store1',
     rating: 4.8,
-    isLive: true,
+
   },
   {
     sellerId: 2,
     nickname: 'luxury_lab',
     profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store2',
     rating: 4.5,
-    isLive: false,
+
   },
   {
     sellerId: 3,
     nickname: 'card_room',
     profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store3',
     rating: 4.2,
-    isLive: false,
+
   },
   {
     sellerId: 4,
     nickname: 'tech_house',
     profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store4',
     rating: 4.6,
-    isLive: true,
+
   },
   {
     sellerId: 5,
     nickname: 'vintage_zone',
     profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store5',
     rating: 4.9,
-    isLive: false,
+
   },
   {
     sellerId: 10,
     nickname: 'vintage_hub',
     profileImageUri: 'https://picsum.photos/seed/seller-10/120/120',
     rating: 4.7,
-    isLive: true,
+
   },
   {
     sellerId: 12,
     nickname: 'sneaker_room',
     profileImageUri: 'https://picsum.photos/seed/seller-12/120/120',
     rating: 4.9,
-    isLive: true,
+
   },
   {
     sellerId: 14,
     nickname: 'card_deck',
     profileImageUri: 'https://picsum.photos/seed/seller-14/120/120',
     rating: 4.4,
-    isLive: true,
+
   },
 ];
 
@@ -107,7 +107,10 @@ export const settingsHandlers = [
   }),
 
   http.get(`${BASE_URL}/v1/users/me/notification`, () =>
-    HttpResponse.json(mockNotification, { status: 200 }),
+    HttpResponse.json(
+      { status: 'SUCCESS', message: 'Notification fetched successfully.', data: mockNotification },
+      { status: 200 },
+    ),
   ),
 
   http.patch(`${BASE_URL}/v1/users/me/notification`, async ({ request }) => {
@@ -219,9 +222,13 @@ export const settingsHandlers = [
   http.get(`${BASE_URL}/v1/users/me/account`, () =>
     HttpResponse.json(
       {
-        bankName: mockAccountData.bankName,
-        accountNum: mockAccountData.accountNum,
-        accountName: mockAccountData.accountName,
+        status: 'SUCCESS',
+        message: 'Account fetched successfully.',
+        data: {
+          bankName: mockAccountData.bankName,
+          accountNum: mockAccountData.accountNum,
+          accountName: mockAccountData.accountName,
+        },
       },
       { status: 200 },
     ),
