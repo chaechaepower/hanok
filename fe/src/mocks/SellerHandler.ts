@@ -19,7 +19,6 @@ export const sellerHandlers = [
       {
         sellerId: 101,
         nickname: 'Mock Seller',
-        grade: 'A',
       },
       { status: 201 },
     );
