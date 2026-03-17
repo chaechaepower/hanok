@@ -35,10 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String token = jwtUtil.resolveToken(request);
-        log.info("[JWT] URI: {}, Authorization header: {}, token: {}",
-                request.getRequestURI(),
-                request.getHeader("Authorization"),
-                token != null ? "있음" : "없음");
+
         if (token != null) {
             try {
                 // 블랙리스트 체크 (로그아웃된 토큰 차단)
