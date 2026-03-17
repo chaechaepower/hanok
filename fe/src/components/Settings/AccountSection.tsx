@@ -100,18 +100,18 @@ export default function AccountSection() {
     <>
       <div className="flex flex-col gap-2 mb-2">
         <h2 className="m-0 text-2xl font-bold text-white">계정 관리</h2>
-        <p className="m-0 text-[15px] text-[#aaa]">계정을 관리합니다.</p>
+        <p className="m-0 text-[15px] text-neutral-400">계정을 관리합니다.</p>
       </div>
 
-      <div className="w-full box-border border border-[#d9b36d]/30 rounded-2xl p-8 bg-[#050505] flex flex-col gap-8">
+      <div className="w-full box-border border border-gold-light/30 rounded-2xl p-8 bg-background flex flex-col gap-8">
         <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
-            <FaUserAlt size={18} className="text-[#aaa]" />
+            <FaUserAlt size={18} className="text-neutral-400" />
             계정 관리
           </h3>
           <button
             onClick={handleOpenPasswordModal}
-            className="py-2 px-5 bg-white text-[#111] text-sm font-bold border-none rounded-full cursor-pointer hover:bg-gray-200 transition-colors"
+            className="py-2 px-5 bg-neutral-100 text-background text-sm font-bold border-none rounded-full cursor-pointer hover:bg-neutral-200 transition-colors"
           >
             비밀번호 수정
           </button>
@@ -120,45 +120,45 @@ export default function AccountSection() {
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-2">
             <span className="text-[15px] text-white font-medium">이메일(로그인 ID)</span>
-            <span className="text-[15px] text-[#aaa]">{user?.email}</span>
+            <span className="text-[15px] text-neutral-400">{user?.email}</span>
           </div>
           <div className="flex flex-col gap-2">
             <span className="text-[15px] text-white font-medium">비밀번호</span>
-            <span className="text-[15px] text-[#aaa]">********</span>
+            <span className="text-[15px] text-neutral-400">********</span>
           </div>
           <div className="flex flex-col gap-2">
             <span className="text-[15px] text-white font-medium">휴대폰 번호</span>
-            <span className="text-[15px] text-[#aaa]">{user?.phone}</span>
+            <span className="text-[15px] text-neutral-400">{user?.phone}</span>
           </div>
         </div>
       </div>
 
-      <div className="w-full box-border border border-[#d9b36d]/30 rounded-2xl p-8 bg-[#050505] flex flex-col gap-6">
+      <div className="w-full box-border border border-gold-light/30 rounded-2xl p-8 bg-background flex flex-col gap-6">
         <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
-          <FiBell size={20} className="text-[#d9b36d]" />
+          <FiBell size={20} className="text-gold-light" />
           알림 설정
         </h3>
         <div className="flex items-center justify-between mt-2">
           <div className="flex flex-col gap-2">
             <span className="text-[15px] text-white font-bold">팔로우 알림 설정</span>
-            <p className="m-0 text-[14px] text-[#aaa]">팔로우한 판매자의 경매 방송이 시작 시 푸시 알림을 받습니다.</p>
+            <p className="m-0 text-[14px] text-neutral-400">팔로우한 판매자의 경매 방송이 시작 시 푸시 알림을 받습니다.</p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" className="sr-only peer" checked={isPushEnabled} onChange={handleTogglePush} />
-            <div className="w-12 h-6 rounded-full peer bg-[#333] peer-checked:bg-[#d9b36d] transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-6" />
+            <div className="w-12 h-6 rounded-full peer bg-neutral-700 peer-checked:bg-gold-light transition-colors after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-6" />
           </label>
         </div>
       </div>
 
-      <div className="w-full box-border border border-[#d9b36d]/30 rounded-2xl p-8 bg-[#050505] flex flex-col gap-6">
+      <div className="w-full box-border border border-gold-light/30 rounded-2xl p-8 bg-background flex flex-col gap-6">
         <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
-          <FiAlertTriangle size={20} className="text-red-500" />
+          <FiAlertTriangle size={20} className="text-accent" />
           회원 탈퇴
         </h3>
         <div className="flex flex-col gap-6 mt-2">
           <div className="flex flex-col gap-3">
             <span className="text-[15px] text-white font-bold">탈퇴 전 주의사항</span>
-            <p className="m-0 text-[14px] text-[#aaa] leading-relaxed">
+            <p className="m-0 text-[14px] text-neutral-400 leading-relaxed">
               회원 탈퇴 시 모든 경매 내역과 평판 기록을 더 이상 플랫폼에서 확인할 수 없게 됩니다.
               <br />
               지갑에 보관된 잔여 가상머니가 0원이어야만 탈퇴 절차를 진행할 수 있습니다. 진행 중인 경매나 정산 대기금이
@@ -167,7 +167,7 @@ export default function AccountSection() {
           </div>
           <button
             onClick={handleOpenWithdrawModal}
-            className="self-start py-3 px-6 bg-transparent text-red-500 border border-red-500 rounded-full text-[15px] font-bold cursor-pointer hover:bg-red-500/10 transition-colors"
+            className="self-start py-3 px-6 bg-transparent text-accent border border-accent rounded-full text-[15px] font-bold cursor-pointer hover:bg-accent/10 transition-colors"
           >
             회원 탈퇴 신청
           </button>
@@ -180,53 +180,53 @@ export default function AccountSection() {
           onClick={() => setIsWithdrawModalOpen(false)}
         >
           <div
-            className="bg-[#0a0a0a] border border-white/5 rounded-2xl w-[460px] p-8 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+            className="bg-background border border-white/5 rounded-2xl w-[460px] p-8 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
               <h2 className="m-0 text-white text-xl font-bold flex items-center gap-2">
-                <FiAlertTriangle size={20} className="text-red-500" />
+                <FiAlertTriangle size={20} className="text-accent" />
                 회원 탈퇴 확인
               </h2>
               <button
                 onClick={() => setIsWithdrawModalOpen(false)}
-                className="bg-transparent border-none text-[#888] cursor-pointer hover:text-white transition-colors"
+                className="bg-transparent border-none text-neutral-600 cursor-pointer hover:text-white transition-colors"
               >
                 <FiX size={22} />
               </button>
             </div>
 
-            <p className="m-0 text-[14px] text-[#aaa] leading-relaxed bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+            <p className="m-0 text-[14px] text-neutral-400 leading-relaxed bg-accent/10 border border-accent/30 rounded-lg p-4">
               탈퇴 후에는 계정 복구가 불가능합니다.
               <br />
               비밀번호를 입력하여 본인 확인 후 탈퇴를 진행해 주세요.
             </p>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[14px] text-[#aaa] font-medium">비밀번호</label>
+              <label className="text-[14px] text-neutral-400 font-medium">비밀번호</label>
               <input
                 type="password"
                 value={withdrawPassword}
                 onChange={(e) => setWithdrawPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmitWithdraw()}
                 placeholder="현재 비밀번호를 입력하세요"
-                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-red-500 transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-accent transition-colors"
               />
             </div>
 
-            {withdrawError && <p className="m-0 text-[13px] text-red-400">{withdrawError}</p>}
+            {withdrawError && <p className="m-0 text-[13px] text-accent-light">{withdrawError}</p>}
 
             <div className="flex justify-end gap-3 mt-2">
               <button
                 onClick={() => setIsWithdrawModalOpen(false)}
-                className="py-3 px-6 bg-[#333] text-[#ddd] border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-[#444] transition-colors"
+                className="py-3 px-6 bg-neutral-700 text-neutral-200 border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-neutral-600 transition-colors"
               >
                 취소
               </button>
               <button
                 onClick={handleSubmitWithdraw}
                 disabled={isWithdrawPending}
-                className="py-3 px-6 bg-red-600 text-white font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="py-3 px-6 bg-accent text-white font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-accent-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isWithdrawPending ? '처리 중…' : '탈퇴 신청'}
               </button>
@@ -240,66 +240,66 @@ export default function AccountSection() {
           onClick={() => setIsPasswordModalOpen(false)}
         >
           <div
-            className="bg-[#0a0a0a] border border-white/5 rounded-2xl w-[460px] p-8 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+            className="bg-background border border-white/5 rounded-2xl w-[460px] p-8 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
               <h2 className="m-0 text-white text-xl font-bold">비밀번호 수정</h2>
               <button
                 onClick={() => setIsPasswordModalOpen(false)}
-                className="bg-transparent border-none text-[#888] cursor-pointer hover:text-white transition-colors"
+                className="bg-transparent border-none text-neutral-600 cursor-pointer hover:text-white transition-colors"
               >
                 <FiX size={22} />
               </button>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[14px] text-[#aaa] font-medium">현재 비밀번호</label>
+              <label className="text-[14px] text-neutral-400 font-medium">현재 비밀번호</label>
               <input
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="현재 비밀번호를 입력하세요"
-                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-gold-light transition-colors"
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[14px] text-[#aaa] font-medium">새 비밀번호</label>
+              <label className="text-[14px] text-neutral-400 font-medium">새 비밀번호</label>
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="새 비밀번호를 입력하세요 (8자 이상)"
-                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-gold-light transition-colors"
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[14px] text-[#aaa] font-medium">새 비밀번호 확인</label>
+              <label className="text-[14px] text-neutral-400 font-medium">새 비밀번호 확인</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSubmitPassword()}
                 placeholder="새 비밀번호를 다시 입력하세요"
-                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-[#d9b36d] transition-colors"
+                className="w-full box-border bg-white/[0.02] text-white border border-white/5 rounded-lg px-4 py-3 text-[15px] outline-none focus:border-gold-light transition-colors"
               />
             </div>
 
-            {passwordError && <p className="m-0 text-[13px] text-red-400">{passwordError}</p>}
+            {passwordError && <p className="m-0 text-[13px] text-accent-light">{passwordError}</p>}
 
             <div className="flex justify-end gap-3 mt-2">
               <button
                 onClick={() => setIsPasswordModalOpen(false)}
-                className="py-3 px-6 bg-[#333] text-[#ddd] border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-[#444] transition-colors"
+                className="py-3 px-6 bg-neutral-700 text-neutral-200 border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-neutral-600 transition-colors"
               >
                 취소
               </button>
               <button
                 onClick={handleSubmitPassword}
                 disabled={isPasswordPending}
-                className="py-3 px-6 bg-[#d9b36d] text-[#111] font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-[#c8a45c] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="py-3 px-6 bg-gold-light text-background font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-gold-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isPasswordPending ? '변경 중…' : '변경'}
               </button>
