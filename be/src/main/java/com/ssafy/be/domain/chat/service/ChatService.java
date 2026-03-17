@@ -22,20 +22,16 @@ public class ChatService {
     private static final long CHAT_MAX = 100L;
     private static final long CHAT_TTL_SECOND = 7200L;
 
-    public ChatMessagePayload handleMessage(Long userId, String nickname, ChatMessageRequest request) {
-
-        // 1. 필터링
+    public ChatMessagePayload handleMessage(Long userId, String nickname, Long streamId, ChatMessageRequest request) {
         ChatFilterResult filterResult = badWordFilter.filter(request.content());
 
-        // 2. 페이로드 생성
-        ChatMessagePayload payload = buildChatPayload(userId, nickname, request.streamId(), filterResult.maskedText());
+        ChatMessagePayload payload = buildChatPayload(userId, nickname, streamId, filterResult.maskedText());
 
-        // 3. Redis 저장
-        saveToRedis(request.streamId(), payload);
+        saveToRedis(streamId, payload);
 
-        // 4. 응답 객체 반환
         return payload;
     }
+
 
     public List<ChatMessagePayload> getRecentMessage(Long streamId) {
         return redisOperator.listRange(chatKey(streamId), 0, -1, ChatMessagePayload.class);
