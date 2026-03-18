@@ -14,7 +14,6 @@ interface Props {
   uniqueBidSync: UniqueBidSyncPayload | null;
   activeBidAuctionId: number | null;
   introduceAuctionId: number | null;
-  introduceAuctionType: LiveAuctionType | null;
   startAuctionId: number | null;
   startAuctionType: LiveAuctionType | null;
   canIntroduce: boolean;
@@ -35,7 +34,6 @@ export default function ControlBar({
   uniqueBidSync,
   activeBidAuctionId,
   introduceAuctionId,
-  introduceAuctionType,
   startAuctionId,
   startAuctionType,
   canIntroduce,
@@ -51,7 +49,6 @@ export default function ControlBar({
   return isSeller ? (
     <SellerControlBar
       introduceAuctionId={introduceAuctionId}
-      introduceAuctionType={introduceAuctionType}
       startAuctionId={startAuctionId}
       startAuctionType={startAuctionType}
       canIntroduce={canIntroduce}

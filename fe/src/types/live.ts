@@ -94,6 +94,7 @@ export type BidWinnerPayload = {
 };
 
 export type AuctionStatisticsRecentBid = {
+  userId: number;
   nickname: string;
   amount: number;
   placedAt: string;
@@ -101,7 +102,6 @@ export type AuctionStatisticsRecentBid = {
 
 export type AuctionStatisticsPayload = {
   itemName: string;
-  totalPrice: number;
   bidCount: number;
   startPrice: number;
   currentPrice: number;
@@ -151,6 +151,7 @@ export type BidSyncPayload = {
     currentPrice: number;
   };
   timer: StreamTimerPayload;
+  isHighestBidder: boolean;
 };
 
 export type AuctionCommentPayload = {
@@ -269,6 +270,11 @@ export type DeleteStreamResponse = {
   status: 'cancelled';
 };
 
+export type EndStreamResponse = {
+  streamId: number;
+  status: 'ended';
+};
+
 export type ScheduledStream = {
   streamId: number;
   title: string;
@@ -331,10 +337,6 @@ export type BroadcastStreamEvent =
         bidRange?: UniqueBidRange;
         timer?: StreamTimerPayload;
       };
-    }
-  | {
-      eventType: 'UNIQUE_AUCTION_INTRODUCE';
-      payload: null;
     }
   | {
       eventType: 'UNIQUE_AUCTION_CALCULATING';

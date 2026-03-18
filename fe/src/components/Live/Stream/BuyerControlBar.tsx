@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import { IoChatbubbleOutline, IoCheckmark } from 'react-icons/io5';
 import { LuVolume2, LuVolumeOff } from 'react-icons/lu';
@@ -30,6 +31,7 @@ interface Props {
 
 export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, activeAuctionId }: Props) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { showToast } = useToast();
   const { id: streamId } = useParams<{ id: string }>();
   const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
@@ -68,9 +70,11 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
       : displayedBidAmount;
   const increment = isUniqueAuction || !hasActiveAuction ? 0 : effectiveBidAmount - currentPrice;
   const isInsufficientBalance = isLoggedIn && hasActiveAuction && effectiveBidAmount > balance;
+  const isHighestBidder = !isUniqueAuction && (bidSync?.isHighestBidder ?? false);
   const isBidDisabled =
     !hasActiveAuction ||
     isInsufficientBalance ||
+    isHighestBidder ||
     (isUniqueAuction && (hasPlacedUniqueBid || freeInput.trim().length === 0));
   const hasRegisteredShippingAddress = true;
   // TODO: replace hasRegisteredShippingAddress with the shipping address lookup API result.
@@ -135,14 +139,17 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
         auctionId: activeAuctionId,
         amount: effectiveBidAmount,
       },
-    }).catch((error) => {
-      console.error('[stream] failed to send bid', error);
-    });
+    })
+      .then(() => queryClient.invalidateQueries({ queryKey: ['wallet'] }))
+      .catch((error) => {
+        console.error('[stream] failed to send bid', error);
+      });
   }, [
     activeAuctionId,
     effectiveBidAmount,
     freeInput,
     hasActiveAuction,
+    queryClient,
     hasPlacedUniqueBid,
     hasRegisteredShippingAddress,
     isInsufficientBalance,

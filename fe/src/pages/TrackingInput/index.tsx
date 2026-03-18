@@ -11,6 +11,58 @@ import { useToast } from '@/components/common/Toast';
 import SideBar from '@/components/common/layouts/SideBar';
 import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
 import { COURIERS } from '@/pages/SellerOnboarding/constants';
+import type { EscrowItem } from '@/types';
+
+function CompletedItemRow({
+  item,
+  isSelected,
+  onSelect,
+  formatPrice,
+  formatDate,
+}: {
+  item: EscrowItem;
+  isSelected: boolean;
+  onSelect: () => void;
+  formatPrice: (price: number) => string;
+  formatDate: (dateStr: string) => string;
+}) {
+  return (
+    <div>
+      <div
+        onClick={onSelect}
+        className={`flex justify-between items-center p-4 rounded-2xl cursor-pointer transition-colors ${
+          isSelected
+            ? 'bg-surface border border-neutral-700'
+            : 'bg-transparent border border-transparent hover:bg-surface/60'
+        }`}
+      >
+        <div className="flex items-center gap-5">
+          <div className="w-[80px] h-[80px] bg-neutral-800 rounded-xl overflow-hidden shrink-0">
+            {item.image ? (
+              <img src={item.image} alt={item.itemName} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-neutral-500 text-xs">
+                이미지 준비중
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-gold-light text-xs font-bold">
+              {item.escrowStatus === 'INVOICE_SUBMITTED'
+                ? '배송중'
+                : item.escrowStatus === 'COMPLETED'
+                  ? '배송 완료'
+                  : item.escrowStatus}
+            </span>
+            <span className="text-lg font-bold text-neutral-100">{item.itemName}</span>
+            <span className="text-neutral-400 text-[13px]">{formatDate(item.createdAt)}</span>
+          </div>
+        </div>
+        <div className="text-lg font-bold text-neutral-100">{formatPrice(item.amount)}</div>
+      </div>
+    </div>
+  );
+}
 
 function CancelModal({
   itemName,
@@ -218,39 +270,14 @@ export default function TrackingInput() {
             <div className="flex flex-col gap-4">
               {completedItems.length > 0 ? (
                 completedItems.map((item) => (
-                  <div
+                  <CompletedItemRow
                     key={item.escrowId || item.itemName}
-                    onClick={() => handleSelectItem(item.escrowId)}
-                    className={`flex justify-between items-center p-4 rounded-2xl cursor-pointer transition-colors ${
-                      selectedItemId === String(item.escrowId)
-                        ? 'bg-surface border border-neutral-700'
-                        : 'bg-transparent border border-transparent hover:bg-surface/60'
-                    }`}
-                  >
-                    <div className="flex items-center gap-5">
-                      <div className="w-[80px] h-[80px] bg-neutral-800 rounded-xl overflow-hidden shrink-0">
-                        {item.image ? (
-                          <img src={item.image} alt={item.itemName} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-neutral-500 text-xs">
-                            이미지 준비중
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-gold-light text-xs font-bold">
-                          {item.escrowStatus === 'INVOICE_SUBMITTED'
-                            ? '배송중'
-                            : item.escrowStatus === 'COMPLETED'
-                              ? '배송 완료'
-                              : item.escrowStatus}
-                        </span>
-                        <span className="text-lg font-bold text-neutral-100">{item.itemName}</span>
-                        <span className="text-neutral-400 text-[13px]">{formatDate(item.createdAt)}</span>
-                      </div>
-                    </div>
-                    <div className="text-lg font-bold text-neutral-100">{formatPrice(item.amount)}</div>
-                  </div>
+                    item={item}
+                    isSelected={selectedItemId === String(item.escrowId)}
+                    onSelect={() => handleSelectItem(item.escrowId)}
+                    formatPrice={formatPrice}
+                    formatDate={formatDate}
+                  />
                 ))
               ) : (
                 <div className="py-5 text-center text-neutral-500 text-sm">완료된 배송이 없습니다.</div>

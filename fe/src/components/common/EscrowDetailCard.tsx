@@ -3,6 +3,7 @@ import { FaTruck } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
 
 import type { EscrowDetailResponse } from '@/types';
+import DeliveryTracker from '@/components/common/DeliveryTracker';
 
 type EscrowDetailCardProps = {
   detail: EscrowDetailResponse['data'];
@@ -87,12 +88,15 @@ export default function EscrowDetailCard({
       </div>
 
       {detail.delivery && (
-        <div className="bg-surface rounded-xl p-[16px_24px] border border-neutral-800 mb-4 text-sm text-neutral-200 flex justify-between items-center">
-          <span className="text-neutral-400">택배 정보</span>
-          <span className="font-semibold text-neutral-100">
-            {detail.delivery.courierName} | {detail.delivery.trackingNumber}
-          </span>
-        </div>
+        <>
+          <div className="bg-surface rounded-xl p-[16px_24px] border border-neutral-800 mb-4 text-sm text-neutral-200 flex justify-between items-center">
+            <span className="text-neutral-400">택배 정보</span>
+            <span className="font-semibold text-neutral-100">
+              {detail.delivery.courierName} | {detail.delivery.trackingNumber}
+            </span>
+          </div>
+          <DeliveryTracker courierName={detail.delivery.courierName} trackingNumber={detail.delivery.trackingNumber} />
+        </>
       )}
 
       {footer ? (

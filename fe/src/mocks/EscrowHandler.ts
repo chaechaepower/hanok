@@ -86,7 +86,7 @@ const detailMap: Record<
     itemName: 'Vintage Sneakers',
     finalPrice: 75000,
     wonAt: '2026-03-01T23:00:00Z',
-    courierName: 'CJ Logistics',
+    courierName: 'CJ대한통운',
     trackingNumber: '580123456789',
   },
   '102': {
@@ -94,7 +94,7 @@ const detailMap: Record<
     itemName: 'Collector Jacket',
     finalPrice: 120000,
     wonAt: '2026-02-20T19:30:00Z',
-    courierName: 'CJ Logistics',
+    courierName: 'CJ대한통운',
     trackingNumber: '120312319124',
   },
   '201': {
@@ -108,7 +108,7 @@ const detailMap: Record<
     itemName: 'Pokemon Card Charizard',
     finalPrice: 180000,
     wonAt: '2026-03-10T14:10:00Z',
-    courierName: 'Korea Post',
+    courierName: '우체국택배',
     trackingNumber: '777123456789',
   },
   '203': {
@@ -116,7 +116,7 @@ const detailMap: Record<
     itemName: 'Luxury Handbag',
     finalPrice: 420000,
     wonAt: '2026-03-08T11:05:00Z',
-    courierName: 'Lotte Global',
+    courierName: '롯데택배',
     trackingNumber: '880123456789',
   },
   '204': {

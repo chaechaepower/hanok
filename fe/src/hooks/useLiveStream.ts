@@ -58,11 +58,6 @@ const isUniqueAuctionStatsEvent = (
 ): event is Extract<BroadcastStreamEvent, { eventType: 'UNIQUE_AUCTION_STATS' }> =>
   event.eventType === 'UNIQUE_AUCTION_STATS';
 
-const isUniqueAuctionIntroduceEvent = (
-  event: BroadcastStreamEvent,
-): event is Extract<BroadcastStreamEvent, { eventType: 'UNIQUE_AUCTION_INTRODUCE' }> =>
-  event.eventType === 'UNIQUE_AUCTION_INTRODUCE';
-
 const isUniqueAuctionCalculatingEvent = (
   event: BroadcastStreamEvent,
 ): event is Extract<BroadcastStreamEvent, { eventType: 'UNIQUE_AUCTION_CALCULATING' }> =>
@@ -253,6 +248,7 @@ export function useLiveStream(
     }
 
     const requestItemSync = async () => {
+      console.log('[stream] requesting ITEM_SYNC for streamId:', streamId);
       await sendStreamMessage(streamId, {
         eventType: 'ITEM_SYNC',
         payload: null,
@@ -266,6 +262,13 @@ export function useLiveStream(
 
       await sendStreamMessage(streamId, {
         eventType: item.auctionType === 'UNIQUE_TOP' ? 'UNIQUE_BID_SYNC' : 'BID_SYNC',
+        payload: null,
+      });
+    };
+
+    const requestBidSync = async () => {
+      await sendStreamMessage(streamId, {
+        eventType: 'BID_SYNC',
         payload: null,
       });
     };
@@ -287,6 +290,7 @@ export function useLiveStream(
     };
 
     const handleBroadcastEvent = (event: BroadcastStreamEvent) => {
+      console.log('[stream] broadcast event:', event);
       if (isAuctionStartEvent(event) && event.payload?.timer) {
         setStreamState('live');
         setTimer(createSyncedTimer(event.payload.timer));
@@ -299,6 +303,7 @@ export function useLiveStream(
               currentPrice: event.payload.item.startPrice,
             },
             timer: event.payload.timer,
+            isHighestBidder: false,
           });
         }
         setWinnerInfo(null);
@@ -340,6 +345,8 @@ export function useLiveStream(
               : prev,
           );
         }
+
+        void requestBidSync();
         return;
       }
 
@@ -370,7 +377,7 @@ export function useLiveStream(
         return;
       }
 
-      if (isAuctionItemIntroduceEvent(event) || isUniqueAuctionIntroduceEvent(event)) {
+      if (isAuctionItemIntroduceEvent(event)) {
         void requestItemSync();
         return;
       }
@@ -488,6 +495,7 @@ export function useLiveStream(
         }
 
         unsubscribeStream = cleanup;
+        console.log('[stream] STOMP subscribed successfully for streamId:', streamId);
         // Mark subscription as ready so the isStreamLive effect can safely call ITEM_SYNC.
         requestItemSyncRef.current = requestItemSync;
         await requestItemSync();

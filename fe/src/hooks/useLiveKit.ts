@@ -23,18 +23,32 @@ interface UseLiveKitReturn {
   toggleCamera: () => void;
   isMicOn: boolean;
   isCameraOn: boolean;
+  viewerCount: number;
 }
 
 export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): UseLiveKitReturn {
   const [state, setState] = useState<LiveKitState>('idle');
   const [isMicOn, setIsMicOn] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
+  const [viewerCount, setViewerCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const roomRef = useRef<Room | null>(null);
   const isHostRef = useRef(isHost);
   const togglingMicRef = useRef(false);
   const togglingCameraRef = useRef(false);
   isHostRef.current = isHost;
+
+  const syncViewerCount = useCallback((room: Room) => {
+    let nextViewerCount = isHostRef.current ? 0 : 1;
+
+    room.remoteParticipants.forEach((participant) => {
+      if (!participant.permissions?.canPublish) {
+        nextViewerCount += 1;
+      }
+    });
+
+    setViewerCount(nextViewerCount);
+  }, []);
 
   const attachTrackToVideo = useCallback((track: { attach: (el: HTMLVideoElement) => void }) => {
     const tryAttach = (attempt: number) => {
@@ -54,6 +68,7 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
       setState('idle');
       setIsMicOn(false);
       setIsCameraOn(false);
+      setViewerCount(0);
       return;
     }
 
@@ -69,6 +84,7 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
       switch (connectionState) {
         case ConnectionState.Connected: {
           setState('connected');
+          syncViewerCount(room);
           // 재연결 시 호스트 로컬 카메라 트랙 재attach
           if (isHostRef.current) {
             const camPub = room.localParticipant.getTrackPublication(Track.Source.Camera);
@@ -80,6 +96,7 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
         }
         case ConnectionState.Disconnected:
           setState('disconnected');
+          setViewerCount(0);
           break;
         case ConnectionState.Reconnecting:
           setState('connecting');
@@ -104,12 +121,23 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
       track.detach();
     });
 
+    room.on(RoomEvent.ParticipantConnected, () => {
+      if (cancelled) return;
+      syncViewerCount(room);
+    });
+
+    room.on(RoomEvent.ParticipantDisconnected, () => {
+      if (cancelled) return;
+      syncViewerCount(room);
+    });
+
     const connect = async () => {
       try {
         await room.connect(serverUrl, token);
         if (cancelled) return;
 
         setState('connected');
+        syncViewerCount(room);
 
         if (isHostRef.current) {
           await room.localParticipant.enableCameraAndMicrophone();
@@ -126,6 +154,7 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
         if (cancelled) return;
         console.error('[LiveKit] 연결 실패:', err);
         setState('error');
+        setViewerCount(0);
       }
     };
 
@@ -139,8 +168,9 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
       });
       room.disconnect();
       roomRef.current = null;
+      setViewerCount(0);
     };
-  }, [serverUrl, token, attachTrackToVideo]);
+  }, [serverUrl, token, attachTrackToVideo, syncViewerCount]);
 
   const disconnect = useCallback(() => {
     roomRef.current?.disconnect();
@@ -184,5 +214,6 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
     toggleCamera,
     isMicOn,
     isCameraOn,
+    viewerCount,
   };
 }

@@ -4,6 +4,7 @@ import { BASE_URL } from '@/api/instance';
 import Logo from '@/assets/Logo.png';
 import type {
   DeleteStreamResponse,
+  EndStreamResponse,
   ItemSyncPayload,
   Live,
   LiveCardData,
@@ -549,6 +550,26 @@ export const LiveCreateHandlers = [
     const response: DeleteStreamResponse = {
       streamId,
       status: 'cancelled',
+    };
+
+    return HttpResponse.json(response, { status: 200 });
+  }),
+
+  http.post(`${BASE_URL}/v1/streams/:streamId/end`, ({ params }) => {
+    const streamId = Number(params.streamId);
+    const liveIndex = registeredLives.findIndex((item) => item.streamId === streamId);
+
+    if (liveIndex !== -1 && registeredLives[liveIndex].sellerId !== getCurrentSellerId()) {
+      return HttpResponse.json({ message: 'Forbidden' }, { status: 403 });
+    }
+
+    if (liveIndex !== -1) {
+      registeredLives.splice(liveIndex, 1);
+    }
+
+    const response: EndStreamResponse = {
+      streamId,
+      status: 'ended',
     };
 
     return HttpResponse.json(response, { status: 200 });
