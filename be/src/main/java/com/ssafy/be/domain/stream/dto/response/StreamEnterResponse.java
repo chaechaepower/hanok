@@ -11,7 +11,6 @@ public record StreamEnterResponse(
         StreamStatus status,
         String notice,
         SellerInfo seller,
-        long viewerCount,
         List<TopBidder> topBidders,
         String token,
         String identity,

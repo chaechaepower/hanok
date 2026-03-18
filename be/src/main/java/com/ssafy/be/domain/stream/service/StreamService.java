@@ -381,8 +381,6 @@ public class StreamService {
         // 시청자 수 증가 (비회원이면 userId null)
         String identity = streamViewerService.enter(streamId, userId);
 
-        long viewerCount = streamViewerService.getViewerCount(streamId);
-
         Seller seller = stream.getSeller();
 
         // 현재 진행 중인 경매의 상위 입찰자 3명
@@ -432,7 +430,6 @@ public class StreamService {
                         seller.getUser().getNickname(),
                         seller.getUser().getProfileImage()
                 ),
-                viewerCount,
                 topBidders,
                 accessToken.toJwt(),
                 identity,
