@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { FaArrowLeft, FaCalendarAlt, FaCamera, FaCircle, FaTimes } from 'react-icons/fa';
+import { FaArrowLeft, FaCalendarAlt, FaCamera, FaCircle, FaTimes, FaVideo, FaVideoSlash } from 'react-icons/fa';
 import { MdLiveTv } from 'react-icons/md';
 import { CATEGORY_MACROS } from '@/constants/macro';
 import { useGetItemsByCategory } from '@/api/hooks/useGetItems';
@@ -66,6 +66,42 @@ export default function LiveRegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [macroAnswers, setMacroAnswers] = useState<Record<string, string>>({});
+
+  const videoPreviewRef = useRef<HTMLVideoElement>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
+  const [isCameraOn, setIsCameraOn] = useState(false);
+
+  const startCamera = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+      cameraStreamRef.current = stream;
+      if (videoPreviewRef.current) {
+        videoPreviewRef.current.srcObject = stream;
+      }
+      setIsCameraOn(true);
+    } catch {
+      setIsCameraOn(false);
+    }
+  }, []);
+
+  const stopCamera = useCallback(() => {
+    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    cameraStreamRef.current = null;
+    if (videoPreviewRef.current) {
+      videoPreviewRef.current.srcObject = null;
+    }
+    setIsCameraOn(false);
+  }, []);
+
+  useEffect(() => {
+    startCamera();
+    return () => {
+      cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, [startCamera]);
 
   const { showToast } = useToast();
   const defaultMacros = useMemo(() => CATEGORY_MACROS[categoryLabel] ?? [], [categoryLabel]);
@@ -373,7 +409,7 @@ export default function LiveRegisterPage() {
   }
 
   return (
-    <div className="w-full mx-auto px-6 py-4 flex flex-col gap-3 h-screen overflow-hidden">
+    <div className="flex h-screen w-full flex-col bg-surface p-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
@@ -422,8 +458,8 @@ export default function LiveRegisterPage() {
         </div>
       </div>
 
-      <div className="flex gap-4 flex-1 min-h-0">
-        <aside className="w-[340px] shrink-0 flex flex-col rounded-2xl bg-[#050505] px-4 py-6 border-r border-white/5">
+      <div className="flex gap-3 flex-1 min-h-0">
+        <aside className="min-w-0 flex-1 flex flex-col rounded-2xl bg-[#050505] px-4 py-6 overflow-hidden">
           <div className="mb-4 flex items-center justify-between">
             <span className="text-xs font-bold text-[#A1A1AA]">경매 물품 목록</span>
             <span className="text-[11px] font-bold text-[#52525B]">{selectedItems.length}</span>
@@ -490,20 +526,38 @@ export default function LiveRegisterPage() {
           </button>
         </aside>
 
-        <div className="flex-1 min-w-0 relative rounded-2xl overflow-hidden bg-black flex flex-col">
+        <div className="min-w-0 flex-2 relative rounded-2xl overflow-hidden bg-background flex flex-col">
           <div className="flex-1 flex items-center justify-center">
-            {thumbnailUrl ? (
-              <img src={thumbnailUrl} alt="thumbnail" className="max-w-[60%] max-h-[60%] object-contain" />
-            ) : (
+            <video
+              ref={videoPreviewRef}
+              autoPlay
+              muted
+              playsInline
+              className={`w-full h-full object-cover ${isCameraOn ? '' : 'hidden'}`}
+              style={{ transform: 'scaleX(-1)' }}
+            />
+            {!isCameraOn && (
               <div className="flex flex-col items-center gap-3 text-white/20">
                 <MdLiveTv size={60} />
-                <span className="text-sm">방송 미리보기</span>
+                <span className="text-sm">카메라가 꺼져 있습니다</span>
               </div>
             )}
           </div>
+          <button
+            type="button"
+            onClick={isCameraOn ? stopCamera : startCamera}
+            className={`absolute bottom-4 right-4 flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold transition-all ${
+              isCameraOn
+                ? 'bg-white/10 text-white hover:bg-white/20'
+                : 'bg-red-500/80 text-white hover:bg-red-500'
+            }`}
+          >
+            {isCameraOn ? <FaVideo size={14} /> : <FaVideoSlash size={14} />}
+            {isCameraOn ? '카메라 끄기' : '카메라 켜기'}
+          </button>
         </div>
 
-        <aside className="w-[300px] shrink-0 flex flex-col rounded-2xl bg-[#050505] overflow-hidden border-l border-white/5">
+        <aside className="min-w-0 flex-1 flex flex-col rounded-2xl bg-[#050505] overflow-hidden">
           <div className="px-4 py-4 border-b border-[rgba(255,255,255,0.05)]">
             <span className="text-xs font-bold text-white">방송 기본 설정</span>
           </div>
