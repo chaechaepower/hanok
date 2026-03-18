@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { getCategoryMacroCommandLabel, getCategoryMacroQuestionType } from '@/constants/macro';
 import { MAX_CHAT_HISTORY } from '@/constants/stompChat';
 import type {
   ChatMessageType,
@@ -31,7 +32,7 @@ const appendMessage = (messages: ChatMessageType[], message: ChatMessageType) =>
   return nextMessages.slice(nextMessages.length - MAX_CHAT_HISTORY);
 };
 
-export function useStompChat() {
+export function useStompChat(category: string) {
   const { id: streamIdParam } = useParams<{ id: string }>();
   const streamId = streamIdParam ?? '';
   const [messagesByStream, setMessagesByStream] = useState<Record<string, ChatMessageType[]>>({});
@@ -85,7 +86,7 @@ export function useStompChat() {
                 id: createMessageId(),
                 type: 'macro_request',
                 nickname: payload.nickname ?? '나',
-                command: payload.command,
+                command: getCategoryMacroCommandLabel(category, payload.command),
               };
             }
             break;
@@ -134,7 +135,7 @@ export function useStompChat() {
       isDisposed = true;
       unsubscribe?.();
     };
-  }, [streamId]);
+  }, [category, streamId]);
 
   const sendMessage = useCallback(
     async (message: string) => {
@@ -157,13 +158,14 @@ export function useStompChat() {
         return;
       }
 
-      const payload: MacroPayload = { command: command.trim() };
+      const mappedQuestionType = getCategoryMacroQuestionType(category, command);
+      const payload: MacroPayload = { command: mappedQuestionType ?? command.trim() };
       await sendStreamMessage(streamId, {
         eventType: 'MACRO_TEMPLATE',
         payload,
       });
     },
-    [streamId],
+    [category, streamId],
   );
 
   return { messages, sendMessage, sendMacro, connectionState, streamId };

@@ -146,3 +146,37 @@ export const getCategoryMacroTemplates = (category: string): MacroTemplate[] => 
   const categoryLabel = getCategoryLabel(category);
   return CATEGORY_MACROS[categoryLabel] ?? CATEGORY_MACROS[category] ?? [];
 };
+
+const normalizeMacroValue = (value: string) => value.trim().replace(/^@/, '');
+
+export const getCategoryMacroQuestionType = (category: string, value: string): string | null => {
+  const normalizedValue = normalizeMacroValue(value);
+
+  if (!normalizedValue) {
+    return null;
+  }
+
+  const matchedMacro = getCategoryMacroTemplates(category).find(
+    (macro) => macro.questionType === normalizedValue || macro.question === normalizedValue,
+  );
+
+  return matchedMacro?.questionType ?? null;
+};
+
+export const getCategoryMacroCommandLabel = (category: string, value: string): string => {
+  const normalizedValue = normalizeMacroValue(value);
+
+  if (!normalizedValue) {
+    return value.trim();
+  }
+
+  const matchedMacro = getCategoryMacroTemplates(category).find(
+    (macro) => macro.questionType === normalizedValue || macro.question === normalizedValue,
+  );
+
+  if (matchedMacro) {
+    return `@${matchedMacro.question}`;
+  }
+
+  return value.trim().startsWith('@') ? value.trim() : `@${value.trim()}`;
+};

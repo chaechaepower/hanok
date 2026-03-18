@@ -219,12 +219,12 @@ export function useLiveStream(
   }, [introducingAuctionItem, liveAuctionItem]);
 
   // ---------------------------------------------------------------------------
-  // BID_SYNC effect: re-request bid state when active auction changes
+  // BID_SYNC effect: re-request bid state only after the auction is live
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
-    const activeBidAuctionId = liveAuctionItem?.auctionId ?? introducingAuctionItem?.auctionId ?? null;
-    const activeAuctionType = liveAuctionItem?.auctionType ?? introducingAuctionItem?.auctionType ?? null;
+    const activeBidAuctionId = liveAuctionItem?.auctionId ?? null;
+    const activeAuctionType = liveAuctionItem?.auctionType ?? null;
 
     if (!streamId || activeBidAuctionId === null || !activeAuctionType) {
       return;
@@ -236,7 +236,7 @@ export function useLiveStream(
     }).catch((error) => {
       console.error('[stream] failed to sync active auction state', error);
     });
-  }, [introducingAuctionItem, liveAuctionItem, streamId]);
+  }, [liveAuctionItem, streamId]);
 
   // ---------------------------------------------------------------------------
   // Main STOMP subscription effect
@@ -256,7 +256,7 @@ export function useLiveStream(
     };
 
     const requestActiveAuctionSync = async (item: ItemSyncItem | null) => {
-      if (!item) {
+      if (!item || item.auctionStatus !== 'LIVE') {
         return;
       }
 
@@ -282,10 +282,7 @@ export function useLiveStream(
 
     const applyItemSync = (payload?: ItemSyncPayload | null) => {
       setItemSync(payload ?? null);
-      const nextActiveItem =
-        payload?.items.find((item) => item.auctionStatus === 'LIVE') ??
-        payload?.items.find((item) => item.auctionStatus === 'INTRODUCING') ??
-        null;
+      const nextActiveItem = payload?.items.find((item) => item.auctionStatus === 'LIVE') ?? null;
       void requestActiveAuctionSync(nextActiveItem);
     };
 
