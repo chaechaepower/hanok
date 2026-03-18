@@ -1,7 +1,5 @@
 package com.ssafy.be.global.security.config;
 
-import static com.google.common.net.HttpHeaders.SET_COOKIE;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 import com.ssafy.be.global.security.filter.JwtAuthenticationFilter;
@@ -59,7 +57,7 @@ public class SecurityConfig {
                         OPTIONS.name()));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setMaxAge(3600L); // Cache preflight
-        configuration.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
+        configuration.setExposedHeaders(List.of("Set-Cookie", "set-cookie", "Authorization"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

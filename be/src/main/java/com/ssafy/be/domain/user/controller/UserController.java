@@ -151,10 +151,10 @@ public class UserController {
     private ResponseCookie buildRefreshCookie(String refreshToken) {
         return ResponseCookie.from(REFRESH_TOKEN_COOKIE, refreshToken)
                 .httpOnly(true)
-                .secure(false)      // prod에서는 true로 변경
+                .secure(true)      // prod에서는 true로 변경
                 .path("/")
                 .maxAge(Duration.ofDays(7))
-                .sameSite("Strict")
+                .sameSite("None")
                 .build();
     }
 }
