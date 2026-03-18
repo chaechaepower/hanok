@@ -1,9 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { FiPackage, FiChevronDown, FiChevronUp } from 'react-icons/fi';
-import type { TrackingResult, TrackingErrorResponse } from '@/types';
+import { useGetTracking } from '@/api/hooks/useGetTracking';
 import { COURIERS } from '@/pages/SellerOnboarding/constants';
-
-const SWEETTRACKER_API_KEY = import.meta.env.VITE_SWEETTRACKER_API_KEY as string;
 
 const COURIER_CODE_MAP = Object.fromEntries(
   COURIERS.map((c) => [c.name, c.code]),
@@ -15,56 +13,11 @@ type DeliveryTrackerProps = {
 };
 
 export default function DeliveryTracker({ courierName, trackingNumber }: DeliveryTrackerProps) {
-  const [tracking, setTracking] = useState<TrackingResult | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const [isOpen, setIsOpen] = useState(false);
-
   const courierCode = COURIER_CODE_MAP[courierName] ?? '';
+  const { data: tracking, isLoading, error } = useGetTracking(courierCode, trackingNumber);
 
-  useEffect(() => {
-    if (!courierCode || !trackingNumber || !SWEETTRACKER_API_KEY) return;
-
-    const fetchTracking = async () => {
-      setIsLoading(true);
-      setError('');
-      try {
-        const params = new URLSearchParams({
-          t_key: SWEETTRACKER_API_KEY,
-          t_code: courierCode,
-          t_invoice: trackingNumber,
-        });
-        const res = await fetch(`https://info.sweettracker.co.kr/api/v1/trackingInfo?${params.toString()}`);
-
-        if (res.status === 404 || res.status === 500) {
-          const errData: TrackingErrorResponse = await res.json();
-          setError(errData.msg || '배송 정보를 조회할 수 없습니다.');
-          return;
-        }
-
-        const data = await res.json();
-
-        if (data.code) {
-          setError(data.msg || '배송 정보를 조회할 수 없습니다.');
-          return;
-        }
-
-        if (data.trackingDetails?.length > 0) {
-          setTracking(data as TrackingResult);
-        } else {
-          setError('배송 정보가 아직 등록되지 않았습니다.');
-        }
-      } catch {
-        setError('배송 추적 조회에 실패했습니다.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTracking();
-  }, [courierCode, trackingNumber]);
-
-  if (!courierCode || !SWEETTRACKER_API_KEY) return null;
+  if (!courierCode) return null;
 
   const levelLabels = ['인수', '이동중', '배달중', '도착'];
 
@@ -93,7 +46,7 @@ export default function DeliveryTracker({ courierName, trackingNumber }: Deliver
             </div>
           )}
 
-          {error && <p className="text-neutral-500 text-sm text-center py-4">{error}</p>}
+          {error && <p className="text-neutral-500 text-sm text-center py-4">{(error as Error).message}</p>}
 
           {tracking && !isLoading && (
             <>
