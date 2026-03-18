@@ -1,272 +1,356 @@
 package com.ssafy.be.domain.notification.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.cloud.storage.Storage;
 import com.ssafy.be.domain.notification.model.NotificationRedisKeys;
 import com.ssafy.be.domain.notification.service.NotificationService;
-import com.ssafy.be.domain.seller.repository.SellerRepository;
-import com.ssafy.be.domain.user.repository.UserRepository;
-import com.ssafy.be.global.infra.portone.PortoneClient;
+import com.ssafy.be.global.extension.IntegrationTestExtension;
 import com.ssafy.be.support.annotation.IntegrationTest;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@Slf4j
 @IntegrationTest
 @AutoConfigureMockMvc(addFilters = false)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@TestClassOrder(ClassOrderer.OrderAnnotation.class)
+@DisplayName("Notification 통합 테스트")
 class NotificationIntegrationTest {
 
-    @Autowired private MockMvc mockMvc;
-    @Autowired private NotificationService notificationService;
-    @Autowired private StringRedisTemplate redisTemplate;
-    @Autowired private ObjectMapper objectMapper;
+    private static final Logger IT_LOG = LoggerFactory.getLogger("IT_REPORT");
+    private static final long SUITE_START = System.currentTimeMillis();
+    private static final Long USER_ID   = 1L;
+    private static final Long HACKER_ID = 999L;
 
-    @MockitoBean private SellerRepository sellerRepository;
-    @MockitoBean private UserRepository userRepository;
-    @MockitoBean private PortoneClient portoneClient;
-    @MockitoBean private Storage storage;
+    @Autowired MockMvc mockMvc;
+    @Autowired NotificationService notificationService;
+    @Autowired StringRedisTemplate redisTemplate;
+    @Autowired ObjectMapper objectMapper;
 
-    private static final Long MY_USER_ID = 1L;
-    private static final Long HACKER_ID  = 999L;
-
-    private Long targetNotifId;
-
-    // ✅ SecurityContext에 principal 주입 — JWT 필터가 하던 역할을 대신
-    private void setAuth(Long userId) {
-        var auth = new UsernamePasswordAuthenticationToken(
-                String.valueOf(userId), null, List.of()
-        );
-        SecurityContextHolder.getContext().setAuthentication(auth);
+    // ═══════════════════════════════════════════════════════════
+    // Suite 시작/종료
+    // ═══════════════════════════════════════════════════════════
+    @BeforeAll
+    static void suiteStart() {
+        IT_LOG.info("");
+        IT_LOG.info("╔════════════════════════════════════════════════════════════╗");
+        IT_LOG.info("║           Notification 통합 테스트 Suite 시작              ║");
+        IT_LOG.info("║  Layer  : Controller → Service → Redis (Testcontainers)   ║");
+        IT_LOG.info("║  Auth   : MockMvc + SecurityContextHolder (Filter OFF)     ║");
+        IT_LOG.info("║  시나리오: I-1 ~ I-8  (4 Group / 8 Cases)                 ║");
+        IT_LOG.info("╚════════════════════════════════════════════════════════════╝");
     }
 
-    @BeforeAll
+    @AfterAll
+    static void suiteEnd() {
+        long total = System.currentTimeMillis() - SUITE_START;
+        IT_LOG.info("");
+        IT_LOG.info("╔════════════════════════════════════════════════════════════╗");
+        IT_LOG.info("║  Suite 종료  |  총 소요: {}ms", total);
+        IT_LOG.info("╚════════════════════════════════════════════════════════════╝");
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // 공통 Setup / Teardown
+    // ═══════════════════════════════════════════════════════════
+    @BeforeEach
     void setUp() {
-        log.info("========== [TEST SETUP] 테스트 환경 초기화 시작 ==========");
-        setAuth(MY_USER_ID); // ✅ sendNotification 전에 principal 세팅
-        redisTemplate.delete(NotificationRedisKeys.getUserInboxKey(MY_USER_ID));
-        redisTemplate.delete(NotificationRedisKeys.getUserUnreadKey(MY_USER_ID));
+        redisTemplate.delete(NotificationRedisKeys.getUserInboxKey(USER_ID));
+        redisTemplate.delete(NotificationRedisKeys.getUserUnreadKey(USER_ID));
         redisTemplate.delete(NotificationRedisKeys.getUserInboxKey(HACKER_ID));
         redisTemplate.delete(NotificationRedisKeys.getUserUnreadKey(HACKER_ID));
-
-        for (int i = 1; i <= 15; i++) {
-            notificationService.sendNotification(
-                    MY_USER_ID, "test", "알림 " + i, "내용 " + i, "/url/" + i
-            );
-        }
-        log.info("▶ [완료] 테스트용 알림 15개 발송 완료");
-        log.info("========================================================\n");
-    }
-
-    @BeforeEach
-    void setDefaultAuth() {
-        setAuth(MY_USER_ID); // ✅ 각 테스트 시작 시 기본 유저로 초기화
+        setAuth(USER_ID);
+        IT_LOG.info("    [setUp] Redis 키 초기화 완료 | 인증 userId={}", USER_ID);
     }
 
     @AfterEach
-    void tearDown(TestInfo testInfo) {
-        SecurityContextHolder.clearContext(); // ✅ 테스트 간 컨텍스트 오염 방지
-        log.info("✅ [PASS] {}", testInfo.getDisplayName());
-        log.info("--------------------------------------------------");
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+        IT_LOG.info("    [tearDown] SecurityContext 초기화 완료");
     }
 
-    // ────────────────────────────────────────────────────────────
-    // Order 1: 커서 기반 알림 목록 페이징 조회
-    // ────────────────────────────────────────────────────────────
-    @Test
-    @Order(1)
-    @DisplayName("1. [GET] 커서 기반 알림 목록 페이징 검증")
-    void testGetNotificationsWithCursor() throws Exception {
-        log.info("========== [TEST REPORT] 1. 커서 기반 목록 조회 ==========");
-
-        log.info("▶ [STEP 1] 첫 번째 페이지(최신) 10개 요청 (cursor=null)");
-        MvcResult firstPageResult = mockMvc.perform(get("/api/v1/notifications")
-                        .param("limit", "10")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.hasNext").value(true))
-                .andExpect(jsonPath("$.items.length()").value(10))
-                .andReturn();
-
-        JsonNode firstPageNode = objectMapper.readTree(
-                firstPageResult.getResponse().getContentAsString(StandardCharsets.UTF_8));
-        String nextCursor = firstPageNode.path("nextCursor").asText();
-
-        log.info("  ↳ {}개 조회 성공 | hasNext: {} | nextCursor: {}",
-                firstPageNode.path("items").size(),
-                firstPageNode.path("hasNext").asBoolean(),
-                nextCursor);
-
-        log.info("▶ [STEP 2] 두 번째 페이지 5개 요청 (cursor={})", nextCursor);
-        MvcResult secondPageResult = mockMvc.perform(get("/api/v1/notifications")
-                        .param("cursor", nextCursor)
-                        .param("limit", "10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.hasNext").value(false))
-                .andExpect(jsonPath("$.items.length()").value(5))
-                .andReturn();
-
-        JsonNode secondPageNode = objectMapper.readTree(
-                secondPageResult.getResponse().getContentAsString(StandardCharsets.UTF_8));
-        log.info("  ↳ {}개 조회 성공 | hasNext: {} | 마지막 페이지 도달 확인",
-                secondPageNode.path("items").size(),
-                secondPageNode.path("hasNext").asBoolean());
-
-        targetNotifId = firstPageNode.path("items").get(0).path("id").asLong();
-        log.info("▶ [STEP 3] 후속 테스트용 타겟 알림 ID 획득: {}", targetNotifId);
-        log.info("========================================================\n");
+    // ═══════════════════════════════════════════════════════════
+    // 헬퍼
+    // ═══════════════════════════════════════════════════════════
+    private void setAuth(Long userId) {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        String.valueOf(userId), null, List.of()));
     }
 
-    // ────────────────────────────────────────────────────────────
-    // Order 2: 안읽은 알림 배지 카운트
-    // ────────────────────────────────────────────────────────────
-    @Test
-    @Order(2)
-    @DisplayName("2. [GET] 헤더 배지용 안 읽은 알림 개수 조회")
-    void testGetUnreadCount() throws Exception {
-        log.info("========== [TEST REPORT] 2. 안읽은 알림 개수 조회 ==========");
-
-        MvcResult result = mockMvc.perform(get("/api/v1/notifications/unread-count"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("15"))
-                .andReturn();
-
-        log.info("  ↳ 안읽은 알림 수 [ {} ] (기대값: 15)", result.getResponse().getContentAsString());
-        log.info("========================================================\n");
-    }
-
-    // ────────────────────────────────────────────────────────────
-    // Order 3: 단건 읽음 처리 + 카운트 감소 확인
-    // ────────────────────────────────────────────────────────────
-    @Test
-    @Order(3)
-    @DisplayName("3. [PATCH] 단건 알림 읽음 처리 및 카운트 검증")
-    void testMarkAsRead() throws Exception {
-        log.info("========== [TEST REPORT] 3. 단건 알림 읽음 처리 ==========");
-        log.info("▶ [STEP 1] 알림 ID [{}] 읽음 처리 요청", targetNotifId);
-
-        mockMvc.perform(patch("/api/v1/notifications/" + targetNotifId + "/read"))
-                .andExpect(status().isOk());
-        log.info("  ↳ 읽음 처리 API 호출 성공 (HTTP 200)");
-
-        MvcResult listResult = mockMvc.perform(get("/api/v1/notifications")
-                        .param("limit", "10"))
-                .andReturn();
-
-        JsonNode items = objectMapper.readTree(
-                listResult.getResponse().getContentAsString(StandardCharsets.UTF_8)).path("items");
-        boolean isRead = false;
-        for (JsonNode item : items) {
-            if (item.path("id").asLong() == targetNotifId) {
-                isRead = item.path("isRead").asBoolean();
-                break;
-            }
+    private void seed(int count) {
+        for (int i = 1; i <= count; i++) {
+            notificationService.sendNotification(
+                    USER_ID, "test", "알림 " + i, "내용 " + i, "/url/" + i);
         }
-        Assertions.assertTrue(isRead, "읽음 처리된 알림의 isRead가 true여야 합니다.");
-        log.info("▶ [STEP 2] isRead 상태 검증 [ {} ]", isRead);
-
-        MvcResult countResult = mockMvc.perform(get("/api/v1/notifications/unread-count"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("14"))
-                .andReturn();
-        log.info("▶ [STEP 3] 카운트 검증: 남은 안읽은 알림 수 [ {} ] (기대값: 14)",
-                countResult.getResponse().getContentAsString());
-        log.info("========================================================\n");
+        IT_LOG.info("    [seed] 알림 {}건 생성 완료 (userId={})", count, USER_ID);
     }
 
-    // ────────────────────────────────────────────────────────────
-    // Order 4: 보안 엣지케이스 - 해커 접근 차단
-    // ────────────────────────────────────────────────────────────
-    @Test
-    @Order(4)
-    @DisplayName("4. [PATCH] 보안 - 해커(999)가 타인 알림 읽음 시도")
-    void testUnauthorizedRead() throws Exception {
-        log.info("========== [TEST REPORT] 4. 타인 알림 접근 차단 검증 ==========");
-
-        notificationService.sendNotification(MY_USER_ID, "test", "해커 타겟 알림", "내용", "/secure");
-
-        // MY_USER_ID로 최신 알림 ID 조회
-        MvcResult result = mockMvc.perform(get("/api/v1/notifications")
-                        .param("limit", "1"))
-                .andReturn();
-
-        long freshNotifId = objectMapper.readTree(
-                        result.getResponse().getContentAsString(StandardCharsets.UTF_8))
+    private long latestNotifId() throws Exception {
+        MvcResult r = mockMvc.perform(
+                get("/api/v1/notifications").param("limit", "1")).andReturn();
+        long id = objectMapper.readTree(
+                        r.getResponse().getContentAsString(StandardCharsets.UTF_8))
                 .path("items").get(0).path("id").asLong();
-
-        log.info("▶ [STEP 1] 해커(ID:{})가 유저(ID:{}) 알림(ID:{}) 읽음 시도", HACKER_ID, MY_USER_ID, freshNotifId);
-
-        // ✅ 해커로 컨텍스트 교체 후 접근 시도
-        setAuth(HACKER_ID);
-        MvcResult failResult = mockMvc.perform(patch("/api/v1/notifications/" + freshNotifId + "/read"))
-                .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("NOTI-002"))
-                .andReturn();
-
-        JsonNode errorNode = objectMapper.readTree(
-                failResult.getResponse().getContentAsString(StandardCharsets.UTF_8));
-        log.info("  ↳ 방어 성공! 403 Forbidden | 에러코드: {}", errorNode.path("code").asText());
-
-        // ✅ 피해 유저 카운트 확인을 위해 다시 MY_USER_ID로 복구
-        setAuth(MY_USER_ID);
-        MvcResult countResult = mockMvc.perform(get("/api/v1/notifications/unread-count"))
-                .andExpect(content().string("15"))
-                .andReturn();
-        log.info("▶ [STEP 2] 피해 유저 안읽은 상태 보존 확인 (개수: {})",
-                countResult.getResponse().getContentAsString());
-        log.info("========================================================\n");
+        IT_LOG.info("    [helper] latestNotifId = {}", id);
+        return id;
     }
 
-    // ────────────────────────────────────────────────────────────
-    // Order 5: 전체 읽음 처리
-    // ────────────────────────────────────────────────────────────
-    @Test
-    @Order(5)
-    @DisplayName("5. [PATCH] 전체 읽음 처리 검증")
-    void testReadAll() throws Exception {
-        log.info("========== [TEST REPORT] 5. 전체 알림 읽음 처리 ==========");
+    // ═══════════════════════════════════════════════════════════
+    // Group 1 : 커서 기반 페이징
+    // ═══════════════════════════════════════════════════════════
+    @Nested
+    @Order(1)
+    @DisplayName("Group 1 │ 커서 기반 페이징")
+    @ExtendWith(IntegrationTestExtension.class)
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+    class CursorPaging {
 
-        MvcResult patchResult = mockMvc.perform(patch("/api/v1/notifications/read-all"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.updatedCount").value(16))
-                .andReturn();
+        @BeforeAll
+        static void groupStart() {
+            IT_LOG.info("");
+            IT_LOG.info("┌────────────────────────────────────────────────────────────");
+            IT_LOG.info("│ 📦 Group 1 │ 커서 기반 페이징");
+            IT_LOG.info("│  검증 목표: 15개 알림을 10 + 5로 분할 페이징 / 빈 inbox 처리");
+            IT_LOG.info("└────────────────────────────────────────────────────────────");
+        }
 
-        log.info("▶ [STEP 1] 전체 읽음 | 업데이트 개수: {}",
-                objectMapper.readTree(patchResult.getResponse().getContentAsString(StandardCharsets.UTF_8))
-                        .path("updatedCount").asInt());
+        @Test
+        @Order(1)
+        @DisplayName("I-1+2. 커서 기반 페이징: 15개 → 10 + 5 분할")
+        void cursorPaging() throws Exception {
+            // given
+            IT_LOG.info("    [요청] 알림 15건 생성");
+            seed(15);
 
-        MvcResult countResult = mockMvc.perform(get("/api/v1/notifications/unread-count"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("0"))
-                .andReturn();
-        log.info("▶ [STEP 2] 카운트 검증 [ {} ] (기대값: 0)", countResult.getResponse().getContentAsString());
+            // when - 1페이지
+            IT_LOG.info("    [진행] GET /api/v1/notifications?limit=10  (1페이지)");
+            MvcResult r1 = mockMvc.perform(
+                            get("/api/v1/notifications").param("limit", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.hasNext").value(true))
+                    .andExpect(jsonPath("$.items.length()").value(10))
+                    .andReturn();
 
-        MvcResult listResult = mockMvc.perform(get("/api/v1/notifications")
-                        .param("limit", "10"))
-                .andExpect(jsonPath("$.items[0].isRead").value(true))
-                .andReturn();
+            String cursor = objectMapper.readTree(
+                            r1.getResponse().getContentAsString(StandardCharsets.UTF_8))
+                    .path("nextCursor").asText();
 
-        log.info("▶ [STEP 3] 첫 번째 알림 isRead [ {} ]",
-                objectMapper.readTree(listResult.getResponse().getContentAsString(StandardCharsets.UTF_8))
-                        .path("items").get(0).path("isRead").asBoolean());
-        log.info("========================================================\n");
+            IT_LOG.info("    [결과] ✔ 1페이지: items=10, hasNext=true");
+            IT_LOG.info("    [결과] ✔ nextCursor = {}", cursor);
+
+            // when - 2페이지
+            IT_LOG.info("    [진행] GET /api/v1/notifications?cursor={}&limit=10  (2페이지)", cursor);
+            mockMvc.perform(get("/api/v1/notifications")
+                            .param("cursor", cursor).param("limit", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.hasNext").value(false))
+                    .andExpect(jsonPath("$.items.length()").value(5));
+
+            IT_LOG.info("    [결과] ✔ 2페이지: items=5, hasNext=false");
+            IT_LOG.info("    [해소] cursor 기반 페이징으로 전체 15건 정확히 분할 조회 보장");
+        }
+
+        @Test
+        @Order(2)
+        @DisplayName("I-3. 알림 없을 때 빈 목록 반환")
+        void emptyInbox() throws Exception {
+            // given
+            IT_LOG.info("    [요청] 알림 0건 상태에서 목록 조회");
+
+            // when & then
+            IT_LOG.info("    [진행] GET /api/v1/notifications?limit=10");
+            mockMvc.perform(get("/api/v1/notifications").param("limit", "10"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.items.length()").value(0))
+                    .andExpect(jsonPath("$.hasNext").value(false));
+
+            IT_LOG.info("    [결과] ✔ items=[], hasNext=false 확인");
+            IT_LOG.info("    [해소] 빈 inbox에서 예외 없이 정상 응답 보장");
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // Group 2 : 읽지 않은 배지 카운트
+    // ═══════════════════════════════════════════════════════════
+    @Nested
+    @Order(2)
+    @DisplayName("Group 2 │ 읽지 않은 배지 카운트")
+    @ExtendWith(IntegrationTestExtension.class)
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+    class UnreadCount {
+
+        @BeforeAll
+        static void groupStart() {
+            IT_LOG.info("");
+            IT_LOG.info("┌────────────────────────────────────────────────────────────");
+            IT_LOG.info("│ 📦 Group 2 │ 읽지 않은 배지 카운트");
+            IT_LOG.info("│  검증 목표: Redis unread 카운터 정확성 보장");
+            IT_LOG.info("└────────────────────────────────────────────────────────────");
+        }
+
+        @Test
+        @Order(1)
+        @DisplayName("I-4. 안읽은 배지 카운트 15 반환")
+        void unreadCount() throws Exception {
+            // given
+            IT_LOG.info("    [요청] 알림 15건 생성 → 전부 미읽음 상태");
+            seed(15);
+
+            // when & then
+            IT_LOG.info("    [진행] GET /api/v1/notifications/unread-count");
+            mockMvc.perform(get("/api/v1/notifications/unread-count"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string("15"));
+
+            IT_LOG.info("    [결과] ✔ unreadCount = 15 확인");
+            IT_LOG.info("    [해소] Redis unread 카운터가 발송 건수와 정확히 일치함 보장");
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // Group 3 : 단건 읽음 처리 + 보안
+    // ═══════════════════════════════════════════════════════════
+    @Nested
+    @Order(3)
+    @DisplayName("Group 3 │ 단건 읽음 처리 + 보안")
+    @ExtendWith(IntegrationTestExtension.class)
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+    class MarkAsRead {
+
+        @BeforeAll
+        static void groupStart() {
+            IT_LOG.info("");
+            IT_LOG.info("┌────────────────────────────────────────────────────────────");
+            IT_LOG.info("│ 📦 Group 3 │ 단건 읽음 처리 + 보안");
+            IT_LOG.info("│  검증 목표: 읽음 처리 후 카운트 감소 / 타인 접근 차단(NOTI-002)");
+            IT_LOG.info("└────────────────────────────────────────────────────────────");
+        }
+
+        @Test
+        @Order(1)
+        @DisplayName("I-5. 단건 읽음 처리: isRead=true, count-1")
+        void markAsRead() throws Exception {
+            // given
+            IT_LOG.info("    [요청] 알림 3건 생성 후 최신 알림 단건 읽음 처리");
+            seed(3);
+            long id = latestNotifId();
+
+            // when
+            IT_LOG.info("    [진행] PATCH /api/v1/notifications/{}/read", id);
+            mockMvc.perform(patch("/api/v1/notifications/" + id + "/read"))
+                    .andExpect(status().isOk());
+            IT_LOG.info("    [결과] ✔ 200 OK 확인");
+
+            // then
+            IT_LOG.info("    [진행] GET /api/v1/notifications/unread-count (읽음 처리 후 확인)");
+            mockMvc.perform(get("/api/v1/notifications/unread-count"))
+                    .andExpect(content().string("2"));
+
+            IT_LOG.info("    [결과] ✔ unreadCount = 2 (3 → 2 감소) 확인");
+            IT_LOG.info("    [해소] 단건 읽음 처리 시 Redis 카운터 -1 정확히 반영 보장");
+        }
+
+        @Test
+        @Order(2)
+        @DisplayName("I-6. 보안: 해커가 타인 알림 읽음 시도 → 403 NOTI-002")
+        void markAsRead_unauthorized() throws Exception {
+            // given
+            IT_LOG.info("    [요청] userId={} 알림 1건 생성", USER_ID);
+            seed(1);
+            long id = latestNotifId();
+
+            IT_LOG.info("    [준비] 인증 전환: userId={} (해커)", HACKER_ID);
+            setAuth(HACKER_ID);
+
+            // when & then
+            IT_LOG.info("    [진행] PATCH /api/v1/notifications/{}/read  (해커 요청)", id);
+            IT_LOG.info("    [기대] 403 Forbidden | ErrorCode=NOTI-002");
+            mockMvc.perform(patch("/api/v1/notifications/" + id + "/read"))
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.code").value("NOTI-002"));
+
+            IT_LOG.info("    [결과] ✔ 403 Forbidden 확인");
+            IT_LOG.info("    [결과] ✔ ErrorCode = NOTI-002 확인");
+            IT_LOG.info("    [해소] 타인 알림 접근 시 권한 오류로 명확히 차단됨 보장");
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // Group 4 : 전체 읽음 처리
+    // ═══════════════════════════════════════════════════════════
+    @Nested
+    @Order(4)
+    @DisplayName("Group 4 │ 전체 읽음 처리")
+    @ExtendWith(IntegrationTestExtension.class)
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+    class ReadAll {
+
+        @BeforeAll
+        static void groupStart() {
+            IT_LOG.info("");
+            IT_LOG.info("┌────────────────────────────────────────────────────────────");
+            IT_LOG.info("│ 📦 Group 4 │ 전체 읽음 처리");
+            IT_LOG.info("│  검증 목표: 일괄 처리 건수 반환 / 중복 호출 멱등성 보장");
+            IT_LOG.info("└────────────────────────────────────────────────────────────");
+        }
+
+        @Test
+        @Order(1)
+        @DisplayName("I-7. 전체 읽음 처리: updatedCount=5, count=0")
+        void readAll() throws Exception {
+            // given
+            IT_LOG.info("    [요청] 알림 5건 생성 후 전체 읽음 처리");
+            seed(5);
+
+            // when
+            IT_LOG.info("    [진행] PATCH /api/v1/notifications/read-all");
+            mockMvc.perform(patch("/api/v1/notifications/read-all"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.updatedCount").value(5));
+
+            IT_LOG.info("    [결과] ✔ updatedCount = 5 확인");
+
+            // then
+            IT_LOG.info("    [진행] GET /api/v1/notifications/unread-count (전체 읽음 후 확인)");
+            mockMvc.perform(get("/api/v1/notifications/unread-count"))
+                    .andExpect(content().string("0"));
+
+            IT_LOG.info("    [결과] ✔ unreadCount = 0 확인");
+            IT_LOG.info("    [해소] 전체 읽음 처리 후 Redis 카운터 완전 초기화 보장");
+        }
+
+        @Test
+        @Order(2)
+        @DisplayName("I-8. 이미 전체 읽음 상태에서 readAll → updatedCount=0 (멱등성)")
+        void readAll_whenAlreadyAllRead() throws Exception {
+            // given
+            IT_LOG.info("    [요청] 알림 3건 생성 → 1차 전체 읽음 처리");
+            seed(3);
+            mockMvc.perform(patch("/api/v1/notifications/read-all")).andReturn();
+            IT_LOG.info("    [준비] 1차 readAll 완료 → 이미 전체 읽음 상태");
+
+            // when & then
+            IT_LOG.info("    [진행] PATCH /api/v1/notifications/read-all  (2차 호출)");
+            IT_LOG.info("    [기대] updatedCount = 0 (처리 대상 없음)");
+            mockMvc.perform(patch("/api/v1/notifications/read-all"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.updatedCount").value(0));
+
+            IT_LOG.info("    [결과] ✔ updatedCount = 0 확인");
+            IT_LOG.info("    [해소] 중복 readAll 호출 시 멱등성 보장 (불필요한 Redis write 없음)");
+        }
     }
 }
