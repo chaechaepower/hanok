@@ -1,78 +1,79 @@
+import { CATEGORY_ID_TO_LABEL } from '@/constants/category';
 import type { SideBarItem } from '@/types';
 import {
-  LayoutGrid,
+  Briefcase,
+  CreditCard,
+  Ellipsis,
   Footprints,
+  Gem,
+  Landmark,
+  Laptop,
+  LayoutGrid,
+  Palette,
+  PuzzleIcon,
   Shirt,
   Watch,
-  Briefcase,
-  Gem,
-  CreditCard,
-  PuzzleIcon,
-  Laptop,
-  Palette,
-  Landmark,
-  Ellipsis,
 } from 'lucide-react';
 
 export const MAIN_CATEGORY_ITEMS: SideBarItem[] = [
   {
     id: 'ALL',
-    label: '전체',
+    label: CATEGORY_ID_TO_LABEL.ALL,
     icon: <LayoutGrid size={20} />,
   },
   {
     id: 'SNEAKERS_SHOES',
-    label: '스니커즈/신발',
+    label: CATEGORY_ID_TO_LABEL.SNEAKERS_SHOES,
     icon: <Footprints size={20} />,
   },
   {
     id: 'CLOTHING',
-    label: '의류',
+    label: CATEGORY_ID_TO_LABEL.CLOTHING,
     icon: <Shirt size={20} />,
   },
   {
     id: 'WATCHES',
-    label: '시계',
+    label: CATEGORY_ID_TO_LABEL.WATCHES,
     icon: <Watch size={20} />,
   },
   {
     id: 'BAGS_FASHION_ACCESSORIES',
-    label: '가방/패션잡화',
+    label: CATEGORY_ID_TO_LABEL.BAGS_FASHION_ACCESSORIES,
     icon: <Briefcase size={20} />,
   },
   {
     id: 'JEWELRY',
-    label: '주얼리',
+    label: CATEGORY_ID_TO_LABEL.JEWELRY,
     icon: <Gem size={20} />,
   },
   {
     id: 'TRADING_CARDS',
-    label: '트레이딩 카드',
+    label: CATEGORY_ID_TO_LABEL.TRADING_CARDS,
     icon: <CreditCard size={20} />,
   },
   {
     id: 'FIGURES_ARTTOYS_GOODS',
-    label: '피규어/아트토이/굿즈',
+    label: CATEGORY_ID_TO_LABEL.FIGURES_ARTTOYS_GOODS,
     icon: <PuzzleIcon size={20} />,
   },
   {
     id: 'ELECTRONICS',
-    label: '전자기기',
+    label: CATEGORY_ID_TO_LABEL.ELECTRONICS,
     icon: <Laptop size={20} />,
   },
   {
     id: 'ART_PRINTS',
-    label: '미술품/판화',
+    label: CATEGORY_ID_TO_LABEL.ART_PRINTS,
     icon: <Palette size={20} />,
   },
   {
     id: 'ANTIQUES',
-    label: '골동품/앤틱',
+    label: CATEGORY_ID_TO_LABEL.ANTIQUES,
     icon: <Landmark size={20} />,
   },
   {
     id: 'ETC',
-    label: '기타',
+    label: CATEGORY_ID_TO_LABEL.ETC,
     icon: <Ellipsis size={20} />,
   },
 ];

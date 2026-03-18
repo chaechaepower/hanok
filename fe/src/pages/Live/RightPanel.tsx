@@ -99,7 +99,14 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
             uniqueBidSync={uniqueBidSync}
           />
         ) : (
-          <ChatPanel messages={messages} connectionState={connectionState} onSendMessage={sendMessage} onSendMacro={sendMacro} />
+          <ChatPanel
+            streamId={streamEnter?.streamId ?? 0}
+            category={streamEnter?.category ?? ''}
+            messages={messages}
+            connectionState={connectionState}
+            onSendMessage={sendMessage}
+            onSendMacro={sendMacro}
+          />
         )}
       </div>
     </div>

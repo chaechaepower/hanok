@@ -54,18 +54,18 @@ export default function ProductListPage() {
   ] as const;
 
   return (
-    <div className="flex w-full max-w-[1200px] mx-auto gap-0 py-10 px-4 min-h-screen text-white">
+    <div className="max-w-[1400px] flex mx-auto gap-10 py-10 px-4 min-h-screen text-white">
       <SideBar
         items={sellerSidebarItems}
         activeItemId={activeMenu}
         onItemClick={(item) => setActiveMenu(item.id)}
-        className="!w-[200px] shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
+        className="shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
       />
-      <div className="flex-1 flex flex-col gap-3">
+      <div className="flex-1 flex flex-col gap-6">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold m-0 mb-2">내 인벤토리</h1>
-            <p className="text-sm text-[#8E8E93] m-0">라이브 경매를 위해 등록된 품목입니다.</p>
+            <h1 className="text-2xl font-bold text-white leading-tight">내 인벤토리</h1>
+            <p className="text-[#888] text-sm mt-1">라이브 경매를 위해 등록된 품목입니다.</p>
           </div>
           <button
             onClick={() => {
@@ -85,7 +85,10 @@ export default function ProductListPage() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => { setActiveTab(tab.id as typeof activeTab); setCurrentPage(1); }}
+                  onClick={() => {
+                    setActiveTab(tab.id as typeof activeTab);
+                    setCurrentPage(1);
+                  }}
                   className={`bg-transparent border-none px-6 py-3 text-sm cursor-pointer relative ${
                     isActive ? 'text-white font-bold' : 'text-[#8E8E93] font-normal'
                   }`}
@@ -100,19 +103,17 @@ export default function ProductListPage() {
           {filteredProducts.length > 0 ? (
             <>
               <div className="flex flex-col">
-                {filteredProducts
-                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                  .map((product) => (
-                    <ProductCard
-                      key={product.itemId}
-                      product={product}
-                      onEdit={() => {
-                        setEditProductInitData(product);
-                        setIsModalOpen(true);
-                      }}
-                      onDelete={handleDelete}
-                    />
-                  ))}
+                {filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((product) => (
+                  <ProductCard
+                    key={product.itemId}
+                    product={product}
+                    onEdit={() => {
+                      setEditProductInitData(product);
+                      setIsModalOpen(true);
+                    }}
+                    onDelete={handleDelete}
+                  />
+                ))}
               </div>
               {Math.ceil(filteredProducts.length / itemsPerPage) > 1 && (
                 <div className="flex items-center justify-center gap-2 py-4 mt-auto">
@@ -123,21 +124,25 @@ export default function ProductListPage() {
                   >
                     이전
                   </button>
-                  {Array.from({ length: Math.ceil(filteredProducts.length / itemsPerPage) }, (_, i) => i + 1).map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 rounded text-[13px] border-none cursor-pointer transition-colors ${
-                        currentPage === page
-                          ? 'bg-[#d9b36d] text-[#111] font-bold'
-                          : 'bg-transparent text-[#aaa] hover:bg-[#2a2a3a]'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+                  {Array.from({ length: Math.ceil(filteredProducts.length / itemsPerPage) }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-8 h-8 rounded text-[13px] border-none cursor-pointer transition-colors ${
+                          currentPage === page
+                            ? 'bg-[#d9b36d] text-[#111] font-bold'
+                            : 'bg-transparent text-[#aaa] hover:bg-[#2a2a3a]'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ),
+                  )}
                   <button
-                    onClick={() => setCurrentPage((p) => Math.min(Math.ceil(filteredProducts.length / itemsPerPage), p + 1))}
+                    onClick={() =>
+                      setCurrentPage((p) => Math.min(Math.ceil(filteredProducts.length / itemsPerPage), p + 1))
+                    }
                     disabled={currentPage >= Math.ceil(filteredProducts.length / itemsPerPage)}
                     className="px-3 py-1.5 bg-transparent border border-[#2C2C2E] text-[#aaa] text-[13px] rounded cursor-pointer hover:bg-[#2a2a3a] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   >

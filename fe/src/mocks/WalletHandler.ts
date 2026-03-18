@@ -122,7 +122,7 @@ export const walletHandlers = [
   }),
 
   http.get(`${BASE_URL}/v1/users/me/account`, async () => {
-    return HttpResponse.json(mockAccount);
+    return HttpResponse.json({ status: 'SUCCESS', message: '요청이 성공적으로 처리되었습니다.', data: mockAccount });
   }),
 
   http.get(`${BASE_URL}/v1/trade-reports`, async ({ request }) => {
