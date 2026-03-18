@@ -462,7 +462,6 @@ public class AuctionService {
                 .filter(Objects::nonNull)
                 .toList();
 
-
         return ItemSyncResponse.ItemInfo.builder()
                 .auctionId(auction.getId())
                 .itemName(auction.getItem().getName())
@@ -476,17 +475,13 @@ public class AuctionService {
                 .finalPrice(auction.getAuctionStatus() == AuctionStatus.SOLD ? auction.getFinalPrice() : null)
                 .itemCondition(auction.getItem().getItemCondition())
                 .build();
-
-
     }
 
     private AuctionStatisticsResponse buildAuctionStatisticsResponse(
             String itemName, Long totalPrice, int bidCount, Long startPrice, Long currentPrice,
             List<AuctionStatisticsResponse.RecentBidDto> recentBidDtos) {
         return AuctionStatisticsResponse.builder()
-        
                 .itemName(itemName)
-                .totalPrice(totalPrice)
                 .bidCount(bidCount)
                 .startPrice(startPrice)
                 .currentPrice(currentPrice)
@@ -496,6 +491,7 @@ public class AuctionService {
 
     private AuctionStatisticsResponse.RecentBidDto buildRecentBidDto(Bid bid) {
         return new AuctionStatisticsResponse.RecentBidDto(
+                bid.userId(),
                 bid.nickname(),
                 bid.amount(),
                 bid.bidAt()
