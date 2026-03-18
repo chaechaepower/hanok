@@ -89,7 +89,7 @@ services:
     ports:
       - "7880:7880"
     volumes:
-      - ./livekit.yaml:/livekit.yaml
+      - /var/lib/docker/volumes/jenkins-stack_jenkins_home/_data/workspace/hanok/infra/livekit.yaml:/livekit.yaml
     command: --config /livekit.yaml
     networks:
       - hanok-network
