@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 
 import java.nio.file.AccessDeniedException;
 
+import static com.ssafy.be.global.exception.GlobalErrorCode.INVALID_PARAMETER;
+import static com.ssafy.be.global.exception.GlobalErrorCode.UNAUTHORIZED;
+
 @Slf4j
 @ControllerAdvice
 @RequiredArgsConstructor
@@ -23,20 +26,23 @@ public class StompExceptionHandler {
     @MessageExceptionHandler(MethodArgumentNotValidException.class)
     @SendToUser("/private/errors")
     public StompResponse<StompErrorPayload> handleValidation(MethodArgumentNotValidException ex) {
-        return buildErrorResponse(GlobalErrorCode.INVALID_PARAMETER);
+        log.error("[STOMP] 예외= {}", INVALID_PARAMETER.getMessage());
+        return buildErrorResponse(INVALID_PARAMETER);
     }
 
     // 인증 실패
     @MessageExceptionHandler(AccessDeniedException.class)
     @SendToUser("/private/errors")
     public StompResponse<StompErrorPayload> handleAccessDenied(AccessDeniedException ex) {
-        return buildErrorResponse(GlobalErrorCode.UNAUTHORIZED);
+        log.error("[STOMP] 예외= {}", UNAUTHORIZED.getMessage());
+        return buildErrorResponse(UNAUTHORIZED);
     }
 
     // 비즈니스 예외 (StompException)
     @MessageExceptionHandler(StompException.class)
     @SendToUser("/private/errors")
     public StompResponse<StompErrorPayload> handleWebSocketException(StompException ex) {
+        log.error("[STOMP] 예외= {}", ex.getErrorType().getMessage());
         return buildErrorResponse(ex.getErrorType());
     }
 
@@ -44,13 +50,12 @@ public class StompExceptionHandler {
     @MessageExceptionHandler(Exception.class)
     @SendToUser("/private/errors")
     public StompResponse<StompErrorPayload> handleException(Exception ex) {
+        log.error("[STOMP] 예외= {}", ex.getMessage(), ex);
         return buildErrorResponse(GlobalErrorCode.INTERNAL_SERVER_ERROR);
     }
 
     // response 빌드
     private StompResponse<StompErrorPayload> buildErrorResponse(ErrorCode errorCode) {
-        log.error("[STOMP] 처리되지 않은 예외 발생", errorCode.getMessage());
-
         return StompResponse.<StompErrorPayload>builder()
                 .eventType(StreamEventType.ERROR)
                 .payload(buildErrorPayload(errorCode))
