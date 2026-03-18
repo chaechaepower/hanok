@@ -28,18 +28,19 @@ public class SellerController implements SellerApi {
     private final SellerService sellerService;
 
     @PostMapping("/register")
-    public ResponseEntity<SellerRegisterResponse> register(
+    public ResponseEntity<ApiResponse<SellerRegisterResponse>> register(
             @AuthenticationPrincipal String userId,
             @RequestBody @Valid SellerRegisterRequest request) {
         Long user = Long.parseLong(userId);
-        SellerRegisterResponse response = sellerService.register(user, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.success(sellerService.register(user, request)));
     }
 
 
     @GetMapping("/{sellerId}/profile")
-    public ResponseEntity<SellerProfileResponse> getProfile(@PathVariable Long sellerId) {
-        return ResponseEntity.ok(sellerService.getProfile(sellerId));
+    public ResponseEntity<ApiResponse<SellerProfileResponse>> getProfile(@PathVariable Long sellerId) {
+        return ResponseEntity.ok(ApiResponse.success(sellerService.getProfile(sellerId)));
     }
 
     @PatchMapping("/{sellerId}/profile")
@@ -53,18 +54,18 @@ public class SellerController implements SellerApi {
     }
 
     @GetMapping("/verify-bizno")
-    public ResponseEntity<BiznoVerifyResponse> verifyBizno(
+    public ResponseEntity<ApiResponse<BiznoVerifyResponse>> verifyBizno(
             @RequestParam String bizno,
             @Parameter(description = "사업자 구분 (1: 개인, 2: 법인)")
             @RequestParam(defaultValue = "1") int gb) {
-        return ResponseEntity.ok(sellerService.verifyBizno(bizno, gb));
+        return ResponseEntity.ok(ApiResponse.success(sellerService.verifyBizno(bizno, gb)));
     }
 
     @GetMapping("/{sellerId}/sold-auctions")
-    public ResponseEntity<List<EscrowListResponse>> getAllSoldAuctions(
+    public ResponseEntity<ApiResponse<List<EscrowListResponse>>> getAllSoldAuctions(
             @PathVariable Long sellerId
     ) {
-        return ResponseEntity.ok(sellerService.getAllSoldAuctions(sellerId));
+        return ResponseEntity.ok(ApiResponse.success(sellerService.getAllSoldAuctions(sellerId)));
     }
 
     @GetMapping("/{sellerId}/reputation")
