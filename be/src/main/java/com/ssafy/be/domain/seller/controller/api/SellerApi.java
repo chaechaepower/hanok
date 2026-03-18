@@ -29,14 +29,14 @@ public interface SellerApi {
             responseCode = "409",
             description = "이미 판매자로 등록된 사용자",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
-    ResponseEntity<SellerRegisterResponse> register(String userId, SellerRegisterRequest request);
+    ResponseEntity<ApiResponse<SellerRegisterResponse>> register(String userId, SellerRegisterRequest request);
 
     @Operation(summary = "판매자 프로필 조회")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "판매자 없음",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{sellerId}/profile")
-    ResponseEntity<SellerProfileResponse> getProfile(@PathVariable Long sellerId);
+    ResponseEntity<ApiResponse<SellerProfileResponse>> getProfile(@PathVariable Long sellerId);
 
     @Operation(summary = "판매자 프로필 수정")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수정 성공")
@@ -52,7 +52,7 @@ public interface SellerApi {
     @Operation(summary = "사업자번호 인증")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "인증 성공")
     @GetMapping("/verify-bizno")
-    ResponseEntity<BiznoVerifyResponse> verifyBizno(
+    ResponseEntity<ApiResponse<BiznoVerifyResponse>>  verifyBizno(
             @RequestParam String bizno,
             @Parameter(description = "사업자 구분 (1: 개인, 2: 법인)")
             @RequestParam(defaultValue = "1") int gb);
@@ -60,7 +60,7 @@ public interface SellerApi {
     @Operation(summary = "판매자 낙찰 이력 조회", description = "특정 판매자의 낙찰된 경매 목록을 조회합니다.")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping("/{sellerId}/sold-auctions")
-    ResponseEntity<List<EscrowListResponse>> getAllSoldAuctions(@PathVariable Long sellerId);
+    ResponseEntity<ApiResponse<List<EscrowListResponse>>>  getAllSoldAuctions(@PathVariable Long sellerId);
 
     @Operation(summary = "판매자 평판 조회", description = "본인 또는 관리자는 상세 정보 포함, 타인은 공개 정보만 반환")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
