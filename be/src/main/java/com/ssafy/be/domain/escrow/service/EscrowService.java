@@ -261,8 +261,8 @@ public class EscrowService {
     }
 
     @Transactional(readOnly = true)
-    public EscrowDetailResponse getEscrowDetail(Long escrowId, Long userId) {
-        Escrow escrow = escrowRepository.findByIdAndSellerUserId(escrowId, userId)
+    public EscrowDetailResponse getEscrowDetail(Long escrowId) {
+        Escrow escrow = escrowRepository.findById(escrowId)
                 .orElseThrow(() -> new GlobalException(EscorwErrorCode.ESCROW_NOT_FOUND));
 
         return buildEscrowDetailResponse(

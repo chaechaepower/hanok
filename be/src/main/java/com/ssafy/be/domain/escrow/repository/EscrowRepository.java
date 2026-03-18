@@ -30,17 +30,6 @@ public interface EscrowRepository extends JpaRepository<Escrow, Long> {
             """)
     List<Escrow> findAllByBuyerUserId(@Param("userId") Long userId);
 
-    @Query("""
-            select e from Escrow e
-            join fetch e.auction a
-            join fetch a.item
-            join fetch e.shippingAddress
-            join fetch e.seller s
-            join fetch s.user u
-            where e.id = :escrowId
-            and u.id = :userId
-            """)
-    Optional<Escrow> findByIdAndSellerUserId(@Param("escrowId") Long escrowId, @Param("userId") Long userId);
 
     @Query("""
             select e from Escrow e

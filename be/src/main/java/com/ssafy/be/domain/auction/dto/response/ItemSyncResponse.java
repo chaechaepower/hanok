@@ -20,6 +20,8 @@ public record ItemSyncResponse(
             List<String> images,
             Long startPrice,
             AuctionType auctionType,
+            Integer auctionTime, // 엔티티에서 네이밍은 auctionDuration임. 프론트 협의
+            Long bidUnit,
             AuctionStatus auctionStatus,
             Long finalPrice,
             ItemCondition itemCondition

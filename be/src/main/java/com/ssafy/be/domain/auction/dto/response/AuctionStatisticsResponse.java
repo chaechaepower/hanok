@@ -8,13 +8,13 @@ import java.util.List;
 @Builder
 public record AuctionStatisticsResponse(
         String itemName,
-        Long totalPrice,
         int bidCount,
         Long startPrice,
         Long currentPrice,
         List<RecentBidDto> recentBids
 ) {
     public record RecentBidDto(
+            Long userId,
             String nickname,
             Long amount,
             LocalDateTime placedAt
