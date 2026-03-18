@@ -1,11 +1,16 @@
 package com.ssafy.be.domain.search.dto;
 
+import lombok.Builder;
+
+import java.time.LocalDateTime;
+
+@Builder
 public record StreamSearchRow(
         Long streamId,
         String title,
         String thumbnail,
         String status,
-        String scheduledAt,
+        LocalDateTime scheduledAt,
         Integer viewerCount,
         String category,
         Long sellerId,
