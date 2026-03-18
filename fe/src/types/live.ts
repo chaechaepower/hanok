@@ -31,7 +31,6 @@ export type StreamEnterResponse = {
   createdAt: string;
   items: LiveStreamItem[];
   seller: StreamEnterSeller;
-  viewerCount: number;
   topBidders: StreamEnterTopBidder[];
   token: string;
   identity: string;

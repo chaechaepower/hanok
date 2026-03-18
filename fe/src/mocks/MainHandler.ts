@@ -16,8 +16,7 @@ const SELLERS = [
   { sellerId: 15, nickname: 'bag_corner' },
 ];
 
-const isActiveStreamStatus = (streamStatus: SearchStreamStatus) =>
-  streamStatus === 'LIVE' || streamStatus === 'PAUSED';
+const isActiveStreamStatus = (streamStatus: SearchStreamStatus) => streamStatus === 'LIVE' || streamStatus === 'PAUSED';
 
 type SearchMockEntry = SearchStreamResult & {
   itemNames: string[];
@@ -228,7 +227,6 @@ export const mainHandlers = [
           nickname: registeredLive.sellerNickname,
           profileImage: registeredLive.sellerProfileImage,
         },
-        viewerCount: 0,
         topBidders: [],
         token: `mock-stream-token-${registeredLive.streamId}`,
         identity: `user-${currentUser?.userId ?? 0}`,
@@ -279,7 +277,10 @@ export const mainHandlers = [
 
     const registeredLiveCards = getRegisteredLiveCards();
     const registeredIds = new Set(registeredLiveCards.map((stream) => stream.streamId));
-    let streams = [...registeredLiveCards, ...MAIN_LIVE_STREAMS.filter((stream) => !registeredIds.has(stream.streamId))];
+    let streams = [
+      ...registeredLiveCards,
+      ...MAIN_LIVE_STREAMS.filter((stream) => !registeredIds.has(stream.streamId)),
+    ];
 
     if (type === 'FOLLOWING') {
       streams = streams.filter((stream) => isSellerFollowed(stream.seller.sellerId));
