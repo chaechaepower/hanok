@@ -93,13 +93,13 @@ docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force
 docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d prometheus grafana
 
 # 현재 active 컨테이너 확인
-ACTIVE=$(grep -v "#" /etc/nginx/sites-enabled/default | grep "server localhost:" | awk -F: '{print $2}' | tr -d ';' | tr -d ' ')
+ACTIVE=$(grep "server 172.26.0.24:" /etc/nginx/sites-enabled/default | grep -v "#" | head -1 | awk -F: '{print $NF}' | tr -d '; ')
 
-if [ "$ACTIVE" = "8080" ]; then
+if [ "$ACTIVE" = "8080" ] || [ -z "$ACTIVE" ]; then
     # blue가 active → green에 배포
     docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate backend-green
     sleep 30
-    GREEN_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/actuator/health)
+    GREEN_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://172.26.0.24:8081/actuator/health)
     if [ "$GREEN_HEALTH" = "200" ]; then
         sudo sed -i "s|server localhost:8080;  # blue (현재 active)|# server localhost:8080;  # blue (대기)|" /etc/nginx/sites-enabled/default
         sudo sed -i "s|# server localhost:8081;  # green (대기)|server localhost:8081;  # green (현재 active)|" /etc/nginx/sites-enabled/default
@@ -115,7 +115,7 @@ else
     # green이 active → blue에 배포
     docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate backend-prod
     sleep 30
-    BLUE_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health)
+    BLUE_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://172.26.0.24:8080/actuator/health)
     if [ "$BLUE_HEALTH" = "200" ]; then
         sudo sed -i "s|# server localhost:8080;  # blue (대기)|server localhost:8080;  # blue (현재 active)|" /etc/nginx/sites-enabled/default
         sudo sed -i "s|server localhost:8081;  # green (현재 active)|# server localhost:8081;  # green (대기)|" /etc/nginx/sites-enabled/default
