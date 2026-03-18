@@ -17,6 +17,7 @@ import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
 import { usePatchSellerProfile } from '@/api/hooks/usePatchSellerProfile';
 import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
 import type { EscrowState, ScheduledStream } from '@/types';
+import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
 import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2, FiX, FiCamera, FiTv, FiChevronDown } from 'react-icons/fi';
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
 import React from 'react';
@@ -138,8 +139,8 @@ export default function ProfilePage() {
       onSuccess: () => {
         showToast({ message: '프로필 이미지가 변경되었습니다.' });
       },
-      onError: () => {
-        showToast({ message: '프로필 이미지 변경에 실패했습니다.' });
+      onError: (error) => {
+        showToast({ message: getUploadErrorMessage(error, '프로필 이미지 변경에 실패했습니다.') });
       },
     });
   };

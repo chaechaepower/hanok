@@ -16,6 +16,7 @@ import FollowedStoresSection from '@/components/Settings/FollowedStoresSection';
 import OrderHistorySection from '@/components/Settings/OrderHistorySection';
 import PaymentSection from '@/components/Settings/PaymentSection';
 import ShippingSection from '@/components/Settings/ShippingSection';
+import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
 
 type SettingsTab = 'account' | 'stores' | 'shipping' | 'payment' | 'order';
 
@@ -43,8 +44,8 @@ export default function SettingsPage() {
       onSuccess: () => {
         showToast({ message: '프로필 이미지가 변경되었습니다.' });
       },
-      onError: () => {
-        showToast({ message: '프로필 이미지 변경에 실패했습니다.' });
+      onError: (error) => {
+        showToast({ message: getUploadErrorMessage(error, '프로필 이미지 변경에 실패했습니다.') });
       },
     });
   };

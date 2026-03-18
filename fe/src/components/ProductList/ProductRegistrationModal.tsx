@@ -6,6 +6,7 @@ import { usePostItem } from '@/api/hooks/usePostItem';
 import Button from '@/components/common/Button';
 import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
 import type { ItemAuctionType, Product } from '@/types';
+import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
 
 interface ProductRegistrationModalProps {
   isOpen: boolean;
@@ -287,7 +288,7 @@ export default function ProductRegistrationModal({
       onClose();
     } catch (err) {
       console.error(err);
-      setError('상품 등록에 실패했습니다. 다시 시도해주세요.');
+      setError(getUploadErrorMessage(err, '상품 등록에 실패했습니다. 다시 시도해주세요.'));
     }
   };
 
