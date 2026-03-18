@@ -209,41 +209,12 @@ public class StreamService {
         streamRepository.delete(stream);
     }
 
-    @Transactional(readOnly = true)
-    public StreamTokenResponse generateToken(Long userId, Long streamId) {
-        Stream stream =
-                streamRepository
-                        .findById(streamId)
-                        .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
-
-        boolean isHost = stream.getSeller().getUser().getId().equals(userId);
-        String participantIdentity = String.valueOf(userId);
-        String roomName = String.valueOf(streamId);
-
-        AccessToken token =
-                new AccessToken(liveKitProperties.apiKey(), liveKitProperties.apiSecret());
-        token.setName(participantIdentity);
-        token.setIdentity(participantIdentity);
-        token.addGrants(
-                new RoomJoin(true),
-                new RoomName(roomName),
-                new CanPublish(isHost),
-                new CanSubscribe(true));
-
-        return new StreamTokenResponse(token.toJwt());
-    }
 
     @Transactional(readOnly = true)
     public StreamDetailResponse getStream(Long userId, Long streamId) {
-        Seller seller =
-                sellerRepository
-                        .findByUserId(userId)
-                        .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
 
-        Stream stream =
-                streamRepository
-                        .findByIdAndSellerId(streamId, seller.getId())
-                        .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
+        Stream stream = streamRepository.findById(streamId)
+                .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
         // auction에서 item + auctionType 함께 매핑
         List<ItemSummaryResponse> items = auctionRepository.findByStreamId(streamId).stream()
@@ -434,12 +405,11 @@ public class StreamService {
 
         // 토큰 발급
         boolean isHost = stream.getSeller().getUser().getId().equals(userId);
-        String participantIdentity = userId != null ? String.valueOf(userId) : "guest-" + streamId;
         String roomName = String.valueOf(streamId);
 
         AccessToken accessToken = new AccessToken(liveKitProperties.apiKey(), liveKitProperties.apiSecret());
-        accessToken.setName(participantIdentity);
-        accessToken.setIdentity(participantIdentity);
+        accessToken.setName(identity);
+        accessToken.setIdentity(identity);
         accessToken.addGrants(
                 new RoomJoin(true),
                 new RoomName(roomName),
