@@ -8,20 +8,21 @@ interface Props {
   auctionType: LiveAuctionType | null;
   auctionStatistics: AuctionStatisticsPayload | null;
   uniqueBidSync: UniqueBidSyncPayload | null;
+  currentUserId: number | null;
 }
 
 function formatPrice(value: number) {
   return value.toLocaleString('ko-KR');
 }
 
-export default function AuctionPanel({ isSeller, auctionType, auctionStatistics, uniqueBidSync }: Props) {
+export default function AuctionPanel({ isSeller, auctionType, auctionStatistics, uniqueBidSync, currentUserId }: Props) {
   if (auctionType === 'UNIQUE_TOP') {
     const bidRange = uniqueBidSync?.bidRange;
 
     return (
       <div className="bid-feed-scroll flex h-full flex-col gap-4 overflow-y-auto p-4">
         <div className="rounded-2xl bg-neutral-900 p-5">
-          <div className="text-[10px] font-bold uppercase tracking-tigher text-neutral-500">UNIQUE AUCTION</div>
+          <div className="text-[10px] font-bold uppercase tracking-tigher text-neutral-500">유일 최고가 경매</div>
           <div className="mt-2 text-3xl font-black text-ember">
             <span className="tabular-nums font-black">{uniqueBidSync?.participantCount ?? 0}</span>
             <span className="ml-2 text-sm font-bold text-neutral-500">명 참여</span>
@@ -44,7 +45,7 @@ export default function AuctionPanel({ isSeller, auctionType, auctionStatistics,
         </div>
 
         <div className="rounded-2xl border border-white/6 bg-white/[0.02] px-4 py-4">
-          <div className="text-[10px] font-bold uppercase tracking-[.08em] text-neutral-500">STATUS</div>
+          <div className="text-[10px] font-bold uppercase tracking-[.08em] text-neutral-500">내역</div>
           <p className="mt-2 text-xs leading-6 text-neutral-300">
             {isSeller
               ? '입찰 금액은 경매 종료 전까지 공개되지 않습니다. 참여 인원만 실시간으로 갱신됩니다.'
@@ -82,7 +83,7 @@ export default function AuctionPanel({ isSeller, auctionType, auctionStatistics,
       </div>
 
       <SellerPriceInfo auctionStatistics={auctionStatistics} />
-      <BidFeed auctionStatistics={auctionStatistics} />
+      <BidFeed auctionStatistics={auctionStatistics} currentUserId={currentUserId} />
     </div>
   );
 }

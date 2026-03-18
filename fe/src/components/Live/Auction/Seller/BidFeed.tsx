@@ -3,6 +3,7 @@ import type { AuctionStatisticsPayload } from '@/types';
 
 interface Props {
   auctionStatistics: AuctionStatisticsPayload | null;
+  currentUserId: number | null;
 }
 
 function formatPrice(value: number) {
@@ -22,7 +23,7 @@ function formatPlacedAt(placedAt: string) {
   };
 }
 
-export default function BidFeed({ auctionStatistics }: Props) {
+export default function BidFeed({ auctionStatistics, currentUserId }: Props) {
   const bids = auctionStatistics?.recentBids ?? [];
 
   return (
@@ -36,21 +37,20 @@ export default function BidFeed({ auctionStatistics }: Props) {
       {/* 입찰 목록 */}
       <div className="bid-feed-scroll flex flex-col gap-1 overflow-y-auto">
         {bids.length === 0 ? (
-          <div className="rounded-xl border border-white/4 bg-white/[0.02] px-3 py-4 text-center text-[11px] font-medium text-neutral-500">
+          <div className="rounded-xl border border-white/4 bg-white/2 px-3 py-4 text-center text-[11px] font-medium text-neutral-500">
             아직 수신된 입찰 데이터가 없습니다.
           </div>
         ) : (
           bids.map((bid, idx) => {
             const formattedTime = formatPlacedAt(bid.placedAt);
             const isTop = idx === 0;
+            const isCurrentUser = currentUserId !== null && bid.userId === currentUserId;
 
             return (
               <div
-                key={`${bid.nickname}-${bid.placedAt}-${bid.amount}-${idx}`}
+                key={`${bid.userId}-${bid.nickname}-${bid.placedAt}-${bid.amount}-${idx}`}
                 className={`flex min-h-9 items-center gap-2 rounded-xl px-2.5 ${
-                  isTop
-                    ? 'border border-gold/18 bg-gold/6'
-                    : 'border border-white/4 bg-white/[0.02]'
+                  isTop ? 'border border-gold/18 bg-gold/6' : 'border border-white/4 bg-white/2'
                 }`}
               >
                 <span className="flex w-8 shrink-0 items-center tabular-nums">
@@ -59,7 +59,13 @@ export default function BidFeed({ auctionStatistics }: Props) {
                   </span>
                 </span>
                 <span
-                  className={`w-20 shrink-0 overflow-hidden py-0.5 text-[11px] font-bold whitespace-nowrap text-ellipsis ${isTop ? 'text-white' : 'text-neutral-400'}`}
+                  className={`w-20 shrink-0 overflow-hidden py-0.5 text-[11px] whitespace-nowrap text-ellipsis ${
+                    isCurrentUser
+                      ? 'font-black text-gold'
+                      : isTop
+                        ? 'font-bold text-white'
+                        : 'font-bold text-neutral-400'
+                  }`}
                 >
                   {bid.nickname}
                 </span>

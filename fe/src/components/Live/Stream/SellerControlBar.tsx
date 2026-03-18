@@ -14,7 +14,6 @@ interface ReadyItem {
 
 interface Props {
   introduceAuctionId: number | null;
-  introduceAuctionType: LiveAuctionType | null;
   startAuctionId: number | null;
   startAuctionType: LiveAuctionType | null;
   canIntroduce: boolean;
@@ -30,7 +29,6 @@ interface Props {
 
 export default function SellerControlBar({
   introduceAuctionId,
-  introduceAuctionType,
   startAuctionId,
   startAuctionType,
   canIntroduce,
@@ -81,14 +79,14 @@ export default function SellerControlBar({
     }
 
     void sendStreamMessage(streamId, {
-      eventType: introduceAuctionType === 'UNIQUE_TOP' ? 'UNIQUE_AUCTION_INTRODUCE' : 'ITEM_INTRODUCE',
+      eventType: 'ITEM_INTRODUCE',
       payload: {
         auctionId: introduceAuctionId,
       },
     }).catch((error) => {
       console.error('[stream] failed to send ITEM_INTRODUCE', error);
     });
-  }, [streamId, introduceAuctionId, introduceAuctionType]);
+  }, [streamId, introduceAuctionId]);
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {

@@ -1,10 +1,83 @@
-import type { AxiosInstance } from 'axios';
-import axios from 'axios';
+import type { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosHeaders } from 'axios';
 import { QueryClient } from '@tanstack/react-query';
+import type { ApiResponse, LoginResponseData } from '@/types';
 
 let instance: AxiosInstance | null = null;
+let refreshRequestPromise: Promise<ApiResponse<LoginResponseData>> | null = null;
 
 export const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const REFRESH_TOKEN_PATH = '/v1/auth/refresh';
+
+type RetriableRequestConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+};
+
+const isRefreshRequest = (url?: string) => url?.includes(REFRESH_TOKEN_PATH) ?? false;
+
+export const clearAuthSession = ({ redirectToLogin = true }: { redirectToLogin?: boolean } = {}) => {
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('userId');
+  queryClient.clear();
+
+  if (!redirectToLogin || typeof window === 'undefined') {
+    return;
+  }
+
+  if (window.location.pathname !== '/login') {
+    window.location.replace('/login');
+  }
+};
+
+export const refreshSessionTokens = async () => {
+  if (refreshRequestPromise) {
+    return refreshRequestPromise;
+  }
+
+  const currentRefreshToken = localStorage.getItem('refreshToken');
+
+  if (!currentRefreshToken) {
+    clearAuthSession();
+    throw new Error('Refresh token is missing.');
+  }
+
+  refreshRequestPromise = axios
+    .post<ApiResponse<LoginResponseData>>(
+      `${BASE_URL}${REFRESH_TOKEN_PATH}`,
+      { refreshToken: currentRefreshToken },
+      {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    )
+    .then((response) => {
+      const { accessToken, refreshToken } = response.data.data;
+
+      if (!accessToken) {
+        throw new Error('Access token is missing from refresh response.');
+      }
+
+      localStorage.setItem('accessToken', accessToken);
+
+      if (refreshToken) {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
+
+      return response.data;
+    })
+    .catch((error) => {
+      clearAuthSession();
+      throw error;
+    })
+    .finally(() => {
+      refreshRequestPromise = null;
+    });
+
+  return refreshRequestPromise;
+};
 
 const initInstance = (): AxiosInstance => {
   const ax = axios.create({
@@ -30,8 +103,43 @@ const initInstance = (): AxiosInstance => {
 
   ax.interceptors.response.use(
     (response) => response,
-    (error) => {
-      return Promise.reject(error);
+    async (error: AxiosError) => {
+      const originalRequest = error.config as RetriableRequestConfig | undefined;
+      const status = error.response?.status;
+
+      if (!originalRequest || status !== 401 || originalRequest._retry || isRefreshRequest(originalRequest.url)) {
+        if (status === 401 && isRefreshRequest(originalRequest?.url)) {
+          clearAuthSession();
+        }
+
+        return Promise.reject(error);
+      }
+
+      const currentRefreshToken = localStorage.getItem('refreshToken');
+
+      if (!currentRefreshToken) {
+        clearAuthSession();
+        return Promise.reject(error);
+      }
+
+      originalRequest._retry = true;
+
+      try {
+        const refreshResponse = await refreshSessionTokens();
+        const nextAccessToken = refreshResponse.data.accessToken;
+
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${nextAccessToken}`;
+        } else {
+          originalRequest.headers = new AxiosHeaders({
+            Authorization: `Bearer ${nextAccessToken}`,
+          });
+        }
+
+        return ax(originalRequest);
+      } catch (refreshError) {
+        return Promise.reject(refreshError);
+      }
     },
   );
 

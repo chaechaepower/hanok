@@ -209,6 +209,7 @@ export const mainHandlers = [
 
     if (registeredLive) {
       const sellerId = registeredLive.sellerId;
+      const isHost = sellerId === (currentUser?.userId ?? null);
 
       return HttpResponse.json({
         streamId: registeredLive.streamId,
@@ -231,11 +232,13 @@ export const mainHandlers = [
         token: `mock-stream-token-${registeredLive.streamId}`,
         identity: `user-${currentUser?.userId ?? 0}`,
         isFollowing: isSellerFollowed(sellerId),
+        isHost,
       });
     }
 
     const stream = MAIN_LIVE_STREAMS.find((item) => item.streamId === streamId) ?? MAIN_LIVE_STREAMS[0];
     const sellerId = stream?.seller.sellerId ?? 1;
+    const isHost = sellerId === (currentUser?.userId ?? null);
 
     return HttpResponse.json({
       streamId: stream?.streamId ?? streamId,
@@ -263,6 +266,7 @@ export const mainHandlers = [
       token: `mock-stream-token-${stream?.streamId ?? streamId}`,
       identity: `user-${currentUser?.userId ?? 0}`,
       isFollowing: isSellerFollowed(sellerId),
+      isHost,
     });
   }),
 
