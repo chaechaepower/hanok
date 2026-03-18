@@ -84,7 +84,8 @@ public class StreamController implements StreamApi {
     public ResponseEntity<StreamEnterResponse> enterStream(
             @AuthenticationPrincipal String userId,
             @PathVariable Long streamId) {
-        return ResponseEntity.ok(streamService.enterStream(Long.parseLong(userId), streamId));
+        Long parsedUserId = (userId == null || userId.equals("anonymousUser")) ? null : Long.parseLong(userId);
+        return ResponseEntity.ok(streamService.enterStream(parsedUserId, streamId));
     }
 
     @GetMapping("/{streamId}/items")
