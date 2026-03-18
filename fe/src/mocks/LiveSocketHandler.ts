@@ -4,7 +4,7 @@ import type { AuctionStatisticsPayload, BidSyncPayload, ItemSyncPayload } from '
 import { getStreamSocketConnectUrl } from '@/websocket/socket';
 
 import { getInitialItemSyncPayloadForStream } from './LiveCreateHandler';
-import { getCurrentMockUser } from './mockState';
+import { getCurrentMockUser, mockLoginUsers } from './mockState';
 
 type StompFrame = {
   command: string;
@@ -807,26 +807,50 @@ const handleAuctionStart = (destination: string, body: string) => {
   };
   const auctionId = payload.payload?.auctionId;
   const nowMs = Date.now();
+  const currentUser = getCurrentMockUser();
+  const otherBidder =
+    mockLoginUsers.find((user) => user.userId !== currentUser?.userId && !user.isSeller) ??
+    mockLoginUsers.find((user) => user.userId !== currentUser?.userId) ??
+    null;
   const itemName = '나이키 에어맥스 95';
   const startPrice = 50000;
-  const bidAmount = 0;
   const bidUnit = 1000;
+  const currentUserBidAmount = startPrice + bidUnit;
+  const topBidAmount = startPrice + bidUnit * 2;
+  const bidAmount = topBidAmount;
   const state: MockTimerState = {
     durationSeconds: AUCTION_DURATION_SECONDS,
     startedAtMs: nowMs,
-    finalPrice: startPrice,
+    finalPrice: topBidAmount,
   };
   const auctionStatisticsState: MockAuctionStatisticsState = {
     itemName,
-    bidCount: 0,
+    bidCount: currentUser ? 2 : 1,
     startPrice,
-    currentPrice: 0,
-    recentBids: [],
+    currentPrice: topBidAmount,
+    recentBids: [
+      {
+        userId: otherBidder?.userId ?? 9999,
+        nickname: otherBidder?.nickname ?? '사용자',
+        amount: topBidAmount,
+        placedAt: createTimestamp(nowMs),
+      },
+      ...(currentUser
+        ? [
+            {
+              userId: currentUser.userId,
+              nickname: currentUser.nickname,
+              amount: currentUserBidAmount,
+              placedAt: createTimestamp(nowMs - 2_000),
+            },
+          ]
+        : []),
+    ],
   };
 
   streamTimerStates.set(streamId, state);
   streamAuctionStatisticsStates.set(streamId, auctionStatisticsState);
-  streamBidSyncStates.set(streamId, { bidUnit, highestBidderUserId: null });
+  streamBidSyncStates.set(streamId, { bidUnit, highestBidderUserId: otherBidder?.userId ?? null });
   activateNextReadyItem(streamId, auctionId);
   scheduleWinnerAnnouncement(streamId);
 
@@ -845,7 +869,7 @@ const handleAuctionStart = (destination: string, body: string) => {
   });
   broadcastAuctionComment(streamId, '경매가 시작되었습니다.');
 
-  if (bidAmount > 0) {
+  if (topBidAmount > 0) {
     broadcastAuctionComment(streamId, `현재 최고 입찰가 ${bidAmount.toLocaleString('ko-KR')}원입니다!`);
   }
 
@@ -982,6 +1006,7 @@ const handleBidPlace = (destination: string, body: string) => {
       currentPrice: bidAmount || currentStatisticsState.currentPrice,
       recentBids: [
         {
+          userId: currentUserId ?? 0,
           nickname: '홍길동',
           amount: bidAmount,
           placedAt: createTimestamp(nowMs),

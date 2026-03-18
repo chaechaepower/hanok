@@ -94,6 +94,7 @@ export type BidWinnerPayload = {
 };
 
 export type AuctionStatisticsRecentBid = {
+  userId: number;
   nickname: string;
   amount: number;
   placedAt: string;

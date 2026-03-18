@@ -8,13 +8,14 @@ interface Props {
   auctionType: LiveAuctionType | null;
   auctionStatistics: AuctionStatisticsPayload | null;
   uniqueBidSync: UniqueBidSyncPayload | null;
+  currentUserId: number | null;
 }
 
 function formatPrice(value: number) {
   return value.toLocaleString('ko-KR');
 }
 
-export default function AuctionPanel({ isSeller, auctionType, auctionStatistics, uniqueBidSync }: Props) {
+export default function AuctionPanel({ isSeller, auctionType, auctionStatistics, uniqueBidSync, currentUserId }: Props) {
   if (auctionType === 'UNIQUE_TOP') {
     const bidRange = uniqueBidSync?.bidRange;
 
@@ -82,7 +83,7 @@ export default function AuctionPanel({ isSeller, auctionType, auctionStatistics,
       </div>
 
       <SellerPriceInfo auctionStatistics={auctionStatistics} />
-      <BidFeed auctionStatistics={auctionStatistics} />
+      <BidFeed auctionStatistics={auctionStatistics} currentUserId={currentUserId} />
     </div>
   );
 }

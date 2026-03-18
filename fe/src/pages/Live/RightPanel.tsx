@@ -21,6 +21,9 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
   const { messages, sendMessage, sendMacro, connectionState } = useStompChat();
   const [followStateOverride, setFollowStateOverride] = useState<{ sellerId: number; value: boolean } | null>(null);
   const { mutate: postFollow, isPending: isFollowPending } = usePostFollow();
+  const storedUserId = localStorage.getItem('userId');
+  const parsedUserId = storedUserId ? Number(storedUserId) : NaN;
+  const currentUserId = Number.isNaN(parsedUserId) ? null : parsedUserId;
   const sellerId = streamEnter?.seller.sellerId ?? 0;
   const sellerNickname = streamEnter?.seller.nickname ?? 'seller';
   const sellerProfileImage = streamEnter?.seller.profileImage ?? null;
@@ -97,6 +100,7 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
             auctionType={auctionType}
             auctionStatistics={auctionStatistics}
             uniqueBidSync={uniqueBidSync}
+            currentUserId={currentUserId}
           />
         ) : (
           <ChatPanel
