@@ -187,9 +187,9 @@ export default function WalletPage() {
 
   return (
     <>
-      <section className="w-full text-[#f5f2eb]">
-        <div className="mx-auto flex w-full max-w-300 flex-col gap-8 px-4 pb-16 pt-8 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-3">
+      <section className="max-w-[1100px] w-full text-[#f5f2eb]">
+        <div className="mx-auto flex w-full flex-col gap-8 pb-16 pt-8">
+          <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -199,11 +199,9 @@ export default function WalletPage() {
               >
                 <FiChevronLeft className="h-6 w-6" />
               </button>
-              <h1 className="text-[24px] font-bold tracking-[-0.02em]">내 가상머니</h1>
+              <h1 className="text-2xl font-bold text-white leading-tight">내 가상머니</h1>
             </div>
-            <p className="pl-12 text-[14px] text-[#b7ada0]">
-              경매 입찰을 위한 가상머니 충전 및 정산 내역을 관리합니다.
-            </p>
+            <p className="text-[#888] text-sm mt-1 ml-12">경매 입찰을 위한 가상머니 충전 및 정산 내역을 관리합니다.</p>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
@@ -248,7 +246,7 @@ export default function WalletPage() {
                 </div>
               </div>
 
-              <img src={coins} alt="coins" className="absolute right-10 bottom-6 w-50 md:block" />
+              <img src={coins} alt="coins" className="absolute right-4 bottom-6 w-50 md:block" />
             </article>
 
             <article className="flex flex-col justify-between rounded-[28px] border border-[#77623d]/70 bg-[#05070f] px-8 py-6 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">

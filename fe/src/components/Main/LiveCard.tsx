@@ -1,3 +1,4 @@
+import { getCategoryLabel } from '@/constants/category';
 import type { LiveCardData, SearchStreamStatus } from '@/types';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,50 +11,33 @@ type LiveCardProps = {
   };
   isNavigable?: boolean;
   disableSellerNavigation?: boolean;
-  metaText?: string;
-};
-
-const CATEGORY_LABEL_MAP: Record<string, string> = {
-  SNEAKERS: '스니커즈/신발',
-  WATCH: '시계',
-  FIGURE: '피규어/아트토이/굿즈',
-  APPAREL: '의류',
-  BAG: '가방/패션잡화',
-  JEWELRY: '주얼리',
-  CARD: '트레이딩 카드',
-  ELECTRONICS: '전자기기',
-  ART: '미술품/판화',
-  ANTIQUE: '골동품/앤틱',
-  ETC: '기타',
 };
 
 const SCHEDULED_BADGE_LABEL = '방송예정';
 
-const STREAM_STATUS_META_MAP: Record<
-  SearchStreamStatus,
-  { label: string; badgeClassName: string; canEnter: boolean }
-> = {
-  LIVE: {
-    label: 'LIVE',
-    badgeClassName: 'bg-[#EF4444] text-white',
-    canEnter: true,
-  },
-  SCHEDULED: {
-    label: SCHEDULED_BADGE_LABEL,
-    badgeClassName: 'bg-gold/20 text-gold-light',
-    canEnter: false,
-  },
-  PAUSED: {
-    label: '일시정지',
-    badgeClassName: 'bg-ember/20 text-ember-light',
-    canEnter: true,
-  },
-  ENDED: {
-    label: '종료됨',
-    badgeClassName: 'bg-white/12 text-white/70',
-    canEnter: false,
-  },
-};
+const STREAM_STATUS_META_MAP: Record<SearchStreamStatus, { label: string; badgeClassName: string; canEnter: boolean }> =
+  {
+    LIVE: {
+      label: 'LIVE',
+      badgeClassName: 'bg-[#EF4444] text-white',
+      canEnter: true,
+    },
+    SCHEDULED: {
+      label: SCHEDULED_BADGE_LABEL,
+      badgeClassName: 'bg-gold/20 text-gold-light',
+      canEnter: false,
+    },
+    PAUSED: {
+      label: '일시정지',
+      badgeClassName: 'bg-ember/20 text-ember-light',
+      canEnter: true,
+    },
+    ENDED: {
+      label: '종료됨',
+      badgeClassName: 'bg-white/12 text-white/70',
+      canEnter: false,
+    },
+  };
 
 const formatScheduledAt = (scheduledAt: string | null) => {
   if (!scheduledAt) return null;
@@ -75,12 +59,11 @@ export default function LiveCard({
   statusBadge,
   isNavigable,
   disableSellerNavigation = false,
-  metaText,
 }: LiveCardProps) {
   const navigate = useNavigate();
   const statusMeta = STREAM_STATUS_META_MAP[stream.streamStatus];
   const sellerInitial = stream.seller.nickname.trim().charAt(0) || '?';
-  const categoryLabel = CATEGORY_LABEL_MAP[stream.category] ?? stream.category;
+  const categoryLabel = getCategoryLabel(stream.category);
   const isScheduledCard = stream.streamStatus === 'SCHEDULED';
   const isLiveStream = stream.streamStatus === 'LIVE';
   const scheduledAtLabel = formatScheduledAt(stream.scheduledAt);
@@ -94,7 +77,7 @@ export default function LiveCard({
       : undefined);
   const canNavigate = isNavigable ?? statusMeta.canEnter;
   const canNavigateToProfile = !disableSellerNavigation && stream.seller.sellerId > 0;
-  const containerClassName = `group w-full max-w-[230px] ${className}`.trim();
+  const containerClassName = `group flex w-full max-w-[230px] flex-col ${className}`.trim();
   const livePreviewClassName = `relative aspect-3/4 w-full overflow-hidden rounded-2xl bg-neutral-900 ${
     canNavigate ? 'cursor-pointer' : ''
   }`.trim();
@@ -128,6 +111,31 @@ export default function LiveCard({
 
   return (
     <article className={containerClassName}>
+      <button
+        type="button"
+        onClick={handleSellerClick}
+        disabled={!canNavigateToProfile}
+        className={`mb-1 flex w-full items-center gap-2.5 rounded-xl bg-transparent px-1 py-1 text-left transition-colors ${
+          canNavigateToProfile ? 'cursor-pointer hover:bg-white/4' : 'cursor-default'
+        } disabled:pointer-events-none`}
+      >
+        {stream.seller.profileImageUri ? (
+          <img
+            src={stream.seller.profileImageUri}
+            alt={`${stream.seller.nickname} profile`}
+            className="h-7 w-7 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-muted text-[14px] font-semibold text-primary-light">
+            {sellerInitial}
+          </div>
+        )}
+
+        <span className="min-w-0 truncate text-[14px] font-medium leading-none text-neutral-200">
+          {stream.seller.nickname}
+        </span>
+      </button>
+
       <div
         className={livePreviewClassName}
         onClick={canNavigate ? handleLiveClick : undefined}
@@ -162,55 +170,24 @@ export default function LiveCard({
 
         {resolvedStatusBadge ? (
           <span
-            className={`absolute left-3 top-3 rounded-md px-2.5 py-1.5 text-[12px] font-semibold ${resolvedStatusBadge.className}`}
+            className={`absolute left-3 top-3 rounded-md px-2 py-0.5 text-[11px] font-semibold ${resolvedStatusBadge.className}`}
           >
             {resolvedStatusBadge.label}
           </span>
         ) : (
           isLiveStream &&
           !isScheduledCard && (
-            <span className="absolute left-3 top-3 rounded-md bg-accent px-2.5 py-1.5 text-[12px] font-semibold text-white">
+            <span className="absolute left-3 top-3 rounded-md bg-accent px-2 py-0.5 text-[11px] font-semibold text-white">
               Live · {stream.viewerCount.toLocaleString()}
             </span>
           )
         )}
       </div>
 
-      <button
-        type="button"
-        onClick={handleSellerClick}
-        disabled={!canNavigateToProfile}
-        className={`mt-5 flex w-full items-start gap-3 text-left ${
-          canNavigateToProfile ? 'cursor-pointer' : 'cursor-default'
-        } disabled:pointer-events-none`}
-      >
-        {stream.seller.profileImageUri ? (
-          <img
-            src={stream.seller.profileImageUri}
-            alt={`${stream.seller.nickname} profile`}
-            className="h-12 w-12 rounded-full object-cover"
-          />
-        ) : (
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-muted text-[16px] font-semibold text-primary-light">
-            {sellerInitial}
-          </div>
-        )}
-
-        <div className="min-w-0 flex flex-col gap-2">
-          <h3 className="overflow-hidden text-ellipsis whitespace-nowrap text-[16px] font-normal leading-none text-warm">
-            {stream.title}
-          </h3>
-          {metaText ? (
-            <p className="text-[14px] font-light leading-none text-neutral-400">{metaText}</p>
-          ) : (
-            <p className="text-[14px] font-light leading-none text-neutral-400">
-              <span>{stream.seller.nickname}</span>
-              <span className="mx-1 text-gold">|</span>
-              <span className="text-gold">{categoryLabel}</span>
-            </p>
-          )}
-        </div>
-      </button>
+      <div className="mt-3 flex min-w-0 flex-col gap-1 px-1">
+        <h3 className="truncate text-[15px] font-medium leading-[1.35] text-warm">{stream.title}</h3>
+        <p className="truncate text-[13px] font-normal leading-none text-neutral-500">{categoryLabel}</p>
+      </div>
     </article>
   );
 }

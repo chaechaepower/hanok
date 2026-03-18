@@ -203,7 +203,9 @@ export default function MainPage() {
                       transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
-                  <span className={`relative z-10 ${isSelected ? 'text-neutral-100' : 'text-neutral-400 hover:text-neutral-200'}`}>
+                  <span
+                    className={`relative z-10 ${isSelected ? 'text-neutral-100' : 'text-neutral-400 hover:text-neutral-200'}`}
+                  >
                     {option.label}
                   </span>
                 </button>
@@ -215,7 +217,7 @@ export default function MainPage() {
             <button
               type="button"
               onClick={() => setIsSortDropdownOpen((prev) => !prev)}
-              className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-primary/15 px-3 py-2 transition hover:bg-primary/25"
+              className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-primary/15 px-4 py-2 transition hover:bg-primary/25"
             >
               <span className="text-body-md font-semibold text-primary-light">{selectedSortLabel}</span>
               <span
@@ -259,7 +261,7 @@ export default function MainPage() {
           />
         )}
 
-        <section className="flex flex-1 flex-col gap-8 py-10 pl-8 pr-8">
+        <section className="flex flex-1 flex-col gap-20 py-10 pl-8 pr-8">
           <h2 className="text-[24px] font-semibold text-warm">
             {isLiveStatus ? '현재 진행 중인 경매!' : '예정된 경매를 살펴보세요'}
           </h2>
