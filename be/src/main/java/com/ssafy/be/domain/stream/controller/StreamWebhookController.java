@@ -3,14 +3,17 @@ package com.ssafy.be.domain.stream.controller;
 import com.ssafy.be.domain.stream.exception.StreamErrorCode;
 import com.ssafy.be.domain.stream.service.StreamReconnectService;
 import com.ssafy.be.domain.stream.service.StreamViewerService;
+import com.ssafy.be.global.exception.GlobalErrorCode;
 import com.ssafy.be.global.exception.GlobalException;
 import com.ssafy.be.global.infra.livekit.LiveKitProperties;
 import io.livekit.server.WebhookReceiver;
 import livekit.LivekitWebhook.WebhookEvent;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/streams")
 @RequiredArgsConstructor
@@ -54,7 +57,8 @@ public class StreamWebhookController {
             }
 
         } catch (Exception e) {
-            throw new GlobalException(StreamErrorCode.INVALID_STREAM_EVENT_TYPE);
+            log.error("[error] livekit webhook 에러 발생 {}", e.getMessage(), e);
+            throw new GlobalException(GlobalErrorCode.INTERNAL_SERVER_ERROR);
         }
 
         return ResponseEntity.ok().build();
