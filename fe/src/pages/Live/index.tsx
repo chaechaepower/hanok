@@ -77,8 +77,8 @@ export default function LivePage() {
   const introduceAuctionId = selectedReadyAuctionItem?.auctionId ?? fallbackReadyAuctionItem?.auctionId ?? null;
   const startAuctionId = introducingAuctionItem?.auctionId ?? null;
   const startAuctionType = introducingAuctionItem?.auctionType ?? null;
-  const activeBidAuctionId = liveAuctionItem?.auctionId ?? introducingAuctionItem?.auctionId ?? null;
-  const activeAuctionType = liveAuctionItem?.auctionType ?? introducingAuctionItem?.auctionType ?? null;
+  const activeBidAuctionId = liveAuctionItem?.auctionId ?? null;
+  const activeAuctionType = liveAuctionItem?.auctionType ?? null;
 
   const livekitUrl = import.meta.env.VITE_LIVEKIT_URL ?? '';
   const livekitToken = activeStreamEnter?.token ?? '';
