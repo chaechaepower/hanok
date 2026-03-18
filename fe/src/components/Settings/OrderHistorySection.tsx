@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FiGift } from 'react-icons/fi';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import { motion } from 'framer-motion';
@@ -89,17 +89,11 @@ export default function OrderHistorySection() {
   const totalCount = items.length;
   const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
 
-  const filteredAndSorted = useMemo(() => {
-    let result = statusFilter === 'ALL' ? items : items.filter((item) => item.escrowStatus === statusFilter);
-
-    if (sortBy === 'LATEST') {
-      result = [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    } else {
-      result = [...result].sort((a, b) => b.amount - a.amount);
-    }
-
-    return result;
-  }, [items, statusFilter, sortBy]);
+  const filteredItems = statusFilter === 'ALL' ? items : items.filter((item) => item.escrowStatus === statusFilter);
+  const filteredAndSorted =
+    sortBy === 'LATEST'
+      ? [...filteredItems].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      : [...filteredItems].sort((a, b) => b.amount - a.amount);
 
   const selectedSortLabel = SORT_OPTIONS.find((o) => o.value === sortBy)?.label ?? '';
 
