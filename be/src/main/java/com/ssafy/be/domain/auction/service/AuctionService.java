@@ -248,7 +248,7 @@ public class AuctionService {
         ShippingAddress shippingAddress = shippingAddressRepository.findByUserIdAndIsDefaultTrue(topBid.userId())
                 .orElseThrow(() -> new StompException(ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
 
-        escrowService.startEscrow(topBid, auction, shippingAddress);
+        escrowService.startEscrow(topBid, auction, shippingAddress); // TODO: 여기서 알림 발송하는데 실패할 경우 롤백됨.
 
         // BID_WINNER로 낙찰 정보 private
         BidWinnerResponse bidWinnerResponse = buildBidWinnerResponse(
