@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.mysql.MySQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
-
 @TestConfiguration(proxyBeanMethods = false)
 public class TestContainersConfig {
     private static final String REDIS_DOCKER_IMAGE = "redis:7.2.0-alpine";
@@ -17,7 +16,9 @@ public class TestContainersConfig {
     @Bean
     MySQLContainer mysqlContainer() {
         return new MySQLContainer(
-                DockerImageName.parse("mysql:8.0.34").asCompatibleSubstituteFor("mysql"));
+                DockerImageName.parse("mysql:8.0.34").asCompatibleSubstituteFor("mysql")).withCommand(
+                        "--ngram_token_size=2",
+                        "--innodb_ft_min_token_size=1");
     }
 
     @Bean
