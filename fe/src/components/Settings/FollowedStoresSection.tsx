@@ -50,7 +50,7 @@ export default function FollowedStoresSection() {
           <div className="w-8 h-8 border-4 border-neutral-700 border-t-gold-light rounded-full animate-spin" />
         </div>
       ) : followedList.length === 0 ? (
-        <div className="w-full box-border border border-gold-light/30 rounded-2xl p-12 bg-background flex flex-col items-center gap-4">
+        <div className="w-full box-border rounded-2xl p-12 bg-surface-elevated flex flex-col items-center gap-4">
           <FaStore size={40} className="text-neutral-700" />
           <p className="m-0 text-neutral-500 text-[15px]">팔로우한 스토어가 없습니다.</p>
         </div>
@@ -60,7 +60,7 @@ export default function FollowedStoresSection() {
             <div
               key={followId}
               onClick={() => navigate(`/profile/${seller.sellerId}`)}
-              className="w-full box-border border border-gold-light/30 rounded-2xl p-6 bg-background flex items-center gap-5 hover:border-gold-light/60 transition-colors cursor-pointer"
+              className="w-full box-border rounded-2xl p-6 bg-surface-elevated flex items-center gap-5 hover:bg-surface transition-colors cursor-pointer"
             >
               <div className="relative flex-shrink-0">
                 {seller.profileImageUri ? (
@@ -86,7 +86,7 @@ export default function FollowedStoresSection() {
               <button
                 onClick={(e) => { e.stopPropagation(); handleUnfollow(seller.sellerId); }}
                 disabled={isPending}
-                className="flex-shrink-0 py-2 px-5 bg-neutral-100 text-background text-sm font-bold border-none rounded-full cursor-pointer hover:bg-neutral-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn btn-accent-outline flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 언팔로우
               </button>

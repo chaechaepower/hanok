@@ -75,7 +75,7 @@ export default function SettingsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-8 box-border py-10">
-      <div className="flex w-full items-center justify-between rounded-2xl border border-gold-light/30 bg-background px-10 py-8 box-border">
+      <div className="flex w-full items-center justify-between rounded-2xl bg-surface-elevated px-10 py-8 box-border">
         <div className="flex items-center gap-6">
           <div className="group relative cursor-pointer" onClick={handleProfileImageClick}>
             <input
@@ -108,7 +108,7 @@ export default function SettingsPage() {
               <button
                 onClick={handleLogout}
                 disabled={isLogoutPending}
-                className="rounded-md border border-neutral-500 bg-transparent px-3 py-1 text-sm text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-white"
+                className="btn btn-primary-outline"
               >
                 {isLogoutPending ? '로그아웃 중...' : '로그아웃'}
               </button>
@@ -120,7 +120,7 @@ export default function SettingsPage() {
           {user?.sellerId && (
             <button
               onClick={() => navigate(`/profile/${user.sellerId}`)}
-              className="flex min-w-[320px] cursor-pointer items-center justify-center gap-2 rounded-xl border border-gold-light/30 bg-background px-8 py-4 transition-colors hover:bg-surface"
+              className="flex min-w-[320px] cursor-pointer items-center justify-center gap-2 rounded-xl bg-surface-elevated px-8 py-4 transition-colors hover:bg-surface"
             >
               <FaStore className="text-gold-light" size={18} />
               <span className="text-[17px] font-bold text-gold-light">내 상점 보기</span>
@@ -129,7 +129,7 @@ export default function SettingsPage() {
 
           <button
             onClick={() => navigate('/wallet')}
-            className="flex min-w-[320px] cursor-pointer items-center justify-between rounded-xl border border-gold-light/30 bg-background px-8 py-5 transition-colors hover:bg-surface"
+            className="flex min-w-[320px] cursor-pointer items-center justify-between rounded-xl bg-surface-elevated px-8 py-5 transition-colors hover:bg-surface"
           >
             <span className="text-[17px] font-medium text-neutral-400">보유머니</span>
             <div className="flex items-center gap-3">

@@ -9,9 +9,9 @@
 
 @theme {
   /* ── 베이스 배경 ── */
-  --color-background: #121010;
-  --color-surface: #1a1614;
-  --color-surface-elevated: #221e1a;
+  --color-background: #181412;
+  --color-surface: #201c18;
+  --color-surface-elevated: #28241e;
 
   /* ── 포인트 (primary alias) ── */
   --color-point: #8a6e52;
@@ -47,7 +47,7 @@
   --shadow-primary-glow: 0 0 0 3px rgba(138, 110, 82, 0.12);
 
   /* ── 뉴트럴 (웜톤 조정) ── */
-  --color-neutral-900: #1c1816;
+  --color-neutral-900: #221e1a;
   --color-neutral-800: #2a2420;
   --color-neutral-700: #3e3630;
   --color-neutral-600: #5a4e44;
@@ -518,10 +518,20 @@ table {
   border: 1px solid var(--color-gold);
 }
 
+.btn-gold:hover {
+  background-color: var(--color-gold-light);
+  border-color: var(--color-gold-light);
+}
+
 .btn-gold-outline {
   color: var(--color-gold);
   background-color: var(--color-gold-muted);
   border: 1px solid color-mix(in srgb, var(--color-gold) 35%, transparent);
+}
+
+.btn-gold-outline:hover {
+  background-color: color-mix(in srgb, var(--color-gold) 25%, transparent);
+  border-color: var(--color-gold);
 }
 
 /* Primary — 브랜드, 판매자 */
@@ -531,10 +541,20 @@ table {
   border: 1px solid var(--color-primary);
 }
 
+.btn-primary:hover {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary-light);
+}
+
 .btn-primary-outline {
   color: var(--color-primary-light);
   background-color: var(--color-primary-muted);
   border: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+.btn-primary-outline:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  border-color: var(--color-primary);
 }
 
 /* Accent — 경고, 신고 */
@@ -544,10 +564,20 @@ table {
   border: 1px solid var(--color-accent);
 }
 
+.btn-accent:hover {
+  background-color: var(--color-accent-light);
+  border-color: var(--color-accent-light);
+}
+
 .btn-accent-outline {
   color: var(--color-accent-light);
   background-color: var(--color-accent-muted);
   border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+.btn-accent-outline:hover {
+  background-color: color-mix(in srgb, var(--color-accent) 25%, transparent);
+  border-color: var(--color-accent);
 }
 
 /* Ember — 완료, 팔로우, 긍정 */
@@ -557,10 +587,20 @@ table {
   border: 1px solid var(--color-ember);
 }
 
+.btn-ember:hover {
+  background-color: var(--color-ember-light);
+  border-color: var(--color-ember-light);
+}
+
 .btn-ember-outline {
   color: var(--color-ember-light);
   background-color: var(--color-ember-muted);
   border: 1px solid color-mix(in srgb, var(--color-ember) 35%, transparent);
+}
+
+.btn-ember-outline:hover {
+  background-color: color-mix(in srgb, var(--color-ember) 25%, transparent);
+  border-color: var(--color-ember);
 }
 
 /* ══════════════════════════════════════════════════════════

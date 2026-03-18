@@ -103,7 +103,7 @@ export default function AccountSection() {
         <p className="m-0 text-[15px] text-neutral-400">계정을 관리합니다.</p>
       </div>
 
-      <div className="w-full box-border border border-gold-light/30 rounded-2xl p-8 bg-background flex flex-col gap-8">
+      <div className="w-full box-border rounded-2xl p-8 bg-surface-elevated flex flex-col gap-8">
         <div className="flex items-center justify-between">
           <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
             <FaUserAlt size={18} className="text-neutral-400" />
@@ -111,7 +111,7 @@ export default function AccountSection() {
           </h3>
           <button
             onClick={handleOpenPasswordModal}
-            className="py-2 px-5 bg-neutral-100 text-background text-sm font-bold border-none rounded-full cursor-pointer hover:bg-neutral-200 transition-colors"
+            className="btn btn-gold-outline"
           >
             비밀번호 수정
           </button>
@@ -133,7 +133,7 @@ export default function AccountSection() {
         </div>
       </div>
 
-      <div className="w-full box-border border border-gold-light/30 rounded-2xl p-8 bg-background flex flex-col gap-6">
+      <div className="w-full box-border rounded-2xl p-8 bg-surface-elevated flex flex-col gap-6">
         <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
           <FiBell size={20} className="text-gold-light" />
           알림 설정
@@ -150,7 +150,7 @@ export default function AccountSection() {
         </div>
       </div>
 
-      <div className="w-full box-border border border-gold-light/30 rounded-2xl p-8 bg-background flex flex-col gap-6">
+      <div className="w-full box-border rounded-2xl p-8 bg-surface-elevated flex flex-col gap-6">
         <h3 className="flex items-center gap-3 m-0 text-lg font-bold text-white">
           <FiAlertTriangle size={20} className="text-accent" />
           회원 탈퇴
@@ -167,7 +167,7 @@ export default function AccountSection() {
           </div>
           <button
             onClick={handleOpenWithdrawModal}
-            className="self-start py-3 px-6 bg-transparent text-accent border border-accent rounded-full text-[15px] font-bold cursor-pointer hover:bg-accent/10 transition-colors"
+            className="btn btn-accent-outline self-start"
           >
             회원 탈퇴 신청
           </button>
@@ -219,14 +219,14 @@ export default function AccountSection() {
             <div className="flex justify-end gap-3 mt-2">
               <button
                 onClick={() => setIsWithdrawModalOpen(false)}
-                className="py-3 px-6 bg-neutral-700 text-neutral-200 border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-neutral-600 transition-colors"
+                className="btn btn-primary-outline"
               >
                 취소
               </button>
               <button
                 onClick={handleSubmitWithdraw}
                 disabled={isWithdrawPending}
-                className="py-3 px-6 bg-accent text-white font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-accent-dark transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="btn btn-accent disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isWithdrawPending ? '처리 중…' : '탈퇴 신청'}
               </button>
@@ -292,7 +292,7 @@ export default function AccountSection() {
             <div className="flex justify-end gap-3 mt-2">
               <button
                 onClick={() => setIsPasswordModalOpen(false)}
-                className="py-3 px-6 bg-neutral-700 text-neutral-200 border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-neutral-600 transition-colors"
+                className="btn btn-primary-outline"
               >
                 취소
               </button>

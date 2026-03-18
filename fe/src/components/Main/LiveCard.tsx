@@ -77,7 +77,7 @@ export default function LiveCard({
       : undefined);
   const canNavigate = isNavigable ?? statusMeta.canEnter;
   const canNavigateToProfile = !disableSellerNavigation && stream.seller.sellerId > 0;
-  const containerClassName = `group flex w-full max-w-[230px] flex-col ${className}`.trim();
+  const containerClassName = `group flex w-full max-w-[280px] flex-col ${className}`.trim();
   const livePreviewClassName = `relative aspect-3/4 w-full overflow-hidden rounded-2xl bg-neutral-900 ${
     canNavigate ? 'cursor-pointer' : ''
   }`.trim();

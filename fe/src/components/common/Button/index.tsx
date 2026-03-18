@@ -1,7 +1,7 @@
 import React from 'react';
 
 type Props = {
-  variant?: 'outline' | 'yellowOutline' | 'white' | 'black' | 'red' | 'yellow' | 'navLogin' | 'navSignup';
+  variant?: 'outline' | 'yellowOutline' | 'white' | 'black' | 'red' | 'yellow' | 'warm' | 'warmOutline' | 'navLogin' | 'navSignup';
   size?: 'large' | 'small' | 'responsive';
 } & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
@@ -20,6 +20,8 @@ const variantClass: Record<NonNullable<Props['variant']>, string> = {
   white: 'bg-neutral-100 text-background hover:bg-neutral-200',
   black: 'bg-background text-neutral-100 hover:bg-neutral-900',
   yellow: 'bg-gold text-background hover:bg-gold-dark',
+  warm: 'bg-warm text-background hover:bg-warm/85',
+  warmOutline: 'bg-transparent text-warm shadow-[0_0_0_1px_var(--color-warm)_inset] hover:bg-warm/6',
   red: 'bg-accent text-white hover:bg-accent-dark',
   navLogin: 'bg-primary text-white rounded-[10px] hover:bg-primary-light',
   navSignup:

@@ -100,8 +100,8 @@ const FollowingSection = ({ category, isLiveStatus, sortFilter, statusFilter }: 
   const sectionTitle = isLiveStatus ? `${meData?.nickname ?? '회원'}님의 단골 경매!` : '다음 경매를 기다려보세요!';
 
   return (
-    <section className="mx-8 mt-6 flex flex-1 flex-col gap-8 rounded-2xl bg-surface-elevated px-8 pb-10 pt-6">
-      <h2 className="text-[24px] font-semibold text-warm">{sectionTitle}</h2>
+    <section className="mx-10 mt-6 flex flex-1 flex-col gap-6 rounded-2xl bg-surface-elevated px-8 pb-10 pt-6">
+      <h2 className="text-[28px] font-semibold text-warm">{sectionTitle}</h2>
       {followingBroadcasts.length > 0 ? (
         <>
           <div className={GRID_CLASS_NAME}>
@@ -184,7 +184,7 @@ export default function MainPage() {
         className="min-h-[calc(100vh-108px)]"
       />
       <div className="flex w-full flex-col">
-        <div className="flex items-center justify-between gap-4 pb-0 pl-8 pr-8 pt-8">
+        <div className="flex items-center justify-between gap-4 px-10 pt-8">
           <div className="relative inline-flex items-center rounded-xl bg-warm/6 p-1">
             {STATUS_OPTIONS.map((option) => {
               const isSelected = statusFilter === option.value;
@@ -261,8 +261,8 @@ export default function MainPage() {
           />
         )}
 
-        <section className="flex flex-1 flex-col gap-20 py-10 pl-8 pr-8">
-          <h2 className="text-[24px] font-semibold text-warm">
+        <section className="mx-10 mt-6 flex flex-1 flex-col gap-6 rounded-2xl bg-surface-elevated px-8 pb-10 pt-6">
+          <h2 className="text-[28px] font-semibold text-warm">
             {isLiveStatus ? '현재 진행 중인 경매!' : '예정된 경매를 살펴보세요'}
           </h2>
           {allBroadcasts.length > 0 ? (

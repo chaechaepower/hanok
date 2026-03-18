@@ -205,25 +205,25 @@ export default function WalletPage() {
 
   return (
     <>
-      <section className="max-w-[1100px] w-full text-[#f5f2eb]">
+      <section className="max-w-[1100px] w-full text-neutral-100">
         <div className="mx-auto flex w-full flex-col gap-8 pb-16 pt-8">
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => navigate(-1)}
-                className="flex h-10 w-10 items-center justify-center rounded-full text-[#f5f2eb] transition hover:bg-white/6"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-warm transition hover:bg-white/6"
                 aria-label="이전 페이지로 이동"
               >
                 <FiChevronLeft className="h-6 w-6" />
               </button>
-              <h1 className="text-2xl font-bold text-white leading-tight">내 가상머니</h1>
+              <h1 className="text-2xl font-bold text-warm leading-tight">내 가상머니</h1>
             </div>
-            <p className="text-[#888] text-sm mt-1 ml-12">경매 입찰을 위한 가상머니 충전 및 정산 내역을 관리합니다.</p>
+            <p className="text-neutral-500 text-sm mt-1 ml-12">경매 입찰을 위한 가상머니 충전 및 정산 내역을 관리합니다.</p>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
-            <article className="relative overflow-hidden rounded-[28px] border border-[#77623d]/70 bg-[#05070f] px-8 py-6 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
+            <article className="relative overflow-hidden rounded-[28px] bg-surface-elevated px-8 py-6 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
               <div className="relative z-10 flex max-w-67.5 flex-col gap-5">
                 <div className="space-y-3">
                   <p className="text-lg font-semibold text-white">보유 머니</p>
@@ -235,10 +235,10 @@ export default function WalletPage() {
                       </>
                     ) : (
                       <>
-                        <p className="text-[32px] font-bold tracking-[-0.03em] text-[#d8c59a]">
+                        <p className="text-[32px] font-bold tracking-[-0.03em] text-gold-light">
                           {formatMoney(balance)} 원
                         </p>
-                        <p className="text-[14px] text-[#b8ab99]">= {formatMoney(balance)} KRW</p>
+                        <p className="text-[14px] text-neutral-400">= {formatMoney(balance)} KRW</p>
                       </>
                     )}
                   </div>
@@ -246,15 +246,15 @@ export default function WalletPage() {
 
                 <div className="flex flex-row gap-3">
                   <div className="w-full">
-                    <Button variant="white" className="gap-2 font-semibold" onClick={() => openPointModal('charge')}>
+                    <Button variant="warm" className="gap-2 font-semibold" onClick={() => openPointModal('charge')}>
                       <FiZap className="h-4 w-4" />
                       충전하기
                     </Button>
                   </div>
                   <div className="w-full">
                     <Button
-                      variant="outline"
-                      className="gap-2 font-semibold shadow-[0_0_0_1px_rgba(255,255,255,0.65)_inset]"
+                      variant="warmOutline"
+                      className="gap-2 font-semibold"
                       onClick={() => openPointModal('withdraw')}
                     >
                       <FiCreditCard className="h-4 w-4" />
@@ -267,7 +267,7 @@ export default function WalletPage() {
               <img src={coins} alt="coins" className="absolute right-4 bottom-6 w-50 md:block" />
             </article>
 
-            <article className="flex flex-col justify-between rounded-[28px] border border-[#77623d]/70 bg-[#05070f] px-8 py-6 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
+            <article className="flex flex-col justify-between rounded-[28px] bg-surface-elevated px-8 py-6 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
               <div className="space-y-3">
                 <p className="text-lg font-semibold text-white">경매 예치 머니</p>
                 <div className="space-y-2">
@@ -278,24 +278,24 @@ export default function WalletPage() {
                     </>
                   ) : (
                     <>
-                      <p className="text-[32px] font-bold tracking-[-0.03em] text-[#e29b47]">
+                      <p className="text-[32px] font-bold tracking-[-0.03em] text-gold">
                         {formatMoney(depositedAuctionBalance)} 원
                       </p>
-                      <p className="text-[14px] text-[#8f8a84]">현재 거래 대기 중인 금액입니다.</p>
+                      <p className="text-[14px] text-neutral-500">현재 거래 대기 중인 금액입니다.</p>
                     </>
                   )}
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 rounded-2xl border border-[#5a4632]/70 bg-[linear-gradient(90deg,rgba(63,47,28,0.68),rgba(32,27,22,0.9))] px-4 py-3 text-[14px] text-[#dfa24f]">
+              <div className="flex items-center gap-3 rounded-2xl border border-primary-muted bg-primary-muted/30 px-4 py-3 text-[14px] text-gold">
                 <FiInfo className="h-4 w-4 shrink-0" />
                 <p>거래 완료 또는 유찰 시 자동 반환/정산됩니다.</p>
               </div>
             </article>
           </div>
 
-          <article className="rounded-[30px] border border-[#6f5a37]/65 bg-[#04070d] px-5 py-5 shadow-[0_26px_70px_rgba(0,0,0,0.24)] sm:px-7 sm:py-6">
-            <div className="border-b border-[#4a402f]">
+          <article className="rounded-[30px] bg-surface-elevated px-5 py-5 shadow-[0_26px_70px_rgba(0,0,0,0.24)] sm:px-7 sm:py-6">
+            <div className="border-b border-neutral-800">
               <div className="macro-scroll flex gap-2 overflow-x-auto">
                 {walletTabs.map((tab) => {
                   const isActive = activeTab === tab.key;
@@ -305,7 +305,7 @@ export default function WalletPage() {
                       type="button"
                       onClick={() => setActiveTab(tab.key)}
                       className={`relative shrink-0 px-3 py-4 text-sm font-semibold transition sm:px-4 sm:text-[15px] ${
-                        isActive ? 'text-gold' : 'text-[#8d8579] hover:text-[#d4c8b8]'
+                        isActive ? 'text-gold' : 'text-neutral-500 hover:text-neutral-300'
                       }`}
                     >
                       {tab.label}
@@ -322,7 +322,7 @@ export default function WalletPage() {
               ) : currentHistory.length > 0 ? (
                 currentHistory.map((item) => <HistoryRow key={item.id} item={item} />)
               ) : (
-                <div className="px-2 py-10 text-center text-sm text-[#8d8579]">내역이 없습니다.</div>
+                <div className="px-2 py-10 text-center text-sm text-neutral-500">내역이 없습니다.</div>
               )}
             </div>
           </article>
@@ -352,18 +352,18 @@ function HistoryRow({ item }: { item: WalletHistoryItem }) {
   const iconMap: Record<WalletType, { icon: IconType; wrapperClassName: string; iconClassName: string }> = {
     charge: {
       icon: FiArrowDown,
-      wrapperClassName: 'bg-[#21314b]',
-      iconClassName: 'text-[#7db7ff]',
+      wrapperClassName: 'bg-ember-muted',
+      iconClassName: 'text-ember-light',
     },
     withdraw: {
       icon: FiArrowUp,
-      wrapperClassName: 'bg-[#2d3226]',
-      iconClassName: 'text-[#87d46d]',
+      wrapperClassName: 'bg-gold-muted',
+      iconClassName: 'text-gold-light',
     },
     settlement: {
       icon: FiArrowUp,
-      wrapperClassName: 'bg-[#303847]',
-      iconClassName: 'text-[#f5f2eb]',
+      wrapperClassName: 'bg-primary-muted',
+      iconClassName: 'text-neutral-100',
     },
   };
 
@@ -381,16 +381,16 @@ function HistoryRow({ item }: { item: WalletHistoryItem }) {
           <Icon className={`h-5 w-5 ${iconClassName}`} />
         </div>
         <div className="min-w-0 space-y-2">
-          <p className="truncate text-[17px] font-semibold text-[#f7f1e7]">{item.title}</p>
-          <p className="text-sm text-[#8d8579]">{item.occurredAt}</p>
+          <p className="truncate text-[17px] font-semibold text-neutral-100">{item.title}</p>
+          <p className="text-sm text-neutral-500">{item.occurredAt}</p>
         </div>
       </div>
 
       <div className="w-full shrink-0 text-left sm:w-auto sm:text-right">
-        <p className="text-[20px] font-bold tracking-[-0.02em] text-[#f7f1e7]">
+        <p className="text-[20px] font-bold tracking-[-0.02em] text-neutral-100">
           {formatTransactionAmount(item.amount)}
         </p>
-        <p className="mt-2 text-sm text-[#8d8579]">{item.status}</p>
+        <p className="mt-2 text-sm text-neutral-500">{item.status}</p>
       </div>
     </div>
   );
