@@ -28,6 +28,8 @@ public class StreamReconnectService {
         Stream stream = streamRepository.findById(streamId)
                 .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
+
+
         // LIVE 상태일 때만 처리
         if (stream.getStatus() != StreamStatus.LIVE) {
             return;
