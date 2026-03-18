@@ -116,7 +116,7 @@ export default function LiveCard({
         onClick={handleSellerClick}
         disabled={!canNavigateToProfile}
         className={`mb-1 flex w-full items-center gap-2.5 rounded-xl bg-transparent px-1 py-1 text-left transition-colors ${
-          canNavigateToProfile ? 'cursor-pointer hover:bg-white/4' : 'cursor-default'
+          canNavigateToProfile ? 'cursor-pointer' : 'cursor-default'
         } disabled:pointer-events-none`}
       >
         {stream.seller.profileImageUri ? (
@@ -136,58 +136,62 @@ export default function LiveCard({
         </span>
       </button>
 
-      <div
-        className={livePreviewClassName}
-        onClick={canNavigate ? handleLiveClick : undefined}
-        onKeyDown={canNavigate ? handleLiveKeyDown : undefined}
-        role={canNavigate ? 'link' : undefined}
-        tabIndex={canNavigate ? 0 : undefined}
+      <button
+        type="button"
+        onClick={handleLiveClick}
+        onKeyDown={handleLiveKeyDown}
+        disabled={!canNavigate}
+        className={`w-full border-none bg-transparent p-0 text-left ${
+          canNavigate ? 'cursor-pointer' : 'cursor-default'
+        } disabled:pointer-events-none`}
       >
-        {stream.thumbnailUri ? (
-          <img
-            src={stream.thumbnailUri}
-            alt={stream.title}
-            className="h-full w-full object-cover transition-transform duration-300 ease-out will-change-transform group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-neutral-600 text-[13px] font-medium tracking-[0.08em] text-neutral-400">
-            LIVE THUMBNAIL
-          </div>
-        )}
-
-        {!resolvedStatusBadge && isScheduledCard && scheduledAtLabel && (
-          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-linear-to-b from-black/70 via-black/45 to-black/75">
-            <div className="px-4 text-center text-warm">
-              <p className="text-[36px] font-semibold leading-none tracking-[-0.02em] drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
-                {scheduledAtLabel}
-              </p>
-              <p className="mt-2 text-[28px] font-semibold leading-none tracking-[-0.01em] drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">
-                {SCHEDULED_BADGE_LABEL}
-              </p>
+        <div className={livePreviewClassName}>
+          {stream.thumbnailUri ? (
+            <img
+              src={stream.thumbnailUri}
+              alt={stream.title}
+              className="h-full w-full object-cover transition-transform duration-300 ease-out will-change-transform group-hover:scale-105"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-neutral-600 text-[13px] font-medium tracking-[0.08em] text-neutral-400">
+              LIVE THUMBNAIL
             </div>
-          </div>
-        )}
+          )}
 
-        {resolvedStatusBadge ? (
-          <span
-            className={`absolute left-3 top-3 rounded-md px-2 py-0.5 text-[11px] font-semibold ${resolvedStatusBadge.className}`}
-          >
-            {resolvedStatusBadge.label}
-          </span>
-        ) : (
-          isLiveStream &&
-          !isScheduledCard && (
-            <span className="absolute left-3 top-3 rounded-md bg-accent px-2 py-0.5 text-[11px] font-semibold text-white">
-              Live · {stream.viewerCount.toLocaleString()}
+          {!resolvedStatusBadge && isScheduledCard && scheduledAtLabel && (
+            <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-linear-to-b from-black/70 via-black/45 to-black/75">
+              <div className="px-4 text-center text-warm">
+                <p className="text-[36px] font-semibold leading-none tracking-[-0.02em] drop-shadow-[0_2px_6px_rgba(0,0,0,0.55)]">
+                  {scheduledAtLabel}
+                </p>
+                <p className="mt-2 text-[28px] font-semibold leading-none tracking-[-0.01em] drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)]">
+                  {SCHEDULED_BADGE_LABEL}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {resolvedStatusBadge ? (
+            <span
+              className={`absolute left-3 top-3 rounded-md px-2 py-0.5 text-[11px] font-semibold ${resolvedStatusBadge.className}`}
+            >
+              {resolvedStatusBadge.label}
             </span>
-          )
-        )}
-      </div>
+          ) : (
+            isLiveStream &&
+            !isScheduledCard && (
+              <span className="absolute left-3 top-3 rounded-md bg-accent px-2 py-0.5 text-[11px] font-semibold text-white">
+                Live · {stream.viewerCount.toLocaleString()}
+              </span>
+            )
+          )}
+        </div>
 
-      <div className="mt-3 flex min-w-0 flex-col gap-1 px-1">
-        <h3 className="truncate text-[15px] font-medium leading-[1.35] text-warm">{stream.title}</h3>
-        <p className="truncate text-[13px] font-normal leading-none text-neutral-500">{categoryLabel}</p>
-      </div>
+        <div className="mt-3 flex min-w-0 flex-col gap-1 px-1">
+          <h3 className="truncate text-[15px] font-medium leading-[1.35] text-warm">{stream.title}</h3>
+          <p className="truncate text-[13px] font-normal leading-none text-neutral-500">{categoryLabel}</p>
+        </div>
+      </button>
     </article>
   );
 }

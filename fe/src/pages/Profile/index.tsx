@@ -180,7 +180,8 @@ export default function ProfilePage() {
     }
   }, [initialFollowing, followedData, followInitialized]);
 
-  const isMyProfile = meData?.sellerId != null && meData.sellerId === sellerId;
+  const mySellerId = meData?.sellerId ?? mySellerStatus?.sellerId ?? null;
+  const isMyProfile = mySellerId != null && mySellerId === sellerId;
   const isOwner = mySellerStatus?.isSeller || true;
 
   const handleFollowToggle = () => {
