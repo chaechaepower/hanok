@@ -188,31 +188,36 @@ export default function ShippingSection() {
       <div className="flex items-start justify-between mb-2">
         <div className="flex flex-col gap-1">
           <h2 className="m-0 text-2xl font-bold text-white">배송지 관리</h2>
-          <p className="m-0 text-[15px] text-neutral-400">기본 배송지 및 주소록을 설정합니다.</p>
+          <p className="m-0 text-[15px] text-neutral-400">
+            기본 배송지 및 주소록을 설정합니다.
+            {addresses.length > 0 && (
+              <span className="ml-2 text-gold-light font-semibold">등록된 배송지 {addresses.length}개</span>
+            )}
+          </p>
         </div>
         <button
           onClick={openAddModal}
-          className="flex-shrink-0 py-2 px-4 bg-background border border-neutral-700 text-white text-sm font-semibold rounded-full cursor-pointer hover:bg-neutral-800 transition-colors"
+          className="btn btn-gold flex-shrink-0"
         >
           + 새 배송지 추가
         </button>
       </div>
 
       {addresses.length === 0 ? (
-        <div className="w-full box-border border border-gold-light/30 rounded-2xl p-12 bg-background flex flex-col items-center gap-4">
+        <div className="w-full box-border rounded-2xl p-12 bg-surface-elevated flex flex-col items-center gap-4">
           <FaMapMarkerAlt size={40} className="text-neutral-700" />
           <p className="m-0 text-neutral-500 text-[15px]">등록된 배송지가 없습니다.</p>
         </div>
       ) : (
-        <div className="w-full box-border border border-gold-light/30 rounded-2xl bg-background overflow-hidden">
+        <div className="flex flex-col gap-3">
           {[...addresses]
             .sort((a, b) => Number(b.isDefault) - Number(a.isDefault))
-            .map((addr, idx) => (
-              <div key={addr.id} className={`p-8 flex flex-col gap-2 ${idx !== 0 ? 'border-t border-gold-light/20' : ''}`}>
+            .map((addr) => (
+              <div key={addr.id} className="rounded-2xl bg-surface-elevated p-6 flex flex-col gap-2">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-white font-bold text-[16px]">{addr.addressName}</span>
                   {addr.isDefault && (
-                    <span className="px-2.5 py-0.5 bg-neutral-100 text-background text-xs font-bold rounded-full">기본</span>
+                    <span className="badge badge-gold">기본</span>
                   )}
                 </div>
 
@@ -224,25 +229,25 @@ export default function ShippingSection() {
                 </p>
                 <p className="m-0 text-[15px] text-neutral-200">{addr.phone}</p>
 
-                <div className="flex items-center gap-4 mt-2 justify-end">
+                <div className="flex items-center gap-2 mt-3 justify-end">
                   {!addr.isDefault && (
                     <button
                       onClick={() => handleSetDefault(addr.id)}
-                      className="text-[14px] text-neutral-400 bg-transparent border-none cursor-pointer hover:text-white transition-colors"
+                      className="btn btn-primary-outline !py-1.5 !px-3 !text-[12px]"
                     >
                       기본으로 설정
                     </button>
                   )}
                   <button
                     onClick={() => openEditModal(addr)}
-                    className="text-[14px] text-neutral-400 bg-transparent border-none cursor-pointer hover:text-white transition-colors"
+                    className="btn btn-primary-outline !py-1.5 !px-3 !text-[12px]"
                   >
                     수정
                   </button>
                   <button
                     onClick={() => handleDelete(addr.id)}
                     disabled={addr.isDefault && addresses.length > 1}
-                    className="text-[14px] text-neutral-400 bg-transparent border-none cursor-pointer hover:text-accent-light transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="btn btn-accent-outline !py-1.5 !px-3 !text-[12px] disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     삭제
                   </button>
@@ -308,7 +313,7 @@ export default function ShippingSection() {
                 <button
                   type="button"
                   onClick={openAddressSearch}
-                  className="flex items-center gap-1.5 px-4 py-3 bg-gold-light text-background font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-gold-dark transition-colors whitespace-nowrap"
+                  className="btn btn-gold whitespace-nowrap"
                 >
                   <FiSearch size={16} />
                   주소 검색
@@ -370,13 +375,13 @@ export default function ShippingSection() {
             <div className="flex justify-end gap-3 mt-2">
               <button
                 onClick={() => setModalOpen(false)}
-                className="py-3 px-6 bg-neutral-700 text-neutral-200 border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-neutral-600 transition-colors"
+                className="btn btn-primary-outline"
               >
                 취소
               </button>
               <button
                 onClick={handleSubmit}
-                className="py-3 px-6 bg-gold-light text-background font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-gold-dark transition-colors"
+                className="btn btn-gold"
               >
                 {modalMode === 'add' ? '추가' : '저장'}
               </button>
@@ -419,7 +424,7 @@ export default function ShippingSection() {
               <button
                 onClick={() => searchAddress(1)}
                 disabled={searchLoading}
-                className="flex items-center gap-1.5 px-5 py-3 bg-gold-light text-background font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-gold-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn btn-gold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <FiSearch size={16} />
                 검색

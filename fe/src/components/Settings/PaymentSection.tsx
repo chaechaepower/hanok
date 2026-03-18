@@ -62,7 +62,7 @@ export default function PaymentSection() {
         <p className="text-neutral-600 text-[15px]">카드 및 계좌를 간편하게 관리하세요.</p>
       </div>
 
-      <div className="border border-gold-light/30 rounded-xl p-8 mb-12 flex items-center justify-between bg-background">
+      <div className="rounded-xl p-8 mb-12 flex items-center justify-between bg-surface-elevated">
         <div className="flex items-center gap-6">
           <div className="flex items-center justify-center">
             <FaCreditCard size={32} className="text-neutral-300" />
@@ -81,7 +81,7 @@ export default function PaymentSection() {
           )}
         </div>
         <button
-          className="px-6 py-2 bg-neutral-100 text-background text-[14px] font-semibold rounded-full hover:bg-neutral-200 transition-colors"
+          className="btn btn-gold"
           onClick={() => setShowForm((prev) => !prev)}
         >
           {hasAccount ? '계좌 변경' : '계좌 등록'}
