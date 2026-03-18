@@ -27,11 +27,11 @@ export default function AccountSection() {
   const { showToast } = useToast();
 
   const user = meData;
-  const isPushEnabled = notiData?.followStreamAlert ?? false;
+  const isPushEnabled = notiData?.notificationSetting ?? false;
 
   const handleTogglePush = () => {
     if (!notiData) return;
-    patchNotification({ followStreamAlert: !notiData.followStreamAlert });
+    patchNotification({ notificationSetting: !notiData.notificationSetting });
   };
 
   const handleOpenPasswordModal = () => {
@@ -109,10 +109,7 @@ export default function AccountSection() {
             <FaUserAlt size={18} className="text-neutral-400" />
             계정 관리
           </h3>
-          <button
-            onClick={handleOpenPasswordModal}
-            className="btn btn-gold-outline"
-          >
+          <button onClick={handleOpenPasswordModal} className="btn btn-gold-outline">
             비밀번호 수정
           </button>
         </div>
@@ -141,7 +138,9 @@ export default function AccountSection() {
         <div className="flex items-center justify-between mt-2">
           <div className="flex flex-col gap-2">
             <span className="text-[15px] text-white font-bold">팔로우 알림 설정</span>
-            <p className="m-0 text-[14px] text-neutral-400">팔로우한 판매자의 경매 방송이 시작 시 푸시 알림을 받습니다.</p>
+            <p className="m-0 text-[14px] text-neutral-400">
+              팔로우한 판매자의 경매 방송이 시작 시 푸시 알림을 받습니다.
+            </p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input type="checkbox" className="sr-only peer" checked={isPushEnabled} onChange={handleTogglePush} />
@@ -165,10 +164,7 @@ export default function AccountSection() {
               있다면 모두 완료된 후 시도해 주세요.
             </p>
           </div>
-          <button
-            onClick={handleOpenWithdrawModal}
-            className="btn btn-accent-outline self-start"
-          >
+          <button onClick={handleOpenWithdrawModal} className="btn btn-accent-outline self-start">
             회원 탈퇴 신청
           </button>
         </div>
@@ -217,10 +213,7 @@ export default function AccountSection() {
             {withdrawError && <p className="m-0 text-[13px] text-accent-light">{withdrawError}</p>}
 
             <div className="flex justify-end gap-3 mt-2">
-              <button
-                onClick={() => setIsWithdrawModalOpen(false)}
-                className="btn btn-primary-outline"
-              >
+              <button onClick={() => setIsWithdrawModalOpen(false)} className="btn btn-primary-outline">
                 취소
               </button>
               <button
@@ -290,10 +283,7 @@ export default function AccountSection() {
             {passwordError && <p className="m-0 text-[13px] text-accent-light">{passwordError}</p>}
 
             <div className="flex justify-end gap-3 mt-2">
-              <button
-                onClick={() => setIsPasswordModalOpen(false)}
-                className="btn btn-primary-outline"
-              >
+              <button onClick={() => setIsPasswordModalOpen(false)} className="btn btn-primary-outline">
                 취소
               </button>
               <button
