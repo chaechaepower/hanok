@@ -82,7 +82,16 @@ export default function LivePage() {
 
   const livekitUrl = import.meta.env.VITE_LIVEKIT_URL ?? '';
   const livekitToken = activeStreamEnter?.token ?? '';
-  const { state: livekitState, videoRef, toggleMic, toggleCamera, isMicOn, isCameraOn, viewerCount, disconnect } = useLiveKit({
+  const {
+    state: livekitState,
+    videoRef,
+    toggleMic,
+    toggleCamera,
+    isMicOn,
+    isCameraOn,
+    viewerCount,
+    disconnect,
+  } = useLiveKit({
     serverUrl: isStreamLive ? livekitUrl : '',
     token: isStreamLive ? livekitToken : '',
     isHost: isSeller,
@@ -150,6 +159,7 @@ export default function LivePage() {
       disconnect();
       setShowStreamEndModal(false);
       markStreamEnded();
+      navigate('/');
     } catch (error) {
       console.error('[stream] failed to end stream', error);
     }
@@ -247,12 +257,7 @@ export default function LivePage() {
             isCameraOn={isCameraOn}
           />
 
-          {auctionComment && (
-            <AuctionCommentToast
-              key={auctionComment.id}
-              message={auctionComment?.message ?? null}
-            />
-          )}
+          {auctionComment && <AuctionCommentToast key={auctionComment.id} message={auctionComment?.message ?? null} />}
 
           <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
             {timer && <AuctionTimer key={timer.receivedAtMs} timer={timer} onExpire={() => undefined} />}
@@ -294,12 +299,7 @@ export default function LivePage() {
               onClose={handleUniqueAuctionResultClose}
             />
           )}
-          {streamState === 'disconnected' && (
-            <StreamDisconnected
-              initialSeconds={60}
-              onTimeout={markStreamEnded}
-            />
-          )}
+          {streamState === 'disconnected' && <StreamDisconnected initialSeconds={60} onTimeout={markStreamEnded} />}
           {streamState === 'ended' && (
             <StreamEnded
               onClose={() => {

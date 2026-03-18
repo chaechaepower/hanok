@@ -18,7 +18,7 @@ const getSellerInitial = (nickname?: string) => nickname?.trim().charAt(0).toUpp
 
 export default function RightPanel({ isSeller, auctionType, auctionStatistics, uniqueBidSync, streamEnter }: Props) {
   const [activeTab, setActiveTab] = useState<'chat' | 'auction'>('chat');
-  const { messages, sendMessage, sendMacro, connectionState } = useStompChat();
+  const { messages, sendMessage, sendMacro, connectionState } = useStompChat(streamEnter?.category ?? '');
   const [followStateOverride, setFollowStateOverride] = useState<{ sellerId: number; value: boolean } | null>(null);
   const { mutate: postFollow, isPending: isFollowPending } = usePostFollow();
   const storedUserId = localStorage.getItem('userId');
