@@ -5,6 +5,7 @@ import lombok.Builder;
 
 @Builder
 public record BidSyncResponse(
+        boolean isHighestBidder,
         ItemInfo item,
         TimerInfo timer
 ) {
