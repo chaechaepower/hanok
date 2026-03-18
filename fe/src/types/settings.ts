@@ -26,15 +26,15 @@ export type PatchMeSettingsResponse = {
 };
 
 export type GetNotificationResponse = {
-  followStreamAlert: boolean;
+  notificationSetting: boolean;
 };
 
 export type PatchNotificationPayload = {
-  followStreamAlert: boolean;
+  notificationSetting: boolean;
 };
 
 export type PatchNotificationResponse = {
-  followStreamAlert: boolean;
+  notificationSetting: boolean;
 };
 
 export type PatchPasswordPayload = {

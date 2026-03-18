@@ -25,7 +25,7 @@ const mockAccountData = {
 };
 
 const mockNotification = {
-  followStreamAlert: true,
+  notificationSetting: true,
 };
 
 const FOLLOWED_SELLER_CATALOG = [
@@ -34,56 +34,48 @@ const FOLLOWED_SELLER_CATALOG = [
     nickname: 'store_one',
     profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store1',
     rating: 4.8,
-
   },
   {
     sellerId: 2,
     nickname: 'luxury_lab',
     profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store2',
     rating: 4.5,
-
   },
   {
     sellerId: 3,
     nickname: 'card_room',
     profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store3',
     rating: 4.2,
-
   },
   {
     sellerId: 4,
     nickname: 'tech_house',
     profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store4',
     rating: 4.6,
-
   },
   {
     sellerId: 5,
     nickname: 'vintage_zone',
     profileImageUri: 'https://api.dicebear.com/7.x/adventurer/svg?seed=store5',
     rating: 4.9,
-
   },
   {
     sellerId: 10,
     nickname: 'vintage_hub',
     profileImageUri: 'https://picsum.photos/seed/seller-10/120/120',
     rating: 4.7,
-
   },
   {
     sellerId: 12,
     nickname: 'sneaker_room',
     profileImageUri: 'https://picsum.photos/seed/seller-12/120/120',
     rating: 4.9,
-
   },
   {
     sellerId: 14,
     nickname: 'card_deck',
     profileImageUri: 'https://picsum.photos/seed/seller-14/120/120',
     rating: 4.4,
-
   },
 ];
 
@@ -114,10 +106,10 @@ export const settingsHandlers = [
   ),
 
   http.patch(`${BASE_URL}/v1/users/me/notification`, async ({ request }) => {
-    const body = (await request.json()) as { followStreamAlert: boolean };
+    const body = (await request.json()) as { notificationSetting: boolean };
 
-    if (typeof body.followStreamAlert === 'boolean') {
-      mockNotification.followStreamAlert = body.followStreamAlert;
+    if (typeof body.notificationSetting === 'boolean') {
+      mockNotification.notificationSetting = body.notificationSetting;
     }
 
     return HttpResponse.json(mockNotification, { status: 200 });
@@ -299,10 +291,7 @@ export const settingsHandlers = [
   ),
 
   http.patch(`${BASE_URL}/v1/users/me/password`, async () =>
-    HttpResponse.json(
-      { status: 'SUCCESS', message: 'Password updated successfully.', data: {} },
-      { status: 200 },
-    ),
+    HttpResponse.json({ status: 'SUCCESS', message: 'Password updated successfully.', data: {} }, { status: 200 }),
   ),
 
   http.patch(`${BASE_URL}/v1/users/me/profile-image`, async () =>
