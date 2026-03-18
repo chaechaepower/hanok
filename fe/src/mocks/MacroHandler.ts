@@ -1,24 +1,25 @@
 import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
-import { getCategoryLabel } from '@/constants/category';
-import { CATEGORY_MACROS } from '@/constants/macro';
+import { getCategoryMacroTemplates } from '@/constants/macro';
 import type { GetStreamMacrosResponse, Macro, PostStreamMacrosRequest, PostStreamMacrosResponse } from '@/types';
 
 const savedMacros: Record<number, { category: string; macros: Macro[] }> = {};
 
 const getDefaultMacros = (category: string): Macro[] => {
-  const label = getCategoryLabel(category);
-  const templates = CATEGORY_MACROS[label] ??
-    CATEGORY_MACROS[category] ?? [
+  const templates = getCategoryMacroTemplates(category);
+
+  if (templates.length === 0) {
+    return [
       { questionType: 'CONDITION', answer: '' },
       { questionType: 'DEFECT', answer: '' },
       { questionType: 'SHIPPING', answer: '' },
     ];
+  }
 
   return templates.map((template) => ({
     questionType: template.questionType,
-    answer: template.answer,
+    answer: '',
   }));
 };
 
@@ -29,11 +30,16 @@ export const macroHandlers = [
     const category = url.searchParams.get('category') ?? '';
 
     const saved = savedMacros[streamId];
-    const macros = saved?.macros ?? getDefaultMacros(category);
+    const resolvedCategory = saved?.category || category;
+    const savedAnswerMap = new Map((saved?.macros ?? []).map((macro) => [macro.questionType, macro.answer]));
+    const macros = getDefaultMacros(resolvedCategory).map((macro) => ({
+      questionType: macro.questionType,
+      answer: savedAnswerMap.get(macro.questionType) ?? '',
+    }));
 
     const response: GetStreamMacrosResponse = {
       streamId,
-      category: saved?.category ?? category,
+      category: resolvedCategory,
       macros,
     };
     return HttpResponse.json(response, { status: 200 });

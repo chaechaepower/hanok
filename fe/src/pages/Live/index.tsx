@@ -60,7 +60,7 @@ export default function LivePage() {
     markStreamEnded,
     clearWinnerInfo,
     clearUniqueAuctionResult,
-  } = useLiveStream(streamId, Boolean(activeStreamEnter?.isLive));
+  } = useLiveStream(streamId, activeStreamEnter?.status === 'LIVE');
 
   const readyItems = itemSync?.items.filter((item) => item.auctionStatus === 'READY') ?? [];
   const selectedAuctionItem = itemSync?.items.find((item) => item.auctionId === selectedAuctionId) ?? null;
@@ -254,7 +254,7 @@ export default function LivePage() {
           )}
           {streamState === 'disconnected' && (
             <StreamDisconnected
-              initialSeconds={30}
+              initialSeconds={60}
               onTimeout={markStreamEnded}
             />
           )}

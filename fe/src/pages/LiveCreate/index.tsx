@@ -105,7 +105,7 @@ export default function LiveCreatePage() {
   );
 
   return (
-    <div className="w-full max-w-[1400px] mx-auto flex gap-10 py-10 px-4">
+    <div className="w-350 mx-auto flex gap-10 py-10 px-4 min-h-screen ">
       <SideBar
         items={sellerSidebarItems}
         activeItemId={activeMenu}

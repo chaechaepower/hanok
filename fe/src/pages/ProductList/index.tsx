@@ -56,7 +56,7 @@ export default function ProductListPage() {
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
   return (
-    <div className="max-w-[1400px] flex mx-auto gap-10 py-10 px-4 min-h-screen">
+    <div className="w-350 flex mx-auto gap-10 py-10 px-4 min-h-screen text-white">
       <SideBar
         items={sellerSidebarItems}
         activeItemId={activeMenu}

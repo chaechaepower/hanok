@@ -147,7 +147,7 @@ export default function SettingsPage() {
           items={settingsSidebarItems}
           activeItemId={activeTab}
           onItemClick={(item) => setActiveTab(item.id as SettingsTab)}
-          className="static shrink-0 !h-auto !w-[240px] border-r-0 !bg-transparent !py-0"
+          className="static shrink-0 !w-[240px] border-r-0 !bg-transparent !py-0"
         />
 
         <div className="w-full flex flex-1 flex-col gap-6">

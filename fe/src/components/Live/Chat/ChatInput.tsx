@@ -36,7 +36,11 @@ export default function ChatInput({
       return [];
     }
 
-    const enabledQuestionTypes = new Set(streamMacros.macros.map((macro) => macro.questionType));
+    const enabledQuestionTypes = new Set(
+      streamMacros.macros
+        .filter((macro) => macro.answer.trim().length > 0)
+        .map((macro) => macro.questionType),
+    );
 
     return getCategoryMacroTemplates(streamMacros.category)
       .filter((macro) => enabledQuestionTypes.has(macro.questionType))

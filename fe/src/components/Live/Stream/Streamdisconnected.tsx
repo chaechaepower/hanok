@@ -6,7 +6,7 @@ interface Props {
   onTimeout?: () => void;
 }
 
-export default function StreamDisconnected({ initialSeconds = 30, onTimeout }: Props) {
+export default function StreamDisconnected({ initialSeconds = 60, onTimeout }: Props) {
   const [secs, setSecs] = useState(initialSeconds);
   const calledRef = useRef(false);
 
@@ -52,7 +52,7 @@ export default function StreamDisconnected({ initialSeconds = 30, onTimeout }: P
           </div>
 
           <div className="flex flex-col items-center gap-1 text-center text-base leading-relaxed text-neutral-500">
-            <span className="font-semibold text-gold/70">30초 안에 판매자가 다시 연결되면</span>
+            <span className="font-semibold text-gold/70">60초 안에 판매자가 다시 연결되면</span>
             <span className="font-semibold text-gold/70">방송이 이어서 재개됩니다.</span>
           </div>
         </div>
