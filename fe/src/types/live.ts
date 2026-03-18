@@ -150,6 +150,7 @@ export type BidSyncPayload = {
     currentPrice: number;
   };
   timer: StreamTimerPayload;
+  isHighestBidder: boolean;
 };
 
 export type AuctionCommentPayload = {

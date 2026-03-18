@@ -70,9 +70,11 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
       : displayedBidAmount;
   const increment = isUniqueAuction || !hasActiveAuction ? 0 : effectiveBidAmount - currentPrice;
   const isInsufficientBalance = isLoggedIn && hasActiveAuction && effectiveBidAmount > balance;
+  const isHighestBidder = !isUniqueAuction && (bidSync?.isHighestBidder ?? false);
   const isBidDisabled =
     !hasActiveAuction ||
     isInsufficientBalance ||
+    isHighestBidder ||
     (isUniqueAuction && (hasPlacedUniqueBid || freeInput.trim().length === 0));
   const hasRegisteredShippingAddress = true;
   // TODO: replace hasRegisteredShippingAddress with the shipping address lookup API result.

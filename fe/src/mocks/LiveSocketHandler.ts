@@ -21,6 +21,7 @@ type MockTimerState = {
 type MockAuctionStatisticsState = AuctionStatisticsPayload;
 type MockBidSyncState = {
   bidUnit: number;
+  highestBidderUserId: number | null;
 };
 type MockUniqueBidSyncState = {
   bidRange: {
@@ -569,6 +570,8 @@ const createBidSyncPayload = (streamId: string, nowMs: number): BidSyncPayload |
       currentPrice: timerState.finalPrice,
     },
     timer: createTimerPayload(timerState, nowMs),
+    isHighestBidder:
+      bidSyncState.highestBidderUserId !== null && bidSyncState.highestBidderUserId === getCurrentMockUser()?.userId,
   };
 };
 
@@ -823,7 +826,7 @@ const handleAuctionStart = (destination: string, body: string) => {
 
   streamTimerStates.set(streamId, state);
   streamAuctionStatisticsStates.set(streamId, auctionStatisticsState);
-  streamBidSyncStates.set(streamId, { bidUnit });
+  streamBidSyncStates.set(streamId, { bidUnit, highestBidderUserId: null });
   activateNextReadyItem(streamId, auctionId);
   scheduleWinnerAnnouncement(streamId);
 
@@ -959,6 +962,18 @@ const handleBidPlace = (destination: string, body: string) => {
   }
 
   const currentStatisticsState = streamAuctionStatisticsStates.get(streamId);
+  const currentUserId = getCurrentMockUser()?.userId ?? null;
+
+  if (bidAmount > 0) {
+    const currentBidSyncState = streamBidSyncStates.get(streamId);
+
+    if (currentBidSyncState) {
+      streamBidSyncStates.set(streamId, {
+        ...currentBidSyncState,
+        highestBidderUserId: currentUserId,
+      });
+    }
+  }
 
   if (currentStatisticsState) {
     streamAuctionStatisticsStates.set(streamId, {
