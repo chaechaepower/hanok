@@ -109,7 +109,7 @@ export default function ProfilePage() {
   const { data: mySellerStatus } = useGetSellerStatus();
   const { data: meData } = useGetMe();
   const { mutate: patchProfile, isPending: isProfilePending } = usePatchSellerProfile(sellerId);
-  const { mutate: patchProfileImage } = usePatchProfileImage();
+  const { mutate: patchProfileImage } = usePatchProfileImage(sellerId);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleProfileImageClick = () => {
@@ -348,7 +348,7 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex flex-col gap-3 min-w-0">
-              <h2 className="m-0 text-neutral-100">{nickname}상점</h2>
+              <h2 className="m-0 text-neutral-100">{nickname}</h2>
               <p className="m-0 text-body-lg text-neutral-300 leading-relaxed">{intro}</p>
 
               <div className="flex gap-2 mt-1">
@@ -357,10 +357,12 @@ export default function ProfilePage() {
                     href={instagramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/5 transition-colors"
-                    title="Instagram"
+                    className="group relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-white/5"
                   >
                     <InstagramIcon />
+                    <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-neutral-800 px-2.5 py-1 text-xs text-neutral-200 opacity-0 shadow-lg transition duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+                      인스타그램
+                    </span>
                   </a>
                 )}
                 {youtubeUrl && (
@@ -368,10 +370,12 @@ export default function ProfilePage() {
                     href={youtubeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/5 transition-colors"
-                    title="YouTube"
+                    className="group relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-white/5"
                   >
                     <YoutubeIcon />
+                    <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-neutral-800 px-2.5 py-1 text-xs text-neutral-200 opacity-0 shadow-lg transition duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+                      유튜브
+                    </span>
                   </a>
                 )}
                 {tiktokUrl && (
@@ -379,10 +383,12 @@ export default function ProfilePage() {
                     href={tiktokUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-white/5 transition-colors"
-                    title="TikTok"
+                    className="group relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-white/5"
                   >
                     <TiktokIcon />
+                    <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-neutral-800 px-2.5 py-1 text-xs text-neutral-200 opacity-0 shadow-lg transition duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
+                      틱톡
+                    </span>
                   </a>
                 )}
               </div>

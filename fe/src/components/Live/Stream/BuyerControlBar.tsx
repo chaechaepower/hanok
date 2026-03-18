@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import { IoChatbubbleOutline, IoCheckmark } from 'react-icons/io5';
-import { LuEye, LuVolume2, LuVolumeOff } from 'react-icons/lu';
+import { LuVolume2, LuVolumeOff } from 'react-icons/lu';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useGetWallet } from '@/api/hooks/useGetWallet';
@@ -41,7 +41,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
   const [customUnit, setCustomUnit] = useState(1000);
   const [bidAmount, setBidAmount] = useState(1000);
   const [freeInput, setFreeInput] = useState('');
-  const [panelOpacity, setPanelOpacity] = useState(60);
+  const [panelOpacity, setPanelOpacity] = useState(90);
   const [bidAccessModal, setBidAccessModal] = useState<BidAccessModalType>(null);
 
   const balance = wallet?.balance ?? 0;
@@ -57,6 +57,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
   const hasActiveAuction = isUniqueAuction ? Boolean(uniqueBidSync) : Boolean(bidSync);
   const uniqueInputAmount = freeInput ? Number(freeInput) : 0;
   const isFreeMode = activeTab === 'custom' && activeCustomUnit === 0;
+  const panelOpacityProgress = ((panelOpacity - 10) / 80) * 100;
   const quickUnit = activeTab === 'quick' ? baseBidUnit : activeCustomUnit;
   const minimumBidAmount = isUniqueAuction ? uniqueMinPrice : currentPrice + quickUnit;
   const displayedBidAmount = isFreeMode ? bidAmount : Math.max(bidAmount, minimumBidAmount);
@@ -502,12 +503,16 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
         </div>
 
         <div className="flex items-center gap-2 px-4">
-          <LuEye size={10} className="shrink-0 text-warm/30" />
-          <div className="relative h-px flex-1">
+          <span className="shrink-0 text-warm/50 text-[12px]">투명도</span>
+          <div className="relative h-[4px] flex-1">
             <div className="absolute inset-0 rounded-full bg-warm/20" />
             <div
-              className="absolute inset-y-0 left-0 rounded-full bg-warm/40"
-              style={{ width: `${((panelOpacity - 10) / 80) * 100}%` }}
+              className="absolute inset-y-0 left-0 rounded-full bg-warm/30"
+              style={{ width: `${panelOpacityProgress}%` }}
+            />
+            <div
+              className="pointer-events-none absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-warm/50 bg-warm/60 shadow-[0_0_10px_rgba(212,174,107,0.35)]"
+              style={{ left: `${panelOpacityProgress}%` }}
             />
             <input
               type="range"

@@ -22,9 +22,7 @@ export default function Header() {
   const sellerButtonLabel = sellerStatus?.isSeller ? '판매자 센터' : '판매자 등록';
   const sellerButtonPath = sellerStatus?.isSeller ? '/products' : '/seller/register';
   const searchKeyword =
-    location.pathname === '/search'
-      ? new URLSearchParams(location.search).get('keyword')?.trim() ?? ''
-      : '';
+    location.pathname === '/search' ? (new URLSearchParams(location.search).get('keyword')?.trim() ?? '') : '';
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const { data: unreadData } = useGetUnreadCount();
@@ -132,20 +130,10 @@ export default function Header() {
           </>
         ) : (
           <>
-            <Button
-              variant="navSignup"
-              size="small"
-              onClick={() => navigate('/signup')}
-              className="px-[18px] py-2"
-            >
+            <Button variant="navSignup" size="small" onClick={() => navigate('/signup')} className="px-[18px] py-2">
               회원가입
             </Button>
-            <Button
-              variant="navLogin"
-              size="small"
-              onClick={() => navigate('/login')}
-              className="px-[18px] py-2"
-            >
+            <Button variant="navLogin" size="small" onClick={() => navigate('/login')} className="px-[18px] py-2">
               로그인
             </Button>
           </>
@@ -171,7 +159,7 @@ function HeaderIcon({ children, onClick, ariaLabel, tooltip, badgeCount, hasNoti
         type="button"
         onClick={onClick}
         aria-label={ariaLabel}
-        className={`relative flex h-10 w-10 items-center justify-center rounded-xl border border-transparent transition-all hover:border-warm/6 hover:bg-warm/5 active:scale-95 ${hasNoti ? 'text-neutral-200 hover:text-neutral-100' : 'text-neutral-400 hover:text-neutral-200'}`}
+        className={`relative flex h-10 w-10 items-center justify-center rounded-xl border border-transparent transition-all hover:border-warm/6 hover:bg-warm/5 active:scale-95 ${hasNoti ? 'text-neutral-200 hover:text-neutral-100' : ''}`}
       >
         {children}
         {badgeCount != null && badgeCount > 0 && (

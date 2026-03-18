@@ -3,7 +3,7 @@ import { getFetchInstance, queryClient } from '@/api/instance';
 
 const patchProfileImagePath = () => `/v1/users/me/profile-image`;
 
-export const usePatchProfileImage = () => {
+export const usePatchProfileImage = (sellerId?: number | null) => {
   return useMutation({
     mutationFn: async (image: File) => {
       const formData = new FormData();
@@ -15,6 +15,11 @@ export const usePatchProfileImage = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['me'] });
+      if (sellerId != null) {
+        queryClient.invalidateQueries({ queryKey: ['sellerProfile', sellerId] });
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['sellerProfile'] });
+      }
     },
   });
 };

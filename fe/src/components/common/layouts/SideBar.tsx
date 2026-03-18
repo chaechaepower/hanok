@@ -40,10 +40,10 @@ export default function SideBar({
 
   return (
     <aside
-      className={`w-[280px] sticky top-16 h-[calc(100vh-64px)] bg-background flex flex-col py-6 border-r border-neutral-800 ${className}`.trim()}
+      className={`w-[280px] sticky h-full top-16 bg-background flex flex-col py-6 border-r border-neutral-800 ${className}`.trim()}
     >
       {/* 카테고리 리스트 (스크롤 영역) */}
-      <div className="flex-1 overflow-y-auto scrollbar-hide px-4">
+      <div className="flex-1 scrollbar-hide px-4">
         <ul className="flex flex-col gap-1">
           {items.map((item) => {
             const isActive = item.id === selectedItemId;

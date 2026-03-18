@@ -146,7 +146,7 @@ export default function TrackingInput() {
         />
       )}
 
-      <div className="flex gap-10 text-white p-[40px_16px] bg-transparent min-h-screen w-full max-w-[1400px] mx-auto">
+      <div className="flex gap-10 text-white p-[40px_16px] bg-transparent min-h-screen w-350 mx-auto">
         <SideBar
           items={sellerSidebarItems}
           activeItemId={activeMenu}
