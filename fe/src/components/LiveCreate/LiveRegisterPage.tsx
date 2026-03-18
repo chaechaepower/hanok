@@ -12,6 +12,7 @@ import { usePostStream } from '@/api/hooks/usePostStream';
 import { usePostStreamMacros } from '@/api/hooks/usePostStreamMacros';
 import { useToast } from '@/components/common/Toast';
 import type { LiveStreamItem, Product, StreamRequest } from '@/types';
+import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
 import { CATEGORIES } from './categories';
 import InventorySelectModal from './InventorySelectModal';
 import ScheduleModal from './ScheduleModal';
@@ -272,7 +273,9 @@ export default function LiveRegisterPage() {
       });
     } catch (err) {
       console.error('[submitReadyEntry]', err);
-      showToast({ message: isEditMode ? '방송 수정에 실패했습니다.' : '방송 등록에 실패했습니다.' });
+      showToast({
+        message: getUploadErrorMessage(err, isEditMode ? '방송 수정에 실패했습니다.' : '방송 등록에 실패했습니다.'),
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -338,7 +341,9 @@ export default function LiveRegisterPage() {
       }
     } catch (err) {
       console.error('[submitStream]', err);
-      showToast({ message: isEditMode ? '방송 수정에 실패했습니다.' : '방송 등록에 실패했습니다.' });
+      showToast({
+        message: getUploadErrorMessage(err, isEditMode ? '방송 수정에 실패했습니다.' : '방송 등록에 실패했습니다.'),
+      });
     } finally {
       setIsSubmitting(false);
     }
