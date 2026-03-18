@@ -14,6 +14,7 @@ import { useGetWallet } from '@/api/hooks/useGetWallet';
 import HistoryRowSkeleton from '@/components/Wallet/HistoryRowSkeleton';
 import PointManagementModal, { type PointModalType } from '@/components/Wallet/PointManagementModal';
 import Button from '@/components/common/Button';
+import { MIN_WALLET_CHARGE_AMOUNT } from '@/constants/wallet';
 import type { TradeReportItem } from '@/types';
 import { requestPointChargePayment } from '@/utils/requestPointChargePayment';
 import coins from '@/assets/coins.png';
@@ -104,12 +105,23 @@ export default function WalletPage() {
 
   const handlePointAmountChange = (value: string) => {
     const sanitizedValue = value.replace(/\D/g, '');
-    const nextAmount = clampWithdrawAmount(Number(sanitizedValue || 0));
+    const requestedAmount = Number(sanitizedValue || 0);
+    const isOverBalance = pointModalType === 'withdraw' && requestedAmount > balance;
+    const nextAmount = clampWithdrawAmount(requestedAmount);
+
+    if (isOverBalance) {
+      showToast({ message: '잔고가 부족합니다.' });
+    }
+
     setPointAmountInput(sanitizedValue ? String(nextAmount) : '');
     setIsDirectInputMode(true);
   };
 
   const handlePointPresetClick = (amount: number) => {
+    if (pointModalType === 'withdraw' && amount > balance) {
+      showToast({ message: '잔고가 부족합니다.' });
+    }
+
     setPointAmountInput(String(clampWithdrawAmount(amount)));
     setIsDirectInputMode(false);
   };
@@ -128,6 +140,12 @@ export default function WalletPage() {
     if (numericPointAmount <= 0) return;
 
     if (isPointSubmitting) return;
+
+    if (pointModalType === 'charge' && numericPointAmount < MIN_WALLET_CHARGE_AMOUNT) {
+      setPointAmountInput(String(MIN_WALLET_CHARGE_AMOUNT));
+      showToast({ message: '최소 10000원부터 충전 가능합니다.' });
+      return;
+    }
 
     setIsPointSubmitting(true);
 

@@ -1,0 +1,1 @@
+export const MIN_WALLET_CHARGE_AMOUNT = 10_000;

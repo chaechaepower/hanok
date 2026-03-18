@@ -195,6 +195,15 @@
 
 html {
   background-color: var(--color-background);
+  scrollbar-gutter: stable;
+}
+
+html::-webkit-scrollbar {
+  width: 0;
+}
+
+html {
+  scrollbar-width: none;
 }
 
 @layer base {

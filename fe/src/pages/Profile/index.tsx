@@ -21,6 +21,21 @@ import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2, FiX, FiCamera, FiTv, FiCh
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
 import React from 'react';
 
+const SOCIAL_PREFIX = {
+  instagram: 'https://www.instagram.com/',
+  youtube: 'https://www.youtube.com/@',
+  tiktok: 'https://www.tiktok.com/@',
+} as const;
+
+const stripPrefix = (url: string) => {
+  if (!url) return '';
+  const match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:instagram|youtube|tiktok)\.com\/@?(.+)/i);
+  return match ? match[1] : url;
+};
+
+const addPrefix = (handle: string, prefix: string) =>
+  handle.trim() ? `${prefix}${handle.trim()}` : '';
+
 const InstagramIcon = () => (
   <>
     <svg width="0" height="0">
@@ -225,9 +240,9 @@ export default function ProfilePage() {
     setProfileForm({
       nickname: data.nickname,
       intro: data.intro,
-      instaUrl: data.instagramUrl ?? '',
-      youtubeUrl: data.youtubeUrl ?? '',
-      tiktokUrl: data.tiktokUrl ?? '',
+      instaUrl: stripPrefix(data.instagramUrl ?? ''),
+      youtubeUrl: stripPrefix(data.youtubeUrl ?? ''),
+      tiktokUrl: stripPrefix(data.tiktokUrl ?? ''),
     });
     setIsProfileEditOpen(true);
   };
@@ -237,7 +252,12 @@ export default function ProfilePage() {
       showToast({ message: '닉네임을 입력해주세요.' });
       return;
     }
-    patchProfile(profileForm, {
+    patchProfile({
+      ...profileForm,
+      instaUrl: addPrefix(profileForm.instaUrl, SOCIAL_PREFIX.instagram),
+      youtubeUrl: addPrefix(profileForm.youtubeUrl, SOCIAL_PREFIX.youtube),
+      tiktokUrl: addPrefix(profileForm.tiktokUrl, SOCIAL_PREFIX.tiktok),
+    }, {
       onSuccess: () => {
         setIsProfileEditOpen(false);
         showToast({ message: '프로필이 수정되었습니다.' });
@@ -548,7 +568,7 @@ export default function ProfilePage() {
         {activeTab === 'sales' && (
           <div className="flex flex-col gap-5">
             {soldAuctions.length === 0 ? (
-              <p className="text-center text-neutral-600 py-16 text-subtitle-lg">낙찰 이력이 없습니다.</p>
+              <p className="text-center text-neutral-600 py-16 text-subtitle-lg">판매 이력이 없습니다.</p>
             ) : (
               soldAuctions.map((sale, index) => {
                 const ui = getEscrowStateUI(sale.escrowStatus);
@@ -765,33 +785,42 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-body-lg text-neutral-400 font-medium">Instagram URL</label>
-              <input
-                className="w-full box-border bg-background text-white border border-neutral-800 rounded-lg px-4 py-3 text-subtitle-lg outline-none focus:border-gold-light transition-colors"
-                placeholder="https://instagram.com/..."
-                value={profileForm.instaUrl}
-                onChange={(e) => setProfileForm((prev) => ({ ...prev, instaUrl: e.target.value }))}
-              />
+              <label className="text-body-lg text-neutral-400 font-medium">Instagram</label>
+              <div className="flex items-center bg-background border border-neutral-800 rounded-lg overflow-hidden focus-within:border-gold-light transition-colors">
+                <span className="shrink-0 px-4 py-3 text-neutral-500 text-body-md bg-neutral-900 border-r border-neutral-800 select-none">{SOCIAL_PREFIX.instagram}</span>
+                <input
+                  className="flex-1 bg-transparent text-white border-none px-4 py-3 text-subtitle-lg outline-none"
+                  placeholder="username"
+                  value={profileForm.instaUrl}
+                  onChange={(e) => setProfileForm((prev) => ({ ...prev, instaUrl: e.target.value }))}
+                />
+              </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-body-lg text-neutral-400 font-medium">YouTube URL</label>
-              <input
-                className="w-full box-border bg-background text-white border border-neutral-800 rounded-lg px-4 py-3 text-subtitle-lg outline-none focus:border-gold-light transition-colors"
-                placeholder="https://youtube.com/..."
-                value={profileForm.youtubeUrl}
-                onChange={(e) => setProfileForm((prev) => ({ ...prev, youtubeUrl: e.target.value }))}
-              />
+              <label className="text-body-lg text-neutral-400 font-medium">YouTube</label>
+              <div className="flex items-center bg-background border border-neutral-800 rounded-lg overflow-hidden focus-within:border-gold-light transition-colors">
+                <span className="shrink-0 px-4 py-3 text-neutral-500 text-body-md bg-neutral-900 border-r border-neutral-800 select-none">{SOCIAL_PREFIX.youtube}</span>
+                <input
+                  className="flex-1 bg-transparent text-white border-none px-4 py-3 text-subtitle-lg outline-none"
+                  placeholder="channel"
+                  value={profileForm.youtubeUrl}
+                  onChange={(e) => setProfileForm((prev) => ({ ...prev, youtubeUrl: e.target.value }))}
+                />
+              </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-body-lg text-neutral-400 font-medium">TikTok URL</label>
-              <input
-                className="w-full box-border bg-background text-white border border-neutral-800 rounded-lg px-4 py-3 text-subtitle-lg outline-none focus:border-gold-light transition-colors"
-                placeholder="https://tiktok.com/..."
-                value={profileForm.tiktokUrl}
-                onChange={(e) => setProfileForm((prev) => ({ ...prev, tiktokUrl: e.target.value }))}
-              />
+              <label className="text-body-lg text-neutral-400 font-medium">TikTok</label>
+              <div className="flex items-center bg-background border border-neutral-800 rounded-lg overflow-hidden focus-within:border-gold-light transition-colors">
+                <span className="shrink-0 px-4 py-3 text-neutral-500 text-body-md bg-neutral-900 border-r border-neutral-800 select-none">{SOCIAL_PREFIX.tiktok}</span>
+                <input
+                  className="flex-1 bg-transparent text-white border-none px-4 py-3 text-subtitle-lg outline-none"
+                  placeholder="username"
+                  value={profileForm.tiktokUrl}
+                  onChange={(e) => setProfileForm((prev) => ({ ...prev, tiktokUrl: e.target.value }))}
+                />
+              </div>
             </div>
 
             <div className="flex justify-end gap-4 mt-4">

@@ -76,20 +76,20 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
       <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-        <div className="relative w-full max-w-[480px] bg-[#0f0f13] rounded-2xl p-6 shadow-2xl border border-white/10">
+        <div className="relative w-full max-w-[480px] bg-surface-elevated rounded-2xl p-6 shadow-2xl border border-neutral-800">
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-4 right-4 text-white/40 hover:text-white transition-colors"
+            className="absolute top-4 right-4 text-neutral-500 hover:text-neutral-100 transition-colors"
           >
             <FaTimes size={14} />
           </button>
 
-          <h2 className="text-white text-xl font-bold mb-1">방송 예약 설정</h2>
-          <p className="text-[#888] text-xs mb-5">오늘로부터 최대 30일 이내로 예약할 수 있습니다.</p>
+          <h2 className="text-neutral-100 text-xl font-bold mb-1">방송 예약 설정</h2>
+          <p className="text-neutral-500 text-xs mb-5">오늘로부터 최대 30일 이내로 예약할 수 있습니다.</p>
 
-          <div className="bg-[#1a1a20] rounded-xl px-4 py-3 mb-5 text-center">
-            <span className="text-[#d9b36d] font-semibold text-base">
+          <div className="bg-surface rounded-xl px-4 py-3 mb-5 text-center">
+            <span className="text-gold-light font-semibold text-base">
               {formatDisplay(selectedDate, hour, minute)}
             </span>
           </div>
@@ -100,18 +100,18 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
                 type="button"
                 onClick={goPrev}
                 disabled={!canPrev}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-neutral-500 hover:text-neutral-100 hover:bg-warm/10 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
               >
                 <FaChevronLeft size={12} />
               </button>
-              <span className="text-white font-semibold text-sm">
+              <span className="text-neutral-100 font-semibold text-sm">
                 {viewYear}년 {viewMonth + 1}월
               </span>
               <button
                 type="button"
                 onClick={goNext}
                 disabled={!canNext}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-neutral-500 hover:text-neutral-100 hover:bg-warm/10 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
               >
                 <FaChevronRight size={12} />
               </button>
@@ -121,7 +121,7 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
               {DAYS.map((d) => (
                 <div
                   key={d}
-                  className={`text-center text-xs font-medium py-1 ${d === '일' ? 'text-red-400' : d === '토' ? 'text-blue-400' : 'text-white/40'}`}
+                  className={`text-center text-xs font-medium py-1 ${d === '일' ? 'text-accent-light' : d === '토' ? 'text-blue-400' : 'text-neutral-500'}`}
                 >
                   {d}
                 </div>
@@ -144,12 +144,12 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
                     disabled={!selectable}
                     onClick={() => setSelectedDate(new Date(d))}
                     className={`h-9 rounded-lg text-sm font-medium transition-all
-                      ${!selectable ? 'text-white/15 cursor-not-allowed' : 'hover:bg-white/10 cursor-pointer'}
-                      ${isSelected ? 'bg-[#d9b36d] text-[#0f0f13] hover:bg-[#c9a35d] font-bold' : ''}
-                      ${!isSelected && isToday ? 'ring-1 ring-[#d9b36d]/50 text-[#d9b36d]' : ''}
-                      ${!isSelected && !isToday && selectable && dayOfWeek === 0 ? 'text-red-400' : ''}
+                      ${!selectable ? 'text-neutral-700 cursor-not-allowed' : 'hover:bg-warm/10 cursor-pointer'}
+                      ${isSelected ? 'bg-gold text-background hover:bg-gold-dark font-bold' : ''}
+                      ${!isSelected && isToday ? 'ring-1 ring-gold/50 text-gold-light' : ''}
+                      ${!isSelected && !isToday && selectable && dayOfWeek === 0 ? 'text-accent-light' : ''}
                       ${!isSelected && !isToday && selectable && dayOfWeek === 6 ? 'text-blue-400' : ''}
-                      ${!isSelected && !isToday && selectable && dayOfWeek !== 0 && dayOfWeek !== 6 ? 'text-white/80' : ''}
+                      ${!isSelected && !isToday && selectable && dayOfWeek !== 0 && dayOfWeek !== 6 ? 'text-neutral-200' : ''}
                     `}
                   >
                     {d.getDate()}
@@ -160,7 +160,7 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
           </div>
 
           <div className="mb-6">
-            <label className="text-white text-sm font-medium mb-3 block">시간 선택</label>
+            <label className="text-neutral-100 text-sm font-medium mb-3 block">시간 선택</label>
             <div className="flex gap-2">
               <div className="flex flex-col gap-1">
                 {(['오전', '오후'] as const).map((label) => {
@@ -176,8 +176,8 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
                       }}
                       className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all
                         ${isActive
-                          ? 'bg-[#d9b36d] text-[#0f0f13]'
-                          : 'bg-[#1a1a20] text-white/40 hover:text-white hover:bg-white/10'
+                          ? 'bg-gold text-background'
+                          : 'bg-surface text-neutral-500 hover:text-neutral-100 hover:bg-warm/10'
                         }`}
                     >
                       {label}
@@ -186,8 +186,8 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
                 })}
               </div>
 
-              <div className="flex-1 bg-[#1a1a20] rounded-xl p-2">
-                <div className="text-white/40 text-[10px] mb-1 text-center">시</div>
+              <div className="flex-1 bg-surface rounded-xl p-2">
+                <div className="text-neutral-500 text-[10px] mb-1 text-center">시</div>
                 <div className="grid grid-cols-4 gap-1">
                   {Array.from({ length: 12 }, (_, i) => {
                     const displayH = i + 1;
@@ -200,8 +200,8 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
                         onClick={() => setHour(actualH)}
                         className={`py-1.5 rounded-lg text-xs font-medium transition-all
                           ${hour === actualH
-                            ? 'bg-[#d9b36d] text-[#0f0f13] font-bold'
-                            : 'text-white/60 hover:bg-white/10 hover:text-white'
+                            ? 'bg-gold text-background font-bold'
+                            : 'text-neutral-400 hover:bg-warm/10 hover:text-neutral-100'
                           }`}
                       >
                         {displayH}
@@ -211,8 +211,8 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
                 </div>
               </div>
 
-              <div className="w-[80px] bg-[#1a1a20] rounded-xl p-2">
-                <div className="text-white/40 text-[10px] mb-1 text-center">분</div>
+              <div className="w-[80px] bg-surface rounded-xl p-2">
+                <div className="text-neutral-500 text-[10px] mb-1 text-center">분</div>
                 <div className="grid grid-cols-2 gap-1">
                   {[0, 10, 20, 30, 40, 50].map((m) => (
                     <button
@@ -221,8 +221,8 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
                       onClick={() => setMinute(m)}
                       className={`py-1.5 rounded-lg text-xs font-medium transition-all
                         ${minute === m
-                          ? 'bg-[#d9b36d] text-[#0f0f13] font-bold'
-                          : 'text-white/60 hover:bg-white/10 hover:text-white'
+                          ? 'bg-gold text-background font-bold'
+                          : 'text-neutral-400 hover:bg-warm/10 hover:text-neutral-100'
                         }`}
                     >
                       {m.toString().padStart(2, '0')}
@@ -237,14 +237,14 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3.5 rounded-2xl border border-white/20 text-white text-sm font-semibold hover:bg-white/10 transition-colors"
+              className="flex-1 py-3.5 rounded-2xl border border-neutral-700 text-neutral-100 text-sm font-semibold hover:bg-warm/10 transition-colors"
             >
               취소
             </button>
             <button
               type="button"
               onClick={handleConfirm}
-              className="flex-1 py-3.5 rounded-2xl bg-[#f0e6c8] text-[#1a1a1a] text-sm font-bold hover:bg-[#e8d9b0] transition-colors"
+              className="flex-1 py-3.5 rounded-2xl bg-gold text-background text-sm font-bold hover:bg-gold-dark transition-colors"
             >
               예약확정
             </button>

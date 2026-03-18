@@ -15,14 +15,14 @@ interface ProductRegistrationModalProps {
 }
 
 const inputClass =
-  'w-full h-12 bg-[#0B0C10] border border-[#1C1C1E] rounded-lg text-white text-sm px-4 outline-none';
+  'w-full h-12 bg-background border border-neutral-800 rounded-lg text-neutral-100 text-sm px-4 outline-none focus:border-primary transition-colors';
 const selectArrowStyle = {
   backgroundImage:
-    `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238E8E93' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+    `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a89a8c' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
 };
 const selectClass = `${inputClass} pr-10 cursor-pointer appearance-none bg-no-repeat bg-[position:right_14px_center]`;
-const labelClass = 'block text-white text-sm font-semibold mb-2';
-const helperClass = 'mt-2 text-[12px] text-[#8E8E93]';
+const labelClass = 'block text-neutral-100 text-sm font-semibold mb-2';
+const helperClass = 'mt-2 text-[12px] text-neutral-500';
 const MIN_START_PRICE = 1000;
 const START_PRICE_STEP = 1000;
 const MIN_BID_UNIT = 100;
@@ -80,7 +80,7 @@ export default function ProductRegistrationModal({
 
     if (initialData) {
       setName(initialData.name);
-      setDescription('');
+      setDescription(initialData.description || '');
 
       const matchedCategory = MAIN_CATEGORY_ITEMS.find(
         (item) => item.label === initialData.category || item.id === initialData.category,
@@ -90,10 +90,10 @@ export default function ProductRegistrationModal({
       setItemCondition(initialData.itemCondition || '');
       setStartPrice(String(initialData.startPrice));
       setShippingFee('');
-      setBidUnit('');
-      setAuctionDuration('');
+      setBidUnit(initialData.bidUnit ? String(initialData.bidUnit) : '');
+      setAuctionDuration(initialData.auctionDuration ? String(initialData.auctionDuration) : '');
       setAuctionType(initialData.auctionType);
-      setHashtags('');
+      setHashtags(initialData.tags && initialData.tags.length > 0 ? initialData.tags.map((t) => `#${t}`).join(' ') : '');
       setExistingImages(initialData.images && initialData.images.length > 0 ? initialData.images : []);
       return;
     }
@@ -292,17 +292,17 @@ export default function ProductRegistrationModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[1000]">
-      <div className="custom-scrollbar bg-[#151517] w-[480px] max-h-[90vh] overflow-y-auto rounded-2xl p-8 relative shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[1000]">
+      <div className="custom-scrollbar bg-surface-elevated w-[480px] max-h-[90vh] overflow-y-auto rounded-2xl p-8 relative shadow-2xl border border-neutral-800">
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-6 right-6 bg-transparent border-none text-[#8E8E93] cursor-pointer"
+          className="absolute top-6 right-6 bg-transparent border-none text-neutral-500 hover:text-neutral-100 cursor-pointer transition-colors"
         >
           <FaTimes size={20} />
         </button>
 
-        <h2 className="text-white text-xl font-bold mt-0 mb-6">{initialData ? '상품 정보 수정' : '새 상품 등록'}</h2>
+        <h2 className="text-neutral-100 text-xl font-bold mt-0 mb-6">{initialData ? '상품 정보 수정' : '새 상품 등록'}</h2>
 
         <input
           type="file"
@@ -314,13 +314,13 @@ export default function ProductRegistrationModal({
         />
 
         <div
-          className="bg-[#2C2A26] rounded-xl min-h-[160px] flex flex-col items-center justify-center mb-6 cursor-pointer border border-dashed border-[#4A4A4C] p-4"
+          className="bg-primary-muted rounded-xl min-h-[160px] flex flex-col items-center justify-center mb-6 cursor-pointer border border-dashed border-neutral-600 p-4"
           onClick={() => {
             if (existingImages.length + images.length < 3) fileInputRef.current?.click();
           }}
         >
           {existingImages.length > 0 || images.length > 0 ? (
-            <div className="flex gap-3 w-full overflow-x-auto p-2" onClick={(e) => e.stopPropagation()}>
+            <div className="flex gap-3 w-full overflow-x-auto macro-scroll p-2 pb-3" onClick={(e) => e.stopPropagation()}>
               {existingImages.map((url, idx) => (
                 <div key={`exist-${idx}`} className="relative w-[120px] h-[120px] shrink-0">
                   <img src={url} alt="기존 이미지" className="w-full h-full object-cover rounded-lg" />
@@ -350,17 +350,17 @@ export default function ProductRegistrationModal({
               {existingImages.length + images.length < 3 && (
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-[120px] h-[120px] border border-dashed border-[#4A4A4C] rounded-lg flex items-center justify-center shrink-0 cursor-pointer"
+                  className="w-[120px] h-[120px] border border-dashed border-neutral-600 rounded-lg flex items-center justify-center shrink-0 cursor-pointer"
                 >
-                  <FaCloudUploadAlt size={24} className="text-[#8E8E93]" />
+                  <FaCloudUploadAlt size={24} className="text-neutral-500" />
                 </div>
               )}
             </div>
           ) : (
             <>
-              <FaCloudUploadAlt size={32} className="text-white mb-3" />
-              <div className="text-white text-[15px] font-semibold">상품 이미지 업로드 최대 3개</div>
-              <div className="text-[#8E8E93] text-[13px] mt-1">PNG, JPG 5MB</div>
+              <FaCloudUploadAlt size={32} className="text-neutral-100 mb-3" />
+              <div className="text-neutral-100 text-[15px] font-semibold">상품 이미지 업로드 최대 3개</div>
+              <div className="text-neutral-500 text-[13px] mt-1">PNG, JPG 5MB</div>
             </>
           )}
         </div>
@@ -413,8 +413,8 @@ export default function ProductRegistrationModal({
               <option value="" disabled hidden>
                 선택
               </option>
-              <option value="BRAND_NEW">미개봉/새제품</option>
-              <option value="OPEN_BOX">개봉 후 미사용</option>
+              <option value="BRAND_NEW">미개봉</option>
+              <option value="OPEN_BOX">개봉된 새상품</option>
               <option value="REFURBISHED">리퍼비시</option>
               <option value="USED">중고</option>
             </select>
@@ -496,7 +496,7 @@ export default function ProductRegistrationModal({
                 경매방식을 선택하세요
               </option>
               <option value="BOTTOM_UP">상향식</option>
-              <option value="UNIQUE">유일최고가</option>
+              <option value="UNIQUE_TOP">유일최고가</option>
             </select>
           </div>
         </div>
@@ -539,30 +539,30 @@ export default function ProductRegistrationModal({
                 {parsed.map((tag, idx) => (
                   <span
                     key={idx}
-                    className="bg-[#2C2A26] text-[#d9b36d] text-[13px] font-medium px-3 py-1.5 rounded-full border border-[#d9b36d]/20"
+                    className="badge-gold-outline text-[13px] font-medium px-3 py-1.5"
                   >
                     #{tag}
                   </span>
                 ))}
-                <span className="text-[12px] text-[#8E8E93]">{parsed.length}/7</span>
+                <span className="text-[12px] text-neutral-500">{parsed.length}/7</span>
               </div>
             );
           })()}
         </div>
 
-        {error && <div className="text-[#FF3B30] text-sm mb-4">{error}</div>}
+        {error && <div className="text-accent-light text-sm mb-4">{error}</div>}
 
         {initialData ? (
           <div className="flex gap-3">
             <Button variant="outline" onClick={onClose}>
               닫기
             </Button>
-            <Button variant="white" onClick={handleSubmit} disabled={isPending}>
+            <Button variant="yellow" onClick={handleSubmit} disabled={isPending}>
               {isPending ? '처리 중...' : '수정완료'}
             </Button>
           </div>
         ) : (
-          <Button variant="white" onClick={handleSubmit} disabled={isPending}>
+          <Button variant="yellow" onClick={handleSubmit} disabled={isPending}>
             {isPending ? '처리 중...' : '인벤토리 추가'}
           </Button>
         )}

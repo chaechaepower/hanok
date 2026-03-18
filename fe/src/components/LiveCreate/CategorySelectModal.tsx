@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FiX, FiChevronDown } from 'react-icons/fi';
 import { CATEGORIES } from './categories';
 
@@ -9,43 +9,78 @@ type Props = {
 
 export default function CategorySelectModal({ onConfirm, onClose }: Props) {
   const [selectedId, setSelectedId] = useState<string>(CATEGORIES[0]?.id ?? '');
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const selectedLabel = CATEGORIES.find((c) => c.id === selectedId)?.label ?? '';
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-        <div className="relative w-full max-w-[480px] bg-[#0f0f13] rounded-2xl p-8 shadow-2xl border border-white/10">
+        <div className="relative w-full max-w-[480px] bg-surface-elevated rounded-2xl p-8 shadow-2xl border border-neutral-800">
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-5 right-5 text-white/50 hover:text-white transition-colors flex items-center justify-center"
+            className="absolute top-5 right-5 text-neutral-500 hover:text-neutral-100 transition-colors flex items-center justify-center"
           >
             <FiX size={24} />
           </button>
 
-          <h2 className="text-2xl font-bold text-white mb-2">방송 카테고리 설정</h2>
-          <p className="text-[#888] text-sm mb-8">
+          <h2 className="text-2xl font-bold text-neutral-100 mb-2">방송 카테고리 설정</h2>
+          <p className="text-neutral-500 text-sm mb-8">
             방송의 카테고리를 설정해주세요. 카테고리에 일치하는 물품만 등록 가능합니다
           </p>
 
           <div className="flex flex-col gap-2 mb-10">
-            <label className="text-white text-sm font-medium">카테고리</label>
-            <div className="relative">
-              <select
-                value={selectedId}
-                onChange={(e) => setSelectedId(e.target.value)}
-                className="w-full appearance-none bg-transparent border border-[#d9b36d] rounded-xl px-5 py-4 text-white text-base outline-none cursor-pointer pr-12"
+            <label className="text-neutral-100 text-sm font-medium">카테고리</label>
+            <div className="relative" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setIsOpen((prev) => !prev)}
+                className="w-full flex items-center justify-between bg-transparent border border-gold rounded-xl px-5 py-4 text-neutral-100 text-base outline-none cursor-pointer"
               >
-                {CATEGORIES.map((cat) => (
-                  <option key={cat.id} value={cat.id} className="bg-[#1a1a1a] text-white">
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[#d9b36d]">
-                <FiChevronDown size={20} />
-              </span>
+                <span>{selectedLabel}</span>
+                <span className={`text-gold transition-transform ${isOpen ? 'rotate-180' : ''}`}>
+                  <FiChevronDown size={20} />
+                </span>
+              </button>
+
+              {isOpen && (
+                <div className="absolute z-10 left-0 right-0 top-[calc(100%+6px)] bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-lg max-h-[280px] overflow-y-auto custom-scrollbar">
+                  {CATEGORIES.map((cat) => {
+                    const isSelected = cat.id === selectedId;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedId(cat.id);
+                          setIsOpen(false);
+                        }}
+                        className={`w-full text-left px-5 py-3 text-[15px] transition-colors cursor-pointer ${
+                          isSelected
+                            ? 'bg-gold/15 text-gold-light font-semibold'
+                            : 'text-neutral-300 hover:bg-warm/8 hover:text-neutral-100'
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
 
@@ -53,14 +88,14 @@ export default function CategorySelectModal({ onConfirm, onClose }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-4 rounded-2xl border border-white/20 text-white text-base font-semibold hover:bg-white/10 transition-colors"
+              className="flex-1 py-4 rounded-2xl border border-neutral-700 text-neutral-100 text-base font-semibold hover:bg-warm/10 transition-colors"
             >
               취소
             </button>
             <button
               type="button"
               onClick={() => onConfirm(selectedId)}
-              className="flex-1 py-4 rounded-2xl bg-[#f0e6c8] text-[#1a1a1a] text-base font-bold hover:bg-[#e8d9b0] transition-colors"
+              className="flex-1 py-4 rounded-2xl bg-gold text-background text-base font-bold hover:bg-gold-dark transition-colors"
             >
               방송 등록하기
             </button>
