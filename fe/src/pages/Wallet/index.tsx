@@ -409,7 +409,7 @@ function mapTradeReportsToHistory(
   return reports.map((report, index) => ({
     id: `${kind}-${report.createdAt}-${index}`,
     title: kind === 'settlement' && report.itemName ? report.itemName : config.title,
-    occurredAt: report.createdAt,
+    occurredAt: report.createdAt.replace('T', ' '),
     amount: report.amount * config.sign,
     status: config.status,
     kind: config.kind,

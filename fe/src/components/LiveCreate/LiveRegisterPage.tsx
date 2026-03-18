@@ -533,7 +533,7 @@ export default function LiveRegisterPage() {
               autoPlay
               muted
               playsInline
-              className={`w-full h-full object-cover ${isCameraOn ? '' : 'hidden'}`}
+              className={`h-full w-full object-contain ${isCameraOn ? '' : 'hidden'}`}
               style={{ transform: 'scaleX(-1)' }}
             />
             {!isCameraOn && (
