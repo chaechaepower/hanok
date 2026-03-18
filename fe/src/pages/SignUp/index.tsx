@@ -7,6 +7,30 @@ import { signUp } from '@/api/hooks/usePostSignUp';
 import { requestIdentityVerification } from '@/utils/requestIdentityVerification';
 import Button from '@/components/common/Button';
 
+function CheckboxIcon({ checked }: { checked: boolean }) {
+  return (
+    <div
+      className={`w-5 h-5 min-w-5 flex justify-center items-center rounded border-2 relative transition-all duration-150 ${
+        checked ? 'border-primary bg-primary' : 'border-neutral-600 bg-transparent'
+      }`}
+    >
+      {checked && (
+        <svg
+          className="w-3 h-3 text-background pointer-events-none"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M5 13l4 4L19 7" />
+        </svg>
+      )}
+    </div>
+  );
+}
+
 export default function SignUpPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -99,28 +123,6 @@ export default function SignUpPage() {
     'flex items-center border border-neutral-800 rounded-[10px] h-[52px] px-3 bg-transparent focus-within:border-primary transition-colors';
   const inputClass = 'flex-1 bg-transparent text-[15px] text-neutral-100 px-2 focus:outline-none placeholder-neutral-600';
   const iconClass = 'w-5 h-5 text-neutral-600';
-
-  const CheckboxIcon = ({ checked }: { checked: boolean }) => (
-    <div
-      className={`w-5 h-5 min-w-5 flex justify-center items-center rounded border-2 relative transition-all duration-150 ${
-        checked ? 'border-primary bg-primary' : 'border-neutral-600 bg-transparent'
-      }`}
-    >
-      {checked && (
-        <svg
-          className="w-3 h-3 text-background pointer-events-none"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M5 13l4 4L19 7" />
-        </svg>
-      )}
-    </div>
-  );
 
   return (
     <div className="w-full flex flex-col items-center px-4 py-10">
