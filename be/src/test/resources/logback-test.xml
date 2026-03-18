@@ -1,66 +1,29 @@
 <configuration>
 
-    <!-- 공통 콘솔 (기존 시스템 로그용) -->
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="CONSOLE_SYSTEM" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <!-- 필요하면 기존 패턴으로 수정 -->
-            <pattern>%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+            <pattern>%gray(%d{HH:mm:ss.SSS}) %highlight(%-5level) [%magenta(%X{testName:-System})] %cyan(%logger{36}) : %msg%n</pattern>
         </encoder>
     </appender>
 
-    <!-- 단위 테스트 리포트: 콘솔 + 파일 -->
-    <appender name="TEST_REPORT_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <!-- 리포트 느낌으로 메시지만 -->
-            <pattern>%msg%n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="TEST_REPORT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>build/reports/test-unit-report.log</file>
-        <encoder>
-            <pattern>%msg%n</pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>build/reports/test-unit-report.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <maxFileSize>10MB</maxFileSize>
-            <maxHistory>7</maxHistory>
-        </rollingPolicy>
-    </appender>
-
-    <!-- 통합 테스트 리포트: 콘솔 + 파일 -->
-    <appender name="IT_REPORT_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <appender name="CONSOLE_TEST_REPORT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%msg%n</pattern>
         </encoder>
     </appender>
 
-    <appender name="IT_REPORT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>build/reports/test-integration-report.log</file>
-        <encoder>
-            <pattern>%msg%n</pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>build/reports/test-integration-report.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
-            <maxFileSize>10MB</maxFileSize>
-            <maxHistory>7</maxHistory>
-        </rollingPolicy>
-    </appender>
+    <logger name="org.hibernate.tool.schema" level="WARN"/>
 
-    <!-- 단위 테스트 리포트 logger -->
     <logger name="TEST_REPORT" level="INFO" additivity="false">
-        <appender-ref ref="TEST_REPORT_CONSOLE" />
-        <appender-ref ref="TEST_REPORT_FILE" />
+        <appender-ref ref="CONSOLE_TEST_REPORT"/>
     </logger>
 
-    <!-- 통합 테스트 리포트 logger -->
     <logger name="IT_REPORT" level="INFO" additivity="false">
-        <appender-ref ref="IT_REPORT_CONSOLE" />
-        <appender-ref ref="IT_REPORT_FILE" />
+        <appender-ref ref="CONSOLE_TEST_REPORT"/>
     </logger>
 
-    <!-- 나머지 일반 로그 (스프링/하이버네이트 등) -->
     <root level="INFO">
-        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="CONSOLE_SYSTEM"/>
     </root>
+
 </configuration>

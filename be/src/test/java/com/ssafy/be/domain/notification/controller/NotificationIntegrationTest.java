@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Notification 통합 테스트")
 class NotificationIntegrationTest {
 
-    private static final Logger log = LoggerFactory.getLogger("IT_REPORT");
+    private static final Logger IT_LOG = LoggerFactory.getLogger("IT_REPORT");
     private static final long SUITE_START = System.currentTimeMillis();
     private static final Long USER_ID   = 1L;
     private static final Long HACKER_ID = 999L;
@@ -44,22 +44,22 @@ class NotificationIntegrationTest {
     // ═══════════════════════════════════════════════════════════
     @BeforeAll
     static void suiteStart() {
-        log.info("");
-        log.info("╔════════════════════════════════════════════════════════════╗");
-        log.info("║           Notification 통합 테스트 Suite 시작              ║");
-        log.info("║  Layer  : Controller → Service → Redis (Testcontainers)   ║");
-        log.info("║  Auth   : MockMvc + SecurityContextHolder (Filter OFF)     ║");
-        log.info("║  시나리오: I-1 ~ I-8  (4 Group / 8 Cases)                 ║");
-        log.info("╚════════════════════════════════════════════════════════════╝");
+        IT_LOG.info("");
+        IT_LOG.info("╔════════════════════════════════════════════════════════════╗");
+        IT_LOG.info("║           Notification 통합 테스트 Suite 시작              ║");
+        IT_LOG.info("║  Layer  : Controller → Service → Redis (Testcontainers)   ║");
+        IT_LOG.info("║  Auth   : MockMvc + SecurityContextHolder (Filter OFF)     ║");
+        IT_LOG.info("║  시나리오: I-1 ~ I-8  (4 Group / 8 Cases)                 ║");
+        IT_LOG.info("╚════════════════════════════════════════════════════════════╝");
     }
 
     @AfterAll
     static void suiteEnd() {
         long total = System.currentTimeMillis() - SUITE_START;
-        log.info("");
-        log.info("╔════════════════════════════════════════════════════════════╗");
-        log.info("║  Suite 종료  |  총 소요: {}ms", total);
-        log.info("╚════════════════════════════════════════════════════════════╝");
+        IT_LOG.info("");
+        IT_LOG.info("╔════════════════════════════════════════════════════════════╗");
+        IT_LOG.info("║  Suite 종료  |  총 소요: {}ms", total);
+        IT_LOG.info("╚════════════════════════════════════════════════════════════╝");
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -72,13 +72,13 @@ class NotificationIntegrationTest {
         redisTemplate.delete(NotificationRedisKeys.getUserInboxKey(HACKER_ID));
         redisTemplate.delete(NotificationRedisKeys.getUserUnreadKey(HACKER_ID));
         setAuth(USER_ID);
-        log.info("    [setUp] Redis 키 초기화 완료 | 인증 userId={}", USER_ID);
+        IT_LOG.info("    [setUp] Redis 키 초기화 완료 | 인증 userId={}", USER_ID);
     }
 
     @AfterEach
     void tearDown() {
         SecurityContextHolder.clearContext();
-        log.info("    [tearDown] SecurityContext 초기화 완료");
+        IT_LOG.info("    [tearDown] SecurityContext 초기화 완료");
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -95,7 +95,7 @@ class NotificationIntegrationTest {
             notificationService.sendNotification(
                     USER_ID, "test", "알림 " + i, "내용 " + i, "/url/" + i);
         }
-        log.info("    [seed] 알림 {}건 생성 완료 (userId={})", count, USER_ID);
+        IT_LOG.info("    [seed] 알림 {}건 생성 완료 (userId={})", count, USER_ID);
     }
 
     private long latestNotifId() throws Exception {
@@ -104,7 +104,7 @@ class NotificationIntegrationTest {
         long id = objectMapper.readTree(
                         r.getResponse().getContentAsString(StandardCharsets.UTF_8))
                 .path("items").get(0).path("id").asLong();
-        log.info("    [helper] latestNotifId = {}", id);
+        IT_LOG.info("    [helper] latestNotifId = {}", id);
         return id;
     }
 
@@ -120,11 +120,11 @@ class NotificationIntegrationTest {
 
         @BeforeAll
         static void groupStart() {
-            log.info("");
-            log.info("┌────────────────────────────────────────────────────────────");
-            log.info("│ 📦 Group 1 │ 커서 기반 페이징");
-            log.info("│  검증 목표: 15개 알림을 10 + 5로 분할 페이징 / 빈 inbox 처리");
-            log.info("└────────────────────────────────────────────────────────────");
+            IT_LOG.info("");
+            IT_LOG.info("┌────────────────────────────────────────────────────────────");
+            IT_LOG.info("│ 📦 Group 1 │ 커서 기반 페이징");
+            IT_LOG.info("│  검증 목표: 15개 알림을 10 + 5로 분할 페이징 / 빈 inbox 처리");
+            IT_LOG.info("└────────────────────────────────────────────────────────────");
         }
 
         @Test
@@ -132,11 +132,11 @@ class NotificationIntegrationTest {
         @DisplayName("I-1+2. 커서 기반 페이징: 15개 → 10 + 5 분할")
         void cursorPaging() throws Exception {
             // given
-            log.info("    [요청] 알림 15건 생성");
+            IT_LOG.info("    [요청] 알림 15건 생성");
             seed(15);
 
             // when - 1페이지
-            log.info("    [진행] GET /api/v1/notifications?limit=10  (1페이지)");
+            IT_LOG.info("    [진행] GET /api/v1/notifications?limit=10  (1페이지)");
             MvcResult r1 = mockMvc.perform(
                             get("/api/v1/notifications").param("limit", "10"))
                     .andExpect(status().isOk())
@@ -148,19 +148,19 @@ class NotificationIntegrationTest {
                             r1.getResponse().getContentAsString(StandardCharsets.UTF_8))
                     .path("nextCursor").asText();
 
-            log.info("    [결과] ✔ 1페이지: items=10, hasNext=true");
-            log.info("    [결과] ✔ nextCursor = {}", cursor);
+            IT_LOG.info("    [결과] ✔ 1페이지: items=10, hasNext=true");
+            IT_LOG.info("    [결과] ✔ nextCursor = {}", cursor);
 
             // when - 2페이지
-            log.info("    [진행] GET /api/v1/notifications?cursor={}&limit=10  (2페이지)", cursor);
+            IT_LOG.info("    [진행] GET /api/v1/notifications?cursor={}&limit=10  (2페이지)", cursor);
             mockMvc.perform(get("/api/v1/notifications")
                             .param("cursor", cursor).param("limit", "10"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.hasNext").value(false))
                     .andExpect(jsonPath("$.items.length()").value(5));
 
-            log.info("    [결과] ✔ 2페이지: items=5, hasNext=false");
-            log.info("    [해소] cursor 기반 페이징으로 전체 15건 정확히 분할 조회 보장");
+            IT_LOG.info("    [결과] ✔ 2페이지: items=5, hasNext=false");
+            IT_LOG.info("    [해소] cursor 기반 페이징으로 전체 15건 정확히 분할 조회 보장");
         }
 
         @Test
@@ -168,17 +168,17 @@ class NotificationIntegrationTest {
         @DisplayName("I-3. 알림 없을 때 빈 목록 반환")
         void emptyInbox() throws Exception {
             // given
-            log.info("    [요청] 알림 0건 상태에서 목록 조회");
+            IT_LOG.info("    [요청] 알림 0건 상태에서 목록 조회");
 
             // when & then
-            log.info("    [진행] GET /api/v1/notifications?limit=10");
+            IT_LOG.info("    [진행] GET /api/v1/notifications?limit=10");
             mockMvc.perform(get("/api/v1/notifications").param("limit", "10"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.items.length()").value(0))
                     .andExpect(jsonPath("$.hasNext").value(false));
 
-            log.info("    [결과] ✔ items=[], hasNext=false 확인");
-            log.info("    [해소] 빈 inbox에서 예외 없이 정상 응답 보장");
+            IT_LOG.info("    [결과] ✔ items=[], hasNext=false 확인");
+            IT_LOG.info("    [해소] 빈 inbox에서 예외 없이 정상 응답 보장");
         }
     }
 
@@ -194,11 +194,11 @@ class NotificationIntegrationTest {
 
         @BeforeAll
         static void groupStart() {
-            log.info("");
-            log.info("┌────────────────────────────────────────────────────────────");
-            log.info("│ 📦 Group 2 │ 읽지 않은 배지 카운트");
-            log.info("│  검증 목표: Redis unread 카운터 정확성 보장");
-            log.info("└────────────────────────────────────────────────────────────");
+            IT_LOG.info("");
+            IT_LOG.info("┌────────────────────────────────────────────────────────────");
+            IT_LOG.info("│ 📦 Group 2 │ 읽지 않은 배지 카운트");
+            IT_LOG.info("│  검증 목표: Redis unread 카운터 정확성 보장");
+            IT_LOG.info("└────────────────────────────────────────────────────────────");
         }
 
         @Test
@@ -206,17 +206,17 @@ class NotificationIntegrationTest {
         @DisplayName("I-4. 안읽은 배지 카운트 15 반환")
         void unreadCount() throws Exception {
             // given
-            log.info("    [요청] 알림 15건 생성 → 전부 미읽음 상태");
+            IT_LOG.info("    [요청] 알림 15건 생성 → 전부 미읽음 상태");
             seed(15);
 
             // when & then
-            log.info("    [진행] GET /api/v1/notifications/unread-count");
+            IT_LOG.info("    [진행] GET /api/v1/notifications/unread-count");
             mockMvc.perform(get("/api/v1/notifications/unread-count"))
                     .andExpect(status().isOk())
                     .andExpect(content().string("15"));
 
-            log.info("    [결과] ✔ unreadCount = 15 확인");
-            log.info("    [해소] Redis unread 카운터가 발송 건수와 정확히 일치함 보장");
+            IT_LOG.info("    [결과] ✔ unreadCount = 15 확인");
+            IT_LOG.info("    [해소] Redis unread 카운터가 발송 건수와 정확히 일치함 보장");
         }
     }
 
@@ -232,11 +232,11 @@ class NotificationIntegrationTest {
 
         @BeforeAll
         static void groupStart() {
-            log.info("");
-            log.info("┌────────────────────────────────────────────────────────────");
-            log.info("│ 📦 Group 3 │ 단건 읽음 처리 + 보안");
-            log.info("│  검증 목표: 읽음 처리 후 카운트 감소 / 타인 접근 차단(NOTI-002)");
-            log.info("└────────────────────────────────────────────────────────────");
+            IT_LOG.info("");
+            IT_LOG.info("┌────────────────────────────────────────────────────────────");
+            IT_LOG.info("│ 📦 Group 3 │ 단건 읽음 처리 + 보안");
+            IT_LOG.info("│  검증 목표: 읽음 처리 후 카운트 감소 / 타인 접근 차단(NOTI-002)");
+            IT_LOG.info("└────────────────────────────────────────────────────────────");
         }
 
         @Test
@@ -244,23 +244,23 @@ class NotificationIntegrationTest {
         @DisplayName("I-5. 단건 읽음 처리: isRead=true, count-1")
         void markAsRead() throws Exception {
             // given
-            log.info("    [요청] 알림 3건 생성 후 최신 알림 단건 읽음 처리");
+            IT_LOG.info("    [요청] 알림 3건 생성 후 최신 알림 단건 읽음 처리");
             seed(3);
             long id = latestNotifId();
 
             // when
-            log.info("    [진행] PATCH /api/v1/notifications/{}/read", id);
+            IT_LOG.info("    [진행] PATCH /api/v1/notifications/{}/read", id);
             mockMvc.perform(patch("/api/v1/notifications/" + id + "/read"))
                     .andExpect(status().isOk());
-            log.info("    [결과] ✔ 200 OK 확인");
+            IT_LOG.info("    [결과] ✔ 200 OK 확인");
 
             // then
-            log.info("    [진행] GET /api/v1/notifications/unread-count (읽음 처리 후 확인)");
+            IT_LOG.info("    [진행] GET /api/v1/notifications/unread-count (읽음 처리 후 확인)");
             mockMvc.perform(get("/api/v1/notifications/unread-count"))
                     .andExpect(content().string("2"));
 
-            log.info("    [결과] ✔ unreadCount = 2 (3 → 2 감소) 확인");
-            log.info("    [해소] 단건 읽음 처리 시 Redis 카운터 -1 정확히 반영 보장");
+            IT_LOG.info("    [결과] ✔ unreadCount = 2 (3 → 2 감소) 확인");
+            IT_LOG.info("    [해소] 단건 읽음 처리 시 Redis 카운터 -1 정확히 반영 보장");
         }
 
         @Test
@@ -268,23 +268,23 @@ class NotificationIntegrationTest {
         @DisplayName("I-6. 보안: 해커가 타인 알림 읽음 시도 → 403 NOTI-002")
         void markAsRead_unauthorized() throws Exception {
             // given
-            log.info("    [요청] userId={} 알림 1건 생성", USER_ID);
+            IT_LOG.info("    [요청] userId={} 알림 1건 생성", USER_ID);
             seed(1);
             long id = latestNotifId();
 
-            log.info("    [준비] 인증 전환: userId={} (해커)", HACKER_ID);
+            IT_LOG.info("    [준비] 인증 전환: userId={} (해커)", HACKER_ID);
             setAuth(HACKER_ID);
 
             // when & then
-            log.info("    [진행] PATCH /api/v1/notifications/{}/read  (해커 요청)", id);
-            log.info("    [기대] 403 Forbidden | ErrorCode=NOTI-002");
+            IT_LOG.info("    [진행] PATCH /api/v1/notifications/{}/read  (해커 요청)", id);
+            IT_LOG.info("    [기대] 403 Forbidden | ErrorCode=NOTI-002");
             mockMvc.perform(patch("/api/v1/notifications/" + id + "/read"))
                     .andExpect(status().isForbidden())
                     .andExpect(jsonPath("$.code").value("NOTI-002"));
 
-            log.info("    [결과] ✔ 403 Forbidden 확인");
-            log.info("    [결과] ✔ ErrorCode = NOTI-002 확인");
-            log.info("    [해소] 타인 알림 접근 시 권한 오류로 명확히 차단됨 보장");
+            IT_LOG.info("    [결과] ✔ 403 Forbidden 확인");
+            IT_LOG.info("    [결과] ✔ ErrorCode = NOTI-002 확인");
+            IT_LOG.info("    [해소] 타인 알림 접근 시 권한 오류로 명확히 차단됨 보장");
         }
     }
 
@@ -300,11 +300,11 @@ class NotificationIntegrationTest {
 
         @BeforeAll
         static void groupStart() {
-            log.info("");
-            log.info("┌────────────────────────────────────────────────────────────");
-            log.info("│ 📦 Group 4 │ 전체 읽음 처리");
-            log.info("│  검증 목표: 일괄 처리 건수 반환 / 중복 호출 멱등성 보장");
-            log.info("└────────────────────────────────────────────────────────────");
+            IT_LOG.info("");
+            IT_LOG.info("┌────────────────────────────────────────────────────────────");
+            IT_LOG.info("│ 📦 Group 4 │ 전체 읽음 처리");
+            IT_LOG.info("│  검증 목표: 일괄 처리 건수 반환 / 중복 호출 멱등성 보장");
+            IT_LOG.info("└────────────────────────────────────────────────────────────");
         }
 
         @Test
@@ -312,24 +312,24 @@ class NotificationIntegrationTest {
         @DisplayName("I-7. 전체 읽음 처리: updatedCount=5, count=0")
         void readAll() throws Exception {
             // given
-            log.info("    [요청] 알림 5건 생성 후 전체 읽음 처리");
+            IT_LOG.info("    [요청] 알림 5건 생성 후 전체 읽음 처리");
             seed(5);
 
             // when
-            log.info("    [진행] PATCH /api/v1/notifications/read-all");
+            IT_LOG.info("    [진행] PATCH /api/v1/notifications/read-all");
             mockMvc.perform(patch("/api/v1/notifications/read-all"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.updatedCount").value(5));
 
-            log.info("    [결과] ✔ updatedCount = 5 확인");
+            IT_LOG.info("    [결과] ✔ updatedCount = 5 확인");
 
             // then
-            log.info("    [진행] GET /api/v1/notifications/unread-count (전체 읽음 후 확인)");
+            IT_LOG.info("    [진행] GET /api/v1/notifications/unread-count (전체 읽음 후 확인)");
             mockMvc.perform(get("/api/v1/notifications/unread-count"))
                     .andExpect(content().string("0"));
 
-            log.info("    [결과] ✔ unreadCount = 0 확인");
-            log.info("    [해소] 전체 읽음 처리 후 Redis 카운터 완전 초기화 보장");
+            IT_LOG.info("    [결과] ✔ unreadCount = 0 확인");
+            IT_LOG.info("    [해소] 전체 읽음 처리 후 Redis 카운터 완전 초기화 보장");
         }
 
         @Test
@@ -337,20 +337,20 @@ class NotificationIntegrationTest {
         @DisplayName("I-8. 이미 전체 읽음 상태에서 readAll → updatedCount=0 (멱등성)")
         void readAll_whenAlreadyAllRead() throws Exception {
             // given
-            log.info("    [요청] 알림 3건 생성 → 1차 전체 읽음 처리");
+            IT_LOG.info("    [요청] 알림 3건 생성 → 1차 전체 읽음 처리");
             seed(3);
             mockMvc.perform(patch("/api/v1/notifications/read-all")).andReturn();
-            log.info("    [준비] 1차 readAll 완료 → 이미 전체 읽음 상태");
+            IT_LOG.info("    [준비] 1차 readAll 완료 → 이미 전체 읽음 상태");
 
             // when & then
-            log.info("    [진행] PATCH /api/v1/notifications/read-all  (2차 호출)");
-            log.info("    [기대] updatedCount = 0 (처리 대상 없음)");
+            IT_LOG.info("    [진행] PATCH /api/v1/notifications/read-all  (2차 호출)");
+            IT_LOG.info("    [기대] updatedCount = 0 (처리 대상 없음)");
             mockMvc.perform(patch("/api/v1/notifications/read-all"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.updatedCount").value(0));
 
-            log.info("    [결과] ✔ updatedCount = 0 확인");
-            log.info("    [해소] 중복 readAll 호출 시 멱등성 보장 (불필요한 Redis write 없음)");
+            IT_LOG.info("    [결과] ✔ updatedCount = 0 확인");
+            IT_LOG.info("    [해소] 중복 readAll 호출 시 멱등성 보장 (불필요한 Redis write 없음)");
         }
     }
 }

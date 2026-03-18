@@ -3,6 +3,7 @@ package com.ssafy.be.global.extension;
 import org.junit.jupiter.api.extension.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.util.Map;
 import java.util.Optional;
@@ -17,14 +18,20 @@ public class TestReportExtension
 
     @Override
     public void beforeEach(ExtensionContext ctx) {
+        String testName = ctx.getDisplayName();
+
+        // ★ 단위 테스트에서도 시스템 로그에 [현재 테스트명] 꼬리표를 달아줍니다.
+        MDC.put("testName", testName);
+
         startTimes.put(ctx.getUniqueId(), System.currentTimeMillis());
-        log.info("");
-        log.info("  ┌─ ▶ {}", ctx.getDisplayName());
+        log.info(""); // 간격 확보용 빈 줄
+        log.info("  ┌─ ▶ {}", testName);
     }
 
     @Override
     public void afterEach(ExtensionContext ctx) {
-        // 결과는 TestWatcher 콜백에서 출력
+        // ★ 테스트 종료 시 꼬리표 제거 (다른 로그와 섞이지 않도록)
+        MDC.clear();
     }
 
     @Override
