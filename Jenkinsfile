@@ -93,7 +93,7 @@ docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force
 docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d prometheus grafana
 
 # 현재 active 컨테이너 확인
-ACTIVE=$(grep -v "#" /etc/nginx/sites-enabled/default | grep "server localhost:808" | head -1 | grep -o "808[01]")
+ACTIVE=$(grep -v "#" /etc/nginx/sites-enabled/default | grep "server localhost:808" | grep -o "808[01]" | head -1)
 
 if [ "$ACTIVE" = "8080" ] || [ -z "$ACTIVE" ]; then
     # blue가 active → green에 배포
