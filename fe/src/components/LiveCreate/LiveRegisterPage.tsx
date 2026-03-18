@@ -486,13 +486,6 @@ export default function LiveRegisterPage() {
         </aside>
 
         <div className="flex-1 min-w-0 relative rounded-2xl overflow-hidden bg-black flex flex-col">
-          {notice && (
-            <div className="absolute top-4 left-4 right-4 z-10 flex items-center gap-2 bg-[#1a1a1a]/80 rounded-lg px-4 py-2 backdrop-blur-sm">
-              <span className="text-[11px] font-bold text-[#A1A1AA] bg-[#2a2a2a] px-2 py-0.5 rounded">공지사항</span>
-              <span className="text-sm text-white/80">{notice}</span>
-            </div>
-          )}
-
           <div className="flex-1 flex items-center justify-center">
             {thumbnailUrl ? (
               <img src={thumbnailUrl} alt="thumbnail" className="max-w-[60%] max-h-[60%] object-contain" />
