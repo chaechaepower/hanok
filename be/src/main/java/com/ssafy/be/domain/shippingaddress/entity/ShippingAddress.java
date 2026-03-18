@@ -29,6 +29,7 @@ public class ShippingAddress {
 
     private String recipientName;
 
+    @Column(name = "is_default")
     private boolean isDefault;
 
     @ManyToOne(fetch = FetchType.LAZY)
