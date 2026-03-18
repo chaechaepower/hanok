@@ -131,7 +131,10 @@ export default function TrackingInput() {
 
   const formatPrice = (price: number) => `${price.toLocaleString('ko-KR')}원`;
   const formatDate = (dateStr: string) =>
-    dateStr.replace(/T/, ' ').replace(/:\d{2}(\.\d+)?Z?$/, '').replace(/Z$/, '');
+    dateStr
+      .replace(/T/, ' ')
+      .replace(/:\d{2}(\.\d+)?Z?$/, '')
+      .replace(/Z$/, '');
 
   return (
     <>
@@ -143,15 +146,15 @@ export default function TrackingInput() {
         />
       )}
 
-      <div className="flex gap-10 text-white p-[40px_16px] bg-transparent min-h-screen w-full max-w-[1200px] mx-auto">
+      <div className="flex gap-10 text-white p-[40px_16px] bg-transparent min-h-screen w-full max-w-[1400px] mx-auto">
         <SideBar
           items={sellerSidebarItems}
           activeItemId={activeMenu}
           onItemClick={(item) => setActiveMenu(item.id)}
-          className="!w-[200px] shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
+          className="shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
         />
 
-        <div className="flex-1 flex flex-col gap-12">
+        <div className="flex-1 flex flex-col gap-12 w-full">
           <section>
             <h2 className="text-xl font-bold text-[#CEAF82] mb-4">배송 등록 대기</h2>
             <div className="flex justify-between pb-3 border-b border-[#3A3A3C] text-sm text-[#E5E5EA] mb-4">

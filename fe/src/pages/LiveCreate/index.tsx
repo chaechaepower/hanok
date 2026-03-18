@@ -4,13 +4,10 @@ import { FaBroadcastTower, FaPlus } from 'react-icons/fa';
 import { useToast } from '@/components/common/Toast';
 import { useDeleteStream } from '@/api/hooks/useDeleteStream';
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
+import { getCategoryLabel } from '@/constants/category';
 import SideBar from '@/components/common/layouts/SideBar';
 import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
-import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
 import CategorySelectModal from '@/components/LiveCreate/CategorySelectModal';
-
-const getCategoryLabel = (categoryId: string): string =>
-  MAIN_CATEGORY_ITEMS.find((c) => c.id === categoryId)?.label ?? categoryId;
 
 const formatScheduledAt = (isoString: string | null): string => {
   if (!isoString) return '방송 중';
@@ -108,12 +105,12 @@ export default function LiveCreatePage() {
   );
 
   return (
-    <div className="w-full max-w-[1200px] mx-auto flex gap-0 py-10 px-4">
+    <div className="w-full max-w-[1400px] mx-auto flex gap-10 py-10 px-4">
       <SideBar
         items={sellerSidebarItems}
         activeItemId={activeMenu}
         onItemClick={(item) => setActiveMenu(item.id)}
-        className="!w-[200px] shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
+        className="shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
       />
 
       <main className="flex-1 flex flex-col gap-6">

@@ -30,10 +30,28 @@ export const sellerHandlers = [
     const bizno = url.searchParams.get('bizno');
 
     if (!bizno || (bizno.length !== 10 && bizno.length !== 13)) {
-      return HttpResponse.json({ valid: false }, { status: 200 });
+      return HttpResponse.json(
+        {
+          status: 'SUCCESS',
+          message: 'Business number verification completed.',
+          data: {
+            valid: false,
+          },
+        },
+        { status: 200 },
+      );
     }
 
-    return HttpResponse.json({ valid: true }, { status: 200 });
+    return HttpResponse.json(
+      {
+        status: 'SUCCESS',
+        message: 'Business number verification completed.',
+        data: {
+          valid: true,
+        },
+      },
+      { status: 200 },
+    );
   }),
 
   http.get(`${BASE_URL}/v1/users/me/seller-status`, async () => {

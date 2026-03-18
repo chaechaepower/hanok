@@ -6,14 +6,16 @@ const SKELETON_SIDEBAR_ITEM_COUNT = 12;
 function LiveCardSkeleton() {
   return (
     <div className="w-full max-w-57.5">
+      <div className="mb-3 flex items-center gap-3">
+        <Skeleton width="40px" height="40px" borderRadius="9999px" className="shrink-0 bg-white/10!" />
+        <Skeleton width="120px" height="15px" borderRadius="6px" className="max-w-full bg-white/10!" />
+      </div>
+
       <Skeleton className="aspect-3/4 w-full bg-white/10!" borderRadius="16px" />
 
-      <div className="mt-5 flex items-start gap-3">
-        <Skeleton width="48px" height="48px" borderRadius="9999px" className="shrink-0 bg-white/10!" />
-        <div className="min-w-0 flex-1">
-          <Skeleton width="160px" height="16px" borderRadius="6px" className="max-w-full bg-white/10!" />
-          <Skeleton width="130px" height="14px" borderRadius="6px" className="mt-3 max-w-full bg-white/10!" />
-        </div>
+      <div className="mt-4">
+        <Skeleton width="160px" height="16px" borderRadius="6px" className="max-w-full bg-white/10!" />
+        <Skeleton width="110px" height="14px" borderRadius="6px" className="mt-3 max-w-full bg-white/10!" />
       </div>
     </div>
   );

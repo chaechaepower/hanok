@@ -1,26 +1,50 @@
 import data from '@emoji-mart/data';
 import Picker from '@emoji-mart/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BsEmojiSmile } from 'react-icons/bs';
 import { IoIosSend } from 'react-icons/io';
 
+import { useGetStreamMacros } from '@/api/hooks/useGetStreamMacros';
+import { getCategoryMacroTemplates } from '@/constants/macro';
 import type { StompConnectionState } from '@/websocket/stompClient';
 
-const macros = ['@사이즈', '@360도', '@소재', '@배송', '@진품인증', '@상태', '@무게', '@보증서', '@출처', '@작가소개'];
-
 interface Props {
+  streamId: number;
+  category: string;
   connectionState: StompConnectionState;
   onSendMessage: (message: string) => Promise<void>;
   onSendMacro: (command: string) => Promise<void>;
 }
 
-export default function ChatInput({ connectionState, onSendMessage, onSendMacro }: Props) {
+export default function ChatInput({
+  streamId,
+  category,
+  connectionState,
+  onSendMessage,
+  onSendMacro,
+}: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const [message, setMessage] = useState('');
   const [showPicker, setShowPicker] = useState(false);
   const isConnected = connectionState === 'connected';
+  const { data: streamMacros } = useGetStreamMacros(streamId, category);
+
+  const macros = useMemo(() => {
+    if (!streamMacros) {
+      return [];
+    }
+
+    const enabledQuestionTypes = new Set(streamMacros.macros.map((macro) => macro.questionType));
+
+    return getCategoryMacroTemplates(streamMacros.category)
+      .filter((macro) => enabledQuestionTypes.has(macro.questionType))
+      .map((macro) => ({
+        questionType: macro.questionType,
+        command: `@${macro.question}`,
+      }));
+  }, [streamMacros]);
 
   useEffect(() => {
     const element = scrollRef.current;
@@ -86,29 +110,31 @@ export default function ChatInput({ connectionState, onSendMessage, onSendMacro 
 
   return (
     <div className="relative border-t border-neutral-800 bg-background px-4 py-3.5">
-      <div className="relative mb-2.5">
-        <div ref={scrollRef} className="macro-scroll flex gap-[7px] overflow-x-auto pb-2.5">
-          {macros.map((macro) => (
-            <button
-              key={macro}
-              type="button"
-              disabled={!isConnected}
-              onClick={() => void handleMacroClick(macro)}
-              className="shrink-0 rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-[10px] font-bold text-neutral-400 transition-all hover:border-gold hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {macro}
-            </button>
-          ))}
+      {macros.length > 0 && (
+        <div className="relative mb-2.5">
+          <div ref={scrollRef} className="macro-scroll flex gap-[7px] overflow-x-auto pb-2.5">
+            {macros.map((macro) => (
+              <button
+                key={macro.questionType}
+                type="button"
+                disabled={!isConnected}
+                onClick={() => void handleMacroClick(macro.command)}
+                className="shrink-0 rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-[10px] font-bold text-neutral-400 transition-all hover:border-gold hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {macro.command}
+              </button>
+            ))}
+          </div>
+          <div className="pointer-events-none absolute bottom-2.5 right-0 top-0 w-10 bg-gradient-to-r from-transparent to-background" />
         </div>
-        <div className="pointer-events-none absolute bottom-2.5 right-0 top-0 w-10 bg-gradient-to-r from-transparent to-background" />
-      </div>
+      )}
 
       <div className="relative flex items-center">
         <input
           type="text"
           value={message}
           disabled={!isConnected}
-          placeholder={isConnected ? '메시지를 입력하세요..' : '채팅 연결 중입니다..'}
+          placeholder={isConnected ? '메시지를 입력하세요.' : '채팅 연결 중입니다..'}
           onChange={(event) => setMessage(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.nativeEvent.isComposing) {

@@ -1,3 +1,5 @@
+import { getCategoryLabel } from './category';
+
 export type MacroTemplate = {
   questionType: string;
   question: string;
@@ -138,4 +140,9 @@ export const CATEGORY_MACROS: Record<string, MacroTemplate[]> = {
     { questionType: 'DIMENSIONS',  question: '크기무게', answer: '' },
     { questionType: 'RECEIPT',     question: '영수증',    answer: '' },
   ],
+};
+
+export const getCategoryMacroTemplates = (category: string): MacroTemplate[] => {
+  const categoryLabel = getCategoryLabel(category);
+  return CATEGORY_MACROS[categoryLabel] ?? CATEGORY_MACROS[category] ?? [];
 };

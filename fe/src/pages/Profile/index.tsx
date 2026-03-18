@@ -44,7 +44,6 @@ const CalendarIcon = () => <FiCalendar size={16} className="text-neutral-600" />
 const HistoryIcon = () => <FiClock size={18} color="currentColor" />;
 const GiftIcon = () => <FiGift size={32} className="text-gold-light" />;
 
-
 const formatDate = (iso: string) => {
   const d = new Date(iso);
   const year = d.getFullYear();
@@ -93,7 +92,6 @@ export default function ProfilePage() {
   const [editPostId, setEditPostId] = useState<number | null>(null);
   const [noticeTitle, setNoticeTitle] = useState('');
   const [noticeContent, setNoticeContent] = useState('');
-
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isProfileEditOpen, setIsProfileEditOpen] = useState(false);
@@ -182,7 +180,8 @@ export default function ProfilePage() {
     }
   }, [initialFollowing, followedData, followInitialized]);
 
-  const isMyProfile = meData?.sellerId != null && meData.sellerId === sellerId;
+  const mySellerId = meData?.sellerId ?? mySellerStatus?.sellerId ?? null;
+  const isMyProfile = mySellerId != null && mySellerId === sellerId;
   const isOwner = mySellerStatus?.isSeller || true;
 
   const handleFollowToggle = () => {
@@ -259,7 +258,12 @@ export default function ProfilePage() {
     let content = noticeContent;
     if (selectedStream) {
       const dateStr = selectedStream.scheduledAt
-        ? new Date(selectedStream.scheduledAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        ? new Date(selectedStream.scheduledAt).toLocaleDateString('ko-KR', {
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
         : '';
       content += `\n\n[방송 안내] ${selectedStream.title}${dateStr ? ` (${dateStr})` : ''}`;
     }
@@ -301,17 +305,13 @@ export default function ProfilePage() {
 
   const { nickname, intro, profileImage, instagramUrl, youtubeUrl, tiktokUrl } = data;
 
-
   return (
     <div className="w-full box-border max-w-[1200px] mx-auto py-10 px-5 flex flex-col gap-8">
       <div className="w-full box-border border border-gold-light/30 rounded-2xl py-12 px-12 bg-surface">
         <div className="flex items-center justify-between gap-12">
           {/* 좌측: 프로필 이미지 + 정보 */}
           <div className="flex items-center gap-8 flex-1 min-w-0">
-            <div
-              className={`relative group ${isMyProfile ? 'cursor-pointer' : ''}`}
-              onClick={handleProfileImageClick}
-            >
+            <div className={`relative group ${isMyProfile ? 'cursor-pointer' : ''}`} onClick={handleProfileImageClick}>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -420,7 +420,9 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated">
                   <span className="text-subtitle-sm text-neutral-500">평균 배송</span>
-                  <span className="text-price-lg text-white">{data.stats.avgShipDays != null ? `${data.stats.avgShipDays}일` : '-'}</span>
+                  <span className="text-price-lg text-white">
+                    {data.stats.avgShipDays != null ? `${data.stats.avgShipDays}일` : '-'}
+                  </span>
                 </div>
               </div>
             )}
@@ -459,7 +461,7 @@ export default function ProfilePage() {
             판매 내역
           </button>
 
-          {isMyProfile && (
+          {isMyProfile && activeTab === 'posts' ? (
             <button
               className="ml-auto bg-transparent text-gold-light border-none cursor-pointer rounded-lg w-8 h-8 flex items-center justify-center hover:bg-white/5 transition-colors -mb-[1px]"
               onClick={handleOpenCreateModal}
@@ -467,7 +469,7 @@ export default function ProfilePage() {
             >
               <FiEdit2 size={18} />
             </button>
-          )}
+          ) : null}
         </div>
 
         {activeTab === 'posts' && (
@@ -477,50 +479,60 @@ export default function ProfilePage() {
             ) : (
               notices.map((post) => {
                 const streamMatch = post.content.match(/\[방송 안내\]\s*([\s\S]+)$/);
-                const mainContent = streamMatch ? post.content.slice(0, post.content.indexOf('[방송 안내]')).trim() : post.content;
+                const mainContent = streamMatch
+                  ? post.content.slice(0, post.content.indexOf('[방송 안내]')).trim()
+                  : post.content;
                 const streamInfo = streamMatch ? streamMatch[1].trim() : null;
 
                 return (
-                <div
-                  key={post.noticeId}
-                  className="border border-white/[0.06] rounded-xl py-7 px-8 bg-white/[0.02] flex flex-col gap-3 cursor-pointer hover:border-gold-light/40 transition-colors"
-                  onClick={() => setViewNoticeId(post.noticeId)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <BellIcon />
-                        <h3 className="m-0 text-neutral-100">{post.title}</h3>
+                  <div
+                    key={post.noticeId}
+                    className="border border-white/[0.06] rounded-xl py-7 px-8 bg-white/[0.02] flex flex-col gap-3 cursor-pointer hover:border-gold-light/40 transition-colors"
+                    onClick={() => setViewNoticeId(post.noticeId)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <BellIcon />
+                          <h3 className="m-0 text-neutral-100">{post.title}</h3>
+                        </div>
+                        {mainContent && (
+                          <p className="m-0 mt-1 ml-8 text-body-md text-neutral-400 leading-relaxed">{mainContent}</p>
+                        )}
+                        {streamInfo && (
+                          <p className="m-0 mt-1 ml-8 text-body-md text-neutral-400 leading-relaxed">{streamInfo}</p>
+                        )}
+                        <div className="flex items-center gap-2 mt-2 ml-8">
+                          <CalendarIcon />
+                          <span className="text-body-md text-neutral-600">
+                            {formatDate(post.createdAt).split(' ')[0]}
+                          </span>
+                        </div>
                       </div>
-                      {mainContent && (
-                        <p className="m-0 mt-1 ml-8 text-body-md text-neutral-400 leading-relaxed">{mainContent}</p>
+                      {isMyProfile && (
+                        <div className="flex gap-3">
+                          <button
+                            className="bg-transparent border-none text-neutral-500 text-body-md cursor-pointer rounded-md px-2 py-1 hover:bg-white/5 hover:text-neutral-200 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenEditModal(post.noticeId, post.title, post.content);
+                            }}
+                          >
+                            수정
+                          </button>
+                          <button
+                            className="bg-transparent border-none text-accent-light/70 text-body-md cursor-pointer rounded-md px-2 py-1 hover:bg-accent/10 hover:text-accent-light transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteNotice(post.noticeId);
+                            }}
+                          >
+                            삭제
+                          </button>
+                        </div>
                       )}
-                      {streamInfo && (
-                        <p className="m-0 mt-1 ml-8 text-body-md text-neutral-400 leading-relaxed">{streamInfo}</p>
-                      )}
-                      <div className="flex items-center gap-2 mt-2 ml-8">
-                        <CalendarIcon />
-                        <span className="text-body-md text-neutral-600">{formatDate(post.createdAt).split(' ')[0]}</span>
-                      </div>
                     </div>
-                    {isMyProfile && (
-                      <div className="flex gap-3">
-                        <button
-                          className="bg-transparent border-none text-neutral-500 text-body-md cursor-pointer rounded-md px-2 py-1 hover:bg-white/5 hover:text-neutral-200 transition-colors"
-                          onClick={(e) => { e.stopPropagation(); handleOpenEditModal(post.noticeId, post.title, post.content); }}
-                        >
-                          수정
-                        </button>
-                        <button
-                          className="bg-transparent border-none text-accent-light/70 text-body-md cursor-pointer rounded-md px-2 py-1 hover:bg-accent/10 hover:text-accent-light transition-colors"
-                          onClick={(e) => { e.stopPropagation(); handleDeleteNotice(post.noticeId); }}
-                        >
-                          삭제
-                        </button>
-                      </div>
-                    )}
                   </div>
-                </div>
                 );
               })
             )}
@@ -570,9 +582,7 @@ export default function ProfilePage() {
       {isModalOpen && (
         <div className="fixed top-0 left-0 w-full h-full bg-black/90 z-[999] flex items-center justify-center backdrop-blur-sm">
           <div className="bg-surface border border-neutral-800 rounded-2xl w-[600px] p-10 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]">
-            <h2 className="m-0 text-neutral-100">
-              {modalMode === 'create' ? '공지사항 등록' : '공지사항 수정'}
-            </h2>
+            <h2 className="m-0 text-neutral-100">{modalMode === 'create' ? '공지사항 등록' : '공지사항 수정'}</h2>
             <input
               className="w-full box-border bg-background text-white border border-neutral-800 rounded-lg p-4 text-subtitle-lg outline-none focus:border-gold-light transition-colors"
               placeholder="제목을 입력하세요"
@@ -612,7 +622,10 @@ export default function ProfilePage() {
                       className="w-full box-border bg-background text-neutral-500 border border-neutral-800 rounded-lg p-4 text-subtitle-lg outline-none cursor-pointer flex items-center justify-between hover:border-neutral-700 transition-colors"
                     >
                       <span>방송을 선택하세요</span>
-                      <FiChevronDown size={16} className={`text-neutral-500 transition-transform ${streamDropdownOpen ? 'rotate-180' : ''}`} />
+                      <FiChevronDown
+                        size={16}
+                        className={`text-neutral-500 transition-transform ${streamDropdownOpen ? 'rotate-180' : ''}`}
+                      />
                     </button>
                     {streamDropdownOpen && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-surface-elevated border border-neutral-800 rounded-lg overflow-hidden z-10 shadow-[0_4px_20px_rgba(0,0,0,0.4)] max-h-[200px] overflow-y-auto custom-scrollbar">
@@ -629,7 +642,12 @@ export default function ProfilePage() {
                             <span className="text-subtitle-md text-neutral-100">{stream.title}</span>
                             <span className="text-body-sm text-neutral-500">
                               {stream.scheduledAt
-                                ? new Date(stream.scheduledAt).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                                ? new Date(stream.scheduledAt).toLocaleDateString('ko-KR', {
+                                    month: 'long',
+                                    day: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })
                                 : ''}
                               {` · ${stream.category}`}
                             </span>
@@ -682,7 +700,9 @@ export default function ProfilePage() {
               </button>
             </div>
 
-            <p className="m-0 text-subtitle-lg text-neutral-200 leading-relaxed whitespace-pre-wrap">{noticeDetail.content}</p>
+            <p className="m-0 text-subtitle-lg text-neutral-200 leading-relaxed whitespace-pre-wrap">
+              {noticeDetail.content}
+            </p>
 
             <div className="flex items-center gap-4 text-body-md text-neutral-600 border-t border-white/5 pt-4">
               <div className="flex items-center gap-2">
