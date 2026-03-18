@@ -427,7 +427,7 @@ export default function LiveRegisterPage() {
           <div className="flex flex-col gap-2 overflow-y-auto pr-2">
             {selectedItems.map((item) => {
               const conditionLabel =
-                { BRAND_NEW: '미개봉 새제품', OPEN_BOX: '개봉된 새상품', REFURBISHED: '리퍼비시', USED: '중고' }[
+                { BRAND_NEW: '미개봉', OPEN_BOX: '개봉된 새상품', REFURBISHED: '리퍼비시', USED: '중고' }[
                   item.itemCondition
                 ] ?? item.itemCondition;
 

@@ -8,6 +8,7 @@ import { createWalletCharge } from '@/api/hooks/usePostWalletCharge';
 import { useGetWallet } from '@/api/hooks/useGetWallet';
 import { useToast } from '@/components/common/Toast';
 import PointManagementModal, { type PointModalType } from '@/components/Wallet/PointManagementModal';
+import { MIN_WALLET_CHARGE_AMOUNT } from '@/constants/wallet';
 import { requestPointChargePayment } from '@/utils/requestPointChargePayment';
 
 interface Props {
@@ -57,12 +58,23 @@ export default function StreamOverlay({ viewerCount = 0, isSeller = false }: Pro
 
   const handlePointAmountChange = (value: string) => {
     const sanitizedValue = value.replace(/\D/g, '');
-    const nextAmount = clampWithdrawAmount(Number(sanitizedValue || 0));
+    const requestedAmount = Number(sanitizedValue || 0);
+    const isOverBalance = pointModalType === 'withdraw' && requestedAmount > balance;
+    const nextAmount = clampWithdrawAmount(requestedAmount);
+
+    if (isOverBalance) {
+      showToast({ message: '잔고가 부족합니다.' });
+    }
+
     setPointAmountInput(sanitizedValue ? String(nextAmount) : '');
     setIsDirectInputMode(true);
   };
 
   const handlePointPresetClick = (amount: number) => {
+    if (pointModalType === 'withdraw' && amount > balance) {
+      showToast({ message: '잔고가 부족합니다.' });
+    }
+
     setPointAmountInput(String(clampWithdrawAmount(amount)));
     setIsDirectInputMode(false);
   };
@@ -79,6 +91,12 @@ export default function StreamOverlay({ viewerCount = 0, isSeller = false }: Pro
 
   const handlePointAction = async () => {
     if (numericPointAmount <= 0 || isPointSubmitting) return;
+
+    if (pointModalType === 'charge' && numericPointAmount < MIN_WALLET_CHARGE_AMOUNT) {
+      setPointAmountInput(String(MIN_WALLET_CHARGE_AMOUNT));
+      showToast({ message: '최소 10000원부터 충전 가능합니다.' });
+      return;
+    }
 
     setIsPointSubmitting(true);
 

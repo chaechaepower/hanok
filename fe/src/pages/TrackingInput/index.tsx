@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { BsBox } from 'react-icons/bs';
 import { FiX } from 'react-icons/fi';
 
@@ -27,42 +27,42 @@ function CancelModal({
     <div className="fixed inset-0 bg-black/55 flex items-center justify-center z-[1000]" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-[20px] p-[40px_32px_32px] w-[360px] relative shadow-[0_20px_60px_rgba(0,0,0,0.25)] flex flex-col items-center gap-5"
+        className="bg-surface-elevated rounded-2xl p-[40px_32px_32px] w-[360px] relative shadow-[0_20px_60px_rgba(0,0,0,0.25)] flex flex-col items-center gap-5"
       >
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 bg-transparent border-none cursor-pointer text-[#888] p-1"
+          className="absolute top-4 right-4 bg-transparent border-none cursor-pointer text-neutral-500 p-1"
         >
           <FiX size={20} />
         </button>
 
-        <div className="w-14 h-14 rounded-full bg-[#FEE2E2] flex items-center justify-center">
-          <FiX size={28} color="#EF4444" />
+        <div className="w-14 h-14 rounded-full bg-accent-muted flex items-center justify-center">
+          <FiX size={28} className="text-accent-light" />
         </div>
 
-        <h2 className="text-xl font-bold text-[#1A2238] m-0">거래를 취소하시겠습니까?</h2>
+        <h2 className="text-xl font-bold text-neutral-100 m-0">거래를 취소하시겠습니까?</h2>
 
-        <div className="flex items-center gap-2.5 bg-[#F5F5F7] rounded-[10px] p-[12px_16px] w-full">
-          <BsBox size={18} color="#555" />
-          <span className="text-[15px] text-[#1A2238] font-medium">{itemName}</span>
+        <div className="flex items-center gap-2.5 bg-neutral-800 rounded-[10px] p-[12px_16px] w-full">
+          <BsBox size={18} className="text-neutral-500" />
+          <span className="text-[15px] text-neutral-100 font-medium">{itemName}</span>
         </div>
 
         <div className="w-full flex flex-col gap-2">
-          <label className="text-[13px] text-[#888] font-medium">취소 사유</label>
+          <label className="text-[13px] text-neutral-500 font-medium">취소 사유</label>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="취소 사유를 입력해주세요."
             rows={4}
-            className="w-full p-3.5 text-sm text-[#1A2238] border border-[#E5E5EA] rounded-[10px] resize-none outline-none font-[inherit] box-border bg-white leading-[1.6]"
+            className="w-full p-3.5 text-sm text-neutral-100 border border-neutral-700 rounded-[10px] resize-none outline-none font-[inherit] box-border bg-surface leading-[1.6]"
           />
         </div>
 
         <button
           type="button"
           onClick={() => onConfirm(reason)}
-          className="w-full h-[52px] bg-[#1A2238] text-white border-none rounded-xl text-base font-semibold cursor-pointer transition-colors hover:bg-[#2C3E62]"
+          className="btn-primary w-full h-[52px] rounded-xl text-base font-semibold cursor-pointer"
         >
           확인
         </button>
@@ -86,6 +86,18 @@ export default function TrackingInput() {
   const [courierName, setCourierName] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
   const [showCourierModal, setShowCourierModal] = useState(false);
+  const courierDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showCourierModal) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (courierDropdownRef.current && !courierDropdownRef.current.contains(e.target as Node)) {
+        setShowCourierModal(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showCourierModal]);
 
   const currentSelectedItem = items.find((item) => String(item.escrowId) === selectedItemId);
   const isTrackingSubmitted =
@@ -156,8 +168,8 @@ export default function TrackingInput() {
 
         <div className="flex-1 flex flex-col gap-12 w-full">
           <section>
-            <h2 className="text-xl font-bold text-[#CEAF82] mb-4">배송 등록 대기</h2>
-            <div className="flex justify-between pb-3 border-b border-[#3A3A3C] text-sm text-[#E5E5EA] mb-4">
+            <h2 className="text-[24px] font-semibold text-warm mb-4">배송 등록 대기</h2>
+            <div className="flex justify-between pb-3 border-b border-neutral-700 text-sm text-neutral-300 mb-4">
               <span>상품</span>
               <span>낙찰가</span>
             </div>
@@ -169,37 +181,37 @@ export default function TrackingInput() {
                     onClick={() => handleSelectItem(item.escrowId)}
                     className={`flex justify-between items-center p-4 rounded-2xl cursor-pointer transition-colors ${
                       selectedItemId === String(item.escrowId)
-                        ? 'bg-[#1C1C1E] border border-[#3A3A3C]'
-                        : 'bg-transparent border border-transparent hover:bg-[#1C1C1E]/60'
+                        ? 'bg-surface border border-neutral-700'
+                        : 'bg-transparent border border-transparent hover:bg-surface/60'
                     }`}
                   >
                     <div className="flex items-center gap-5">
-                      <div className="w-[80px] h-[80px] bg-[#2C2C2E] rounded-xl overflow-hidden shrink-0">
+                      <div className="w-[80px] h-[80px] bg-neutral-800 rounded-xl overflow-hidden shrink-0">
                         {item.image ? (
                           <img src={item.image} alt={item.itemName} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[#8E8E93] text-xs">
+                          <div className="w-full h-full flex items-center justify-center text-neutral-500 text-xs">
                             이미지 준비중
                           </div>
                         )}
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-lg font-bold">{item.itemName}</span>
-                        <span className="text-[#AEAEB2] text-[13px]">{formatDate(item.createdAt)}</span>
+                        <span className="text-lg font-bold text-neutral-100">{item.itemName}</span>
+                        <span className="text-neutral-400 text-[13px]">{formatDate(item.createdAt)}</span>
                       </div>
                     </div>
-                    <div className="text-lg font-bold">{formatPrice(item.amount)}</div>
+                    <div className="text-lg font-bold text-neutral-100">{formatPrice(item.amount)}</div>
                   </div>
                 ))
               ) : (
-                <div className="py-5 text-center text-[#8E8E93] text-sm">대기 중인 배송이 없습니다.</div>
+                <div className="py-5 text-center text-neutral-500 text-sm">대기 중인 배송이 없습니다.</div>
               )}
             </div>
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-[#CEAF82] mb-4">배송 등록 완료</h2>
-            <div className="flex justify-between pb-3 border-b border-[#3A3A3C] text-sm text-[#E5E5EA] mb-4">
+            <h2 className="text-[24px] font-semibold text-warm mb-4">배송 등록 완료</h2>
+            <div className="flex justify-between pb-3 border-b border-neutral-700 text-sm text-neutral-300 mb-4">
               <span>상품</span>
               <span>낙찰가</span>
             </div>
@@ -211,45 +223,45 @@ export default function TrackingInput() {
                     onClick={() => handleSelectItem(item.escrowId)}
                     className={`flex justify-between items-center p-4 rounded-2xl cursor-pointer transition-colors ${
                       selectedItemId === String(item.escrowId)
-                        ? 'bg-[#1C1C1E] border border-[#3A3A3C]'
-                        : 'bg-transparent border border-transparent hover:bg-[#1C1C1E]/60'
+                        ? 'bg-surface border border-neutral-700'
+                        : 'bg-transparent border border-transparent hover:bg-surface/60'
                     }`}
                   >
                     <div className="flex items-center gap-5">
-                      <div className="w-[80px] h-[80px] bg-[#2C2C2E] rounded-xl overflow-hidden shrink-0">
+                      <div className="w-[80px] h-[80px] bg-neutral-800 rounded-xl overflow-hidden shrink-0">
                         {item.image ? (
                           <img src={item.image} alt={item.itemName} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[#8E8E93] text-xs">
+                          <div className="w-full h-full flex items-center justify-center text-neutral-500 text-xs">
                             이미지 준비중
                           </div>
                         )}
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-[#CEAF82] text-xs font-bold">
+                        <span className="text-gold-light text-xs font-bold">
                           {item.escrowStatus === 'INVOICE_SUBMITTED'
                             ? '배송중'
                             : item.escrowStatus === 'COMPLETED'
                               ? '배송 완료'
                               : item.escrowStatus}
                         </span>
-                        <span className="text-lg font-bold">{item.itemName}</span>
-                        <span className="text-[#AEAEB2] text-[13px]">{formatDate(item.createdAt)}</span>
+                        <span className="text-lg font-bold text-neutral-100">{item.itemName}</span>
+                        <span className="text-neutral-400 text-[13px]">{formatDate(item.createdAt)}</span>
                       </div>
                     </div>
-                    <div className="text-lg font-bold">{formatPrice(item.amount)}</div>
+                    <div className="text-lg font-bold text-neutral-100">{formatPrice(item.amount)}</div>
                   </div>
                 ))
               ) : (
-                <div className="py-5 text-center text-[#8E8E93] text-sm">완료된 배송이 없습니다.</div>
+                <div className="py-5 text-center text-neutral-500 text-sm">완료된 배송이 없습니다.</div>
               )}
             </div>
           </section>
 
           {cancelledItems.length > 0 && (
             <section>
-              <h2 className="text-xl font-bold text-[#8E8E93] mb-4">거래 취소</h2>
-              <div className="flex justify-between pb-3 border-b border-[#3A3A3C] text-sm text-[#E5E5EA] mb-4">
+              <h2 className="text-[24px] font-semibold text-neutral-500 mb-4">거래 취소</h2>
+              <div className="flex justify-between pb-3 border-b border-neutral-700 text-sm text-neutral-300 mb-4">
                 <span>상품</span>
                 <span>낙찰가</span>
               </div>
@@ -260,22 +272,22 @@ export default function TrackingInput() {
                     className="flex justify-between items-center p-4 opacity-50 border border-transparent rounded-2xl"
                   >
                     <div className="flex items-center gap-5">
-                      <div className="w-[80px] h-[80px] bg-[#2C2C2E] rounded-xl overflow-hidden shrink-0">
+                      <div className="w-[80px] h-[80px] bg-neutral-800 rounded-xl overflow-hidden shrink-0">
                         {item.image ? (
                           <img src={item.image} alt={item.itemName} className="w-full h-full object-cover grayscale" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[#8E8E93] text-xs">
+                          <div className="w-full h-full flex items-center justify-center text-neutral-500 text-xs">
                             이미지 준비중
                           </div>
                         )}
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-[#8E8E93] text-xs font-bold">거래 취소</span>
-                        <span className="text-lg font-bold">{item.itemName}</span>
-                        <span className="text-[#AEAEB2] text-[13px]">{formatDate(item.createdAt)}</span>
+                        <span className="text-neutral-500 text-xs font-bold">거래 취소</span>
+                        <span className="text-lg font-bold text-neutral-100">{item.itemName}</span>
+                        <span className="text-neutral-400 text-[13px]">{formatDate(item.createdAt)}</span>
                       </div>
                     </div>
-                    <div className="text-lg font-bold">{formatPrice(item.amount)}</div>
+                    <div className="text-lg font-bold text-neutral-100">{formatPrice(item.amount)}</div>
                   </div>
                 ))}
               </div>
@@ -291,29 +303,56 @@ export default function TrackingInput() {
               counterpartyLabel="구매자"
               footer={
                 isTrackingSubmitted ? (
-                  <div className="bg-[#2C2C2E] rounded-xl p-5 border border-[#3A3A3C] text-center text-[#8E8E93] text-sm">
+                  <div className="bg-neutral-800 rounded-xl p-5 border border-neutral-700 text-center text-neutral-500 text-sm">
                     운송장이 등록된 상품입니다.
                   </div>
                 ) : (
                   <>
                     <div className="flex gap-2 mb-8">
-                      <button
-                        type="button"
-                        onClick={() => selectedItemId && setShowCourierModal(true)}
-                        disabled={!selectedItemId}
-                        className="w-[160px] h-[48px] bg-transparent border border-[#3A3A3C] rounded-lg px-3 text-left cursor-pointer flex items-center justify-between hover:border-[#d9b36d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <span className={courier ? 'text-white text-sm' : 'text-[#8E8E93] text-sm'}>
-                          {courier ? courierName : '택배사 선택'}
-                        </span>
-                        <span className="text-[#555] text-xs">▼</span>
-                      </button>
+                      <div className="relative w-[160px]" ref={courierDropdownRef}>
+                        <button
+                          type="button"
+                          onClick={() => selectedItemId && setShowCourierModal((prev) => !prev)}
+                          disabled={!selectedItemId}
+                          className="w-full h-[48px] bg-transparent border border-neutral-700 rounded-lg px-3 text-left cursor-pointer flex items-center justify-between hover:border-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <span className={courier ? 'text-neutral-100 text-sm' : 'text-neutral-500 text-sm'}>
+                            {courier ? courierName : '택배사 선택'}
+                          </span>
+                          <span className={`text-gold transition-transform text-sm ${showCourierModal ? 'rotate-180' : ''}`}>▾</span>
+                        </button>
+                        {showCourierModal && (
+                          <div className="absolute z-10 left-0 right-0 top-[calc(100%+4px)] bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-lg max-h-[240px] overflow-y-auto custom-scrollbar min-w-[200px]">
+                            {COURIERS.map((item) => {
+                              const isSelected = courier === item.code;
+                              return (
+                                <button
+                                  key={item.code}
+                                  type="button"
+                                  onClick={() => {
+                                    setCourier(item.code);
+                                    setCourierName(item.name);
+                                    setShowCourierModal(false);
+                                  }}
+                                  className={`w-full text-left px-4 py-2.5 text-[14px] transition-colors cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-gold/15 text-gold-light font-semibold'
+                                      : 'text-neutral-300 hover:bg-warm/8 hover:text-neutral-100'
+                                  }`}
+                                >
+                                  {item.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                       <input
                         type="text"
                         placeholder="송장 번호"
                         value={trackingNumber}
                         onChange={(e) => setTrackingNumber(e.target.value)}
-                        className="flex-1 h-[48px] bg-transparent border border-[#3A3A3C] rounded-lg px-4 text-white text-sm outline-none"
+                        className="flex-1 h-[48px] bg-transparent border border-neutral-700 rounded-lg px-4 text-neutral-100 text-sm outline-none"
                       />
                     </div>
 
@@ -338,14 +377,14 @@ export default function TrackingInput() {
                             },
                           );
                         }}
-                        className="w-[120px] h-12 bg-white text-black rounded-lg border-none text-base font-bold cursor-pointer transition-colors hover:bg-gray-200"
+                        className="btn-primary w-[120px] h-12 rounded-lg text-base font-bold cursor-pointer"
                       >
                         등록
                       </button>
                       <button
                         type="button"
                         onClick={() => setShowCancelModal(true)}
-                        className="bg-transparent border-none text-[#8E8E93] text-[13px] underline cursor-pointer"
+                        className="bg-transparent border-none text-neutral-500 text-[13px] underline cursor-pointer hover:text-neutral-300 transition-colors"
                       >
                         거래취소
                       </button>
@@ -355,59 +394,13 @@ export default function TrackingInput() {
               }
             />
           ) : (
-            <div className="h-full flex items-center justify-center text-[#8E8E93]">
+            <div className="h-full flex items-center justify-center text-neutral-500">
               목록에서 배송 건을 선택해주세요
             </div>
           )}
         </div>
       </div>
 
-      {showCourierModal && (
-        <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60"
-          onClick={() => setShowCourierModal(false)}
-        >
-          <div
-            className="w-full max-w-[430px] max-h-[70vh] bg-[#1C1C1E] rounded-2xl flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-5 pt-4 shrink-0">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-[17px] font-bold text-white">택배사 선택</h3>
-                <button
-                  type="button"
-                  onClick={() => setShowCourierModal(false)}
-                  className="bg-transparent border-none text-[#8E8E93] text-2xl cursor-pointer p-0"
-                >
-                  &times;
-                </button>
-              </div>
-            </div>
-            <div className="overflow-y-auto px-5 pt-2 pb-5">
-              <div className="grid grid-cols-3 gap-2">
-                {COURIERS.map((item) => (
-                  <button
-                    key={item.code}
-                    type="button"
-                    onClick={() => {
-                      setCourier(item.code);
-                      setCourierName(item.name);
-                      setShowCourierModal(false);
-                    }}
-                    className={`py-3 px-1 border-none rounded-lg text-[13px] cursor-pointer text-center whitespace-nowrap overflow-hidden text-ellipsis ${
-                      courier === item.code
-                        ? 'bg-[#CEAF82] text-[#0B0C10] font-bold'
-                        : 'bg-[#2C2C2E] text-[#E5E5EA] font-normal'
-                    }`}
-                  >
-                    {item.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

@@ -7,6 +7,30 @@ import { signUp } from '@/api/hooks/usePostSignUp';
 import { requestIdentityVerification } from '@/utils/requestIdentityVerification';
 import Button from '@/components/common/Button';
 
+function CheckboxIcon({ checked }: { checked: boolean }) {
+  return (
+    <div
+      className={`w-5 h-5 min-w-5 flex justify-center items-center rounded border-2 relative transition-all duration-150 ${
+        checked ? 'border-primary bg-primary' : 'border-neutral-600 bg-transparent'
+      }`}
+    >
+      {checked && (
+        <svg
+          className="w-3 h-3 text-background pointer-events-none"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M5 13l4 4L19 7" />
+        </svg>
+      )}
+    </div>
+  );
+}
+
 export default function SignUpPage() {
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -96,15 +120,15 @@ export default function SignUpPage() {
   };
 
   const inputContainerClass =
-    'flex items-center border border-[#3A3A3C] rounded-[10px] h-[52px] px-3 bg-transparent focus-within:border-[#CEAF82] transition-colors';
-  const inputClass = 'flex-1 bg-transparent text-[15px] text-white px-2 focus:outline-none placeholder-[#636366]';
-  const iconClass = 'w-5 h-5 text-[#8E8E93]';
+    'flex items-center border border-neutral-800 rounded-[10px] h-[52px] px-3 bg-transparent focus-within:border-primary transition-colors';
+  const inputClass = 'flex-1 bg-transparent text-[15px] text-neutral-100 px-2 focus:outline-none placeholder-neutral-600';
+  const iconClass = 'w-5 h-5 text-neutral-600';
 
   return (
     <div className="w-full flex flex-col items-center px-4 py-10">
       <div className="w-full max-w-[480px] text-center mb-10 mx-auto">
-        <h1 className="text-[#F5F2EB] text-[32px] font-bold mb-4">회원가입</h1>
-        <p className="text-[#E5E5EA] text-[15px]">한옥에 가입하고 경매에 참여해 보세요!</p>
+        <h1 className="text-neutral-100 text-[32px] font-bold mb-4">회원가입</h1>
+        <p className="text-neutral-300 text-[15px]">한옥에 가입하고 경매에 참여해 보세요!</p>
       </div>
 
       <form
@@ -112,7 +136,7 @@ export default function SignUpPage() {
         className="w-full max-w-[480px] flex flex-col gap-6 mx-auto"
       >
         <div className="flex flex-col gap-2">
-          <label className="text-[13px] font-medium text-[#E5E5EA] ml-1">이메일</label>
+          <label className="text-[13px] font-medium text-neutral-300 ml-1">이메일</label>
           <div className={inputContainerClass}>
             <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -137,17 +161,17 @@ export default function SignUpPage() {
               size="small"
               onClick={handleEmailCheck}
               disabled={isEmailVerified}
-              className="w-auto! px-5"
+              className="w-auto! px-5 !bg-neutral-200 !text-background hover:!bg-neutral-300"
             >
               중복 확인
             </Button>
           </div>
-          {emailError && <p className="text-[#FF453A] text-xs px-1">{emailError}</p>}
-          {isEmailVerified && <p className="text-[#32D74B] text-xs px-1">사용 가능한 이메일입니다.</p>}
+          {emailError && <p className="text-accent-light text-xs px-1">{emailError}</p>}
+          {isEmailVerified && <p className="text-ember-light text-xs px-1">사용 가능한 이메일입니다.</p>}
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[13px] font-medium text-[#E5E5EA] ml-1">닉네임</label>
+          <label className="text-[13px] font-medium text-neutral-300 ml-1">닉네임</label>
           <div className={inputContainerClass}>
             <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -168,7 +192,7 @@ export default function SignUpPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[13px] font-medium text-[#E5E5EA] ml-1">비밀번호</label>
+          <label className="text-[13px] font-medium text-neutral-300 ml-1">비밀번호</label>
           <div className={`${inputContainerClass} mb-1`}>
             <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -186,7 +210,7 @@ export default function SignUpPage() {
               className={inputClass}
             />
           </div>
-          {passwordError && <p className="text-[#FF453A] text-xs px-1 -mt-2 mb-1">{passwordError}</p>}
+          {passwordError && <p className="text-accent-light text-xs px-1 -mt-2 mb-1">{passwordError}</p>}
 
           <div className={inputContainerClass}>
             <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -206,12 +230,12 @@ export default function SignUpPage() {
             />
           </div>
           {passwordConfirm && password !== passwordConfirm && (
-            <p className="text-[#FF453A] text-xs px-1">비밀번호가 일치하지 않습니다.</p>
+            <p className="text-accent-light text-xs px-1">비밀번호가 일치하지 않습니다.</p>
           )}
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[13px] font-medium text-[#E5E5EA] ml-1">휴대폰 본인인증</label>
+          <label className="text-[13px] font-medium text-neutral-300 ml-1">휴대폰 본인인증</label>
           <div className={inputContainerClass}>
             <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -233,86 +257,50 @@ export default function SignUpPage() {
               size="small"
               onClick={handleIdentityVerification}
               disabled={isIdentityVerified}
-              className="w-auto! px-5"
+              className="w-auto! px-5 !bg-neutral-200 !text-background hover:!bg-neutral-300"
             >
               {isIdentityVerified ? '인증완료' : '본인인증'}
             </Button>
           </div>
-          {phoneError && <p className="text-[#FF453A] text-xs px-1">{phoneError}</p>}
-          {isIdentityVerified && <p className="text-[#32D74B] text-xs px-1">본인인증이 완료되었습니다. ({verifiedName})</p>}
+          {phoneError && <p className="text-accent-light text-xs px-1">{phoneError}</p>}
+          {isIdentityVerified && <p className="text-ember-light text-xs px-1">본인인증이 완료되었습니다. ({verifiedName})</p>}
         </div>
 
         <div className="flex flex-col gap-3 mt-4">
           <label className="flex items-center gap-3 cursor-pointer">
-            <div
-              className={`w-5 h-5 min-w-5 flex justify-center items-center rounded border-2 relative transition-all duration-150 ${
-                termsAgreed ? 'border-[#CEAF82] bg-[#CEAF82]' : 'border-[#888] bg-transparent'
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={termsAgreed}
-                onChange={(e) => setTermsAgreed(e.target.checked)}
-                className="appearance-none absolute inset-0 cursor-pointer"
-              />
-              {termsAgreed && (
-                <svg
-                  className="w-3 h-3 text-black pointer-events-none"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-            </div>
-            <span className="text-sm text-[#E5E5EA]">온라인 경매 약관 동의 [필수]</span>
+            <CheckboxIcon checked={termsAgreed} />
+            <input
+              type="checkbox"
+              checked={termsAgreed}
+              onChange={(e) => setTermsAgreed(e.target.checked)}
+              className="hidden"
+            />
+            <span className="text-sm text-neutral-300">온라인 경매 약관 동의 [필수]</span>
           </label>
           <label className="flex items-center gap-3 cursor-pointer">
-            <div
-              className={`w-5 h-5 min-w-5 flex justify-center items-center rounded border-2 relative transition-all duration-150 ${
-                privacyAgreed ? 'border-[#CEAF82] bg-[#CEAF82]' : 'border-[#888] bg-transparent'
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={privacyAgreed}
-                onChange={(e) => setPrivacyAgreed(e.target.checked)}
-                className="appearance-none absolute inset-0 cursor-pointer"
-              />
-              {privacyAgreed && (
-                <svg
-                  className="w-3 h-3 text-black pointer-events-none"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M5 13l4 4L19 7" />
-                </svg>
-              )}
-            </div>
-            <span className="text-sm text-[#E5E5EA]">개인정보 수집 및 이용 동의 [필수]</span>
+            <CheckboxIcon checked={privacyAgreed} />
+            <input
+              type="checkbox"
+              checked={privacyAgreed}
+              onChange={(e) => setPrivacyAgreed(e.target.checked)}
+              className="hidden"
+            />
+            <span className="text-sm text-neutral-300">개인정보 수집 및 이용 동의 [필수]</span>
           </label>
         </div>
 
         <div className="mt-4">
-          <Button type="submit" variant="white" size="large">
+          <Button type="submit" variant="white" size="large" className="!bg-neutral-200 !text-background hover:!bg-neutral-300">
             가입 하기
           </Button>
         </div>
 
-        <div className="text-center text-[13px] text-[#A0A0A0] mt-1 flex items-center justify-center gap-1">
+        <div className="text-center text-[13px] text-neutral-500 mt-1 flex items-center justify-center gap-1">
           이미 계정이 있으신가요?
           <button
             type="button"
             onClick={() => navigate('/login')}
-            className="text-gold font-semibold hover:underline ml-1"
+            className="text-primary-light font-semibold hover:underline ml-1"
           >
             로그인
           </button>

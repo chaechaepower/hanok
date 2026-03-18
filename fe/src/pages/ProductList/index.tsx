@@ -53,6 +53,8 @@ export default function ProductListPage() {
     { id: 'SOLD', label: `판매 완료(${countByStatus.SOLD})` },
   ] as const;
 
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+
   return (
     <div className="w-350 flex mx-auto gap-10 py-10 px-4 min-h-screen text-white">
       <SideBar
@@ -64,22 +66,22 @@ export default function ProductListPage() {
       <div className="flex-1 flex flex-col gap-6">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-bold text-white leading-tight">내 인벤토리</h1>
-            <p className="text-[#888] text-sm mt-1">라이브 경매를 위해 등록된 품목입니다.</p>
+            <h2 className="text-[24px] font-semibold text-warm leading-tight m-0 mb-2">내 인벤토리</h2>
+            <p className="text-body-md text-neutral-500 m-0">라이브 경매를 위해 등록된 품목입니다.</p>
           </div>
           <button
             onClick={() => {
               setEditProductInitData(null);
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-1.5 bg-[#F5F5F7] text-[#1C1C1E] border-none rounded-3xl px-6 py-2.5 text-sm font-semibold cursor-pointer"
+            className="btn-primary-outline flex items-center gap-1.5 rounded-[10px] px-5 py-2.5 text-sm font-semibold cursor-pointer"
           >
             <FaPlus size={12} />새 물품 등록
           </button>
         </div>
 
-        <div className="bg-[#151517] rounded-2xl border border-[#2C2C2E] min-h-[600px] px-6 pb-6 flex flex-col">
-          <div className="flex border-b border-[#2C2C2E] mb-6 pt-4">
+        <div className="bg-surface-elevated rounded-2xl border border-neutral-800 px-6 pb-6 flex flex-col">
+          <div className="flex border-b border-neutral-800 mb-6 pt-4">
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -90,11 +92,11 @@ export default function ProductListPage() {
                     setCurrentPage(1);
                   }}
                   className={`bg-transparent border-none px-6 py-3 text-sm cursor-pointer relative ${
-                    isActive ? 'text-white font-bold' : 'text-[#8E8E93] font-normal'
+                    isActive ? 'text-neutral-100 font-bold' : 'text-neutral-500 font-normal'
                   }`}
                 >
                   {tab.label}
-                  {isActive && <div className="absolute -bottom-px left-0 right-0 h-0.5 bg-white" />}
+                  {isActive && <div className="absolute -bottom-px left-0 right-0 h-0.5 bg-neutral-100" />}
                 </button>
               );
             })}
@@ -115,36 +117,32 @@ export default function ProductListPage() {
                   />
                 ))}
               </div>
-              {Math.ceil(filteredProducts.length / itemsPerPage) > 1 && (
-                <div className="flex items-center justify-center gap-2 py-4 mt-auto">
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 py-4 mt-4">
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage <= 1}
-                    className="px-3 py-1.5 bg-transparent border border-[#2C2C2E] text-[#aaa] text-[13px] rounded cursor-pointer hover:bg-[#2a2a3a] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="px-3 py-1.5 bg-transparent border border-neutral-700 text-neutral-400 text-[13px] rounded-lg cursor-pointer hover:bg-warm/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     이전
                   </button>
-                  {Array.from({ length: Math.ceil(filteredProducts.length / itemsPerPage) }, (_, i) => i + 1).map(
-                    (page) => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`w-8 h-8 rounded text-[13px] border-none cursor-pointer transition-colors ${
-                          currentPage === page
-                            ? 'bg-[#d9b36d] text-[#111] font-bold'
-                            : 'bg-transparent text-[#aaa] hover:bg-[#2a2a3a]'
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ),
-                  )}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 rounded-lg text-[13px] border-none cursor-pointer transition-colors ${
+                        currentPage === page
+                          ? 'bg-primary text-neutral-100 font-bold'
+                          : 'bg-transparent text-neutral-400 hover:bg-warm/10'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
                   <button
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(Math.ceil(filteredProducts.length / itemsPerPage), p + 1))
-                    }
-                    disabled={currentPage >= Math.ceil(filteredProducts.length / itemsPerPage)}
-                    className="px-3 py-1.5 bg-transparent border border-[#2C2C2E] text-[#aaa] text-[13px] rounded cursor-pointer hover:bg-[#2a2a3a] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage >= totalPages}
+                    className="px-3 py-1.5 bg-transparent border border-neutral-700 text-neutral-400 text-[13px] rounded-lg cursor-pointer hover:bg-warm/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     다음
                   </button>
@@ -152,8 +150,8 @@ export default function ProductListPage() {
               )}
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-[28px] font-bold text-white">새 물품을 등록 해주세요.</p>
+            <div className="flex-1 flex items-center justify-center py-16">
+              <p className="text-body-lg text-neutral-500">새 물품을 등록 해주세요.</p>
             </div>
           )}
         </div>

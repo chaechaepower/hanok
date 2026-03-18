@@ -6,12 +6,6 @@ export type SellerReputationData = {
   avgShipDays?: number;
 };
 
-export type SellerReputationResponse = {
-  status: string;
-  message: string;
-  data: SellerReputationData;
-};
-
 export type BusinessType = 'INDIVIDUAL' | 'BUSINESS';
 
 export type RegisterAccountPayload = {

@@ -1068,10 +1068,11 @@ const handleChatMessage = (destination: string, body: string) => {
   const streamId = getStreamIdFromDestination(destination);
   const payload = JSON.parse(body) as {
     payload?: {
+      content?: string;
       message?: string;
     };
   };
-  const message = payload.payload?.message?.trim();
+  const message = (payload.payload?.content ?? payload.payload?.message)?.trim();
 
   if (!message) {
     return;
@@ -1096,7 +1097,7 @@ const handleChatMessage = (destination: string, body: string) => {
     eventType: 'CHAT_MESSAGE',
     payload: {
       nickname: getChatNickname(),
-      message,
+      content: message,
     },
   });
 };

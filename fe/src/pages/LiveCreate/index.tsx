@@ -46,56 +46,56 @@ export default function LiveCreatePage() {
 
   const content = isLoading ? (
     <div className="flex items-center justify-center py-20">
-      <div className="w-8 h-8 border-4 border-[#333] border-t-[#d9b36d] rounded-full animate-spin" />
+      <div className="w-8 h-8 border-4 border-neutral-700 border-t-gold rounded-full animate-spin" />
     </div>
   ) : streams.length === 0 ? (
-    <div className="flex items-center justify-center py-20 text-[#888] text-base border border-white/10 rounded-2xl">
+    <div className="flex items-center justify-center py-20 text-neutral-500 text-body-lg border border-neutral-800 rounded-2xl">
       등록된 라이브 방송이 없습니다.
     </div>
   ) : (
     streams.map((stream) => (
       <div
         key={stream.streamId}
-        className="flex items-center gap-5 border border-white/10 rounded-2xl p-4 bg-[#111] hover:bg-white/5 transition-colors"
+        className="flex items-center gap-5 border border-neutral-800 rounded-2xl p-4 bg-surface hover:bg-surface-elevated transition-colors"
       >
-        <div className="relative w-[130px] h-[100px] rounded-xl overflow-hidden shrink-0 bg-[#1a1a1a]">
+        <div className="relative w-[130px] h-[100px] rounded-xl overflow-hidden shrink-0 bg-neutral-900">
           {stream.thumbnail ? (
             <img src={stream.thumbnail} alt={stream.title} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-[#222]">
-              <FaBroadcastTower size={32} className="text-white/20" />
+            <div className="w-full h-full flex items-center justify-center bg-neutral-800">
+              <FaBroadcastTower size={32} className="text-neutral-600" />
             </div>
           )}
           {stream.state === 'LIVE' && (
-            <span className="absolute top-2 left-2 px-2 py-0.5 bg-[#e74c3c] text-white text-xs font-bold rounded-md">
+            <span className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-white text-xs font-bold rounded-md">
               방송중
             </span>
           )}
           {stream.state === 'SCHEDULED' && (
-            <span className="absolute top-2 left-2 px-2 py-0.5 bg-[#3498db] text-white text-xs font-bold rounded-md">
+            <span className="absolute top-2 left-2 px-2 py-0.5 bg-gold/20 text-gold-light text-xs font-bold rounded-md">
               예약
             </span>
           )}
         </div>
 
         <div className="flex-1 flex flex-col gap-1.5">
-          <p className="text-[#888] text-sm">{formatScheduledAt(stream.scheduledAt)}</p>
-          <p className="text-white text-base font-semibold">{stream.title}</p>
-          <p className="text-[#888] text-sm">방송 카테고리 : {getCategoryLabel(stream.category)}</p>
+          <p className="text-neutral-500 text-sm">{formatScheduledAt(stream.scheduledAt)}</p>
+          <p className="text-neutral-100 text-base font-semibold">{stream.title}</p>
+          <p className="text-neutral-500 text-sm">방송 카테고리 : {getCategoryLabel(stream.category)}</p>
         </div>
 
         <div className="flex items-center gap-4 shrink-0 pr-2">
           <button
             type="button"
             onClick={() => navigate(`/live/register?streamId=${stream.streamId}`)}
-            className="text-sm transition-colors text-white/70 hover:text-white"
+            className="text-sm transition-colors text-neutral-300 hover:text-neutral-100"
           >
             수정
           </button>
           <button
             type="button"
             onClick={() => handleDelete(stream.streamId)}
-            className="text-white/70 text-sm hover:text-[#e74c3c] transition-colors"
+            className="text-neutral-300 text-sm hover:text-accent-light transition-colors"
           >
             삭제
           </button>
@@ -116,13 +116,13 @@ export default function LiveCreatePage() {
       <main className="flex-1 flex flex-col gap-6">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white leading-tight">라이브 방송 관리</h1>
-            <p className="text-[#888] text-sm mt-1">라이브 방송 예약 목록입니다.</p>
+            <h2 className="text-[24px] font-semibold text-warm leading-tight m-0 mb-2">라이브 방송 관리</h2>
+            <p className="text-body-md text-neutral-500 m-0">라이브 방송 예약 목록입니다.</p>
           </div>
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="flex items-center gap-1.5 px-[24px] py-[10px] bg-[#F5F5F7] text-[#1C1C1E] border-none rounded-[24px] text-[14px] font-semibold cursor-pointer whitespace-nowrap hover:opacity-90 transition-opacity"
+            className="btn-primary-outline flex items-center gap-1.5 rounded-[10px] px-5 py-2.5 text-sm font-semibold cursor-pointer"
           >
             <FaPlus size={12} />
             라이브 방송 등록

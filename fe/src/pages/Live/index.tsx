@@ -254,7 +254,7 @@ export default function LivePage() {
           )}
           {streamState === 'disconnected' && (
             <StreamDisconnected
-              initialSeconds={30}
+              initialSeconds={60}
               onTimeout={markStreamEnded}
             />
           )}
