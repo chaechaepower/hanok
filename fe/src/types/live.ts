@@ -318,20 +318,12 @@ export type BroadcastStreamEvent =
       };
     }
   | {
-      eventType: 'BID_SYNC';
-      payload?: BidSyncPayload | null;
-    }
-  | {
       eventType: 'AUCTION_STATISTICS';
       payload?: AuctionStatisticsPayload;
     }
   | {
       eventType: 'UNIQUE_AUCTION_STATS';
       payload?: UniqueAuctionStatsPayload | null;
-    }
-  | {
-      eventType: 'ITEM_SYNC';
-      payload?: ItemSyncPayload | null;
     }
   | {
       eventType: 'UNIQUE_AUCTION_START';
@@ -374,6 +366,14 @@ export type PrivateStreamEvent =
   | {
       eventType: 'BID_WINNER';
       payload?: BidWinnerPayload;
+    }
+  | {
+      eventType: 'BID_SYNC';
+      payload?: BidSyncPayload | null;
+    }
+  | {
+      eventType: 'ITEM_SYNC';
+      payload?: ItemSyncPayload | null;
     }
   | {
       eventType: 'UNIQUE_BID_SYNC';

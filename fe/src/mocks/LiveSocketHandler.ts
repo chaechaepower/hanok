@@ -572,8 +572,8 @@ const createBidSyncPayload = (streamId: string, nowMs: number): BidSyncPayload |
   };
 };
 
-const broadcastBidSync = (streamId: string) => {
-  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+const sendPrivateBidSync = (streamId: string) => {
+  broadcastToDestination(`/user/private/streams/${streamId}`, {
     eventType: 'BID_SYNC',
     payload: createBidSyncPayload(streamId, Date.now()),
   });
@@ -595,7 +595,7 @@ const createUniqueBidSyncPayload = (streamId: string, nowMs: number) => {
   };
 };
 
-const broadcastUniqueBidSync = (streamId: string) => {
+const sendPrivateUniqueBidSync = (streamId: string) => {
   broadcastToDestination(`/user/private/streams/${streamId}`, {
     eventType: 'UNIQUE_BID_SYNC',
     payload: createUniqueBidSyncPayload(streamId, Date.now()),
@@ -644,11 +644,11 @@ const ensureSeededUniqueAuctionState = (streamId: string) => {
   }
 };
 
-const broadcastItemSync = (streamId: string) => {
+const sendPrivateItemSync = (streamId: string) => {
   const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
 
   streamItemSyncStates.set(streamId, itemSyncPayload);
-  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+  broadcastToDestination(`/user/private/streams/${streamId}`, {
     eventType: 'ITEM_SYNC',
     payload: itemSyncPayload,
   });
@@ -1011,19 +1011,19 @@ const handleBidPlace = (destination: string, body: string) => {
 
 const handleBidSync = (destination: string) => {
   const streamId = getStreamIdFromDestination(destination);
-  broadcastBidSync(streamId);
+  sendPrivateBidSync(streamId);
 };
 
 const handleUniqueBidSync = (destination: string) => {
   const streamId = getStreamIdFromDestination(destination);
   ensureSeededUniqueAuctionState(streamId);
-  broadcastUniqueBidSync(streamId);
+  sendPrivateUniqueBidSync(streamId);
 };
 
 const handleItemSync = (destination: string) => {
   const streamId = getStreamIdFromDestination(destination);
   ensureSeededUniqueAuctionState(streamId);
-  broadcastItemSync(streamId);
+  sendPrivateItemSync(streamId);
 };
 
 const handleAuctionItemIntroduce = (destination: string, body: string) => {

@@ -36,14 +36,6 @@ const isAuctionStatisticsEvent = (
 ): event is Extract<BroadcastStreamEvent, { eventType: 'AUCTION_STATISTICS' }> =>
   event.eventType === 'AUCTION_STATISTICS';
 
-const isBidSyncEvent = (
-  event: BroadcastStreamEvent,
-): event is Extract<BroadcastStreamEvent, { eventType: 'BID_SYNC' }> => event.eventType === 'BID_SYNC';
-
-const isItemSyncEvent = (
-  event: BroadcastStreamEvent,
-): event is Extract<BroadcastStreamEvent, { eventType: 'ITEM_SYNC' }> => event.eventType === 'ITEM_SYNC';
-
 const isAuctionCommentEvent = (
   event: BroadcastStreamEvent,
 ): event is Extract<BroadcastStreamEvent, { eventType: 'AUCTION_COMMENT' }> => event.eventType === 'AUCTION_COMMENT';
@@ -105,6 +97,14 @@ const isLegacyUniqueAuctionEndEvent = (event: {
 const isBidWinnerEvent = (
   event: PrivateStreamEvent,
 ): event is Extract<PrivateStreamEvent, { eventType: 'BID_WINNER' }> => event.eventType === 'BID_WINNER';
+
+const isPrivateBidSyncEvent = (
+  event: PrivateStreamEvent,
+): event is Extract<PrivateStreamEvent, { eventType: 'BID_SYNC' }> => event.eventType === 'BID_SYNC';
+
+const isPrivateItemSyncEvent = (
+  event: PrivateStreamEvent,
+): event is Extract<PrivateStreamEvent, { eventType: 'ITEM_SYNC' }> => event.eventType === 'ITEM_SYNC';
 
 const isUniqueBidAckEvent = (
   event: PrivateStreamEvent,
@@ -271,6 +271,22 @@ export function useLiveStream(
       });
     };
 
+    const applyBidSync = (payload?: BidSyncPayload | null) => {
+      setBidSync(payload ?? null);
+      if (payload?.timer) {
+        setTimer(createSyncedTimer(payload.timer));
+      }
+    };
+
+    const applyItemSync = (payload?: ItemSyncPayload | null) => {
+      setItemSync(payload ?? null);
+      const nextActiveItem =
+        payload?.items.find((item) => item.auctionStatus === 'LIVE') ??
+        payload?.items.find((item) => item.auctionStatus === 'INTRODUCING') ??
+        null;
+      void requestActiveAuctionSync(nextActiveItem);
+    };
+
     const handleBroadcastEvent = (event: BroadcastStreamEvent) => {
       console.log('[stream] broadcast event:', event);
       if (isAuctionStartEvent(event) && event.payload?.timer) {
@@ -326,24 +342,6 @@ export function useLiveStream(
               : prev,
           );
         }
-        return;
-      }
-
-      if (isBidSyncEvent(event)) {
-        setBidSync(event.payload ?? null);
-        if (event.payload?.timer) {
-          setTimer(createSyncedTimer(event.payload.timer));
-        }
-        return;
-      }
-
-      if (isItemSyncEvent(event)) {
-        setItemSync(event.payload ?? null);
-        const nextActiveItem =
-          event.payload?.items.find((item) => item.auctionStatus === 'LIVE') ??
-          event.payload?.items.find((item) => item.auctionStatus === 'INTRODUCING') ??
-          null;
-        void requestActiveAuctionSync(nextActiveItem);
         return;
       }
 
@@ -424,6 +422,16 @@ export function useLiveStream(
     };
 
     const handlePrivateEvent = (event: PrivateStreamEvent) => {
+      if (isPrivateBidSyncEvent(event)) {
+        applyBidSync(event.payload);
+        return;
+      }
+
+      if (isPrivateItemSyncEvent(event)) {
+        applyItemSync(event.payload);
+        return;
+      }
+
       if (isUniqueBidSyncEvent(event)) {
         setUniqueBidSync(event.payload ?? null);
         if (event.payload?.timer) {
