@@ -46,6 +46,4 @@ public interface StreamApi {
     @Operation(summary = "예정 방송 목록 조회", description = "로그인한 사용자(userId)가 판매자인 LIVE + SCHEDULED 방송만 슬라이스 조회")
     ResponseEntity<ScheduledStreamListResponse> getScheduledStreamList(String userId, int page, int size);
 
-    @Operation(summary = "LiveKit 토큰 발급", description = "방송 입장 없이 토큰만 필요할 때 사용")
-    ResponseEntity<StreamTokenResponse> generateToken(String userId, Long streamId);
 }
