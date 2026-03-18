@@ -1,24 +1,11 @@
 import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
+import { MAIN_CATEGORY_IDS } from '@/constants/category';
 import type { LiveCardData, PageResponse, SearchMatchReason, SearchStreamResult, SearchStreamStatus } from '@/types';
 
 import { getRegisteredLiveById, getRegisteredLiveCards } from './LiveCreateHandler';
 import { getCurrentMockUser, isSellerFollowed } from './mockState';
-
-const CATEGORY_CODES = [
-  'SNEAKERS_SHOES',
-  'CLOTHING',
-  'WATCHES',
-  'BAGS_FASHION_ACCESSORIES',
-  'JEWELRY',
-  'TRADING_CARDS',
-  'FIGURES_PLASTIC_MODELS',
-  'ELECTRONICS',
-  'ART',
-  'ANTIQUES_VINTAGE',
-  'ETC',
-];
 
 const SELLERS = [
   { sellerId: 10, nickname: 'vintage_hub' },
@@ -42,7 +29,7 @@ const SEARCH_STREAMS: SearchMockEntry[] = [
     streamId: 1,
     title: '나이키 한정판 경매 방송',
     thumbnail: '',
-    category: 'SNEAKERS',
+    category: 'SNEAKERS_SHOES',
     status: 'LIVE',
     viewerCount: 142,
     scheduledAt: null,
@@ -59,7 +46,7 @@ const SEARCH_STREAMS: SearchMockEntry[] = [
     streamId: 7,
     title: '오늘의 패션 경매',
     thumbnail: null,
-    category: 'APPAREL',
+    category: 'CLOTHING',
     status: 'ENDED',
     viewerCount: 87,
     scheduledAt: null,
@@ -76,7 +63,7 @@ const SEARCH_STREAMS: SearchMockEntry[] = [
     streamId: 12,
     title: '롤렉스 빈티지 컬렉션 라이브',
     thumbnail: '',
-    category: 'WATCH',
+    category: 'WATCHES',
     status: 'LIVE',
     viewerCount: 56,
     scheduledAt: null,
@@ -93,7 +80,7 @@ const SEARCH_STREAMS: SearchMockEntry[] = [
     streamId: 18,
     title: '카드 수집가 야간 경매',
     thumbnail: null,
-    category: 'CARD',
+    category: 'TRADING_CARDS',
     status: 'PAUSED',
     viewerCount: 33,
     scheduledAt: null,
@@ -110,7 +97,7 @@ const SEARCH_STREAMS: SearchMockEntry[] = [
     streamId: 24,
     title: '명품 가방 셀렉션',
     thumbnail: '',
-    category: 'BAG',
+    category: 'BAGS_FASHION_ACCESSORIES',
     status: 'SCHEDULED',
     viewerCount: 0,
     scheduledAt: new Date(Date.now() + 1000 * 60 * 90).toISOString(),
@@ -127,7 +114,7 @@ const SEARCH_STREAMS: SearchMockEntry[] = [
     streamId: 31,
     title: '피규어 오픈박스 라이브',
     thumbnail: null,
-    category: 'FIGURE',
+    category: 'FIGURES_ARTTOYS_GOODS',
     status: 'LIVE',
     viewerCount: 219,
     scheduledAt: null,
@@ -145,7 +132,7 @@ const SEARCH_STREAMS: SearchMockEntry[] = [
 const MAIN_LIVE_STREAMS: LiveCardData[] = Array.from({ length: 60 }, (_, index) => {
   const id = index + 1;
   const seller = SELLERS[index % SELLERS.length];
-  const category = CATEGORY_CODES[index % CATEGORY_CODES.length];
+  const category = MAIN_CATEGORY_IDS[index % MAIN_CATEGORY_IDS.length];
   const streamStatus: SearchStreamStatus =
     index % 8 === 0 ? 'SCHEDULED' : index % 11 === 0 ? 'PAUSED' : index % 15 === 0 ? 'ENDED' : 'LIVE';
   const hasStarted = streamStatus !== 'SCHEDULED';

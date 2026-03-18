@@ -4,7 +4,7 @@ import type { Product } from '@/types';
 import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
 
 const conditionLabels: Record<string, string> = {
-  BRAND_NEW: '미개봉 새제품',
+  BRAND_NEW: '미개봉',
   OPEN_BOX: '개봉된 새상품',
   REFURBISHED: '리퍼비시',
   USED: '중고',

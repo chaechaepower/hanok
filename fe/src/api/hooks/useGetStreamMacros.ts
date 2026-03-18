@@ -12,6 +12,6 @@ export const useGetStreamMacros = (streamId: number, category: string) => {
       );
       return res.data;
     },
-    enabled: !!category,
+    enabled: streamId > 0 && !!category,
   });
 };

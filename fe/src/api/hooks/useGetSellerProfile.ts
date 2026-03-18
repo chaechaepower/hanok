@@ -1,15 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { getFetchInstance } from '../instance';
-import type { SellerProfileResponse } from '@/types';
+import type { ApiResponse, SellerProfileResponse } from '@/types';
 
-export const getSellerProfilePath = (sellerId: number) =>
-  `/v1/sellers/${sellerId}/profile`;
+export const getSellerProfilePath = (sellerId: number) => `/v1/sellers/${sellerId}/profile`;
 
 export const getSellerProfile = async (sellerId: number) => {
-  const response = await getFetchInstance().get<SellerProfileResponse>(
-    getSellerProfilePath(sellerId)
-  );
-  return response.data;
+  const response = await getFetchInstance().get<ApiResponse<SellerProfileResponse>>(getSellerProfilePath(sellerId));
+  return response.data.data;
 };
 
 export const useGetSellerProfile = (sellerId: number) => {

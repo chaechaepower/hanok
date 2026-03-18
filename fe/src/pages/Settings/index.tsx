@@ -1,24 +1,27 @@
-import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FaUserAlt, FaHeart, FaMapMarkerAlt, FaCreditCard } from 'react-icons/fa';
-import { BiSolidPurchaseTag } from "react-icons/bi";
-import { FiCamera } from 'react-icons/fi';
-import { useToast } from '@/components/common/Toast';
-import { useGetMe } from '@/api/hooks/useGetMe';
-import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
-import { useGetNotification } from '@/api/hooks/useGetNotification';
-import { useGetWallet } from '@/api/hooks/useGetWallet';
-import { useLogout } from '@/api/hooks/usePostLogout';
+import { useRef, useState } from 'react';
 import { FaStore } from 'react-icons/fa';
+import { FiCamera } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+
+import { useGetMe } from '@/api/hooks/useGetMe';
+import { useGetNotification } from '@/api/hooks/useGetNotification';
+import { useLogout as useLogout } from '@/api/hooks/usePostLogout';
+import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
+import { useGetWallet } from '@/api/hooks/useGetWallet';
+import SideBar from '@/components/common/layouts/SideBar';
+import { settingsSidebarItems } from '@/components/common/layouts/settingsSidebarItems';
+import { useToast } from '@/components/common/Toast';
 import AccountSection from '@/components/Settings/AccountSection';
 import FollowedStoresSection from '@/components/Settings/FollowedStoresSection';
-import ShippingSection from '@/components/Settings/ShippingSection';
-import PaymentSection from '@/components/Settings/PaymentSection';
 import OrderHistorySection from '@/components/Settings/OrderHistorySection';
+import PaymentSection from '@/components/Settings/PaymentSection';
+import ShippingSection from '@/components/Settings/ShippingSection';
+
+type SettingsTab = 'account' | 'stores' | 'shipping' | 'payment' | 'order';
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('account');
+  const [activeTab, setActiveTab] = useState<SettingsTab>('account');
 
   const { data: meData, isLoading: isMeLoading } = useGetMe();
   const { isLoading: isNotiLoading } = useGetNotification();
@@ -32,9 +35,10 @@ export default function SettingsPage() {
     fileInputRef.current?.click();
   };
 
-  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleProfileImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
+
     patchProfileImage(file, {
       onSuccess: () => {
         showToast({ message: '프로필 이미지가 변경되었습니다.' });
@@ -50,8 +54,7 @@ export default function SettingsPage() {
       onSuccess: () => {
         navigate('/login');
       },
-      onError: (error) => {
-        console.error('Logout failed:', error);
+      onError: () => {
         showToast({ message: '로그아웃에 실패했습니다.' });
       },
     });
@@ -61,32 +64,20 @@ export default function SettingsPage() {
 
   if (isMeLoading || isNotiLoading || isWalletLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <div className="w-10 h-10 border-4 border-neutral-700 border-t-gold-light rounded-full animate-spin" />
-        <p className="text-neutral-400 mt-3">정보를 불러오는 중…</p>
+      <div className="flex min-h-[400px] flex-col items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-neutral-700 border-t-gold-light" />
+        <p className="mt-3 text-neutral-400">정보를 불러오는 중입니다.</p>
       </div>
     );
   }
 
   const user = meData;
 
-  const tabs = [
-    { id: 'account', label: '계정 관리', icon: <FaUserAlt size={20} className="text-primary-light" /> },
-    { id: 'stores', label: '팔로우한 스토어', icon: <FaHeart size={20} className="text-accent-light" /> },
-    { id: 'shipping', label: '배송지 관리', icon: <FaMapMarkerAlt size={20} className="text-gold-light" /> },
-    { id: 'payment', label: '결제수단 관리', icon: <FaCreditCard size={20} className="text-primary-light" /> },
-    { id: 'order', label: '구매 내역', icon: <BiSolidPurchaseTag size={20} className="text-ember-light" /> },
-
-  ];
-
   return (
-    <div className="w-full box-border max-w-[1200px] mx-auto py-10 px-5 flex flex-col gap-8">
-      <div className="w-full box-border rounded-2xl py-8 px-10 bg-background border border-gold-light/30 flex items-center justify-between">
+    <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-8 box-border py-10">
+      <div className="flex w-full items-center justify-between rounded-2xl border border-gold-light/30 bg-background px-10 py-8 box-border">
         <div className="flex items-center gap-6">
-          <div
-            className="relative group cursor-pointer"
-            onClick={handleProfileImageClick}
-          >
+          <div className="group relative cursor-pointer" onClick={handleProfileImageClick}>
             <input
               ref={fileInputRef}
               type="file"
@@ -98,25 +89,26 @@ export default function SettingsPage() {
               <img
                 src={user.profileImage}
                 alt={user.nickname}
-                className="w-[100px] h-[100px] rounded-full object-cover"
+                className="h-[100px] w-[100px] rounded-full object-cover"
               />
             ) : (
-              <div className="w-[100px] h-[100px] rounded-full bg-surface text-gold-light text-4xl flex items-center justify-center font-bold">
+              <div className="flex h-[100px] w-[100px] items-center justify-center rounded-full bg-surface text-4xl font-bold text-gold-light">
                 {user?.nickname?.charAt(0) || 'U'}
               </div>
             )}
-            <div className="absolute inset-0 w-[100px] h-[100px] rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="absolute inset-0 flex h-[100px] w-[100px] items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
               <FiCamera size={24} className="text-white" />
             </div>
           </div>
+
           <div className="flex flex-col gap-1">
-            <h1 className="m-0 text-3xl font-bold text-white tracking-tight">{user?.nickname}</h1>
+            <h1 className="m-0 text-3xl font-bold tracking-tight text-white">{user?.nickname}</h1>
             <div className="flex items-center gap-3">
               <span className="text-lg text-neutral-400">({user?.email?.split('@')[0]})</span>
               <button
                 onClick={handleLogout}
                 disabled={isLogoutPending}
-                className="px-3 py-1 bg-transparent border border-neutral-500 text-neutral-400 text-sm rounded-md hover:bg-neutral-800 hover:text-white transition-colors"
+                className="rounded-md border border-neutral-500 bg-transparent px-3 py-1 text-sm text-neutral-400 transition-colors hover:bg-neutral-800 hover:text-white"
               >
                 {isLogoutPending ? '로그아웃 중...' : '로그아웃'}
               </button>
@@ -128,55 +120,42 @@ export default function SettingsPage() {
           {user?.sellerId && (
             <button
               onClick={() => navigate(`/profile/${user.sellerId}`)}
-              className="flex items-center justify-center gap-2 border border-gold-light/30 bg-background rounded-xl py-4 px-8 min-w-[320px] cursor-pointer hover:bg-surface transition-colors"
+              className="flex min-w-[320px] cursor-pointer items-center justify-center gap-2 rounded-xl border border-gold-light/30 bg-background px-8 py-4 transition-colors hover:bg-surface"
             >
               <FaStore className="text-gold-light" size={18} />
-              <span className="text-gold-light text-[17px] font-bold">내 상점 보기</span>
+              <span className="text-[17px] font-bold text-gold-light">내 상점 보기</span>
             </button>
           )}
+
           <button
             onClick={() => navigate('/wallet')}
-            className="flex items-center justify-between border border-gold-light/30 bg-background rounded-xl py-5 px-8 min-w-[320px] cursor-pointer hover:bg-surface transition-colors"
+            className="flex min-w-[320px] cursor-pointer items-center justify-between rounded-xl border border-gold-light/30 bg-background px-8 py-5 transition-colors hover:bg-surface"
           >
-            <span className="text-neutral-400 text-[17px] font-medium">보유머니</span>
+            <span className="text-[17px] font-medium text-neutral-400">보유머니</span>
             <div className="flex items-center gap-3">
-              <span className="text-gold-light text-2xl font-bold">
+              <span className="text-2xl font-bold text-gold-light">
                 {formatPrice(walletData?.balance)} <span className="text-xl">원</span>
               </span>
-              <span className="text-gold-light text-xl font-bold">&gt;</span>
+              <span className="text-xl font-bold text-gold-light">&gt;</span>
             </div>
           </button>
         </div>
       </div>
 
-      <div className="flex gap-10 mt-2">
-        <div className="w-[240px] flex flex-col gap-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className="flex items-center justify-between w-full py-4 text-left border-none bg-transparent cursor-pointer"
-            >
-              <div className="flex items-center gap-4">
-                {tab.icon}
-                <span className={`text-[17px] font-medium ${activeTab === tab.id ? 'text-white' : 'text-neutral-600'}`}>
-                  {tab.label}
-                </span>
-              </div>
-              {activeTab === tab.id && <div className="w-[4px] h-[20px] bg-gold-light rounded-full" />}
-            </button>
-          ))}
-        </div>
+      <div className="mt-2 flex gap-10">
+        <SideBar
+          items={settingsSidebarItems}
+          activeItemId={activeTab}
+          onItemClick={(item) => setActiveTab(item.id as SettingsTab)}
+          className="static shrink-0 !h-auto !w-[240px] border-r-0 !bg-transparent !py-0"
+        />
 
-        <div className="flex-1 flex flex-col gap-6">
+        <div className="w-full flex flex-1 flex-col gap-6">
           {activeTab === 'account' && <AccountSection />}
           {activeTab === 'stores' && <FollowedStoresSection />}
           {activeTab === 'shipping' && <ShippingSection />}
           {activeTab === 'payment' && <PaymentSection />}
           {activeTab === 'order' && <OrderHistorySection />}
-          {activeTab !== 'account' && activeTab !== 'stores' && activeTab !== 'shipping' && activeTab !== 'payment' && (
-            <div className="flex items-center justify-center p-20 text-neutral-600">해당 메뉴는 준비 중입니다.</div>
-          )}
         </div>
       </div>
     </div>

@@ -39,11 +39,11 @@ export default function SideBar({
   };
 
   return (
-    <aside className={`w-[280px] sticky top-16 h-[calc(100vh-64px)] bg-background flex flex-col py-6 border-r border-neutral-800 ${className}`.trim()}>
-
+    <aside
+      className={`w-[280px] sticky top-16 h-[calc(100vh-64px)] bg-background flex flex-col py-6 border-r border-neutral-800 ${className}`.trim()}
+    >
       {/* 카테고리 리스트 (스크롤 영역) */}
       <div className="flex-1 overflow-y-auto scrollbar-hide px-4">
-        <h2 className="px-3 text-xs font-semibold text-neutral-500 mb-3 tracking-wider">CATEGORIES</h2>
         <ul className="flex flex-col gap-1">
           {items.map((item) => {
             const isActive = item.id === selectedItemId;
@@ -62,10 +62,14 @@ export default function SideBar({
                       transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
-                  <span className={`relative z-10 flex h-6 w-6 items-center justify-center text-[20px] leading-none ${isActive ? 'text-point' : 'text-neutral-500'}`}>
+                  <span
+                    className={`relative z-10 flex h-6 w-6 items-center justify-center text-[20px] leading-none ${isActive ? 'text-point' : 'text-neutral-500'}`}
+                  >
                     {item.icon ?? item.label.slice(0, 1)}
                   </span>
-                  <span className={`relative z-10 whitespace-nowrap text-[15px] leading-none ${isActive ? 'font-bold text-point' : 'font-medium text-neutral-400 hover:text-neutral-200'}`}>
+                  <span
+                    className={`relative z-10 whitespace-nowrap text-[15px] leading-none ${isActive ? 'font-bold text-point' : 'font-medium text-neutral-400 hover:text-neutral-200'}`}
+                  >
                     {item.label}
                   </span>
                 </button>
@@ -82,7 +86,6 @@ export default function SideBar({
           })}
         </ul>
       </div>
-
     </aside>
   );
 }

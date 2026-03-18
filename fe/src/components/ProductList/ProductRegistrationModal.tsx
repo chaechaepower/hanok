@@ -80,7 +80,7 @@ export default function ProductRegistrationModal({
 
     if (initialData) {
       setName(initialData.name);
-      setDescription('');
+      setDescription(initialData.description || '');
 
       const matchedCategory = MAIN_CATEGORY_ITEMS.find(
         (item) => item.label === initialData.category || item.id === initialData.category,
@@ -90,10 +90,10 @@ export default function ProductRegistrationModal({
       setItemCondition(initialData.itemCondition || '');
       setStartPrice(String(initialData.startPrice));
       setShippingFee('');
-      setBidUnit('');
-      setAuctionDuration('');
+      setBidUnit(initialData.bidUnit ? String(initialData.bidUnit) : '');
+      setAuctionDuration(initialData.auctionDuration ? String(initialData.auctionDuration) : '');
       setAuctionType(initialData.auctionType);
-      setHashtags('');
+      setHashtags(initialData.tags && initialData.tags.length > 0 ? initialData.tags.map((t) => `#${t}`).join(' ') : '');
       setExistingImages(initialData.images && initialData.images.length > 0 ? initialData.images : []);
       return;
     }
@@ -320,7 +320,7 @@ export default function ProductRegistrationModal({
           }}
         >
           {existingImages.length > 0 || images.length > 0 ? (
-            <div className="flex gap-3 w-full overflow-x-auto p-2" onClick={(e) => e.stopPropagation()}>
+            <div className="flex gap-3 w-full overflow-x-auto macro-scroll p-2 pb-3" onClick={(e) => e.stopPropagation()}>
               {existingImages.map((url, idx) => (
                 <div key={`exist-${idx}`} className="relative w-[120px] h-[120px] shrink-0">
                   <img src={url} alt="기존 이미지" className="w-full h-full object-cover rounded-lg" />
@@ -413,8 +413,8 @@ export default function ProductRegistrationModal({
               <option value="" disabled hidden>
                 선택
               </option>
-              <option value="BRAND_NEW">미개봉/새제품</option>
-              <option value="OPEN_BOX">개봉 후 미사용</option>
+              <option value="BRAND_NEW">미개봉</option>
+              <option value="OPEN_BOX">개봉된 새상품</option>
               <option value="REFURBISHED">리퍼비시</option>
               <option value="USED">중고</option>
             </select>

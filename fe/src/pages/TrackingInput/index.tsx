@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { BsBox } from 'react-icons/bs';
 import { FiX } from 'react-icons/fi';
 
@@ -86,6 +86,18 @@ export default function TrackingInput() {
   const [courierName, setCourierName] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
   const [showCourierModal, setShowCourierModal] = useState(false);
+  const courierDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showCourierModal) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (courierDropdownRef.current && !courierDropdownRef.current.contains(e.target as Node)) {
+        setShowCourierModal(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showCourierModal]);
 
   const currentSelectedItem = items.find((item) => String(item.escrowId) === selectedItemId);
   const isTrackingSubmitted =
@@ -131,7 +143,10 @@ export default function TrackingInput() {
 
   const formatPrice = (price: number) => `${price.toLocaleString('ko-KR')}원`;
   const formatDate = (dateStr: string) =>
-    dateStr.replace(/T/, ' ').replace(/:\d{2}(\.\d+)?Z?$/, '').replace(/Z$/, '');
+    dateStr
+      .replace(/T/, ' ')
+      .replace(/:\d{2}(\.\d+)?Z?$/, '')
+      .replace(/Z$/, '');
 
   return (
     <>
@@ -143,15 +158,15 @@ export default function TrackingInput() {
         />
       )}
 
-      <div className="flex gap-10 p-[40px_16px] bg-transparent min-h-screen w-full max-w-[1200px] mx-auto">
+      <div className="flex gap-10 text-white p-[40px_16px] bg-transparent min-h-screen w-full max-w-[1400px] mx-auto">
         <SideBar
           items={sellerSidebarItems}
           activeItemId={activeMenu}
           onItemClick={(item) => setActiveMenu(item.id)}
-          className="!w-[200px] shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
+          className="shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
         />
 
-        <div className="flex-1 flex flex-col gap-12">
+        <div className="flex-1 flex flex-col gap-12 w-full">
           <section>
             <h2 className="text-[24px] font-semibold text-warm mb-4">배송 등록 대기</h2>
             <div className="flex justify-between pb-3 border-b border-neutral-700 text-sm text-neutral-300 mb-4">
@@ -294,17 +309,44 @@ export default function TrackingInput() {
                 ) : (
                   <>
                     <div className="flex gap-2 mb-8">
-                      <button
-                        type="button"
-                        onClick={() => selectedItemId && setShowCourierModal(true)}
-                        disabled={!selectedItemId}
-                        className="w-[160px] h-[48px] bg-transparent border border-neutral-700 rounded-lg px-3 text-left cursor-pointer flex items-center justify-between hover:border-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <span className={courier ? 'text-neutral-100 text-sm' : 'text-neutral-500 text-sm'}>
-                          {courier ? courierName : '택배사 선택'}
-                        </span>
-                        <span className="text-neutral-600 text-xs">▼</span>
-                      </button>
+                      <div className="relative w-[160px]" ref={courierDropdownRef}>
+                        <button
+                          type="button"
+                          onClick={() => selectedItemId && setShowCourierModal((prev) => !prev)}
+                          disabled={!selectedItemId}
+                          className="w-full h-[48px] bg-transparent border border-neutral-700 rounded-lg px-3 text-left cursor-pointer flex items-center justify-between hover:border-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <span className={courier ? 'text-neutral-100 text-sm' : 'text-neutral-500 text-sm'}>
+                            {courier ? courierName : '택배사 선택'}
+                          </span>
+                          <span className={`text-gold transition-transform text-sm ${showCourierModal ? 'rotate-180' : ''}`}>▾</span>
+                        </button>
+                        {showCourierModal && (
+                          <div className="absolute z-10 left-0 right-0 top-[calc(100%+4px)] bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-lg max-h-[240px] overflow-y-auto custom-scrollbar min-w-[200px]">
+                            {COURIERS.map((item) => {
+                              const isSelected = courier === item.code;
+                              return (
+                                <button
+                                  key={item.code}
+                                  type="button"
+                                  onClick={() => {
+                                    setCourier(item.code);
+                                    setCourierName(item.name);
+                                    setShowCourierModal(false);
+                                  }}
+                                  className={`w-full text-left px-4 py-2.5 text-[14px] transition-colors cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-gold/15 text-gold-light font-semibold'
+                                      : 'text-neutral-300 hover:bg-warm/8 hover:text-neutral-100'
+                                  }`}
+                                >
+                                  {item.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                       <input
                         type="text"
                         placeholder="송장 번호"
@@ -359,52 +401,6 @@ export default function TrackingInput() {
         </div>
       </div>
 
-      {showCourierModal && (
-        <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60"
-          onClick={() => setShowCourierModal(false)}
-        >
-          <div
-            className="w-full max-w-[430px] max-h-[70vh] bg-surface-elevated rounded-2xl flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-5 pt-4 shrink-0">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-[17px] font-bold text-neutral-100">택배사 선택</h3>
-                <button
-                  type="button"
-                  onClick={() => setShowCourierModal(false)}
-                  className="bg-transparent border-none text-neutral-500 text-2xl cursor-pointer p-0"
-                >
-                  &times;
-                </button>
-              </div>
-            </div>
-            <div className="overflow-y-auto px-5 pt-2 pb-5">
-              <div className="grid grid-cols-3 gap-2">
-                {COURIERS.map((item) => (
-                  <button
-                    key={item.code}
-                    type="button"
-                    onClick={() => {
-                      setCourier(item.code);
-                      setCourierName(item.name);
-                      setShowCourierModal(false);
-                    }}
-                    className={`py-3 px-1 border-none rounded-lg text-[13px] cursor-pointer text-center whitespace-nowrap overflow-hidden text-ellipsis ${
-                      courier === item.code
-                        ? 'bg-gold text-neutral-900 font-bold'
-                        : 'bg-neutral-800 text-neutral-200 font-normal'
-                    }`}
-                  >
-                    {item.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

@@ -133,36 +133,40 @@ export const profileHandlers = [
     if (sellerId === 200) {
       return HttpResponse.json(
         {
-          sellerId: 200,
-          nickname: 'Luxury Seller',
-          intro: 'Authentic luxury goods only. Feel free to ask questions anytime.',
-          profileImage: LogoImage,
-          instagramUrl: 'https://instagram.com/luxury_seller',
-          youtubeUrl: 'https://youtube.com/@luxury_seller_tv',
-          tiktokUrl: 'https://tiktok.com/@luxury_seller_official',
-          stats: {
-            rating: 4.9,
-            avgShipDays: 1.2,
-            followerCount: 1542,
+          status: 'SUCCESS',
+          message: 'Seller profile fetched successfully.',
+          data: {
+            sellerId: 200,
+            nickname: 'Luxury Seller',
+            intro: 'Authentic luxury goods only. Feel free to ask questions anytime.',
+            profileImage: LogoImage,
+            instagramUrl: 'https://instagram.com/luxury_seller',
+            youtubeUrl: 'https://youtube.com/@luxury_seller_tv',
+            tiktokUrl: 'https://tiktok.com/@luxury_seller_official',
+            stats: {
+              rating: 4.9,
+              avgShipDays: 1.2,
+              followerCount: 1542,
+            },
+            recentSales: [
+              {
+                itemId: 101,
+                title: 'Luxury Leather Bag',
+                finalPrice: 8500000,
+                soldAt: '2026-03-09T14:00:00Z',
+              },
+            ],
+            posts: [
+              {
+                streamId: 10,
+                title: 'Weekly luxury live auction',
+                category: 'LUXURY_GOODS',
+                thumbnail: LogoImage,
+                scheduledAt: '2026-03-08T20:00:00Z',
+                state: 'SCHEDULED',
+              },
+            ],
           },
-          recentSales: [
-            {
-              itemId: 101,
-              title: 'Luxury Leather Bag',
-              finalPrice: 8500000,
-              soldAt: '2026-03-09T14:00:00Z',
-            },
-          ],
-          posts: [
-            {
-              streamId: 10,
-              title: 'Weekly luxury live auction',
-              category: 'LUXURY_GOODS',
-              thumbnail: LogoImage,
-              scheduledAt: '2026-03-08T20:00:00Z',
-              state: 'SCHEDULED',
-            },
-          ],
         },
         { status: 200 },
       );
@@ -171,36 +175,40 @@ export const profileHandlers = [
     const overrides = mockSellerProfiles[sellerId] ?? {};
     return HttpResponse.json(
       {
-        sellerId,
-        nickname: (overrides.nickname as string) ?? 'Seller Mock',
-        intro: (overrides.intro as string) ?? 'Curating good items and running regular live auctions.',
-        profileImage: LogoImage,
-        instagramUrl: (overrides.instagramUrl as string) ?? 'https://instagram.com/im_rerak',
-        youtubeUrl: (overrides.youtubeUrl as string) ?? 'https://youtube.com/@im_rerak',
-        tiktokUrl: (overrides.tiktokUrl as string) ?? 'https://tiktok.com/@seller123',
-        stats: {
-          rating: null,
-          avgShipDays: 1.8,
-          followerCount: 342,
+        status: 'SUCCESS',
+        message: 'Seller profile fetched successfully.',
+        data: {
+          sellerId,
+          nickname: (overrides.nickname as string) ?? 'Seller Mock',
+          intro: (overrides.intro as string) ?? 'Curating good items and running regular live auctions.',
+          profileImage: LogoImage,
+          instagramUrl: (overrides.instagramUrl as string) ?? 'https://instagram.com/im_rerak',
+          youtubeUrl: (overrides.youtubeUrl as string) ?? 'https://youtube.com/@im_rerak',
+          tiktokUrl: (overrides.tiktokUrl as string) ?? 'https://tiktok.com/@seller123',
+          stats: {
+            rating: null,
+            avgShipDays: 1.8,
+            followerCount: 342,
+          },
+          recentSales: [
+            {
+              itemId: 10,
+              title: 'Rare Air Max',
+              finalPrice: 75000,
+              soldAt: '2026-03-01T14:00:00Z',
+            },
+          ],
+          posts: [
+            {
+              streamId: 5,
+              title: 'This week live preview',
+              category: 'SNEAKERS_SHOES',
+              thumbnail: LogoImage,
+              scheduledAt: '2026-03-03T20:00:00Z',
+              state: 'LIVE',
+            },
+          ],
         },
-        recentSales: [
-          {
-            itemId: 10,
-            title: 'Rare Air Max',
-            finalPrice: 75000,
-            soldAt: '2026-03-01T14:00:00Z',
-          },
-        ],
-        posts: [
-          {
-            streamId: 5,
-            title: 'This week live preview',
-            category: 'SNEAKERS_SHOES',
-            thumbnail: LogoImage,
-            scheduledAt: '2026-03-03T20:00:00Z',
-            state: 'LIVE',
-          },
-        ],
       },
       { status: 200 },
     );

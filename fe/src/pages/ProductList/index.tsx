@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
-import { motion } from 'framer-motion';
 import type { Product } from '@/types';
 import { useToast } from '@/components/common/Toast';
 import ProductCard from '@/components/ProductList/ProductCard';
@@ -57,17 +56,17 @@ export default function ProductListPage() {
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
   return (
-    <div className="flex w-full max-w-[1200px] mx-auto gap-0 py-10 px-4 min-h-screen">
+    <div className="max-w-[1400px] flex mx-auto gap-10 py-10 px-4 min-h-screen">
       <SideBar
         items={sellerSidebarItems}
         activeItemId={activeMenu}
         onItemClick={(item) => setActiveMenu(item.id)}
-        className="!w-[200px] shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
+        className="shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
       />
-      <div className="flex-1 flex flex-col gap-3">
+      <div className="flex-1 flex flex-col gap-6">
         <div className="flex justify-between items-start">
           <div>
-            <h2 className="text-[24px] font-semibold text-warm m-0 mb-2">내 인벤토리</h2>
+            <h2 className="text-[24px] font-semibold text-warm leading-tight m-0 mb-2">내 인벤토리</h2>
             <p className="text-body-md text-neutral-500 m-0">라이브 경매를 위해 등록된 품목입니다.</p>
           </div>
           <button
@@ -82,49 +81,41 @@ export default function ProductListPage() {
         </div>
 
         <div className="bg-surface-elevated rounded-2xl border border-neutral-800 px-6 pb-6 flex flex-col">
-          <div className="flex gap-1 pt-4 mb-6">
-            <div className="relative inline-flex items-center rounded-xl bg-warm/6 p-1">
-              {tabs.map((tab) => {
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => { setActiveTab(tab.id as typeof activeTab); setCurrentPage(1); }}
-                    className="relative z-10 rounded-lg px-4 py-2 text-subtitle-sm transition cursor-pointer border-none bg-transparent"
-                  >
-                    {isActive && (
-                      <motion.span
-                        layoutId="inventoryTab"
-                        initial={false}
-                        className="absolute inset-0 rounded-lg bg-primary"
-                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                      />
-                    )}
-                    <span className={`relative z-10 ${isActive ? 'text-neutral-100' : 'text-neutral-400 hover:text-neutral-200'}`}>
-                      {tab.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+          <div className="flex border-b border-neutral-800 mb-6 pt-4">
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id as typeof activeTab);
+                    setCurrentPage(1);
+                  }}
+                  className={`bg-transparent border-none px-6 py-3 text-sm cursor-pointer relative ${
+                    isActive ? 'text-neutral-100 font-bold' : 'text-neutral-500 font-normal'
+                  }`}
+                >
+                  {tab.label}
+                  {isActive && <div className="absolute -bottom-px left-0 right-0 h-0.5 bg-neutral-100" />}
+                </button>
+              );
+            })}
           </div>
 
           {filteredProducts.length > 0 ? (
             <>
               <div className="flex flex-col">
-                {filteredProducts
-                  .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                  .map((product) => (
-                    <ProductCard
-                      key={product.itemId}
-                      product={product}
-                      onEdit={() => {
-                        setEditProductInitData(product);
-                        setIsModalOpen(true);
-                      }}
-                      onDelete={handleDelete}
-                    />
-                  ))}
+                {filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((product) => (
+                  <ProductCard
+                    key={product.itemId}
+                    product={product}
+                    onEdit={() => {
+                      setEditProductInitData(product);
+                      setIsModalOpen(true);
+                    }}
+                    onDelete={handleDelete}
+                  />
+                ))}
               </div>
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 py-4 mt-4">

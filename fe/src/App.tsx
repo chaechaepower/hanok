@@ -4,7 +4,6 @@ import TrakingInputPage from './pages/TrackingInput';
 import ProfilePage from './pages/Profile';
 import SellerOnboardingPage from './pages/SellerOnboarding';
 import LivePage from './pages/Live';
-import LiveTestPage from './pages/LiveTest';
 import LiveCreatePage from './pages/LiveCreate';
 import ProductListPage from './pages/ProductList';
 import SignUpPage from './pages/SignUp';
@@ -21,7 +20,6 @@ function App() {
     <Routes>
       {/* 풀스크린 (Header/Footer 없음) */}
       <Route path="live/:id" element={<LivePage />} />
-      <Route path="live-test/:id" element={<LiveTestPage />} />
 
       <Route path="/" element={<MainLayout />}>
         <Route index element={<MainPage />} />
