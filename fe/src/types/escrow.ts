@@ -1,4 +1,4 @@
-export type EscrowState = 'DEPOSITED' | 'INVOICE_SUBMITTED' | 'COMPLETED' | 'CANCELLED';
+export type EscrowState = 'DEPOSITED' | 'SHIPPED' | 'COMPLETED' | 'CANCELLED';
 
 export type EscrowItem = {
   escrowId?: string | number;
@@ -10,29 +10,25 @@ export type EscrowItem = {
 };
 
 export type EscrowDetailResponse = {
-  status: string;
-  message: string;
-  data: {
-    winningInfo: {
-      imageUrl?: string;
-      itemName: string;
-      finalPrice: number;
-      sellerName: string;
-      sellerId: string;
-      wonAt: string;
-    };
-    shippingAddress: {
-      name: string;
-      phone: string;
-      postalCode: string;
-      address: string;
-      addressDetail: string;
-    };
-    delivery: {
-      courierName: string;
-      trackingNumber: string;
-    } | null;
+  winningInfo: {
+    image: string;
+    itemName: string;
+    finalPrice: number;
+    sellerName: string;
+    sellerId: string;
+    wonAt: string;
   };
+  shippingAddress: {
+    name: string;
+    phone: string;
+    postalCode: string;
+    address: string;
+    addressDetail: string;
+  };
+  delivery: {
+    courierName: string;
+    trackingNumber: string;
+  } | null;
 };
 
 export type PostTrackingInfoPayload = {

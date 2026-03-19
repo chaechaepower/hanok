@@ -76,7 +76,7 @@ export const profileHandlers = [
             image: 'https://picsum.photos/seed/sold-console/400/300',
             itemName: 'Retro Game Console',
             amount: 180000,
-            escrowStatus: 'INVOICE_SUBMITTED',
+            escrowStatus: 'SHIPPED',
             createdAt: '2026-03-05T09:20:15Z',
           },
           {

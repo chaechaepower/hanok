@@ -16,7 +16,7 @@ const mockBuyerEscrows = [
     image: 'https://picsum.photos/seed/shoes/140/140',
     itemName: 'Vintage Sneakers',
     amount: 75000,
-    escrowStatus: 'INVOICE_SUBMITTED',
+    escrowStatus: 'SHIPPED',
     createdAt: '2026-03-01T23:00:00Z',
   },
   {
@@ -43,7 +43,7 @@ const mockSellerEscrows = [
     image: 'https://picsum.photos/seed/card/140/140',
     itemName: 'Pokemon Card Charizard',
     amount: 180000,
-    escrowStatus: 'INVOICE_SUBMITTED',
+    escrowStatus: 'SHIPPED',
     createdAt: '2026-03-10T14:10:00Z',
   },
   {
@@ -67,7 +67,7 @@ const mockSellerEscrows = [
 const detailMap: Record<
   string,
   {
-    imageUrl: string;
+    image: string;
     itemName: string;
     finalPrice: number;
     wonAt: string;
@@ -76,51 +76,51 @@ const detailMap: Record<
   }
 > = {
   '100': {
-    imageUrl: 'https://picsum.photos/seed/camera/140/140',
+    image: 'https://picsum.photos/seed/camera/140/140',
     itemName: 'Vintage Camera',
     finalPrice: 250000,
     wonAt: '2026-03-15T08:15:30Z',
   },
   '101': {
-    imageUrl: 'https://picsum.photos/seed/shoes/140/140',
+    image: 'https://picsum.photos/seed/shoes/140/140',
     itemName: 'Vintage Sneakers',
     finalPrice: 75000,
     wonAt: '2026-03-01T23:00:00Z',
     courierName: 'CJ대한통운',
-    trackingNumber: '580123456789',
+    trackingNumber: '521465873135',
   },
   '102': {
-    imageUrl: 'https://picsum.photos/seed/jacket/140/140',
+    image: 'https://picsum.photos/seed/jacket/140/140',
     itemName: 'Collector Jacket',
     finalPrice: 120000,
     wonAt: '2026-02-20T19:30:00Z',
     courierName: 'CJ대한통운',
-    trackingNumber: '120312319124',
+    trackingNumber: '521465873135',
   },
   '201': {
-    imageUrl: 'https://picsum.photos/seed/watch/140/140',
+    image: 'https://picsum.photos/seed/watch/140/140',
     itemName: 'Rolex Datejust',
     finalPrice: 920000,
     wonAt: '2026-03-16T09:20:00Z',
   },
   '202': {
-    imageUrl: 'https://picsum.photos/seed/card/140/140',
+    image: 'https://picsum.photos/seed/card/140/140',
     itemName: 'Pokemon Card Charizard',
     finalPrice: 180000,
     wonAt: '2026-03-10T14:10:00Z',
-    courierName: '우체국택배',
-    trackingNumber: '777123456789',
+    courierName: 'CJ대한통운',
+    trackingNumber: '521465873135',
   },
   '203': {
-    imageUrl: 'https://picsum.photos/seed/bag/140/140',
+    image: 'https://picsum.photos/seed/bag/140/140',
     itemName: 'Luxury Handbag',
     finalPrice: 420000,
     wonAt: '2026-03-08T11:05:00Z',
-    courierName: '롯데택배',
-    trackingNumber: '880123456789',
+    courierName: 'CJ대한통운',
+    trackingNumber: '521465873135',
   },
   '204': {
-    imageUrl: 'https://picsum.photos/seed/figure/140/140',
+    image: 'https://picsum.photos/seed/figure/140/140',
     itemName: 'Limited Figure',
     finalPrice: 135000,
     wonAt: '2026-03-05T17:40:00Z',
@@ -160,7 +160,7 @@ export const escrowHandlers = [
         message: 'Escrow detail fetched successfully.',
         data: {
           winningInfo: {
-            imageUrl: detail.imageUrl,
+            image: detail.image,
             itemName: detail.itemName,
             finalPrice: detail.finalPrice,
             sellerName: 'Mock Seller',
@@ -189,6 +189,24 @@ export const escrowHandlers = [
   http.post(`${BASE_URL}/v1/escrows/:escrowId/tracking`, async () =>
     HttpResponse.json({ success: true }, { status: 200 }),
   ),
+
+  http.post(`${BASE_URL}/v1/escrows/:escrowId/complete`, async ({ params }) => {
+    const escrowId = Number(params.escrowId);
+
+    mockBuyerEscrows.forEach((item) => {
+      if (item.escrowId === escrowId) {
+        item.escrowStatus = 'COMPLETED';
+      }
+    });
+
+    mockSellerEscrows.forEach((item) => {
+      if (item.escrowId === escrowId) {
+        item.escrowStatus = 'COMPLETED';
+      }
+    });
+
+    return HttpResponse.json({ success: true }, { status: 200 });
+  }),
 
   http.post(`${BASE_URL}/v1/escrows/:escrowId/cancel`, async () =>
     HttpResponse.json({ success: true }, { status: 200 }),

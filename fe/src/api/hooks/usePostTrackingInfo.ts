@@ -4,8 +4,7 @@ import { getFetchInstance } from '../instance';
 import type { PostTrackingInfoPayload } from '@/types';
 import { queryClient } from '../instance';
 
-export const postTrackingInfoPath = (escrowId: string | number) =>
-  `/v1/escrows/${escrowId}/tracking`;
+export const postTrackingInfoPath = (escrowId: string | number) => `/v1/escrows/${escrowId}/tracking`;
 
 export const postTrackingInfo = async ({
   escrowId,
@@ -18,9 +17,9 @@ export const postTrackingInfo = async ({
 export const usePostTrackingInfo = () => {
   return useMutation({
     mutationFn: postTrackingInfo,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['escrows'] });
-      queryClient.invalidateQueries({ queryKey: ['escrowDetail'] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['escrowsSeller'] });
+      queryClient.invalidateQueries({ queryKey: ['escrowDetail', variables.escrowId] });
     },
   });
 };

@@ -20,7 +20,9 @@ export default function ChatMessage({ messages, connectionState }: Props) {
       {messages.length === 0 ? (
         <div className="flex h-full items-center justify-center">
           <p className="text-[11px] font-medium tracking-wide text-neutral-700">
-            {connectionState === 'connected' ? '아직 도착한 채팅이 없습니다.' : '채팅 서버에 연결 중입니다.'}
+            {connectionState === 'connected'
+              ? '채팅을 기다리고 있습니다.'
+              : '채팅 연결 중입니다.'}
           </p>
         </div>
       ) : (
@@ -38,7 +40,7 @@ export default function ChatMessage({ messages, connectionState }: Props) {
               <div key={message.id} className="flex flex-col items-end">
                 <span className="mb-0.5 px-1.5 text-[10px] font-bold text-neutral-600">{message.nickname}</span>
                 <p className="inline-block max-w-[85%] rounded-[16px_4px_16px_16px] border border-gold/20 bg-gold/7 px-3 py-2 text-[13px] italic text-gold/90">
-                  {message.command}
+                  {message.question}
                 </p>
               </div>
             );
@@ -47,9 +49,9 @@ export default function ChatMessage({ messages, connectionState }: Props) {
           if (message.type === 'macro_response') {
             return (
               <div key={message.id} className="flex flex-col items-end">
-                <span className="mb-0.5 px-1.5 text-[10px] font-bold text-neutral-600">{message.label}</span>
+                <span className="mb-0.5 px-1.5 text-[10px] font-bold text-neutral-600">판매자</span>
                 <p className="inline-block max-w-[90%] rounded-[16px_4px_16px_16px] border border-primary/20 bg-primary/7 px-3 py-2 text-[13px] leading-relaxed text-primary-light/90">
-                  {message.message}
+                  {message.answer}
                 </p>
               </div>
             );

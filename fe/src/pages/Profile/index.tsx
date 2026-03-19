@@ -16,7 +16,9 @@ import ReportModal from '@/components/Profile/ReportModal';
 import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
 import { usePatchSellerProfile } from '@/api/hooks/usePatchSellerProfile';
 import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
-import type { EscrowState, ScheduledStream } from '@/types';
+import type { ScheduledStream } from '@/types';
+import { getEscrowStateUI } from '@/utils/getEscrowStateUI';
+import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
 import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2, FiX, FiCamera, FiTv, FiChevronDown } from 'react-icons/fi';
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
 import React from 'react';
@@ -33,8 +35,7 @@ const stripPrefix = (url: string) => {
   return match ? match[1] : url;
 };
 
-const addPrefix = (handle: string, prefix: string) =>
-  handle.trim() ? `${prefix}${handle.trim()}` : '';
+const addPrefix = (handle: string, prefix: string) => (handle.trim() ? `${prefix}${handle.trim()}` : '');
 
 const InstagramIcon = () => (
   <>
@@ -70,32 +71,6 @@ const formatDate = (iso: string) => {
 };
 
 const formatPrice = (price: number) => price.toLocaleString('ko-KR') + '원';
-
-const getEscrowStateUI = (state: EscrowState) => {
-  switch (state) {
-    case 'INVOICE_SUBMITTED':
-      return {
-        label: '배송중',
-        badgeClass: 'self-start badge badge-ember-outline',
-      };
-    case 'COMPLETED':
-      return {
-        label: '배송완료',
-        badgeClass: 'self-start badge badge-primary-outline',
-      };
-    case 'CANCELLED':
-      return {
-        label: '취소됨',
-        badgeClass: 'self-start badge badge-neutral',
-      };
-    case 'DEPOSITED':
-    default:
-      return {
-        label: '결제완료',
-        badgeClass: 'self-start badge badge-gold-outline',
-      };
-  }
-};
 
 export default function ProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -138,8 +113,8 @@ export default function ProfilePage() {
       onSuccess: () => {
         showToast({ message: '프로필 이미지가 변경되었습니다.' });
       },
-      onError: () => {
-        showToast({ message: '프로필 이미지 변경에 실패했습니다.' });
+      onError: (error) => {
+        showToast({ message: getUploadErrorMessage(error, '프로필 이미지 변경에 실패했습니다.') });
       },
     });
   };
@@ -252,20 +227,23 @@ export default function ProfilePage() {
       showToast({ message: '닉네임을 입력해주세요.' });
       return;
     }
-    patchProfile({
-      ...profileForm,
-      instaUrl: addPrefix(profileForm.instaUrl, SOCIAL_PREFIX.instagram),
-      youtubeUrl: addPrefix(profileForm.youtubeUrl, SOCIAL_PREFIX.youtube),
-      tiktokUrl: addPrefix(profileForm.tiktokUrl, SOCIAL_PREFIX.tiktok),
-    }, {
-      onSuccess: () => {
-        setIsProfileEditOpen(false);
-        showToast({ message: '프로필이 수정되었습니다.' });
+    patchProfile(
+      {
+        ...profileForm,
+        instaUrl: addPrefix(profileForm.instaUrl, SOCIAL_PREFIX.instagram),
+        youtubeUrl: addPrefix(profileForm.youtubeUrl, SOCIAL_PREFIX.youtube),
+        tiktokUrl: addPrefix(profileForm.tiktokUrl, SOCIAL_PREFIX.tiktok),
       },
-      onError: () => {
-        showToast({ message: '프로필 수정에 실패했습니다.' });
+      {
+        onSuccess: () => {
+          setIsProfileEditOpen(false);
+          showToast({ message: '프로필이 수정되었습니다.' });
+        },
+        onError: () => {
+          showToast({ message: '프로필 수정에 실패했습니다.' });
+        },
       },
-    });
+    );
   };
 
   const handleDeleteNotice = (postId: number) => {
@@ -787,7 +765,9 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-2">
               <label className="text-body-lg text-neutral-400 font-medium">Instagram</label>
               <div className="flex items-center bg-background border border-neutral-800 rounded-lg overflow-hidden focus-within:border-gold-light transition-colors">
-                <span className="shrink-0 px-4 py-3 text-neutral-500 text-body-md bg-neutral-900 border-r border-neutral-800 select-none">{SOCIAL_PREFIX.instagram}</span>
+                <span className="shrink-0 px-4 py-3 text-neutral-500 text-body-md bg-neutral-900 border-r border-neutral-800 select-none">
+                  {SOCIAL_PREFIX.instagram}
+                </span>
                 <input
                   className="flex-1 bg-transparent text-white border-none px-4 py-3 text-subtitle-lg outline-none"
                   placeholder="username"
@@ -800,7 +780,9 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-2">
               <label className="text-body-lg text-neutral-400 font-medium">YouTube</label>
               <div className="flex items-center bg-background border border-neutral-800 rounded-lg overflow-hidden focus-within:border-gold-light transition-colors">
-                <span className="shrink-0 px-4 py-3 text-neutral-500 text-body-md bg-neutral-900 border-r border-neutral-800 select-none">{SOCIAL_PREFIX.youtube}</span>
+                <span className="shrink-0 px-4 py-3 text-neutral-500 text-body-md bg-neutral-900 border-r border-neutral-800 select-none">
+                  {SOCIAL_PREFIX.youtube}
+                </span>
                 <input
                   className="flex-1 bg-transparent text-white border-none px-4 py-3 text-subtitle-lg outline-none"
                   placeholder="channel"
@@ -813,7 +795,9 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-2">
               <label className="text-body-lg text-neutral-400 font-medium">TikTok</label>
               <div className="flex items-center bg-background border border-neutral-800 rounded-lg overflow-hidden focus-within:border-gold-light transition-colors">
-                <span className="shrink-0 px-4 py-3 text-neutral-500 text-body-md bg-neutral-900 border-r border-neutral-800 select-none">{SOCIAL_PREFIX.tiktok}</span>
+                <span className="shrink-0 px-4 py-3 text-neutral-500 text-body-md bg-neutral-900 border-r border-neutral-800 select-none">
+                  {SOCIAL_PREFIX.tiktok}
+                </span>
                 <input
                   className="flex-1 bg-transparent text-white border-none px-4 py-3 text-subtitle-lg outline-none"
                   placeholder="username"

@@ -12,6 +12,7 @@ const conditionLabels: Record<string, string> = {
 
 const statusClassMap: Record<string, { label: string; bg: string }> = {
   READY: { label: '대기', bg: 'bg-neutral-800' },
+  SCHEDULED: { label: '대기', bg: 'bg-neutral-800' },
   PENDING: { label: '경매중', bg: 'bg-accent' },
   SOLD: { label: '판매완료', bg: 'bg-ember' },
 };
@@ -42,17 +43,15 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
   return (
     <div className="flex bg-surface rounded-2xl p-6 gap-6 mb-4 border border-neutral-800 hover:bg-surface-elevated transition-colors">
       <div className="relative w-[160px] h-[160px] rounded-xl overflow-hidden shrink-0 bg-white group">
-        <div className={`absolute top-3 left-3 ${currentStatus.bg} text-white px-3 py-1 rounded-full text-xs font-semibold z-10`}>
+        <div
+          className={`absolute top-3 left-3 ${currentStatus.bg} text-white px-3 py-1 rounded-full text-xs font-semibold z-10`}
+        >
           {currentStatus.label}
         </div>
 
         {images.length > 0 ? (
           <>
-            <img
-              src={images[currentIndex]}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
+            <img src={images[currentIndex]} alt={product.name} className="w-full h-full object-cover" />
             {images.length > 1 && (
               <>
                 <button
@@ -89,7 +88,7 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
       <div className="flex-1 flex flex-col">
         <div className="flex justify-between mb-2">
           <div className="text-neutral-500 text-[13px]">{product.tags.map((tag) => `#${tag}`).join(' ')}</div>
-          {product.status === 'READY' && (
+          {(product.status === 'READY' || product.status === 'SCHEDULED') && (
             <div className="flex gap-3">
               <button
                 onClick={() => onEdit(product.itemId)}

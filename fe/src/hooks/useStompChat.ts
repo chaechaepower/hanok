@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { useGetMe } from '@/api/hooks/useGetMe';
 import { getCategoryMacroCommandLabel, getCategoryMacroQuestionType } from '@/constants/macro';
 import { MAX_CHAT_HISTORY } from '@/constants/stompChat';
 import type {
@@ -35,6 +36,8 @@ const appendMessage = (messages: ChatMessageType[], message: ChatMessageType) =>
 export function useStompChat(category: string) {
   const { id: streamIdParam } = useParams<{ id: string }>();
   const streamId = streamIdParam ?? '';
+  const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
+  const { data: me } = useGetMe({ enabled: isLoggedIn });
   const [messagesByStream, setMessagesByStream] = useState<Record<string, ChatMessageType[]>>({});
   const [connectionState, setConnectionState] = useState<StompConnectionState>(getStompConnectionState());
   const messages = messagesByStream[streamId] ?? [];
@@ -65,7 +68,7 @@ export function useStompChat(category: string) {
               nextMessage = {
                 id: createMessageId(),
                 type: 'chat',
-                nickname: payload.nickname ?? '익명',
+                nickname: payload.nickname ?? 'guest',
                 message: payload.content,
               };
             }
@@ -74,19 +77,14 @@ export function useStompChat(category: string) {
           case 'MACRO_TEMPLATE': {
             const payload = response.payload as MacroTemplatePayload | null;
 
-            if (payload?.label && payload.message) {
+            if (payload?.questionType && typeof payload.answer === 'string') {
               nextMessage = {
                 id: createMessageId(),
                 type: 'macro_response',
-                label: payload.label,
-                message: payload.message,
-              };
-            } else if (payload?.command) {
-              nextMessage = {
-                id: createMessageId(),
-                type: 'macro_request',
-                nickname: payload.nickname ?? '나',
-                command: getCategoryMacroCommandLabel(category, payload.command),
+                sender: '판매자',
+                question: getCategoryMacroCommandLabel(category, payload.questionType),
+                answer: payload.answer,
+                createdAt: payload.createdAt,
               };
             }
             break;
@@ -153,19 +151,32 @@ export function useStompChat(category: string) {
   );
 
   const sendMacro = useCallback(
-    async (command: string) => {
-      if (!streamId || !command.trim()) {
+    async (question: string) => {
+      if (!streamId || !question.trim()) {
         return;
       }
 
-      const mappedQuestionType = getCategoryMacroQuestionType(category, command);
-      const payload: MacroPayload = { command: mappedQuestionType ?? command.trim() };
+      const mappedQuestionType = getCategoryMacroQuestionType(category, question);
+      const normalizedQuestionType = mappedQuestionType ?? question.trim();
+      const questionLabel = getCategoryMacroCommandLabel(category, normalizedQuestionType);
+
+      setMessagesByStream((prev) => ({
+        ...prev,
+        [streamId]: appendMessage(prev[streamId] ?? [], {
+          id: createMessageId(),
+          type: 'macro_request',
+          nickname: me?.nickname ?? '나',
+          question: questionLabel,
+        }),
+      }));
+
+      const payload: MacroPayload = { questionType: normalizedQuestionType };
       await sendStreamMessage(streamId, {
         eventType: 'MACRO_TEMPLATE',
         payload,
       });
     },
-    [category, streamId],
+    [category, me?.nickname, streamId],
   );
 
   return { messages, sendMessage, sendMacro, connectionState, streamId };

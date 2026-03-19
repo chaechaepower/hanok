@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { FaArrowLeft, FaCalendarAlt, FaCamera, FaCircle, FaTimes } from 'react-icons/fa';
+import { FaArrowLeft, FaCalendarAlt, FaCamera, FaCircle, FaTimes, FaVideo, FaVideoSlash } from 'react-icons/fa';
 import { MdLiveTv } from 'react-icons/md';
 import { CATEGORY_MACROS } from '@/constants/macro';
 import { useGetItemsByCategory } from '@/api/hooks/useGetItems';
@@ -12,6 +12,7 @@ import { usePostStream } from '@/api/hooks/usePostStream';
 import { usePostStreamMacros } from '@/api/hooks/usePostStreamMacros';
 import { useToast } from '@/components/common/Toast';
 import type { LiveStreamItem, Product, StreamRequest } from '@/types';
+import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
 import { CATEGORIES } from './categories';
 import InventorySelectModal from './InventorySelectModal';
 import ScheduleModal from './ScheduleModal';
@@ -65,6 +66,42 @@ export default function LiveRegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [macroAnswers, setMacroAnswers] = useState<Record<string, string>>({});
+
+  const videoPreviewRef = useRef<HTMLVideoElement>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
+  const [isCameraOn, setIsCameraOn] = useState(false);
+
+  const startCamera = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      });
+      cameraStreamRef.current = stream;
+      if (videoPreviewRef.current) {
+        videoPreviewRef.current.srcObject = stream;
+      }
+      setIsCameraOn(true);
+    } catch {
+      setIsCameraOn(false);
+    }
+  }, []);
+
+  const stopCamera = useCallback(() => {
+    cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    cameraStreamRef.current = null;
+    if (videoPreviewRef.current) {
+      videoPreviewRef.current.srcObject = null;
+    }
+    setIsCameraOn(false);
+  }, []);
+
+  useEffect(() => {
+    startCamera();
+    return () => {
+      cameraStreamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, [startCamera]);
 
   const { showToast } = useToast();
   const defaultMacros = useMemo(() => CATEGORY_MACROS[categoryLabel] ?? [], [categoryLabel]);
@@ -272,7 +309,9 @@ export default function LiveRegisterPage() {
       });
     } catch (err) {
       console.error('[submitReadyEntry]', err);
-      showToast({ message: isEditMode ? '방송 수정에 실패했습니다.' : '방송 등록에 실패했습니다.' });
+      showToast({
+        message: getUploadErrorMessage(err, isEditMode ? '방송 수정에 실패했습니다.' : '방송 등록에 실패했습니다.'),
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -338,7 +377,9 @@ export default function LiveRegisterPage() {
       }
     } catch (err) {
       console.error('[submitStream]', err);
-      showToast({ message: isEditMode ? '방송 수정에 실패했습니다.' : '방송 등록에 실패했습니다.' });
+      showToast({
+        message: getUploadErrorMessage(err, isEditMode ? '방송 수정에 실패했습니다.' : '방송 등록에 실패했습니다.'),
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -368,34 +409,34 @@ export default function LiveRegisterPage() {
   }
 
   return (
-    <div className="w-full mx-auto px-6 py-4 flex flex-col gap-3 h-screen overflow-hidden">
-      <div className="flex items-center justify-between">
+    <div className="flex h-screen w-full flex-col bg-surface p-3">
+      <div className="flex items-center justify-between pb-2">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => navigate('/lives')}
-            className="text-white/60 hover:text-white transition-colors"
+            className="rounded-lg px-2 py-1.5 text-neutral-500 transition-colors hover:bg-warm/5 hover:text-neutral-400"
           >
             <FaArrowLeft size={16} />
           </button>
           <div className="flex items-center gap-2">
-            <FaCircle className="text-[#e74c3c] text-sm" />
-            <h1 className="text-xl font-bold text-white">{pageTitle}</h1>{' '}
-            <span className="text-[#d9b36d] font-semibold">[{categoryLabel}]</span>
+            <FaCircle className="text-accent text-sm" />
+            <h1 className="text-sm font-bold text-neutral-100">{pageTitle}</h1>
+            <span className="text-xs font-bold text-gold">[{categoryLabel}]</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleSchedule}
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-5 py-2 bg-transparent border border-white/50 text-white text-sm rounded-lg hover:bg-white/10 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg border border-neutral-700 bg-transparent px-3 py-1.5 text-[11px] font-bold text-neutral-300 transition-colors hover:border-neutral-600 hover:bg-neutral-900 disabled:opacity-50"
           >
-            <FaCalendarAlt size={14} />
+            <FaCalendarAlt size={12} />
             {scheduleButtonLabel}
             {scheduledAt && (
-              <span className="text-[#d9b36d] text-xs font-medium ml-1">
+              <span className="ml-1 text-[10px] font-bold text-gold">
                 {new Date(scheduledAt).toLocaleDateString('ko-KR', {
                   month: 'long',
                   day: 'numeric',
@@ -409,19 +450,19 @@ export default function LiveRegisterPage() {
             type="button"
             onClick={handleEnter}
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-5 py-2 bg-[#e74c3c] text-white text-sm font-semibold rounded-lg hover:bg-[#c0392b] transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg border border-accent/35 bg-accent/12 px-3 py-1.5 text-[11px] font-bold text-accent-light transition-colors hover:bg-accent/18 disabled:opacity-50"
           >
-            <MdLiveTv size={16} />
+            <MdLiveTv size={14} />
             {sellerEntryButtonLabel || liveButtonLabel}
           </button>
         </div>
       </div>
 
-      <div className="flex gap-4 flex-1 min-h-0">
-        <aside className="w-[340px] shrink-0 flex flex-col rounded-2xl bg-[#050505] px-4 py-6 border-r border-white/5">
+      <div className="flex gap-3 flex-1 min-h-0">
+        <aside className="min-w-0 flex-1 flex flex-col rounded-2xl bg-background px-4 py-6 overflow-hidden">
           <div className="mb-4 flex items-center justify-between">
-            <span className="text-xs font-bold text-[#A1A1AA]">경매 물품 목록</span>
-            <span className="text-[11px] font-bold text-[#52525B]">{selectedItems.length}</span>
+            <span className="text-xs font-bold text-neutral-400">경매 물품 목록</span>
+            <span className="text-[11px] font-bold text-neutral-600">{selectedItems.length}</span>
           </div>
 
           <div className="flex flex-col gap-2 overflow-y-auto pr-2">
@@ -434,10 +475,10 @@ export default function LiveRegisterPage() {
               return (
                 <div
                   key={item.itemId}
-                  className="flex gap-3 rounded-[20px] p-3.5 transition-all duration-200 bg-white/[0.02] border border-white/[0.06]"
+                  className="flex gap-3 rounded-2xl border border-neutral-800 bg-white/[0.02] p-3"
                 >
                   <div
-                    className="h-16 w-16 shrink-0 rounded-[14px] bg-[#27272A]"
+                    className="h-14 w-14 shrink-0 rounded-xl bg-neutral-800"
                     style={
                       item.images && item.images.length > 0
                         ? {
@@ -449,24 +490,24 @@ export default function LiveRegisterPage() {
                     }
                   />
                   <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
-                    <span className="truncate text-xs font-bold leading-snug text-white">{item.name}</span>
+                    <span className="truncate text-xs font-bold leading-snug text-neutral-100">{item.name}</span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[13px] font-black text-[#C5A059]">
+                      <span className="text-[11px] font-black text-gold">
                         {item.startPrice.toLocaleString()}원
                       </span>
-                      <span className="rounded-full px-1.5 py-0.5 text-[9px] font-extrabold text-[rgba(255,220,140,0.95)] bg-[rgba(197,160,89,0.08)]">
+                      <span className="rounded-full bg-gold/10 px-1.5 py-0.5 text-[9px] font-extrabold text-gold-light">
                         {conditionLabel}
                       </span>
                     </div>
                   </div>
                   <div className="flex shrink-0 flex-col items-end justify-center">
-                    <span className="rounded-full px-1.5 py-0.5 text-[9px] font-extrabold text-[#71717A] bg-[rgba(113,113,122,0.15)] border border-[rgba(113,113,122,0.3)]">
+                    <span className="rounded-full border border-neutral-700 bg-neutral-900 px-1.5 py-0.5 text-[9px] font-extrabold text-neutral-500">
                       대기
                     </span>
                     <button
                       type="button"
                       onClick={() => toggleItem(item)}
-                      className="mt-1.5 text-[#e74c3c] text-[10px] hover:text-red-400 bg-transparent border-none cursor-pointer"
+                      className="mt-1.5 bg-transparent border-none cursor-pointer text-accent text-[10px] hover:text-accent-light"
                     >
                       <FaTimes size={10} />
                     </button>
@@ -479,44 +520,64 @@ export default function LiveRegisterPage() {
           <button
             type="button"
             onClick={() => setShowInventoryModal(true)}
-            className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-[rgba(255,255,255,0.07)] bg-transparent px-4 py-2.5 text-xs font-bold text-[#71717A] transition-all hover:border-[rgba(255,255,255,0.12)] hover:bg-[#18181B] hover:text-[#D4D4D8]"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-neutral-800 bg-transparent px-4 py-2.5 text-xs font-bold text-neutral-600 transition-all hover:border-neutral-700 hover:bg-neutral-900 hover:text-neutral-300"
           >
             인벤토리에서 물품 선택
           </button>
         </aside>
 
-        <div className="flex-1 min-w-0 relative rounded-2xl overflow-hidden bg-black flex flex-col">
+        <div className="min-w-0 flex-2 relative rounded-2xl overflow-hidden bg-background flex flex-col">
           <div className="flex-1 flex items-center justify-center">
-            {thumbnailUrl ? (
-              <img src={thumbnailUrl} alt="thumbnail" className="max-w-[60%] max-h-[60%] object-contain" />
-            ) : (
+            <video
+              ref={videoPreviewRef}
+              autoPlay
+              muted
+              playsInline
+              className={`h-full w-full object-contain ${isCameraOn ? '' : 'hidden'}`}
+              style={{ transform: 'scaleX(-1)' }}
+            />
+            {!isCameraOn && (
               <div className="flex flex-col items-center gap-3 text-white/20">
                 <MdLiveTv size={60} />
-                <span className="text-sm">방송 미리보기</span>
+                <span className="text-sm">카메라가 꺼져 있습니다</span>
               </div>
             )}
           </div>
+          <div className="absolute bottom-4 right-4 flex items-center gap-2 rounded-2xl bg-surface/80 px-2.5 py-2">
+            <button
+              type="button"
+              onClick={isCameraOn ? stopCamera : startCamera}
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${
+                isCameraOn
+                  ? 'text-neutral-400 hover:text-neutral-200'
+                  : 'text-accent hover:text-accent-light'
+              }`}
+            >
+              {isCameraOn ? <FaVideo size={14} /> : <FaVideoSlash size={14} />}
+              {isCameraOn ? '카메라 끄기' : '카메라 켜기'}
+            </button>
+          </div>
         </div>
 
-        <aside className="w-[300px] shrink-0 flex flex-col rounded-2xl bg-[#050505] overflow-hidden border-l border-white/5">
-          <div className="px-4 py-4 border-b border-[rgba(255,255,255,0.05)]">
-            <span className="text-xs font-bold text-white">방송 기본 설정</span>
+        <aside className="min-w-0 flex-1 flex flex-col rounded-2xl bg-background overflow-hidden">
+          <div className="px-3 py-2 border-b border-neutral-800">
+            <span className="text-xs font-bold text-neutral-100">방송 기본 설정</span>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-[#52525B] uppercase tracking-wider">썸네일 업로드</label>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">썸네일 업로드</label>
               <button
                 type="button"
                 onClick={() => thumbnailInputRef.current?.click()}
-                className="w-full h-[100px] border border-[rgba(255,255,255,0.07)] rounded-xl bg-transparent flex flex-col items-center justify-center gap-2 hover:border-[rgba(255,255,255,0.12)] hover:bg-[#18181B] transition-all"
+                className="w-full h-[100px] rounded-xl border border-neutral-800 bg-transparent flex flex-col items-center justify-center gap-2 transition-all hover:border-neutral-700 hover:bg-neutral-900"
               >
                 {thumbnailUrl ? (
                   <img src={thumbnailUrl} alt="thumb" className="w-full h-full object-contain rounded-xl" />
                 ) : (
                   <>
-                    <FaCamera size={18} className="text-[#52525B]" />
-                    <span className="text-[#52525B] text-[11px] font-bold">이미지 첨부</span>
+                    <FaCamera size={18} className="text-neutral-600" />
+                    <span className="text-[11px] font-bold text-neutral-600">이미지 첨부</span>
                   </>
                 )}
               </button>
@@ -530,18 +591,18 @@ export default function LiveRegisterPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-[#52525B] uppercase tracking-wider">방송 제목</label>
+              <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">방송 제목</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="제목을 입력하세요."
-                className="w-full bg-transparent border border-[rgba(255,255,255,0.07)] rounded-lg px-3 py-2 text-white text-xs placeholder:text-[#3F3F46] outline-none focus:border-[rgba(197,160,89,0.4)] transition-colors"
+                className="w-full rounded-lg border border-neutral-800 bg-transparent px-3 py-2 text-xs text-neutral-100 outline-none placeholder:text-neutral-700 transition-colors focus:border-gold/40"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-[#52525B] uppercase tracking-wider">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
                 상단 고정 공지사항 (선택)
               </label>
               <input
@@ -549,13 +610,13 @@ export default function LiveRegisterPage() {
                 value={notice}
                 onChange={(e) => setNotice(e.target.value)}
                 placeholder="공지사항을 입력하세요."
-                className="w-full bg-transparent border border-[rgba(255,255,255,0.07)] rounded-lg px-3 py-2 text-white text-xs placeholder:text-[#3F3F46] outline-none focus:border-[rgba(197,160,89,0.4)] transition-colors"
+                className="w-full rounded-lg border border-neutral-800 bg-transparent px-3 py-2 text-xs text-neutral-100 outline-none placeholder:text-neutral-700 transition-colors focus:border-gold/40"
               />
             </div>
 
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold text-[#52525B] uppercase tracking-wider">카테고리 매크로</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">카테고리 매크로</label>
               </div>
               <div className="flex flex-col gap-2">
                 {macroFields.map((macro) => {
@@ -565,10 +626,10 @@ export default function LiveRegisterPage() {
                     <div key={macro.questionType} className="flex items-center gap-2">
                       <button
                         type="button"
-                        className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-extrabold whitespace-nowrap transition-colors ${
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-extrabold whitespace-nowrap transition-colors ${
                           macroAnswers[macro.questionType]
-                            ? 'bg-[rgba(197,160,89,0.12)] border border-[rgba(197,160,89,0.4)] text-[#C5A059]'
-                            : 'bg-transparent border border-[rgba(255,255,255,0.07)] text-[#52525B]'
+                            ? 'border border-gold/40 bg-gold/10 text-gold'
+                            : 'border border-neutral-800 bg-transparent text-neutral-600'
                         }`}
                         onClick={() => {
                           const cmd = '!' + command;
@@ -585,13 +646,13 @@ export default function LiveRegisterPage() {
                           setMacroAnswers((prev) => ({ ...prev, [macro.questionType]: e.target.value }));
                         }}
                         placeholder="응답을 입력해주세요."
-                        className="flex-1 min-w-0 bg-transparent border border-[rgba(255,255,255,0.07)] rounded-lg px-2 py-1.5 text-white text-[11px] placeholder:text-[#3F3F46] outline-none focus:border-[rgba(197,160,89,0.4)] transition-colors"
+                        className="min-w-0 flex-1 rounded-lg border border-neutral-800 bg-transparent px-2 py-1.5 text-[11px] text-neutral-100 outline-none placeholder:text-neutral-700 transition-colors focus:border-gold/40"
                       />
                     </div>
                   );
                 })}
                 {!macroFields.length && (
-                  <p className="text-[#52525B] text-xs font-bold">해당 카테고리의 매크로가 없습니다.</p>
+                  <p className="text-xs font-bold text-neutral-600">해당 카테고리의 매크로가 없습니다.</p>
                 )}
               </div>
             </div>

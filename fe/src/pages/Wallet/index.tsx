@@ -57,7 +57,7 @@ export default function WalletPage() {
   const settlementReportsQuery = useGetTradeReports('SETTLEMENT', activeTab === 'settlement');
 
   const balance = wallet?.balance ?? 0;
-  const depositedAuctionBalance = wallet?.depositedAuctionBalance ?? 0;
+  const depositedBalance = wallet?.depositedBalance ?? 0;
   const registeredWithdrawAccount = account ? `${account.bankName} ${account.accountNum}(등록됨)` : '';
   const numericPointAmount = Number(pointAmountInput || 0);
   const clampWithdrawAmount = (amount: number) => {
@@ -219,7 +219,9 @@ export default function WalletPage() {
               </button>
               <h1 className="text-2xl font-bold text-warm leading-tight">내 가상머니</h1>
             </div>
-            <p className="text-neutral-500 text-sm mt-1 ml-12">경매 입찰을 위한 가상머니 충전 및 정산 내역을 관리합니다.</p>
+            <p className="text-neutral-500 text-sm mt-1 ml-12">
+              경매 입찰을 위한 가상머니 충전 및 정산 내역을 관리합니다.
+            </p>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
@@ -279,7 +281,7 @@ export default function WalletPage() {
                   ) : (
                     <>
                       <p className="text-[32px] font-bold tracking-[-0.03em] text-gold">
-                        {formatMoney(depositedAuctionBalance)} 원
+                        {formatMoney(depositedBalance)} 원
                       </p>
                       <p className="text-[14px] text-neutral-500">현재 거래 대기 중인 금액입니다.</p>
                     </>
@@ -409,7 +411,7 @@ function mapTradeReportsToHistory(
   return reports.map((report, index) => ({
     id: `${kind}-${report.createdAt}-${index}`,
     title: kind === 'settlement' && report.itemName ? report.itemName : config.title,
-    occurredAt: report.createdAt,
+    occurredAt: report.createdAt.replace('T', ' '),
     amount: report.amount * config.sign,
     status: config.status,
     kind: config.kind,

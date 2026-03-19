@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
-import type { EscrowDetailResponse } from '@/types';
+import type { ApiResponse, EscrowDetailResponse } from '@/types';
 
 export const getEscrowDetailPath = (escrowId: string | number) => `/v1/escrows/${escrowId}`;
 
 export const getEscrowDetail = async (escrowId: string | number) => {
-  const response = await getFetchInstance().get<EscrowDetailResponse>(getEscrowDetailPath(escrowId));
+  const response = await getFetchInstance().get<ApiResponse<EscrowDetailResponse>>(getEscrowDetailPath(escrowId));
   return response.data;
 };
 

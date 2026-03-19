@@ -21,8 +21,10 @@ interface UseLiveKitReturn {
   disconnect: () => void;
   toggleMic: () => void;
   toggleCamera: () => void;
+  toggleRemoteAudio: () => void;
   isMicOn: boolean;
   isCameraOn: boolean;
+  isRemoteAudioMuted: boolean;
   viewerCount: number;
 }
 
@@ -30,12 +32,15 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
   const [state, setState] = useState<LiveKitState>('idle');
   const [isMicOn, setIsMicOn] = useState(false);
   const [isCameraOn, setIsCameraOn] = useState(false);
+  const [isRemoteAudioMuted, setIsRemoteAudioMuted] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const roomRef = useRef<Room | null>(null);
   const isHostRef = useRef(isHost);
   const togglingMicRef = useRef(false);
   const togglingCameraRef = useRef(false);
+  const audioElementsRef = useRef<Set<HTMLMediaElement>>(new Set());
+  const isRemoteAudioMutedRef = useRef(false);
   isHostRef.current = isHost;
 
   const syncViewerCount = useCallback((room: Room) => {
@@ -112,13 +117,16 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
         if (track.kind === Track.Kind.Video) {
           attachTrackToVideo(track);
         } else if (track.kind === Track.Kind.Audio) {
-          track.attach();
+          const audioEl = track.attach();
+          audioEl.muted = isRemoteAudioMutedRef.current;
+          audioElementsRef.current.add(audioEl);
         }
       },
     );
 
     room.on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack) => {
-      track.detach();
+      const detached = track.detach();
+      detached.forEach((el) => audioElementsRef.current.delete(el));
     });
 
     room.on(RoomEvent.ParticipantConnected, () => {
@@ -191,6 +199,15 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
     }
   }, []);
 
+  const toggleRemoteAudio = useCallback(() => {
+    const next = !isRemoteAudioMutedRef.current;
+    isRemoteAudioMutedRef.current = next;
+    setIsRemoteAudioMuted(next);
+    audioElementsRef.current.forEach((el) => {
+      el.muted = next;
+    });
+  }, []);
+
   const toggleCamera = useCallback(async () => {
     const room = roomRef.current;
     if (!room || togglingCameraRef.current) return;
@@ -212,8 +229,10 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
     disconnect,
     toggleMic,
     toggleCamera,
+    toggleRemoteAudio,
     isMicOn,
     isCameraOn,
+    isRemoteAudioMuted,
     viewerCount,
   };
 }

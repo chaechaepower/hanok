@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import { IoChatbubbleOutline, IoCheckmark } from 'react-icons/io5';
 import { LuVolume2, LuVolumeOff } from 'react-icons/lu';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { useGetAddresses } from '@/api/hooks/useGetAddresses';
 import { useGetWallet } from '@/api/hooks/useGetWallet';
 import BidAccessModal from '@/components/Live/Auction/Buyer/BidAccessModal';
 import KeyboardGuide from '@/components/Live/Auction/Buyer/KeyboardGuide';
@@ -21,30 +22,36 @@ const CUSTOM_UNIT_OPTIONS = [
 
 type BidTab = 'quick' | 'custom';
 type BidAccessModalType = 'login' | 'shipping' | null;
+type AuctionEndPhase = 'ended' | 'waiting' | null;
 
 interface Props {
   auctionType: LiveAuctionType | null;
   bidSync: BidSyncPayload | null;
   uniqueBidSync: UniqueBidSyncPayload | null;
   activeAuctionId: number | null;
+  isRemoteAudioMuted?: boolean;
+  onToggleMute?: () => void;
+  onToggleChat?: () => void;
 }
 
-export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, activeAuctionId }: Props) {
+export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, activeAuctionId, isRemoteAudioMuted, onToggleMute, onToggleChat }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
   const { id: streamId } = useParams<{ id: string }>();
   const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
   const { data: wallet } = useGetWallet(isLoggedIn);
+  const { data: addresses, isLoading: isAddressesLoading } = useGetAddresses(isLoggedIn);
   const [guideOpen, setGuideOpen] = useState(false);
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
-  const [muted, setMuted] = useState(false);
   const [tab, setTab] = useState<BidTab>('quick');
   const [customUnit, setCustomUnit] = useState(1000);
   const [bidAmount, setBidAmount] = useState(1000);
   const [freeInput, setFreeInput] = useState('');
   const [panelOpacity, setPanelOpacity] = useState(90);
   const [bidAccessModal, setBidAccessModal] = useState<BidAccessModalType>(null);
+  const [auctionEndPhase, setAuctionEndPhase] = useState<AuctionEndPhase>(null);
+  const hadActiveAuctionRef = useRef(false);
 
   const balance = wallet?.balance ?? 0;
   const isUniqueAuction = auctionType === 'UNIQUE_TOP';
@@ -57,6 +64,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
   const uniqueBidUnit = uniqueBidSync?.bidRange.bidUnit ?? 1000;
   const hasPlacedUniqueBid = uniqueBidSync?.hasBid ?? false;
   const hasActiveAuction = isUniqueAuction ? Boolean(uniqueBidSync) : Boolean(bidSync);
+  const visibleAuctionEndPhase = hasActiveAuction ? null : auctionEndPhase;
   const uniqueInputAmount = freeInput ? Number(freeInput) : 0;
   const isFreeMode = activeTab === 'custom' && activeCustomUnit === 0;
   const panelOpacityProgress = ((panelOpacity - 10) / 80) * 100;
@@ -76,8 +84,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
     isInsufficientBalance ||
     isHighestBidder ||
     (isUniqueAuction && (hasPlacedUniqueBid || freeInput.trim().length === 0));
-  const hasRegisteredShippingAddress = true;
-  // TODO: replace hasRegisteredShippingAddress with the shipping address lookup API result.
+  const hasRegisteredShippingAddress = Boolean(addresses?.length) && addresses?.some((address) => address.isDefault);
 
   const handleBidPlace = useCallback(() => {
     if (!hasActiveAuction) {
@@ -87,6 +94,11 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
 
     if (!isLoggedIn) {
       setBidAccessModal('login');
+      return;
+    }
+
+    if (isAddressesLoading) {
+      showToast({ message: '배송지 정보를 확인하는 중입니다.' });
       return;
     }
 
@@ -152,6 +164,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
     queryClient,
     hasPlacedUniqueBid,
     hasRegisteredShippingAddress,
+    isAddressesLoading,
     isInsufficientBalance,
     isLoggedIn,
     isUniqueAuction,
@@ -166,7 +179,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
     if (bidAccessModal === 'login') {
       navigate('/login');
     } else if (bidAccessModal === 'shipping') {
-      navigate('/settings');
+      navigate('/settings?tab=shipping');
     }
 
     setBidAccessModal(null);
@@ -260,6 +273,23 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
     };
   }, [handleKeyDown, handleKeyUp]);
 
+  useEffect(() => {
+    if (hasActiveAuction) {
+      hadActiveAuctionRef.current = true;
+      return;
+    }
+
+    if (hadActiveAuctionRef.current) {
+      const endedTimer = window.setTimeout(() => setAuctionEndPhase('ended'), 0);
+      const waitingTimer = window.setTimeout(() => setAuctionEndPhase('waiting'), 3000);
+
+      return () => {
+        window.clearTimeout(endedTimer);
+        window.clearTimeout(waitingTimer);
+      };
+    }
+  }, [hasActiveAuction]);
+
   const handleFreeInput = (value: string) => {
     const nextValue = value.replace(/[^0-9]/g, '');
     setFreeInput(nextValue);
@@ -283,6 +313,24 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
               className="flex flex-1 flex-col gap-2 rounded-2xl bg-surface/80 px-4 py-3"
               style={{ opacity: panelOpacity / 100 }}
             >
+              {visibleAuctionEndPhase !== null ? (
+                <div className="flex flex-1 flex-col items-center justify-center gap-2">
+                  {visibleAuctionEndPhase === 'ended' ? (
+                    <>
+                      <span className="text-sm font-bold text-neutral-300">경매가 종료되었습니다</span>
+                      <span className="text-xs text-neutral-500">잠시만 기다려주세요</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-gold" />
+                        <span className="text-sm font-bold text-neutral-200">다음 경매 준비 중...</span>
+                      </div>
+                      <span className="text-xs text-neutral-500">판매자가 다음 상품을 준비하고 있습니다</span>
+                    </>
+                  )}
+                </div>
+              ) : (<>
               <div className="flex gap-1 rounded-lg bg-neutral-900 p-0.5">
                 {isUniqueAuction ? (
                   <div className="flex-1 rounded-md bg-neutral-800 py-1.5 text-center text-xs font-bold text-neutral-100">
@@ -489,6 +537,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
                   </button>
                 </div>
               )}
+            </>)}
             </div>
           </div>
 
@@ -496,13 +545,14 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
             <button
               type="button"
               className="flex h-10 w-10 items-center justify-center rounded-xl text-neutral-400 transition hover:bg-warm/10 hover:text-neutral-200"
-              onClick={() => setMuted((prev) => !prev)}
+              onClick={onToggleMute}
             >
-              {muted ? <LuVolumeOff size={18} /> : <LuVolume2 size={18} />}
+              {isRemoteAudioMuted ? <LuVolumeOff size={18} /> : <LuVolume2 size={18} />}
             </button>
             <button
               type="button"
               className="flex h-10 w-10 items-center justify-center rounded-xl text-neutral-400 transition hover:bg-warm/10 hover:text-neutral-200"
+              onClick={onToggleChat}
             >
               <IoChatbubbleOutline size={18} />
             </button>
