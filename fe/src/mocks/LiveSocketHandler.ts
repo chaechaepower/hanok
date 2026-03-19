@@ -4,6 +4,7 @@ import type { AuctionStatisticsPayload, BidSyncPayload, ItemSyncPayload } from '
 import { getStreamSocketConnectUrl } from '@/websocket/socket';
 
 import { getInitialItemSyncPayloadForStream } from './LiveCreateHandler';
+import { getSavedMacroAnswer } from './MacroHandler';
 import { getCurrentMockUser, mockLoginUsers } from './mockState';
 
 type StompFrame = {
@@ -43,16 +44,16 @@ const HEARTBEAT_INTERVAL_MS = 5_000;
 const RECENT_BIDS_LIMIT = 15;
 const textEncoder = new TextEncoder();
 const CHAT_MACRO_RESPONSES: Record<string, string> = {
-  '@사이즈': '사이즈는 실측 기준으로 안내드리며, 상세 수치는 상품 설명에서 다시 안내드리겠습니다.',
-  '@360도': '잠시 후 제품을 360도로 돌려서 상태를 다시 보여드리겠습니다.',
-  '@소재': '주요 소재와 디테일은 잠시 후 클로즈업으로 다시 보여드리겠습니다.',
-  '@배송': '낙찰 후 영업일 기준 2~5일 이내 순차 발송됩니다.',
-  '@진품인증': '인증 정보와 검수 기준은 라이브 중에 다시 설명드리겠습니다.',
-  '@상태': '현재 보이는 컨디션 외에 특이사항이 있으면 바로 말씀드리겠습니다.',
-  '@무게': '무게는 측정 후 채팅으로 다시 안내드리겠습니다.',
-  '@보증서': '보증서 및 구성품 포함 여부를 바로 확인해드리겠습니다.',
-  '@출처': '확보 경로와 스토리는 설명 타임에 함께 안내드리겠습니다.',
-  '@작가소개': '작가와 브랜드 배경은 설명 구간에서 정리해서 말씀드리겠습니다.',
+  WEARABLE_SIZE: '265mm',
+  SIZE: '265mm',
+  SHIPPING: '낙찰 후 영업일 기준 2~5일 이내 순차 발송됩니다.',
+  MATERIAL: '주요 소재와 디테일은 잠시 후 클로즈업으로 다시 보여드리겠습니다.',
+  AUTH: '인증 정보와 검수 기준은 라이브 중에 다시 설명드리겠습니다.',
+  CONDITION: '현재 보이는 컨디션 외에 특이사항이 있으면 바로 말씀드리겠습니다.',
+  WEIGHT: '무게는 측정 후 채팅으로 다시 안내드리겠습니다.',
+  WARRANTY: '보증서 및 구성품 포함 여부를 바로 확인해드리겠습니다.',
+  ORIGIN: '확보 경로와 스토리는 설명 타임에 함께 안내드리겠습니다.',
+  ARTIST: '작가와 브랜드 배경은 설명 구간에서 정리해서 말씀드리겠습니다.',
 };
 
 const liveSocket = ws.link(getStreamSocketConnectUrl());
@@ -598,6 +599,60 @@ const createUniqueBidSyncPayload = (streamId: string, nowMs: number) => {
   };
 };
 
+const ensureSeededBidAuctionState = (streamId: string) => {
+  const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
+  const activeBidItem = itemSyncPayload?.items.find(
+    (item) => item.auctionType !== 'UNIQUE_TOP' && item.auctionStatus === 'LIVE',
+  );
+
+  if (!activeBidItem) {
+    return;
+  }
+
+  let initializedTimer = false;
+
+  if (!streamTimerStates.has(streamId)) {
+    streamTimerStates.set(streamId, {
+      durationSeconds: activeBidItem.auctionTime ?? AUCTION_DURATION_SECONDS,
+      startedAtMs: Date.now(),
+      finalPrice: activeBidItem.startPrice + (activeBidItem.bidUnit ?? 1000),
+    });
+    initializedTimer = true;
+  }
+
+  if (!streamBidSyncStates.has(streamId)) {
+    streamBidSyncStates.set(streamId, {
+      bidUnit: activeBidItem.bidUnit ?? 1000,
+      highestBidderUserId: mockLoginUsers.find((user) => user.userId !== getCurrentMockUser()?.userId)?.userId ?? null,
+    });
+  }
+
+  if (!streamAuctionStatisticsStates.has(streamId)) {
+    const timerState = streamTimerStates.get(streamId);
+
+    if (timerState) {
+      streamAuctionStatisticsStates.set(streamId, {
+        itemName: activeBidItem.itemName,
+        bidCount: 1,
+        startPrice: activeBidItem.startPrice,
+        currentPrice: timerState.finalPrice,
+        recentBids: [
+          {
+            userId: mockLoginUsers.find((user) => user.userId !== getCurrentMockUser()?.userId)?.userId ?? 9999,
+            nickname: mockLoginUsers.find((user) => user.userId !== getCurrentMockUser()?.userId)?.nickname ?? '테스트유저',
+            amount: timerState.finalPrice,
+            placedAt: createTimestamp(Date.now() - 1000),
+          },
+        ],
+      });
+    }
+  }
+
+  if (initializedTimer) {
+    scheduleWinnerAnnouncement(streamId);
+  }
+};
+
 const sendPrivateUniqueBidSync = (streamId: string) => {
   broadcastToDestination(`/user/private/streams/${streamId}`, {
     eventType: 'UNIQUE_BID_SYNC',
@@ -678,6 +733,7 @@ const sendItemSyncToClient = (
   destination: string,
 ) => {
   const streamId = getStreamIdFromDestination(destination);
+  ensureSeededBidAuctionState(streamId);
   ensureSeededUniqueAuctionState(streamId);
   const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
 
@@ -1049,6 +1105,7 @@ const handleBidPlace = (destination: string, body: string) => {
 
 const handleBidSync = (destination: string) => {
   const streamId = getStreamIdFromDestination(destination);
+  ensureSeededBidAuctionState(streamId);
   sendPrivateBidSync(streamId);
 };
 
@@ -1060,6 +1117,7 @@ const handleUniqueBidSync = (destination: string) => {
 
 const handleItemSync = (destination: string) => {
   const streamId = getStreamIdFromDestination(destination);
+  ensureSeededBidAuctionState(streamId);
   ensureSeededUniqueAuctionState(streamId);
   sendPrivateItemSync(streamId);
 };
@@ -1125,31 +1183,28 @@ const handleMacroTemplate = (destination: string, body: string) => {
   const streamId = getStreamIdFromDestination(destination);
   const payload = JSON.parse(body) as {
     payload?: {
-      command?: string;
+      questionType?: string;
     };
   };
-  const command = payload.payload?.command?.trim();
+  const questionType = payload.payload?.questionType?.trim();
 
-  if (!command) {
+  if (!questionType) {
     return;
   }
 
-  broadcastChatEvent(streamId, {
-    eventType: 'MACRO_TEMPLATE',
-    payload: {
-      nickname: getChatNickname(),
-      command,
-    },
-  });
-
-  const responseMessage = CHAT_MACRO_RESPONSES[command] ?? '해당 질문은 잠시 후 라이브에서 안내드리겠습니다.';
+  const responseMessage =
+    getSavedMacroAnswer(Number(streamId), questionType) ||
+    CHAT_MACRO_RESPONSES[questionType] ||
+    '해당 질문은 잠시 후 라이브에서 안내드리겠습니다.';
 
   globalThis.setTimeout(() => {
     broadcastChatEvent(streamId, {
       eventType: 'MACRO_TEMPLATE',
       payload: {
-        label: 'Seller',
-        message: responseMessage,
+        questionType,
+        answer: responseMessage,
+        sender: 'seller',
+        createdAt: new Date().toISOString(),
       },
     });
   }, 250);

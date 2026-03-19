@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { FaStore } from 'react-icons/fa';
 import { FiCamera } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useGetMe } from '@/api/hooks/useGetMe';
 import { useGetNotification } from '@/api/hooks/useGetNotification';
@@ -19,10 +19,14 @@ import ShippingSection from '@/components/Settings/ShippingSection';
 import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
 
 type SettingsTab = 'account' | 'stores' | 'shipping' | 'payment' | 'order';
+const SETTINGS_TABS: SettingsTab[] = ['account', 'stores', 'shipping', 'payment', 'order'];
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<SettingsTab>('account');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const initialTab = SETTINGS_TABS.includes(tabParam as SettingsTab) ? (tabParam as SettingsTab) : 'account';
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
 
   const { data: meData, isLoading: isMeLoading } = useGetMe();
   const { isLoading: isNotiLoading } = useGetNotification();
@@ -147,7 +151,11 @@ export default function SettingsPage() {
         <SideBar
           items={settingsSidebarItems}
           activeItemId={activeTab}
-          onItemClick={(item) => setActiveTab(item.id as SettingsTab)}
+          onItemClick={(item) => {
+            const nextTab = item.id as SettingsTab;
+            setActiveTab(nextTab);
+            setSearchParams({ tab: nextTab });
+          }}
           className="static shrink-0 !w-[240px] border-r-0 !bg-transparent !py-0"
         />
 

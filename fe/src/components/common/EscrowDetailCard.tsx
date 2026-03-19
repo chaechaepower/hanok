@@ -2,21 +2,25 @@ import type { ReactNode } from 'react';
 import { FaTruck } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
 
-import type { EscrowDetailResponse } from '@/types';
 import DeliveryTracker from '@/components/common/DeliveryTracker';
+import type { EscrowDetailResponse } from '@/types';
 
 type EscrowDetailCardProps = {
-  detail: EscrowDetailResponse['data'];
+  detail: EscrowDetailResponse;
   onClose?: () => void;
   footer?: ReactNode;
   className?: string;
   counterpartyLabel?: string;
   minHeightClassName?: string;
+  showHeaderCloseButton?: boolean;
 };
 
 const formatPrice = (price: number) => `${price.toLocaleString('ko-KR')}원`;
 const formatDate = (dateStr: string) =>
-  dateStr.replace(/T/, ' ').replace(/:\d{2}(\.\d+)?Z?$/, '').replace(/Z$/, '');
+  dateStr
+    .replace(/T/, ' ')
+    .replace(/:\d{2}(\.\d+)?Z?$/, '')
+    .replace(/Z$/, '');
 
 export default function EscrowDetailCard({
   detail,
@@ -25,40 +29,39 @@ export default function EscrowDetailCard({
   className = '',
   counterpartyLabel = '판매자',
   minHeightClassName = 'min-h-[600px]',
+  showHeaderCloseButton = true,
 }: EscrowDetailCardProps) {
   return (
     <div
-      className={`bg-surface-elevated rounded-3xl p-8 border border-neutral-800 flex flex-col ${minHeightClassName} ${className}`}
+      className={`bg-surface-elevated rounded-3xl border border-neutral-800 p-8 ${minHeightClassName} ${className} flex flex-col`}
     >
-      {onClose && (
-        <div className="flex justify-end mb-2">
+      {onClose && showHeaderCloseButton && (
+        <div className="mb-2 flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="bg-transparent border-none text-neutral-500 cursor-pointer hover:text-neutral-100 transition-colors p-0"
+            className="border-none bg-transparent p-0 text-neutral-500 transition-colors hover:text-neutral-100"
           >
             <FiX size={22} />
           </button>
         </div>
       )}
 
-      <div className="flex gap-5 mb-8">
-        <div className="w-[120px] h-[120px] bg-neutral-800 rounded-2xl overflow-hidden shrink-0">
-          {detail.winningInfo.imageUrl ? (
+      <div className="mb-8 flex gap-5">
+        <div className="h-[120px] w-[120px] shrink-0 overflow-hidden rounded-2xl bg-neutral-800">
+          {detail.winningInfo.image ? (
             <img
-              src={detail.winningInfo.imageUrl}
+              src={detail.winningInfo.image}
               alt={detail.winningInfo.itemName}
-              className="w-full h-full object-cover"
+              className="h-full w-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-neutral-500 text-sm">
-              이미지 준비중
-            </div>
+            <div className="flex h-full w-full items-center justify-center text-sm text-neutral-500">이미지 준비중</div>
           )}
         </div>
-        <div className="flex flex-col justify-center flex-1">
-          <p className="text-xl font-bold mb-2 break-keep leading-[1.3] text-neutral-100">{detail.winningInfo.itemName}</p>
-          <p className="text-neutral-500 text-[13px] mb-4">{formatDate(detail.winningInfo.wonAt)}</p>
+        <div className="flex flex-1 flex-col justify-center">
+          <p className="mb-2 break-keep text-xl leading-[1.3] font-bold text-neutral-100">{detail.winningInfo.itemName}</p>
+          <p className="mb-4 text-[13px] text-neutral-500">{formatDate(detail.winningInfo.wonAt)}</p>
           <div className="grid grid-cols-[60px_1fr] gap-[8px_12px] text-sm">
             <span className="text-neutral-400">낙찰가</span>
             <span className="text-right font-medium text-neutral-100">{formatPrice(detail.winningInfo.finalPrice)}</span>
@@ -70,16 +73,16 @@ export default function EscrowDetailCard({
         </div>
       </div>
 
-      <div className="h-px bg-neutral-700 -mx-8 mb-8 w-[calc(100%+64px)]" />
+      <div className="mb-8 h-px w-[calc(100%+64px)] -mx-8 bg-neutral-700" />
 
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-2 text-gold-light font-bold text-base">
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-2 text-base font-bold text-gold-light">
           <FaTruck size={18} />
           <span>배송지 정보</span>
         </div>
       </div>
 
-      <div className="bg-surface rounded-xl p-6 border border-neutral-800 mb-4 text-sm text-neutral-200 flex flex-col gap-2">
+      <div className="mb-4 flex flex-col gap-2 rounded-xl border border-neutral-800 bg-surface p-6 text-sm text-neutral-200">
         <p>{detail.shippingAddress.name}</p>
         <p>{detail.shippingAddress.phone}</p>
         <p>
@@ -89,8 +92,8 @@ export default function EscrowDetailCard({
 
       {detail.delivery && (
         <>
-          <div className="bg-surface rounded-xl p-[16px_24px] border border-neutral-800 mb-4 text-sm text-neutral-200 flex justify-between items-center">
-            <span className="text-neutral-400">택배 정보</span>
+          <div className="mb-4 flex items-center justify-between rounded-xl border border-neutral-800 bg-surface p-[16px_24px] text-sm text-neutral-200">
+            <span className="text-neutral-400">배송 정보</span>
             <span className="font-semibold text-neutral-100">
               {detail.delivery.courierName} | {detail.delivery.trackingNumber}
             </span>

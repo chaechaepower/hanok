@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { FiGift } from 'react-icons/fi';
 import { MdKeyboardArrowDown } from 'react-icons/md';
-import { motion } from 'framer-motion';
 
+import { usePostCompleteEscrow } from '@/api/hooks/usePostCompleteEscrow';
 import { useGetEscrowDetail } from '@/api/hooks/useGetEscrowDetail';
 import { useGetEscrowsBuyer } from '@/api/hooks/useGetEscrowsBuyer';
 import EscrowDetailCard from '@/components/common/EscrowDetailCard';
-import type { EscrowState } from '@/types';
+import { useToast } from '@/components/common/Toast';
+import { ESCROW_STATUS_OPTIONS, getEscrowStateUI, type EscrowStatusFilter } from '@/utils/getEscrowStateUI';
 
 const formatDate = (iso: string) => {
   const d = new Date(iso);
@@ -20,42 +22,7 @@ const formatDate = (iso: string) => {
 
 const formatPrice = (price: number) => `${price.toLocaleString('ko-KR')}원`;
 
-const getEscrowStateUI = (state: EscrowState) => {
-  switch (state) {
-    case 'INVOICE_SUBMITTED':
-      return {
-        label: '배송중',
-        badgeClass: 'self-start badge badge-ember-outline',
-      };
-    case 'COMPLETED':
-      return {
-        label: '배송완료',
-        badgeClass: 'self-start badge badge-primary-outline',
-      };
-    case 'CANCELLED':
-      return {
-        label: '취소됨',
-        badgeClass: 'self-start badge badge-neutral',
-      };
-    case 'DEPOSITED':
-    default:
-      return {
-        label: '결제완료',
-        badgeClass: 'self-start badge badge-gold-outline',
-      };
-  }
-};
-
-type StatusFilter = EscrowState | 'ALL';
 type SortOption = 'LATEST' | 'AMOUNT';
-
-const STATUS_OPTIONS: Array<{ value: StatusFilter; label: string }> = [
-  { value: 'ALL', label: '전체' },
-  { value: 'DEPOSITED', label: '결제완료' },
-  { value: 'INVOICE_SUBMITTED', label: '배송중' },
-  { value: 'COMPLETED', label: '배송완료' },
-  { value: 'CANCELLED', label: '취소됨' },
-];
 
 const SORT_OPTIONS: Array<{ value: SortOption; label: string }> = [
   { value: 'LATEST', label: '최신순' },
@@ -64,10 +31,12 @@ const SORT_OPTIONS: Array<{ value: SortOption; label: string }> = [
 
 export default function OrderHistorySection() {
   const { data: escrowsResponse } = useGetEscrowsBuyer();
+  const { showToast } = useToast();
+  const { mutateAsync: completeEscrow, isPending: isCompletingEscrow } = usePostCompleteEscrow();
   const items = escrowsResponse?.data || [];
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+  const [statusFilter, setStatusFilter] = useState<EscrowStatusFilter>('ALL');
   const [sortBy, setSortBy] = useState<SortOption>('LATEST');
   const [isSortOpen, setIsSortOpen] = useState(false);
   const sortDropdownRef = useRef<HTMLDivElement | null>(null);
@@ -85,6 +54,8 @@ export default function OrderHistorySection() {
 
   const { data: detailResponse, isLoading: isDetailLoading } = useGetEscrowDetail(selectedItemId);
   const selectedItemDetail = detailResponse?.data;
+  const selectedEscrow = items.find((item) => String(item.escrowId) === selectedItemId) ?? null;
+  const canCompletePurchase = selectedEscrow?.escrowStatus === 'SHIPPED';
 
   const totalCount = items.length;
   const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
@@ -95,10 +66,24 @@ export default function OrderHistorySection() {
       ? [...filteredItems].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       : [...filteredItems].sort((a, b) => b.amount - a.amount);
 
-  const selectedSortLabel = SORT_OPTIONS.find((o) => o.value === sortBy)?.label ?? '';
+  const selectedSortLabel = SORT_OPTIONS.find((option) => option.value === sortBy)?.label ?? '';
 
   const handleCloseModal = () => {
     setSelectedItemId(null);
+  };
+
+  const handleCompletePurchase = async () => {
+    if (!selectedItemId || !canCompletePurchase) {
+      return;
+    }
+
+    try {
+      await completeEscrow(selectedItemId);
+      showToast({ message: '구매 확정이 완료되었습니다.' });
+    } catch (error) {
+      console.error('[escrow] failed to complete purchase', error);
+      showToast({ message: '구매 확정 처리에 실패했습니다.' });
+    }
   };
 
   return (
@@ -118,7 +103,7 @@ export default function OrderHistorySection() {
 
         <div className="flex items-center justify-between">
           <div className="relative inline-flex items-center rounded-xl bg-warm/6 p-1">
-            {STATUS_OPTIONS.map((option) => {
+            {ESCROW_STATUS_OPTIONS.map((option) => {
               const isSelected = statusFilter === option.value;
               return (
                 <button
@@ -198,12 +183,12 @@ export default function OrderHistorySection() {
                   key={item.escrowId}
                   type="button"
                   onClick={() => item.escrowId && setSelectedItemId(String(item.escrowId))}
-                  className="flex items-center justify-between rounded-2xl bg-surface-elevated px-6 py-5 text-left transition-colors hover:bg-surface cursor-pointer border-none"
+                  className="flex cursor-pointer items-center justify-between rounded-2xl border-none bg-surface-elevated px-6 py-5 text-left transition-colors hover:bg-surface"
                 >
-                  <div className="flex items-center gap-6 flex-1">
-                    <div className="w-16 h-16 rounded-full bg-surface border-[1.5px] border-neutral-700 flex items-center justify-center overflow-hidden">
+                  <div className="flex flex-1 items-center gap-6">
+                    <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-neutral-700 bg-surface">
                       {item.image ? (
-                        <img src={item.image} alt={item.itemName} className="w-full h-full object-cover" />
+                        <img src={item.image} alt={item.itemName} className="h-full w-full object-cover" />
                       ) : (
                         <FiGift size={32} className="text-gold-light" />
                       )}
@@ -216,7 +201,7 @@ export default function OrderHistorySection() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-1.5 w-35">
+                  <div className="flex w-35 flex-col items-end gap-1.5">
                     <span className="text-base font-bold text-white">- {formatPrice(item.amount)}</span>
                     <span className="text-[13px] text-neutral-600">{ui.label}</span>
                   </div>
@@ -232,13 +217,10 @@ export default function OrderHistorySection() {
           className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm"
           onClick={handleCloseModal}
         >
-          <div
-            className="w-full max-w-[520px] max-h-[90vh] overflow-y-auto"
-            onClick={(event) => event.stopPropagation()}
-          >
+          <div className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
             {isDetailLoading || !selectedItemDetail ? (
-              <div className="bg-surface-elevated rounded-3xl p-8 min-h-[320px] flex items-center justify-center">
-                <div className="w-10 h-10 border-4 border-neutral-700 border-t-gold-light rounded-full animate-spin" />
+              <div className="flex min-h-[320px] items-center justify-center rounded-3xl bg-surface-elevated p-8">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-neutral-700 border-t-gold-light" />
               </div>
             ) : (
               <EscrowDetailCard
@@ -246,6 +228,28 @@ export default function OrderHistorySection() {
                 onClose={handleCloseModal}
                 counterpartyLabel="판매자"
                 minHeightClassName="min-h-0"
+                showHeaderCloseButton={false}
+                footer={
+                  <div className="mt-6 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={handleCloseModal}
+                      className="flex-1 rounded-2xl border border-neutral-700 bg-transparent py-3 text-sm font-bold text-neutral-300 transition hover:bg-warm/10"
+                    >
+                      닫기
+                    </button>
+                    {canCompletePurchase && (
+                      <button
+                        type="button"
+                        onClick={() => void handleCompletePurchase()}
+                        disabled={isCompletingEscrow}
+                        className="flex-1 rounded-2xl bg-gold py-3 text-sm font-bold text-background transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        구매확정
+                      </button>
+                    )}
+                  </div>
+                }
               />
             )}
           </div>

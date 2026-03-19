@@ -334,9 +334,61 @@ const registeredLives: RegisteredLive[] = [
     sellerNickname: 'sneaker_room',
     sellerProfileImage: 'https://picsum.photos/seed/seller-12/120/120',
   },
+  {
+    streamId: 6,
+    title: 'Buyer quick bid test',
+    category: 'SNEAKERS_SHOES',
+    thumbnail: Logo,
+    scheduledAt: null,
+    startType: 'IMMEDIATE',
+    notice: 'Buyer-side bottom-up auction test room.',
+    isLive: true,
+    createdAt: new Date(Date.now() - 300000).toISOString(),
+    items: [
+      {
+        itemId: 601,
+        name: 'Buyer test sneakers',
+        category: 'SNEAKERS_SHOES',
+        startPrice: 80000,
+        status: 'LIVE',
+        auctionType: 'BOTTOM_UP',
+        itemCondition: 'BRAND_NEW',
+        image1: Logo,
+        createdAt: new Date(Date.now() - 300000).toISOString(),
+        description: 'Bottom-up auction room for buyer-side timer and bid testing.',
+        bidUnit: 5000,
+        auctionTime: 10,
+        images: [
+          'https://picsum.photos/seed/buyer-test-1/400/400',
+          'https://picsum.photos/seed/buyer-test-2/400/400',
+        ],
+      },
+      {
+        itemId: 602,
+        name: 'Buyer test backup lot',
+        category: 'SNEAKERS_SHOES',
+        startPrice: 120000,
+        status: 'READY',
+        auctionType: 'BOTTOM_UP',
+        itemCondition: 'OPEN_BOX',
+        image1: Logo,
+        createdAt: new Date(Date.now() - 240000).toISOString(),
+        description: 'Second lot kept ready for manual follow-up testing.',
+        bidUnit: 10000,
+        auctionTime: 15,
+        images: [
+          'https://picsum.photos/seed/buyer-test-3/400/400',
+          'https://picsum.photos/seed/buyer-test-4/400/400',
+        ],
+      },
+    ],
+    sellerId: 12,
+    sellerNickname: 'sneaker_room',
+    sellerProfileImage: 'https://picsum.photos/seed/seller-12/120/120',
+  },
 ];
 
-let nextLiveId = 6;
+let nextLiveId = 7;
 
 const parseStreamRequest = async (request: Request) => {
   let body: StreamRequest;

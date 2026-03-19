@@ -1,6 +1,6 @@
 export type WalletResponse = {
   balance: number;
-  depositedAuctionBalance: number;
+  depositedBalance: number;
 };
 
 export type WalletChargePayload = {

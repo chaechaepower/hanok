@@ -42,7 +42,7 @@ export type DeleteItemResponse = {
   status: string;
 };
 
-export type ProductStatus = 'READY' | 'PENDING' | 'SOLD';
+export type ProductStatus = 'READY' | 'SCHEDULED' | 'PENDING' | 'SOLD';
 
 export interface Product {
   itemId: number;

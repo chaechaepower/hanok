@@ -12,6 +12,12 @@ import SideBar from '@/components/common/layouts/SideBar';
 import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
 import { COURIERS } from '@/pages/SellerOnboarding/constants';
 import type { EscrowItem } from '@/types';
+import {
+  getEscrowStateUI,
+  isCancelledEscrowState,
+  isPendingEscrowState,
+  isTrackingSubmittedEscrowState,
+} from '@/utils/getEscrowStateUI';
 
 function CompletedItemRow({
   item,
@@ -47,13 +53,7 @@ function CompletedItemRow({
             )}
           </div>
           <div className="flex flex-col gap-1">
-            <span className="text-gold-light text-xs font-bold">
-              {item.escrowStatus === 'INVOICE_SUBMITTED'
-                ? '배송중'
-                : item.escrowStatus === 'COMPLETED'
-                  ? '배송 완료'
-                  : item.escrowStatus}
-            </span>
+            <span className="text-gold-light text-xs font-bold">{getEscrowStateUI(item.escrowStatus).label}</span>
             <span className="text-lg font-bold text-neutral-100">{item.itemName}</span>
             <span className="text-neutral-400 text-[13px]">{formatDate(item.createdAt)}</span>
           </div>
@@ -152,18 +152,16 @@ export default function TrackingInput() {
   }, [showCourierModal]);
 
   const currentSelectedItem = items.find((item) => String(item.escrowId) === selectedItemId);
-  const isTrackingSubmitted =
-    currentSelectedItem &&
-    (currentSelectedItem.escrowStatus === 'INVOICE_SUBMITTED' || currentSelectedItem.escrowStatus === 'COMPLETED');
+  const isTrackingSubmitted = currentSelectedItem
+    ? isTrackingSubmittedEscrowState(currentSelectedItem.escrowStatus)
+    : false;
 
   const { data: detailResponse } = useGetEscrowDetail(selectedItemId);
   const selectedItemDetail = detailResponse?.data;
 
-  const pendingItems = items.filter((item) => item.escrowStatus === 'DEPOSITED');
-  const completedItems = items.filter(
-    (item) => item.escrowStatus === 'INVOICE_SUBMITTED' || item.escrowStatus === 'COMPLETED',
-  );
-  const cancelledItems = items.filter((item) => item.escrowStatus === 'CANCELLED');
+  const pendingItems = items.filter((item) => isPendingEscrowState(item.escrowStatus));
+  const completedItems = items.filter((item) => isTrackingSubmittedEscrowState(item.escrowStatus));
+  const cancelledItems = items.filter((item) => isCancelledEscrowState(item.escrowStatus));
 
   const handleSelectItem = (id: string | number | undefined) => {
     if (!id) return;
@@ -346,7 +344,11 @@ export default function TrackingInput() {
                           <span className={courier ? 'text-neutral-100 text-sm' : 'text-neutral-500 text-sm'}>
                             {courier ? courierName : '택배사 선택'}
                           </span>
-                          <span className={`text-gold transition-transform text-sm ${showCourierModal ? 'rotate-180' : ''}`}>▾</span>
+                          <span
+                            className={`text-gold transition-transform text-sm ${showCourierModal ? 'rotate-180' : ''}`}
+                          >
+                            ▾
+                          </span>
                         </button>
                         {showCourierModal && (
                           <div className="absolute z-10 left-0 right-0 top-[calc(100%+4px)] bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-lg max-h-[240px] overflow-y-auto custom-scrollbar min-w-[200px]">
@@ -427,7 +429,6 @@ export default function TrackingInput() {
           )}
         </div>
       </div>
-
     </>
   );
 }

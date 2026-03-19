@@ -6,6 +6,9 @@ import type { GetStreamMacrosResponse, Macro, PostStreamMacrosRequest, PostStrea
 
 const savedMacros: Record<number, { category: string; macros: Macro[] }> = {};
 
+export const getSavedMacroAnswer = (streamId: number, questionType: string) =>
+  savedMacros[streamId]?.macros.find((macro) => macro.questionType === questionType)?.answer ?? '';
+
 const getDefaultMacros = (category: string): Macro[] => {
   const templates = getCategoryMacroTemplates(category);
 

@@ -5,6 +5,7 @@ import { IoChatbubbleOutline, IoCheckmark } from 'react-icons/io5';
 import { LuVolume2, LuVolumeOff } from 'react-icons/lu';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import { useGetAddresses } from '@/api/hooks/useGetAddresses';
 import { useGetWallet } from '@/api/hooks/useGetWallet';
 import BidAccessModal from '@/components/Live/Auction/Buyer/BidAccessModal';
 import KeyboardGuide from '@/components/Live/Auction/Buyer/KeyboardGuide';
@@ -39,6 +40,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
   const { id: streamId } = useParams<{ id: string }>();
   const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
   const { data: wallet } = useGetWallet(isLoggedIn);
+  const { data: addresses, isLoading: isAddressesLoading } = useGetAddresses(isLoggedIn);
   const [guideOpen, setGuideOpen] = useState(false);
   const [activeKeys, setActiveKeys] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<BidTab>('quick');
@@ -78,8 +80,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
     isInsufficientBalance ||
     isHighestBidder ||
     (isUniqueAuction && (hasPlacedUniqueBid || freeInput.trim().length === 0));
-  const hasRegisteredShippingAddress = true;
-  // TODO: replace hasRegisteredShippingAddress with the shipping address lookup API result.
+  const hasRegisteredShippingAddress = Boolean(addresses?.length) && addresses?.some((address) => address.isDefault);
 
   const handleBidPlace = useCallback(() => {
     if (!hasActiveAuction) {
@@ -89,6 +90,11 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
 
     if (!isLoggedIn) {
       setBidAccessModal('login');
+      return;
+    }
+
+    if (isAddressesLoading) {
+      showToast({ message: '배송지 정보를 확인하는 중입니다.' });
       return;
     }
 
@@ -154,6 +160,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
     queryClient,
     hasPlacedUniqueBid,
     hasRegisteredShippingAddress,
+    isAddressesLoading,
     isInsufficientBalance,
     isLoggedIn,
     isUniqueAuction,
@@ -168,7 +175,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
     if (bidAccessModal === 'login') {
       navigate('/login');
     } else if (bidAccessModal === 'shipping') {
-      navigate('/settings');
+      navigate('/settings?tab=shipping');
     }
 
     setBidAccessModal(null);

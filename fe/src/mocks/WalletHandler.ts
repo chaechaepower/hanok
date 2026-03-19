@@ -4,7 +4,7 @@ import { BASE_URL } from '@/api/instance';
 
 const mockWallet = {
   balance: 1250000,
-  depositedAuctionBalance: 250000,
+  depositedBalance: 250000,
 };
 
 const mockPendingWalletCharges = new Map<string, number>();

@@ -10,9 +10,10 @@ export const getAddresses = async () => {
   return response.data;
 };
 
-export const useGetAddresses = () => {
+export const useGetAddresses = (enabled = true) => {
   return useQuery({
     queryKey: ['addresses'],
     queryFn: getAddresses,
+    enabled,
   });
 };

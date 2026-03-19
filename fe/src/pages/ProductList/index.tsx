@@ -17,8 +17,17 @@ export default function ProductListPage() {
   const [editProductInitData, setEditProductInitData] = useState<Product | null>(null);
   const itemsPerPage = 7;
 
-  const { data: fetchedProducts } = useGetItems();
-  const products = fetchedProducts || [];
+  const { data: allProducts = [] } = useGetItems(undefined, activeTab === 'ALL');
+  const { data: readyProducts = [] } = useGetItems('READY');
+  const { data: scheduledProducts = [] } = useGetItems('SCHEDULED');
+  const { data: pendingProducts = [] } = useGetItems('PENDING');
+  const { data: soldProducts = [] } = useGetItems('SOLD');
+  const productsByTab = {
+    ALL: allProducts,
+    READY: [...readyProducts, ...scheduledProducts],
+    PENDING: pendingProducts,
+    SOLD: soldProducts,
+  } as const;
 
   const { mutateAsync: deleteItem } = useDeleteItem();
   const { showToast } = useToast();
@@ -35,15 +44,12 @@ export default function ProductListPage() {
     }
   };
 
-  const filteredProducts = products.filter((p) => {
-    if (activeTab === 'ALL') return true;
-    return p.status === activeTab;
-  });
+  const filteredProducts = productsByTab[activeTab];
 
   const countByStatus = {
-    READY: products.filter((p) => p.status === 'READY').length,
-    PENDING: products.filter((p) => p.status === 'PENDING').length,
-    SOLD: products.filter((p) => p.status === 'SOLD').length,
+    READY: readyProducts.length + scheduledProducts.length,
+    PENDING: pendingProducts.length,
+    SOLD: soldProducts.length,
   };
 
   const tabs = [

@@ -23,14 +23,14 @@ export interface ChatSendPayload {
 }
 
 export interface MacroPayload {
-  command: string;
+  questionType: string;
 }
 
 export interface MacroTemplatePayload {
-  nickname?: string;
-  command?: string;
-  label?: string;
-  message?: string;
+  questionType?: string;
+  answer?: string;
+  sender?: string;
+  createdAt?: string;
 }
 
 export type { ChatMessageType };
