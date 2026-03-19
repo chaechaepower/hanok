@@ -35,6 +35,10 @@ public class Auction {
     @JoinColumn(name = "item_id")
     private Item item;
 
+    // --- 양방향 매핑 추가 (삭제 시 자식 Detail도 함께 삭제되도록 설정) ---
+    @OneToOne(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private UniqueBidAuctionDetail uniqueBidAuctionDetail;
+
     @Builder
     private Auction(AuctionStatus auctionStatus,
                     Long finalPrice,
@@ -48,6 +52,11 @@ public class Auction {
         this.item = item;
     }
 
+    // --- 연관관계 편의 메서드 추가 ---
+    public void assignUniqueBidDetail(UniqueBidAuctionDetail detail) {
+        this.uniqueBidAuctionDetail = detail;
+    }
+
     public void startAuction(String startedAt) {
         if (auctionStatus != INTRODUCING) {
             throw new IllegalArgumentException("상품 설명 단계가 아닙니다.");
@@ -55,6 +64,13 @@ public class Auction {
 
         this.auctionStatus = LIVE;
         this.startedAt = startedAt;
+    }
+
+    public void startCalculating() {
+        if (this.auctionStatus != LIVE) {
+            throw new IllegalStateException("LIVE 상태가 아닙니다.");
+        }
+        this.auctionStatus = CALCULATING;
     }
 
     public void introduceAuction() {
@@ -84,6 +100,10 @@ public class Auction {
 
     public boolean isIntroducing() {
         return this.auctionStatus == INTRODUCING;
+    }
+
+    public boolean isCalculating() {
+        return this.auctionStatus == CALCULATING;
     }
 
     public boolean isSeller(Long userId) {
