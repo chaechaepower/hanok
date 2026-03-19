@@ -4,11 +4,20 @@ import lombok.Builder;
 
 @Builder
 public record UniqueBidStartResponse(
-        Long minPrice,
-        Long maxPrice,
-        Long bidUnit,
-        int durationSeconds,
-        String serverNow,
-        String serverStartedAt
+        BidRangeDto bidRange,
+        TimerDto timer
 ) {
+    @Builder
+    public record BidRangeDto(
+            Long minPrice,
+            Long maxPrice,
+            Long bidUnit
+    ) {}
+
+    @Builder
+    public record TimerDto(
+            int durationSeconds,
+            String serverNow,
+            String serverStartedAt
+    ) {}
 }
