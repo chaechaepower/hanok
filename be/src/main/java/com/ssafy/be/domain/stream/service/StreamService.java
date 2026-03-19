@@ -209,6 +209,8 @@ public class StreamService {
             gcsClient.deleteImage(stream.getThumbnail());
         }
 
+        auctionRepository.deleteByStreamId(streamId);
+
         streamRepository.delete(stream);
     }
 
