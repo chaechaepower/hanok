@@ -394,7 +394,7 @@ export default function TrackingInput() {
                           }
 
                           submitTracking(
-                            { escrowId: selectedItemId, carrierName: carrier, trackingNumber },
+                            { escrowId: selectedItemId, carrierName: carrierName, trackingNumber },
                             {
                               onSuccess: () => {
                                 showToast({ message: '운송장 번호가 등록되었습니다.' });
