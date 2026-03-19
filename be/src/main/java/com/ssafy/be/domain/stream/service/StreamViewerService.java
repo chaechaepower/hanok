@@ -27,4 +27,8 @@ public class StreamViewerService {
     public long getViewerCount(Long streamId) {
         return redisOperator.getSetSize(VIEWER_SET_KEY + streamId);
     }
+
+    public void clearViewers(Long streamId) {
+        redisOperator.delete(VIEWER_SET_KEY + streamId);
+    }
 }

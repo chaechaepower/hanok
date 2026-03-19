@@ -30,6 +30,8 @@ import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
 import com.ssafy.be.global.infra.gcs.GcsClient;
 import com.ssafy.be.global.infra.livekit.LiveKitProperties;
+import com.ssafy.be.global.websocket.enums.StreamEventType;
+import com.ssafy.be.global.websocket.publisher.StreamPublisher;
 import io.livekit.server.AccessToken;
 import io.livekit.server.CanPublish;
 import io.livekit.server.CanSubscribe;
@@ -63,6 +65,7 @@ public class StreamService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
     private final MacroRedisRepository macroRedisRepository;
+    private final StreamPublisher streamPublisher; // 추가
 
     @Transactional
     public StreamRegisterResponse register(
@@ -110,7 +113,7 @@ public class StreamService {
                                 item.getAuctionDuration(),
                                 item.getItemCondition(),
                                 item.getCategory(),
-                                auction.getItem().getAuctionType(),  // 방금 저장한 auction에서 가져오기
+                                auction.getItem().getAuctionType(),
                                 item.getStatus(),
                                 item.getCreatedAt());
                     })
@@ -192,15 +195,15 @@ public class StreamService {
 
     @Transactional
     public void deleteStream(Long userId, Long streamId) {
-        Seller seller =
-                sellerRepository
-                        .findByUserId(userId)
-                        .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
+        Seller seller = sellerRepository.findByUserId(userId)
+                .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
 
-        Stream stream =
-                streamRepository
-                        .findByIdAndSellerId(streamId, seller.getId())
-                        .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
+        Stream stream = streamRepository.findByIdAndSellerId(streamId, seller.getId())
+                .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
+
+        if (stream.getStatus() != StreamStatus.SCHEDULED) {
+            throw new GlobalException(StreamErrorCode.STREAM_CANNOT_DELETE);
+        }
 
         if (stream.getThumbnail() != null) {
             gcsClient.deleteImage(stream.getThumbnail());
@@ -280,6 +283,12 @@ public class StreamService {
                         .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
         stream.end();
+
+        // Redis viewer Set 삭제
+        streamViewerService.clearViewers(streamId);
+
+        // 시청자들에게 방송 종료 이벤트 전송
+        streamPublisher.broadcast(streamId, StreamEventType.SYSTEM_STREAM_END, null);
     }
 
     @Transactional(readOnly = true)
@@ -305,9 +314,9 @@ public class StreamService {
                                         stream.getTitle(),
                                         stream.getCategory(),
                                         stream.getThumbnail(),
-                                        stream.getStatus() ,
+                                        stream.getStatus(),
                                         streamViewerService.getViewerCount(stream.getId()),
-                                        (stream.getStatus() == StreamStatus.SCHEDULED)? stream.getScheduledAt() : null ,
+                                        (stream.getStatus() == StreamStatus.SCHEDULED) ? stream.getScheduledAt() : null,
                                         stream.getStartedAt(),
                                         new StreamSellerResponse(
                                                 sel.getId(),
@@ -345,9 +354,9 @@ public class StreamService {
                     stream.getTitle(),
                     stream.getCategory(),
                     stream.getThumbnail(),
-                    stream.getStatus() ,
+                    stream.getStatus(),
                     streamViewerService.getViewerCount(stream.getId()),
-                    (stream.getStatus() == StreamStatus.SCHEDULED)? stream.getScheduledAt() : null ,
+                    (stream.getStatus() == StreamStatus.SCHEDULED) ? stream.getScheduledAt() : null,
                     stream.getStartedAt(),
                     new StreamSellerResponse(
                             sel.getId(),

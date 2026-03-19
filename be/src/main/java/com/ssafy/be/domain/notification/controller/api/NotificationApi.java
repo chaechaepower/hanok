@@ -43,4 +43,13 @@ public interface NotificationApi {
     @Operation(summary = "모든 알림 읽음 처리")
     @ApiResponse(responseCode = "200", description = "전체 읽음 처리 성공")
     ResponseEntity<Map<String, Integer>> markAllAsRead(String principal);
+
+    @Operation(
+            summary = "알림 직접 전송(테스트용)",
+            description = "테스트 후 삭제 필요"
+    )
+    @ApiResponse(responseCode = "200", description = "테스트 알림 발송 성공")
+    void sendDirectly(
+            @Parameter(description = "알림 수신자 userId", example = "1") Long receiverId
+    );
 }

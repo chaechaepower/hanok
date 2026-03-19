@@ -3,6 +3,7 @@ package com.ssafy.be.domain.auction.handler;
 import com.ssafy.be.domain.auction.dto.request.ItemIntroduceRequest;
 import com.ssafy.be.domain.auction.service.AuctionService;
 import com.ssafy.be.global.common.response.JsonConverter;
+import com.ssafy.be.global.websocket.dto.StreamPublishTask;
 import com.ssafy.be.global.websocket.dto.request.StompRequest;
 import com.ssafy.be.global.websocket.enums.StreamEventType;
 import com.ssafy.be.global.websocket.handler.StreamEventHandler;
@@ -30,8 +31,9 @@ public class ItemIntroduceHandler implements StreamEventHandler {
     public void handle(StompRequest<?> request, Long streamId, Principal principal) {
         ItemIntroduceRequest requestPayload = jsonConverter.convert(request.getPayload(), ItemIntroduceRequest.class);
 
-        auctionService.introduceItem(requestPayload, streamId, Long.parseLong(principal.getName()));
+        StreamPublishTask streamPublishTask = auctionService.introduceItem(requestPayload, streamId, Long.parseLong(principal.getName()));
 
         streamPublisher.broadcast(streamId, ITEM_INTRODUCE, null);
+        streamPublisher.publish(streamPublishTask);
     }
 }
