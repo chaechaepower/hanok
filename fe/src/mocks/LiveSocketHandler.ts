@@ -727,6 +727,10 @@ const broadcastChatEvent = (streamId: string, payload: unknown) => {
   broadcastToDestination(`/broadcast/streams/${streamId}`, payload);
 };
 
+const sendPrivateChatEvent = (streamId: string, payload: unknown) => {
+  broadcastToDestination(`/user/private/streams/${streamId}`, payload);
+};
+
 const sendItemSyncToClient = (
   client: { send: (data: WebSocketData) => void },
   subscriptionId: string,
@@ -1198,7 +1202,7 @@ const handleMacroTemplate = (destination: string, body: string) => {
     '해당 질문은 잠시 후 라이브에서 안내드리겠습니다.';
 
   globalThis.setTimeout(() => {
-    broadcastChatEvent(streamId, {
+    sendPrivateChatEvent(streamId, {
       eventType: 'MACRO_TEMPLATE',
       payload: {
         questionType,

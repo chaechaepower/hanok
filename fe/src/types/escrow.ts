@@ -26,7 +26,7 @@ export type EscrowDetailResponse = {
     addressDetail: string;
   };
   delivery: {
-    courierName: string;
+    carrierName: string;
     trackingNumber: string;
   } | null;
 };

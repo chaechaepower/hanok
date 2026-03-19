@@ -10,7 +10,6 @@ type EscrowDetailCardProps = {
   onClose?: () => void;
   footer?: ReactNode;
   className?: string;
-  counterpartyLabel?: string;
   minHeightClassName?: string;
   showHeaderCloseButton?: boolean;
 };
@@ -27,7 +26,6 @@ export default function EscrowDetailCard({
   onClose,
   footer,
   className = '',
-  counterpartyLabel = '판매자',
   minHeightClassName = 'min-h-[600px]',
   showHeaderCloseButton = true,
 }: EscrowDetailCardProps) {
@@ -60,15 +58,17 @@ export default function EscrowDetailCard({
           )}
         </div>
         <div className="flex flex-1 flex-col justify-center">
-          <p className="mb-2 break-keep text-xl leading-[1.3] font-bold text-neutral-100">{detail.winningInfo.itemName}</p>
+          <p className="mb-2 break-keep text-xl leading-[1.3] font-bold text-neutral-100">
+            {detail.winningInfo.itemName}
+          </p>
           <p className="mb-4 text-[13px] text-neutral-500">{formatDate(detail.winningInfo.wonAt)}</p>
           <div className="grid grid-cols-[60px_1fr] gap-[8px_12px] text-sm">
             <span className="text-neutral-400">낙찰가</span>
-            <span className="text-right font-medium text-neutral-100">{formatPrice(detail.winningInfo.finalPrice)}</span>
-            <span className="text-neutral-400">{counterpartyLabel}</span>
-            <span className="text-right text-neutral-100">
-              {detail.winningInfo.sellerName}({detail.winningInfo.sellerId})
+            <span className="text-right font-medium text-neutral-100">
+              {formatPrice(detail.winningInfo.finalPrice)}
             </span>
+            <span className="text-neutral-400">판매자</span>
+            <span className="text-right text-neutral-100">{detail.winningInfo.sellerName}</span>
           </div>
         </div>
       </div>
@@ -95,10 +95,10 @@ export default function EscrowDetailCard({
           <div className="mb-4 flex items-center justify-between rounded-xl border border-neutral-800 bg-surface p-[16px_24px] text-sm text-neutral-200">
             <span className="text-neutral-400">배송 정보</span>
             <span className="font-semibold text-neutral-100">
-              {detail.delivery.courierName} | {detail.delivery.trackingNumber}
+              {detail.delivery.carrierName} | {detail.delivery.trackingNumber}
             </span>
           </div>
-          <DeliveryTracker courierName={detail.delivery.courierName} trackingNumber={detail.delivery.trackingNumber} />
+          <DeliveryTracker carrierName={detail.delivery.carrierName} trackingNumber={detail.delivery.trackingNumber} />
         </>
       )}
 

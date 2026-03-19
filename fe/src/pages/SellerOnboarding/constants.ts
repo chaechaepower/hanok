@@ -87,7 +87,7 @@ export const BANKS = [
   { code: '294', name: '한국포스증권' },
 ];
 
-export const COURIERS = [
+export const CARRIERS = [
   { code: '04', name: 'CJ대한통운' },
   { code: '01', name: '우체국택배' },
   { code: '05', name: '한진택배' },

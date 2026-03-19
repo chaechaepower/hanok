@@ -359,6 +359,10 @@ export type BroadcastStreamEvent =
       payload: null;
     }
   | {
+      eventType: 'SYSTEM_STREAM_END';
+      payload: null;
+    }
+  | {
       eventType?: string;
       event?: string;
       payload?: unknown;

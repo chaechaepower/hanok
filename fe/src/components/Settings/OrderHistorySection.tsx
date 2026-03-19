@@ -57,8 +57,9 @@ export default function OrderHistorySection() {
   const selectedEscrow = items.find((item) => String(item.escrowId) === selectedItemId) ?? null;
   const canCompletePurchase = selectedEscrow?.escrowStatus === 'SHIPPED';
 
-  const totalCount = items.length;
-  const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
+  const activeItems = items.filter((item) => item.escrowStatus !== 'CANCELLED');
+  const totalCount = activeItems.length;
+  const totalAmount = activeItems.reduce((sum, item) => sum + item.amount, 0);
 
   const filteredItems = statusFilter === 'ALL' ? items : items.filter((item) => item.escrowStatus === statusFilter);
   const filteredAndSorted =
@@ -217,7 +218,10 @@ export default function OrderHistorySection() {
           className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm"
           onClick={handleCloseModal}
         >
-          <div className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto"
+            onClick={(event) => event.stopPropagation()}
+          >
             {isDetailLoading || !selectedItemDetail ? (
               <div className="flex min-h-[320px] items-center justify-center rounded-3xl bg-surface-elevated p-8">
                 <div className="h-10 w-10 animate-spin rounded-full border-4 border-neutral-700 border-t-gold-light" />
@@ -226,7 +230,6 @@ export default function OrderHistorySection() {
               <EscrowDetailCard
                 detail={selectedItemDetail}
                 onClose={handleCloseModal}
-                counterpartyLabel="판매자"
                 minHeightClassName="min-h-0"
                 showHeaderCloseButton={false}
                 footer={

@@ -71,7 +71,7 @@ const detailMap: Record<
     itemName: string;
     finalPrice: number;
     wonAt: string;
-    courierName?: string;
+    carrierName?: string;
     trackingNumber?: string;
   }
 > = {
@@ -86,7 +86,7 @@ const detailMap: Record<
     itemName: 'Vintage Sneakers',
     finalPrice: 75000,
     wonAt: '2026-03-01T23:00:00Z',
-    courierName: 'CJ대한통운',
+    carrierName: 'CJ대한통운',
     trackingNumber: '521465873135',
   },
   '102': {
@@ -94,7 +94,7 @@ const detailMap: Record<
     itemName: 'Collector Jacket',
     finalPrice: 120000,
     wonAt: '2026-02-20T19:30:00Z',
-    courierName: 'CJ대한통운',
+    carrierName: 'CJ대한통운',
     trackingNumber: '521465873135',
   },
   '201': {
@@ -108,7 +108,7 @@ const detailMap: Record<
     itemName: 'Pokemon Card Charizard',
     finalPrice: 180000,
     wonAt: '2026-03-10T14:10:00Z',
-    courierName: 'CJ대한통운',
+    carrierName: 'CJ대한통운',
     trackingNumber: '521465873135',
   },
   '203': {
@@ -116,7 +116,7 @@ const detailMap: Record<
     itemName: 'Luxury Handbag',
     finalPrice: 420000,
     wonAt: '2026-03-08T11:05:00Z',
-    courierName: 'CJ대한통운',
+    carrierName: 'CJ대한통운',
     trackingNumber: '521465873135',
   },
   '204': {
@@ -174,9 +174,9 @@ export const escrowHandlers = [
             address: '123 Mock Street',
             addressDetail: '405-107',
           },
-          delivery: detail.courierName
+          delivery: detail.carrierName
             ? {
-                courierName: detail.courierName,
+                carrierName: detail.carrierName,
                 trackingNumber: detail.trackingNumber!,
               }
             : null,

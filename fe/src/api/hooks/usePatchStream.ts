@@ -7,6 +7,7 @@ export const usePatchStream = (streamId: number) => {
   const queryClient = useQueryClient();
 
   return useMutation<UpdateStreamResponse, Error, StreamMultipartPayload>({
+    throwOnError: false,
     mutationFn: async (payload) => {
       const formData = buildStreamFormData(payload);
       const res = await getFetchInstance().patch<UpdateStreamResponse>(`/v1/streams/${streamId}`, formData, {
