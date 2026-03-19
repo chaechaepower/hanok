@@ -261,7 +261,7 @@ export default function MainPage() {
           />
         )}
 
-        <section className="mx-10 mt-6 flex flex-1 flex-col gap-6 rounded-2xl bg-surface-elevated px-8 pb-10 pt-6">
+        <section className="mx-10 mt-6 flex flex-1 flex-col gap-6 rounded-2xl bg-surface px-8 pb-10 pt-6">
           <h2 className="text-[28px] font-semibold text-warm">
             {isLiveStatus ? '현재 진행 중인 경매!' : '예정된 경매를 살펴보세요'}
           </h2>
