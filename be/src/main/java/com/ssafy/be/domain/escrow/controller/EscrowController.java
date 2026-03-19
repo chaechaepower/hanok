@@ -71,7 +71,7 @@ public class EscrowController implements EscrowApi {
             @PathVariable Long escrowId,
             @AuthenticationPrincipal String principal
     ) {
-        EscrowDetailResponse response = escrowService.getEscrowDetail(escrowId, getUserId(principal));
+        EscrowDetailResponse response = escrowService.getEscrowDetail(escrowId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

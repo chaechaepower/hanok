@@ -29,7 +29,7 @@ public class BidSyncHandler implements StreamEventHandler {
     public void handle(StompRequest<?> request, Long streamId, Principal principal) {
         Long userId = Long.parseLong(principal.getName());
 
-        BidSyncResponse response = auctionService.syncBid(streamId);
+        BidSyncResponse response = auctionService.syncBid(streamId, userId);
 
         streamPublisher.sendToUser(userId, streamId, BID_SYNC, response);
     }

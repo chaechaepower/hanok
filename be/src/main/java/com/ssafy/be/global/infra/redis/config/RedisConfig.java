@@ -1,6 +1,7 @@
 package com.ssafy.be.global.infra.redis.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,9 +13,11 @@ import org.springframework.data.redis.connection.lettuce.LettucePoolingClientCon
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.util.ErrorHandler;
 import org.springframework.util.StringUtils;
 
 @RequiredArgsConstructor
+@Slf4j
 @Configuration
 public class RedisConfig {
 
@@ -51,6 +54,9 @@ public class RedisConfig {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(redisConnectionFactory);
         container.setTaskExecutor(redisMessageTaskExecutor());
+        container.setErrorHandler((ErrorHandler) throwable -> {
+            log.error("[RedisMessageListenerContainer] listener execution failed", throwable);
+        });
         return container;
     }
 

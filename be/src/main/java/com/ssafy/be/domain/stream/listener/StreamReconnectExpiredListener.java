@@ -1,6 +1,7 @@
 package com.ssafy.be.domain.stream.listener;
 
 import com.ssafy.be.domain.stream.repository.StreamRepository;
+import com.ssafy.be.domain.stream.service.StreamReconnectService;
 import com.ssafy.be.domain.stream.service.StreamWebSocketService;
 import com.ssafy.be.global.websocket.enums.StreamEventType;
 import com.ssafy.be.global.websocket.publisher.StreamPublisher;
@@ -16,39 +17,23 @@ import org.springframework.transaction.annotation.Transactional;
 public class StreamReconnectExpiredListener extends KeyExpirationEventMessageListener {
 
     private static final String RECONNECT_KEY_PREFIX = "stream:reconnect:";
-
-    private final StreamRepository streamRepository;
-    private final StreamPublisher streamPublisher;
+    private final StreamReconnectService streamReconnectService;
 
     public StreamReconnectExpiredListener(
             RedisMessageListenerContainer listenerContainer,
-            StreamRepository streamRepository,
-            StreamPublisher streamPublisher) {
+            StreamReconnectService streamReconnectService) {
         super(listenerContainer);
-        this.streamRepository = streamRepository;
-        this.streamPublisher = streamPublisher;
+        this.streamReconnectService = streamReconnectService;
     }
 
     @Override
-    @Transactional
     public void onMessage(Message message, byte[] pattern) {
         String expiredKey = message.toString();
-
-        // stream:reconnect:{streamId} 키만 처리
         if (!expiredKey.startsWith(RECONNECT_KEY_PREFIX)) {
             return;
         }
-
         Long streamId = Long.parseLong(expiredKey.replace(RECONNECT_KEY_PREFIX, ""));
         log.info("[Stream] 재연결 타임아웃 - streamId: {}", streamId);
-
-        // Stream 상태를 FAILED로 변경
-        streamRepository.findById(streamId).ifPresent(stream -> {
-            stream.end();
-            log.info("[Stream] 상태 FAILED 변경 - streamId: {}", streamId);
-        });
-
-        // 시청자들에게 실패 알림
-        streamPublisher.broadcast(streamId, StreamEventType.STREAM_FAILED, null);
+        streamReconnectService.handleTimeout(streamId);
     }
 }

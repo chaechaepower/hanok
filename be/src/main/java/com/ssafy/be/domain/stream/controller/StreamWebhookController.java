@@ -41,6 +41,8 @@ public class StreamWebhookController {
             if ("participant_joined".equals(eventType)) {
                 // guest면 숫자 변환 불가 → 무시
                 if (!identity.startsWith("guest-")) {
+                    log.info("[livekit webhook] 입장 identiy={}", identity);
+
                     Long userId = Long.parseLong(identity);
                     streamReconnectService.handleReconnect(streamId, userId);
                 }
@@ -51,6 +53,8 @@ public class StreamWebhookController {
 
                 // guest면 재연결 로직 불필요 → 무시
                 if (!identity.startsWith("guest-")) {
+                    log.info("[livekit webhook] 입장 identiy={}", identity);
+
                     Long userId = Long.parseLong(identity);
                     streamReconnectService.handleDisconnect(streamId, userId);
                 }

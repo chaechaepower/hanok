@@ -1,0 +1,56 @@
+<configuration>
+
+    <appender name="CONSOLE_SYSTEM" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%gray(%d{HH:mm:ss.SSS}) %highlight(%-5level) [%magenta(%X{testName:-System})] %cyan(%logger{36}) : %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="CONSOLE_TEST_REPORT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE_SYSTEM" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>build/reports/system-integration.log</file>
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level [%X{testName:-System}] %logger{36} : %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>build/reports/system-integration.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="FILE_TEST_REPORT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>build/reports/test-scenario-report.log</file>
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>build/reports/test-scenario-report.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>10MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <logger name="org.hibernate.tool.schema" level="WARN"/>
+
+    <logger name="TEST_REPORT" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_TEST_REPORT"/>
+        <appender-ref ref="FILE_TEST_REPORT"/>
+    </logger>
+
+    <logger name="IT_REPORT" level="INFO" additivity="false">
+        <appender-ref ref="CONSOLE_TEST_REPORT"/>
+        <appender-ref ref="FILE_TEST_REPORT"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE_SYSTEM"/>
+        <appender-ref ref="FILE_SYSTEM"/>
+    </root>
+
+</configuration>

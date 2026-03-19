@@ -4,8 +4,10 @@ import com.google.cloud.storage.Storage;
 import com.ssafy.be.domain.seller.client.BiznoClient;
 import com.ssafy.be.global.infra.gcs.GcsClient;
 import com.ssafy.be.global.infra.portone.PortoneClient;
+import com.ssafy.be.global.sse.service.SseEmitterService;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 
 import static org.mockito.Mockito.mock;
 
@@ -30,5 +32,11 @@ public class ExternalApiMockConfig {
     @Bean
     GcsClient gcsClient() {
         return mock(GcsClient.class);
+    }
+
+    @Bean
+    @Primary
+    public SseEmitterService sseEmitterServiceMock() {
+        return mock(SseEmitterService.class);
     }
 }
