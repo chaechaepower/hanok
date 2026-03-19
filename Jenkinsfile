@@ -89,7 +89,7 @@ webhook:
 LKEOF
 
 docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis
-docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate livekit
+docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d livekit
 docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d prometheus grafana
 
 # 현재 active 컨테이너 확인
