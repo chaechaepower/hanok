@@ -94,6 +94,9 @@ public class StreamService {
                         Item item = itemRepository
                                 .findByIdAndSellerId(itemId, seller.getId())
                                 .orElseThrow(() -> new GlobalException(ItemErrorCode.ITEM_NOT_FOUND));
+
+                        item.schedule();
+
                         Auction auction = auctionRepository.save(
                                 Auction.builder()
                                         .auctionStatus(AuctionStatus.READY)

@@ -14,6 +14,8 @@ import java.util.Optional;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.ssafy.be.domain.item.entity.ItemStatus.*;
+
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EntityListeners(AuditingEntityListener.class)
@@ -116,7 +118,11 @@ public class Item {
     }
 
     public void sold(LocalDateTime soldAt) {
-        this.status = ItemStatus.SOLD;
+        this.status = SOLD;
         this.soldAt = soldAt;
+    }
+
+    public void schedule() {
+        this.status= SCHEDULED;
     }
 }
