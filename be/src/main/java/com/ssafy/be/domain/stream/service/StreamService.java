@@ -27,6 +27,7 @@ import com.ssafy.be.domain.stream.entity.StreamViewType;
 import com.ssafy.be.domain.stream.exception.StreamErrorCode;
 import com.ssafy.be.domain.stream.repository.MacroRedisRepository;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
+import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
 import com.ssafy.be.global.infra.gcs.GcsClient;
@@ -304,20 +305,21 @@ public class StreamService {
         Category category = request.category();
         boolean isFollowing = request.type() == StreamViewType.FOLLOWING;
 
-        // FOLLOWING 타입일 때만 로그인 사용자로부터 userId를 추출해서 팔로잉한 seller의 stream만 반환한다.
-        // API 시그니처 변경 없이 SecurityContext에서 가져온다.
-        User loginUser = null;
+        final User loginUser;
         if (isFollowing) {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.getName() != null && !authentication.getName().equals("anonymousUser")) {
                 Long loginUserId = Long.parseLong(authentication.getName());
                 loginUser = userRepository.findById(loginUserId).orElse(null);
+            } else {
+                loginUser = null;
             }
+        } else {
+            loginUser = null;
         }
 
         if (request.sort() == StreamSortType.VIEWER_COUNT) {
-            // 전체 가져와서 메모리 정렬
-            List<Stream> streams =
+            List<Stream> allStreams =
                     switch (request.status()) {
                         case LIVE -> streamRepository.findAllLiveStreams(category);
                         case SCHEDULED -> streamRepository.findAllScheduledStreams(category);
@@ -325,12 +327,15 @@ public class StreamService {
                         case PAUSED -> List.of();
                     };
 
+            List<Stream> streams;
             if (isFollowing && loginUser != null) {
-                streams = streams.stream()
+                streams = allStreams.stream()
                         .filter(stream -> followRepository.existsByUserAndSeller(loginUser, stream.getSeller()))
                         .toList();
             } else if (isFollowing) {
                 return Page.empty(PageRequest.of(request.page(), request.size()));
+            } else {
+                streams = allStreams;
             }
 
             List<StreamListItemResponse> sorted =
@@ -351,9 +356,7 @@ public class StreamService {
                                                 sel.getUser().getNickname(),
                                                 sel.getUser().getProfileImage()));
                             })
-                            .sorted(
-                                    Comparator.comparingLong(StreamListItemResponse::viewerCount)
-                                            .reversed())
+                            .sorted(Comparator.comparingLong(StreamListItemResponse::viewerCount).reversed())
                             .toList();
 
             // 수동 페이지네이션
@@ -361,8 +364,7 @@ public class StreamService {
             int end = Math.min(start + request.size(), sorted.size());
             List<StreamListItemResponse> pageContent = sorted.subList(start, end);
 
-            return new PageImpl<>(
-                    pageContent, PageRequest.of(request.page(), request.size()), sorted.size());
+            return new PageImpl<>(pageContent, PageRequest.of(request.page(), request.size()), sorted.size());
         }
 
         if (isFollowing) {
@@ -370,8 +372,7 @@ public class StreamService {
                 return Page.empty(PageRequest.of(request.page(), request.size()));
             }
 
-            // FOLLOWING + LATEST 정렬은 팔로잉 조건이 들어가므로 메모리에서 필터/정렬 후 수동 페이지네이션으로 처리한다.
-            List<Stream> streams =
+            List<Stream> allStreams =
                     switch (request.status()) {
                         case LIVE -> streamRepository.findAllLiveStreams(category);
                         case SCHEDULED -> streamRepository.findAllScheduledStreams(category);
@@ -379,13 +380,13 @@ public class StreamService {
                         case PAUSED -> List.of();
                     };
 
-            streams = streams.stream()
+            List<Stream> filtered = allStreams.stream()
                     .filter(stream -> followRepository.existsByUserAndSeller(loginUser, stream.getSeller()))
                     .sorted(Comparator.comparing(Stream::getCreatedAt).reversed())
                     .toList();
 
             List<StreamListItemResponse> mapped =
-                    streams.stream()
+                    filtered.stream()
                             .map(stream -> {
                                 Seller sel = stream.getSeller();
                                 return new StreamListItemResponse(
@@ -408,10 +409,8 @@ public class StreamService {
             int end = Math.min(start + request.size(), mapped.size());
             List<StreamListItemResponse> pageContent = mapped.subList(start, end);
 
-            return new PageImpl<>(
-                    pageContent,
-                    PageRequest.of(request.page(), request.size()),
-                    mapped.size());
+            return new PageImpl<>(pageContent, PageRequest.of(request.page(), request.size()), mapped.size());
+
         } else {
             Pageable pageable =
                     PageRequest.of(request.page(), request.size(), Sort.by("createdAt").descending());
