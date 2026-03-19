@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import { IoChatbubbleOutline, IoCheckmark } from 'react-icons/io5';
@@ -21,6 +21,7 @@ const CUSTOM_UNIT_OPTIONS = [
 
 type BidTab = 'quick' | 'custom';
 type BidAccessModalType = 'login' | 'shipping' | null;
+type AuctionEndPhase = 'ended' | 'waiting' | null;
 
 interface Props {
   auctionType: LiveAuctionType | null;
@@ -47,6 +48,8 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
   const [freeInput, setFreeInput] = useState('');
   const [panelOpacity, setPanelOpacity] = useState(90);
   const [bidAccessModal, setBidAccessModal] = useState<BidAccessModalType>(null);
+  const [auctionEndPhase, setAuctionEndPhase] = useState<AuctionEndPhase>(null);
+  const hadActiveAuctionRef = useRef(false);
 
   const balance = wallet?.balance ?? 0;
   const isUniqueAuction = auctionType === 'UNIQUE_TOP';
@@ -262,6 +265,20 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
     };
   }, [handleKeyDown, handleKeyUp]);
 
+  useEffect(() => {
+    if (hasActiveAuction) {
+      hadActiveAuctionRef.current = true;
+      setAuctionEndPhase(null);
+      return;
+    }
+
+    if (hadActiveAuctionRef.current) {
+      setAuctionEndPhase('ended');
+      const timer = window.setTimeout(() => setAuctionEndPhase('waiting'), 3000);
+      return () => window.clearTimeout(timer);
+    }
+  }, [hasActiveAuction]);
+
   const handleFreeInput = (value: string) => {
     const nextValue = value.replace(/[^0-9]/g, '');
     setFreeInput(nextValue);
@@ -285,6 +302,24 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
               className="flex flex-1 flex-col gap-2 rounded-2xl bg-surface/80 px-4 py-3"
               style={{ opacity: panelOpacity / 100 }}
             >
+              {auctionEndPhase !== null ? (
+                <div className="flex flex-1 flex-col items-center justify-center gap-2">
+                  {auctionEndPhase === 'ended' ? (
+                    <>
+                      <span className="text-sm font-bold text-neutral-300">경매가 종료되었습니다</span>
+                      <span className="text-xs text-neutral-500">잠시만 기다려주세요</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-gold" />
+                        <span className="text-sm font-bold text-neutral-200">다음 경매 준비 중...</span>
+                      </div>
+                      <span className="text-xs text-neutral-500">판매자가 다음 상품을 준비하고 있습니다</span>
+                    </>
+                  )}
+                </div>
+              ) : (<>
               <div className="flex gap-1 rounded-lg bg-neutral-900 p-0.5">
                 {isUniqueAuction ? (
                   <div className="flex-1 rounded-md bg-neutral-800 py-1.5 text-center text-xs font-bold text-neutral-100">
@@ -491,6 +526,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
                   </button>
                 </div>
               )}
+            </>)}
             </div>
           </div>
 
