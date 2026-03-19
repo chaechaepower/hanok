@@ -321,9 +321,9 @@ export default function LivePage() {
             <motion.div
               key="right-panel"
               className="min-w-0 overflow-hidden rounded-2xl"
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 'auto', opacity: 1, flex: 1 }}
-              exit={{ width: 0, opacity: 0, flex: 0 }}
+              initial={{ flex: 0, opacity: 0 }}
+              animate={{ flex: 1, opacity: 1 }}
+              exit={{ flex: 0, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             >
               <RightPanel
