@@ -394,6 +394,7 @@ export function useLiveStream(
       }
 
       if (isBidEndEvent(event)) {
+        setBidSync(null);
         void requestItemSync();
         return;
       }
