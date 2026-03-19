@@ -14,7 +14,7 @@ export default function StreamEnded({ onClose }: Props) {
 
         <div className="flex flex-col items-center gap-2 text-center">
           <div className="text-xl font-bold tracking-wide text-gold">방송이 종료되었습니다.</div>
-          <div className="text-sm text-neutral-500">판매자가 재연결되지 않아 경매가 자동 취소되었습니다.</div>
+          <div className="text-sm text-neutral-500">경매 참여가 마감되었습니다. 판매자의 다음 경매를 기다려보세요!</div>
         </div>
 
         <button
