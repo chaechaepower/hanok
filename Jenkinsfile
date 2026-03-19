@@ -104,12 +104,17 @@ if [ "$ACTIVE" = "8080" ] || [ -z "$ACTIVE" ]; then
     # blue가 active → green에 배포
     docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} pull backend-green
     docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps backend-green
-    sleep 60
-    GREEN_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://172.26.0.24:8081/actuator/health)
+    GREEN_HEALTH="000"
+    for i in $(seq 1 30); do
+        GREEN_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://172.26.0.24:8081/actuator/health)
+        if [ "$GREEN_HEALTH" = "200" ]; then
+            break
+        fi
+        echo "헬스체크 대기 중... ($i/30)"
+        sleep 10
+    done
     if [ "$GREEN_HEALTH" = "200" ]; then
-        # green을 down에서 활성으로
         sudo sed -i "s|server localhost:8081 down;|server localhost:8081;|" /etc/nginx/sites-enabled/default
-        # blue를 down으로
         sudo sed -i "s|server localhost:8080;  # blue|server localhost:8080 down;  # blue|" /etc/nginx/sites-enabled/default    
         sudo /usr/local/bin/nginx-reload.sh
         sleep 3
@@ -124,12 +129,17 @@ else
     # green이 active → blue에 배포
     docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} pull backend-prod
     docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps backend-prod
-    sleep 60
-    BLUE_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://172.26.0.24:8080/actuator/health)
+    BLUE_HEALTH="000"
+    for i in $(seq 1 30); do
+        BLUE_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://172.26.0.24:8080/actuator/health)
+        if [ "$BLUE_HEALTH" = "200" ]; then
+            break
+        fi
+        echo "헬스체크 대기 중... ($i/30)"
+        sleep 10
+    done
     if [ "$BLUE_HEALTH" = "200" ]; then
-        # blue를 down에서 활성으로
         sudo sed -i "s|server localhost:8080 down;|server localhost:8080;|" /etc/nginx/sites-enabled/default
-        # green을 down으로
         sudo sed -i "s|server localhost:8081;  # green|server localhost:8081 down;  # green|" /etc/nginx/sites-enabled/default
         sudo /usr/local/bin/nginx-reload.sh
         sleep 3
