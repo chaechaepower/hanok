@@ -64,6 +64,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
   const uniqueBidUnit = uniqueBidSync?.bidRange.bidUnit ?? 1000;
   const hasPlacedUniqueBid = uniqueBidSync?.hasBid ?? false;
   const hasActiveAuction = isUniqueAuction ? Boolean(uniqueBidSync) : Boolean(bidSync);
+  const visibleAuctionEndPhase = hasActiveAuction ? null : auctionEndPhase;
   const uniqueInputAmount = freeInput ? Number(freeInput) : 0;
   const isFreeMode = activeTab === 'custom' && activeCustomUnit === 0;
   const panelOpacityProgress = ((panelOpacity - 10) / 80) * 100;
@@ -275,14 +276,17 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
   useEffect(() => {
     if (hasActiveAuction) {
       hadActiveAuctionRef.current = true;
-      setAuctionEndPhase(null);
       return;
     }
 
     if (hadActiveAuctionRef.current) {
-      setAuctionEndPhase('ended');
-      const timer = window.setTimeout(() => setAuctionEndPhase('waiting'), 3000);
-      return () => window.clearTimeout(timer);
+      const endedTimer = window.setTimeout(() => setAuctionEndPhase('ended'), 0);
+      const waitingTimer = window.setTimeout(() => setAuctionEndPhase('waiting'), 3000);
+
+      return () => {
+        window.clearTimeout(endedTimer);
+        window.clearTimeout(waitingTimer);
+      };
     }
   }, [hasActiveAuction]);
 
@@ -309,9 +313,9 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
               className="flex flex-1 flex-col gap-2 rounded-2xl bg-surface/80 px-4 py-3"
               style={{ opacity: panelOpacity / 100 }}
             >
-              {auctionEndPhase !== null ? (
+              {visibleAuctionEndPhase !== null ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-2">
-                  {auctionEndPhase === 'ended' ? (
+                  {visibleAuctionEndPhase === 'ended' ? (
                     <>
                       <span className="text-sm font-bold text-neutral-300">경매가 종료되었습니다</span>
                       <span className="text-xs text-neutral-500">잠시만 기다려주세요</span>
