@@ -57,6 +57,10 @@ public class RedisOperator {
         return redisTemplate.opsForHash().entries(key);
     }
 
+    public Object getHashEntry(String key, String hashKey) {
+        return redisTemplate.opsForHash().get(key, hashKey);
+    }
+
     public void putHashEntries(String key, Map<String, String> data) {
         redisTemplate.opsForHash().putAll(key, data);
     }

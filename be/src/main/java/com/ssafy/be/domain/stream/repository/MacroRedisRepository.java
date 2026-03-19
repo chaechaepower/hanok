@@ -4,9 +4,7 @@ import com.ssafy.be.global.infra.redis.RedisOperator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -25,5 +23,10 @@ public class MacroRedisRepository {
 
     public void deleteAll(Long streamId) {
         redisOperator.delete(MACRO_KEY + streamId);
+    }
+
+    public String findOne(Long streamId, String questionType) {
+        Object value = redisOperator.getHashEntry(MACRO_KEY + streamId, questionType);
+        return value != null ? value.toString() : null;
     }
 }
