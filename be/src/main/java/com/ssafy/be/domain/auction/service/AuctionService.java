@@ -32,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -65,7 +66,7 @@ public class AuctionService {
     private final EscrowService escrowService;
 
     @Transactional
-    public void introduceItem(ItemIntroduceRequest request, Long streamId, Long userId) {
+    public StreamPublishTask introduceItem(ItemIntroduceRequest request, Long streamId, Long userId) {
         // 1. 호스트인지 확인
         Seller seller = sellerRepository.findByUserId(userId)
                 .orElseThrow(() -> new StompException(SellerErrorCode.SELLER_NOT_FOUND));
@@ -77,6 +78,15 @@ public class AuctionService {
                 .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
 
         auction.introduceAuction();
+
+        // 3. AUCTION_COMMENT로 경매 중계 메시지 브로드캐스트
+        return buildStreamPublishTask(
+                BROADCAST,
+                streamId,
+                null,
+                AUCTION_COMMENT,
+                buildAuctionCommentResponse(INTRODUCE.getValue())
+        );
     }
 
     @Transactional
@@ -210,6 +220,10 @@ public class AuctionService {
 
         Bid topBid = auctionBidRepository.findTopBid(auctionId).orElse(null);
 
+        // 배송지 먼저 등록되있는지 검증 -> 배송지 없으면 낙찰 불가
+        ShippingAddress shippingAddress = shippingAddressRepository.findByUserIdAndIsDefaultTrue(topBid.userId())
+                .orElseThrow(() -> new StompException(ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
+
         // AUCTION_END로 경매 종료 broadcast
         StreamPublishTask endPublishTask = buildStreamPublishTask(
                 BROADCAST,
@@ -235,10 +249,8 @@ public class AuctionService {
         }
 
         // 낙찰
-        ShippingAddress shippingAddress = shippingAddressRepository.findByUserIdAndIsDefaultTrue(topBid.userId())
-                .orElseThrow(() -> new StompException(ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
-
         auction.sold(topBid.amount());
+        auction.getItem().sold(LocalDateTime.now());
 
         // 에스크로 시작
         escrowService.startEscrow(topBid, auction, shippingAddress);

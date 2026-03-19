@@ -5,6 +5,6 @@ import lombok.Builder;
 @Builder
 public record WalletSummaryResponse(
         Long balance,
-        Long depositedAuctionBalance
+        Long depositedBalance
 ) {
 }

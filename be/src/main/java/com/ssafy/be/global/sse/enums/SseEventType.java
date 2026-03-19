@@ -7,7 +7,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum SseEventType{
     CONNECT("SSE 연결"),
-    NOTIFICATION("알람");
+    NOTIFICATION("알람"),
+    TEST("테스트용");
 
     private final String value;
 }

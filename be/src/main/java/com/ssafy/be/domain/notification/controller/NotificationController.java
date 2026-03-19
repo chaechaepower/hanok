@@ -3,10 +3,15 @@ package com.ssafy.be.domain.notification.controller;
 import com.ssafy.be.domain.notification.controller.api.NotificationApi;
 import com.ssafy.be.domain.notification.dto.response.NotificationPageResponse;
 import com.ssafy.be.domain.notification.service.NotificationService;
+import com.ssafy.be.global.sse.service.SseEmitterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+
+import static com.ssafy.be.global.sse.enums.SseEventType.TEST;
 
 
 @RestController
@@ -15,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 public class NotificationController implements NotificationApi {
 
     private final NotificationService notificationService;
+    private final SseEmitterService sseEmitterService;
 
     // 1. 알림 목록 조회
     @GetMapping
@@ -58,6 +64,17 @@ public class NotificationController implements NotificationApi {
         int updatedCount = notificationService.readAllNotifications(userId);
 
         return ResponseEntity.ok(java.util.Map.of("updatedCount", updatedCount));
+    }
+
+    // 알림 직접 전송(테스트용) TODO: 테스트 후 삭제 필요
+    @GetMapping("/send/receiver?={receiverId}")
+    public void sendDirectly(@RequestParam Long receiverId) {
+
+        sseEmitterService.sendToClient(
+                TEST,
+                receiverId,
+                "테스트 메시지, 발송 일시= %s".format(LocalDateTime.now().toString())
+        );
     }
 
     private Long getUserId(String principal) {

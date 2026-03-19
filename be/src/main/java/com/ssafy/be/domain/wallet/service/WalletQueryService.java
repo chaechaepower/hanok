@@ -28,9 +28,11 @@ public class WalletQueryService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GlobalException(UserErrorCode.USER_NOT_FOUND));
 
+        Long depositedBalance = user.calculateDepositedAmount();
+
         return WalletSummaryResponse.builder()
                 .balance(user.getBalance())
-                .depositedAuctionBalance(user.getDepositedEscrowBalance())
+                .depositedBalance(depositedBalance)
                 .build();
     }
 
