@@ -53,12 +53,20 @@ pipeline {
                                     passwordVariable: 'DOCKER_PASS'
                             )]) {
                                 sh '''
-                                    docker login -u $DOCKER_USER -p $DOCKER_PASS
-                                    docker build -t $DOCKER_USER/hanok-backend:prod .
-                                    docker build -t $DOCKER_USER/hanok-backend:${BUILD_NUMBER} .
-                                    docker push $DOCKER_USER/hanok-backend:prod
-                                    docker push $DOCKER_USER/hanok-backend:${BUILD_NUMBER}
-                                '''
+                    docker login -u $DOCKER_USER -p $DOCKER_PASS
+                    
+                    docker build -t $DOCKER_USER/hanok-backend:prod \
+                                 -t $DOCKER_USER/hanok-backend:${BUILD_NUMBER} .
+                    
+                    docker push $DOCKER_USER/hanok-backend:prod
+                    docker push $DOCKER_USER/hanok-backend:${BUILD_NUMBER}
+                    
+                    docker images $DOCKER_USER/hanok-backend --format "{{.Tag}}" | \
+                    grep -v prod | \
+                    sort -rn | \
+                    tail -n +4 | \
+                    xargs -I {} docker rmi $DOCKER_USER/hanok-backend:{} 2>/dev/null || true
+                '''
                             }
                         }
                     }
@@ -67,15 +75,65 @@ pipeline {
                 stage('Deploy') {
                     steps {
                         sh '''
-    cp /var/jenkins_home/env/.env.prod infra/.env.prod
+cp /var/jenkins_home/env/.env.prod infra/.env.prod
 
-    docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis
+LIVEKIT_SECRET=$(grep LIVEKIT_API_SECRET infra/.env.prod | cut -d '=' -f2)
+cat > infra/livekit.yaml << LKEOF
+port: 7880
+keys:
+  devkey: ${LIVEKIT_SECRET}
+webhook:
+  urls:
+    - http://13.124.238.68/api/v1/streams/webhook
+  api_key: devkey
+LKEOF
+
+docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis
+docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d livekit
+docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d prometheus grafana
+docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d loki promtail
+
+# 현재 active 컨테이너 확인
+ACTIVE=$(grep "server localhost:808" /etc/nginx/sites-enabled/default | grep -v "^[[:space:]]*#" | grep -o "808[01]" | head -1)
+
+if [ "$ACTIVE" = "8080" ] || [ -z "$ACTIVE" ]; then
+    # blue가 active → green에 배포
+    docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate backend-green
+    sleep 30
+    GREEN_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://172.26.0.24:8081/actuator/health)
+    if [ "$GREEN_HEALTH" = "200" ]; then
+        sudo sed -i "s|server localhost:8080;  # blue (현재 active)|# server localhost:8080;  # blue (대기)|" /etc/nginx/sites-enabled/default
+        sudo sed -i "s|# server localhost:8081;  # green (대기)|server localhost:8081;  # green (현재 active)|" /etc/nginx/sites-enabled/default
+        sudo /usr/local/bin/nginx-reload.sh
+        sleep 3
+        docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} stop backend-prod
+        echo "배포 완료 - green 활성화"
+    else
+        echo "green 헬스체크 실패 - blue 유지"
+        docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} stop backend-green
+        exit 1
+    fi
+else
+    # green이 active → blue에 배포
     docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps --force-recreate backend-prod
-    docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d prometheus grafana
-    docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d livekit
+    sleep 30
+    BLUE_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://172.26.0.24:8080/actuator/health)
+    if [ "$BLUE_HEALTH" = "200" ]; then
+        sudo sed -i "s|# server localhost:8080;  # blue (대기)|server localhost:8080;  # blue (현재 active)|" /etc/nginx/sites-enabled/default
+        sudo sed -i "s|server localhost:8081;  # green (현재 active)|# server localhost:8081;  # green (대기)|" /etc/nginx/sites-enabled/default
+        sudo /usr/local/bin/nginx-reload.sh
+        sleep 3
+        docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} stop backend-green
+        echo "배포 완료 - blue 활성화"
+    else
+        echo "blue 헬스체크 실패 - green 유지"
+        docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} stop backend-prod
+        exit 1
+    fi
+fi
 
-    rm -rf /var/www/hanok/*
-    cp -r fe/dist/* /var/www/hanok/
+rm -rf /var/www/hanok/*
+cp -r fe/dist/* /var/www/hanok/
 '''
                     }
                 }

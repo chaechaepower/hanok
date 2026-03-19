@@ -21,6 +21,7 @@ public class StreamReconnectService {
     private final StreamRepository streamRepository;
     private final StreamReconnectRedisRepository reconnectRedisRepository;
     private final StreamPublisher streamPublisher;
+    private final StreamViewerService streamViewerService; // 추가
 
     // 판매자 연결 끊김 처리
     @Transactional
@@ -78,5 +79,16 @@ public class StreamReconnectService {
 
         // 시청자들에게 알림
         streamPublisher.broadcast(streamId, StreamEventType.STREAM_RESUMED, null);
+    }
+
+    @Transactional
+    public void handleTimeout(Long streamId) {
+        streamRepository.findById(streamId).ifPresent(stream -> {
+            stream.end();
+            log.info("[Stream] 상태 ENDED 변경 - streamId: {}", streamId);
+        });
+
+        streamViewerService.clearViewers(streamId); // 추가
+        streamPublisher.broadcast(streamId, StreamEventType.STREAM_FAILED, null);
     }
 }

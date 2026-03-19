@@ -80,6 +80,41 @@ services:
       BIZNO_API_KEY: ${BIZNO_API_KEY}
 
   # =============================================
+  # Backend (green)
+  # =============================================
+  backend-green:
+    image: kimkangyeon/hanok-backend:prod
+    container_name: hanok-backend-green
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    volumes:
+      - /var/lib/docker/volumes/jenkins-stack_jenkins_home/_data/env/gcs-key.json:/app/gcs-key.json
+    networks:
+      - hanok-network
+    environment:
+      TZ: Asia/Seoul
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: hanok-mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
+      PORTONE_BASE_URL: ${PORTONE_BASE_URL}
+      PORTONE_STORE_ID: ${PORTONE_STORE_ID}
+      PORTONE_SECRET_KEY: ${PORTONE_SECRET_KEY}
+      PORTONE_SECRET_WEBHOOK: ${PORTONE_SECRET_WEBHOOK}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      GCS_CREDENTIALS_PATH: ${GCS_CREDENTIALS_PATH}
+      GOOGLE_APPLICATION_CREDENTIALS: /app/gcs-key.json
+      BIZNO_API_KEY: ${BIZNO_API_KEY}
+
+  # =============================================
   # LiveKit
   # =============================================
   livekit:
@@ -124,6 +159,35 @@ services:
       - hanok-network
 
   # =============================================
+  # Loki (로그 수집 서버)
+  # =============================================
+  loki:
+    image: grafana/loki:latest
+    container_name: hanok-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki-data:/loki
+    networks:
+      - hanok-network
+
+  # =============================================
+  # Promtail (로그 수집 에이전트)
+  # =============================================
+  promtail:
+    image: grafana/promtail:latest
+    container_name: hanok-promtail
+    restart: unless-stopped
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes/jenkins-stack_jenkins_home/_data/workspace/hanok/infra/promtail.yml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - hanok-network
+
+  # =============================================
   # InfluxDB (k6 결과 저장)
   # =============================================
   influxdb:
@@ -148,6 +212,7 @@ volumes:
   prometheus-data:
   grafana-data:
   influxdb-data:
+  loki-data:
 
 # =============================================
 # Network
@@ -155,3 +220,5 @@ volumes:
 networks:
   hanok-network:
     driver: bridge
+
+

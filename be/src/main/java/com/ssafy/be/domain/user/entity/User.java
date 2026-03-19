@@ -182,6 +182,10 @@ public class User {
         this.depositedWithdrawBalance -= amount;
     }
 
+    public Long calculateDepositedAmount() {
+        return this.depositedBidBalance + this.depositedEscrowBalance + this.depositedWithdrawBalance;
+    }
+
     private void decreaseDepositedBidBalance(Long amount) {
         if (!hasSufficientDepositedBidBalance(amount)) {
             throw new IllegalArgumentException("잔액이 부족합니다.");

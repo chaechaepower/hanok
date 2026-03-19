@@ -40,6 +40,11 @@ public class SseEmitterService {
     public void sendToClient(SseEventType eventType, Long userId, Object data) {
         SseEmitter sseEmitter = sseEmitterRepository.findById(userId);
 
+        if (sseEmitter == null) {
+            log.debug("SSE emitter가 없습니다. 전송을 스킵합니다. userId={}, eventType={}", userId, eventType);
+            return;
+        }
+
         try {
             sseEmitter.send(
                     SseEmitter.event()

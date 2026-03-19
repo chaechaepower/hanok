@@ -32,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -54,7 +55,6 @@ import static com.ssafy.be.domain.auction.entity.AuctionStatus.*;
 @Service
 public class AuctionService {
     private static final long SNIPING_THRESHOLD_SECONDS = 5L;
-    public static final int RECENT_BIDS_SIZE = 15;
     private final AuctionBidFacade auctionBidFacade;
     private final AuctionRepository auctionRepository;
     private final AuctionBidRepository auctionBidRepository;
@@ -66,21 +66,27 @@ public class AuctionService {
     private final EscrowService escrowService;
 
     @Transactional
-    public void introduceItem(ItemIntroduceRequest request, Long streamId, Long userId) {
+    public StreamPublishTask introduceItem(ItemIntroduceRequest request, Long streamId, Long userId) {
         // 1. 호스트인지 확인
         Seller seller = sellerRepository.findByUserId(userId)
                 .orElseThrow(() -> new StompException(SellerErrorCode.SELLER_NOT_FOUND));
 
         validateStreamHost(streamId, seller.getId());
 
-        // 2. 준비중인 경매 상태인지 확인
+        // 2. 경매 상태 '설명중'으로 변경
         Auction auction = auctionRepository.findById(request.auctionId())
                 .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
 
-        validateReadyAuction(auction);
-
-        // 3. 경매 상태 '설명중'으로 변경
         auction.introduceAuction();
+
+        // 3. AUCTION_COMMENT로 경매 중계 메시지 브로드캐스트
+        return buildStreamPublishTask(
+                BROADCAST,
+                streamId,
+                null,
+                AUCTION_COMMENT,
+                buildAuctionCommentResponse(INTRODUCE.getValue())
+        );
     }
 
     @Transactional
@@ -91,24 +97,21 @@ public class AuctionService {
 
         validateStreamHost(streamId, seller.getId());
 
-        // 2. 설명중인 경매인지 확인
+        // 2. 모든 클라이언트의 시각을 서버 시각으로 동기화하기 위해 현재 시각 필요
+        String serverNow = TimeUtils.nowAsString();
+
+        // 3. 경매 시작
         Auction auction = auctionRepository.findById(request.auctionId())
                 .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
 
-        validateIntroducingAuction(auction);
-
-        // 3. 모든 클라이언트의 시각을 서버 시각으로 동기화하기 위해 현재 시각 필요
-        String serverNow = TimeUtils.nowAsString();
-
-        // 4. 경매 시작
         auction.startAuction(serverNow);
 
-        // 5. 레디스에 경매 타이머 정보 저장 - TTL로 타이머 관리(MVP)
+        // 4. 레디스에 경매 타이머 정보 저장 - TTL로 타이머 관리(MVP)
         Item auctionItem = auction.getItem();
         auctionTimerRepository.save(auction.getId(), auctionItem.getAuctionDuration());
 
-        // 6. 응답
-        // 6-1. AUCTION_START로 입찰 시작 브로드캐스트
+        // 5. 응답
+        // 5-1. AUCTION_START로 입찰 시작 브로드캐스트
         AuctionStartResponse auctionStartResponse = buildAuctionStartResponse(
                 buildItemDto(auctionItem),
                 buildTimerDto(auctionItem, serverNow)
@@ -122,7 +125,7 @@ public class AuctionService {
                 auctionStartResponse
         );
 
-        // 6-2. AUCTION_COMMENT로 경매 중계 메시지 브로드캐스트
+        // 5-2. AUCTION_COMMENT로 경매 중계 메시지 브로드캐스트
         StreamPublishTask auctionCommentPublishTask = buildStreamPublishTask(
                 BROADCAST,
                 streamId,
@@ -172,10 +175,10 @@ public class AuctionService {
         );
 
         // 6-2. AUCTION_STATISTICS로 실시간 통계 정보 브로드캐스트
-        List<Bid> bids = auctionBidRepository.findTopBids(auction.getId(), RECENT_BIDS_SIZE);
+        List<Bid> bids = auctionBidRepository.findAll(auction.getId());
 
         List<AuctionStatisticsResponse.RecentBidDto> recentBids = bids.stream()
-                .limit(RECENT_BIDS_SIZE)
+                .limit(15)
                 .map(this::buildRecentBidDto)
                 .toList();
 
@@ -215,6 +218,12 @@ public class AuctionService {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
 
+        Bid topBid = auctionBidRepository.findTopBid(auctionId).orElse(null);
+
+        // 배송지 먼저 등록되있는지 검증 -> 배송지 없으면 낙찰 불가
+        ShippingAddress shippingAddress = shippingAddressRepository.findByUserIdAndIsDefaultTrue(topBid.userId())
+                .orElseThrow(() -> new StompException(ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
+
         // AUCTION_END로 경매 종료 broadcast
         StreamPublishTask endPublishTask = buildStreamPublishTask(
                 BROADCAST,
@@ -233,8 +242,6 @@ public class AuctionService {
                 buildAuctionCommentResponse(UNSOLD.getValue())
         );
 
-        Bid topBid = auctionBidRepository.findTopBid(auctionId).orElse(null);
-
         // 유찰
         if (topBid == null) {
             auction.unsold();
@@ -243,11 +250,9 @@ public class AuctionService {
 
         // 낙찰
         auction.sold(topBid.amount());
+        auction.getItem().sold(LocalDateTime.now());
 
         // 에스크로 시작
-        ShippingAddress shippingAddress = shippingAddressRepository.findByUserIdAndIsDefaultTrue(topBid.userId())
-                .orElseThrow(() -> new StompException(ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
-
         escrowService.startEscrow(topBid, auction, shippingAddress);
 
         // BID_WINNER로 낙찰 정보 private
@@ -279,15 +284,14 @@ public class AuctionService {
     }
 
     @Transactional(readOnly = true)
-    public BidSyncResponse syncBid(Long streamId) {
+    public BidSyncResponse syncBid(Long streamId, Long userId) {
         // 1. 현재 진행 중인 경매 조회
         Auction auction = auctionRepository.findByStreamIdAndAuctionStatus(streamId, LIVE)
                 .orElseThrow(() -> new StompException(AuctionErrorCode.LIVE_AUCTION_NOT_FOUND));
 
         // 2. 현재 최고가 조회 (없으면 시작가 사용)
-        Long currentPrice = auctionBidRepository.findTopBid(auction.getId())
-                .map(Bid::amount)
-                .orElse(auction.getItem().getStartPrice());
+        Bid topBid = auctionBidRepository.findTopBid(auction.getId()).orElse(null);
+        Long currentPrice = topBid == null ? auction.getItem().getStartPrice() : topBid.amount();
 
         // 3. 타이머 정보 조회
         String serverNow = TimeUtils.nowAsString();
@@ -295,6 +299,7 @@ public class AuctionService {
 
         // 4. 응답 생성
         return buildBidSyncResponse(
+                topBid != null && topBid.userId().equals(userId), // 현재 요청 userId가 최고 입찰자인지 여부
                 buildBidSyncItemInfo(auction.getItem().getBidUnit(), currentPrice),
                 buildBidSyncTimerInfo((int) remainingSeconds, serverNow, auction.getStartedAt())
         );
@@ -331,18 +336,6 @@ public class AuctionService {
 
         if (!isStreamHost) {
             throw new StompException(AuctionErrorCode.AUCTION_UNAUTHORIZED);
-        }
-    }
-
-    private void validateReadyAuction(Auction auction) {
-        if (!auction.isReady()) {
-            throw new StompException(AuctionErrorCode.AUCTION_NOT_READY);
-        }
-    }
-
-    private void validateIntroducingAuction(Auction auction) {
-        if (!auction.isIntroducing()) {
-            throw new StompException(AuctionErrorCode.AUCTION_NOT_INTRODUCING);
         }
     }
 
@@ -445,8 +438,13 @@ public class AuctionService {
                 .build();
     }
 
-    private BidSyncResponse buildBidSyncResponse(BidSyncResponse.ItemInfo itemInfo, BidSyncResponse.TimerInfo timerInfo) {
+    private BidSyncResponse buildBidSyncResponse(
+            boolean isHighestBidder,
+            BidSyncResponse.ItemInfo itemInfo,
+            BidSyncResponse.TimerInfo timerInfo
+    ) {
         return BidSyncResponse.builder()
+                .isHighestBidder(isHighestBidder)
                 .item(itemInfo)
                 .timer(timerInfo)
                 .build();
@@ -480,9 +478,11 @@ public class AuctionService {
                 .auctionId(auction.getId())
                 .itemName(auction.getItem().getName())
                 .description(auction.getItem().getDescription())
-                .images(images)  // null 제거된 리스트
+                .images(images)
                 .startPrice(auction.getItem().getStartPrice())
                 .auctionType(auction.getItem().getAuctionType())
+                .auctionTime(auction.getItem().getAuctionDuration())
+                .bidUnit(auction.getItem().getBidUnit())
                 .auctionStatus(auction.getAuctionStatus())
                 .finalPrice(auction.getAuctionStatus() == AuctionStatus.SOLD ? auction.getFinalPrice() : null)
                 .itemCondition(auction.getItem().getItemCondition())
@@ -494,7 +494,6 @@ public class AuctionService {
             List<AuctionStatisticsResponse.RecentBidDto> recentBidDtos) {
         return AuctionStatisticsResponse.builder()
                 .itemName(itemName)
-                .totalPrice(totalPrice)
                 .bidCount(bidCount)
                 .startPrice(startPrice)
                 .currentPrice(currentPrice)
@@ -504,6 +503,7 @@ public class AuctionService {
 
     private AuctionStatisticsResponse.RecentBidDto buildRecentBidDto(Bid bid) {
         return new AuctionStatisticsResponse.RecentBidDto(
+                bid.userId(),
                 bid.nickname(),
                 bid.amount(),
                 bid.bidAt()

@@ -14,8 +14,6 @@ import org.springframework.stereotype.Component;
 
 import java.security.Principal;
 
-import static com.ssafy.be.global.websocket.enums.StreamEventType.CHAT_MESSAGE;
-
 @RequiredArgsConstructor
 @Component
 public class ChatMessageHandler implements StreamEventHandler {
@@ -25,7 +23,7 @@ public class ChatMessageHandler implements StreamEventHandler {
 
     @Override
     public StreamEventType getEventType() {
-        return CHAT_MESSAGE;
+        return StreamEventType.CHAT_MESSAGE;
     }
 
     @Override
@@ -40,7 +38,7 @@ public class ChatMessageHandler implements StreamEventHandler {
 
         ChatMessagePayload responsePayload = chatService.handleMessage(userId, nickname, streamId, requestPayload);  // streamId 넘김
 
-        streamPublisher.broadcast(streamId, CHAT_MESSAGE, responsePayload);
+        streamPublisher.broadcast(streamId, StreamEventType.CHAT_MESSAGE, responsePayload);
     }
 
 
