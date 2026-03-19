@@ -61,4 +61,6 @@ public class UniqueBidAuctionDetail {
     public int getDuration() {
         return auction.getItem().getAuctionDuration();
     }
+
 }
+
