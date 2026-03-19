@@ -33,7 +33,7 @@ export default function CategorySelectModal({ onConfirm, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-5 right-5 text-neutral-500 hover:text-neutral-100 transition-colors flex items-center justify-center"
+            className="absolute top-6 right-6 text-neutral-500 hover:text-neutral-100 transition-colors flex items-center justify-center"
           >
             <FiX size={24} />
           </button>
@@ -42,13 +42,13 @@ export default function CategorySelectModal({ onConfirm, onClose }: Props) {
           <p className="text-neutral-500 text-sm whitespace-pre-line">{`방송의 카테고리를 설정해주세요`}</p>
           <p className="text-accent-light text-sm mb-8 whitespace-pre-line">{`카테고리에 일치하는 물품만 등록 가능합니다`}</p>
 
-          <div className="flex flex-col gap-2 mb-10">
+          <div className="flex flex-col gap-2 mb-8">
             <label className="text-neutral-100 text-sm font-medium">카테고리</label>
             <div className="relative" ref={dropdownRef}>
               <button
                 type="button"
                 onClick={() => setIsOpen((prev) => !prev)}
-                className="w-full flex items-center justify-between bg-transparent border border-gold rounded-xl px-5 py-4 text-neutral-100 text-base outline-none cursor-pointer"
+                className="w-full flex items-center justify-between bg-transparent border border-gold rounded-xl px-4 py-4 text-neutral-100 text-base outline-none cursor-pointer"
               >
                 <span>{selectedLabel}</span>
                 <span className={`text-gold transition-transform ${isOpen ? 'rotate-180' : ''}`}>
@@ -57,7 +57,7 @@ export default function CategorySelectModal({ onConfirm, onClose }: Props) {
               </button>
 
               {isOpen && (
-                <div className="absolute z-10 left-0 right-0 top-[calc(100%+6px)] bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-lg max-h-[280px] overflow-y-auto custom-scrollbar">
+                <div className="absolute z-10 left-0 right-0 top-[calc(100%+8px)] bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-lg max-h-[280px] overflow-y-auto custom-scrollbar">
                   {CATEGORIES.map((cat) => {
                     const isSelected = cat.id === selectedId;
                     return (
@@ -68,7 +68,7 @@ export default function CategorySelectModal({ onConfirm, onClose }: Props) {
                           setSelectedId(cat.id);
                           setIsOpen(false);
                         }}
-                        className={`w-full text-left px-5 py-3 text-[15px] transition-colors cursor-pointer ${
+                        className={`w-full text-left px-4 py-3 text-[15px] transition-colors cursor-pointer ${
                           isSelected
                             ? 'bg-gold/15 text-gold-light font-semibold'
                             : 'text-neutral-300 hover:bg-warm/8 hover:text-neutral-100'
