@@ -67,7 +67,7 @@ public class NotificationController implements NotificationApi {
     }
 
     // 알림 직접 전송(테스트용) TODO: 테스트 후 삭제 필요
-    @GetMapping("/send/receiver?={receiverId}")
+    @GetMapping("/send")
     public void sendDirectly(@RequestParam Long receiverId) {
 
         sseEmitterService.sendToClient(
