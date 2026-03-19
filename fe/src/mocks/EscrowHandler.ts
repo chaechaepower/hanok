@@ -87,7 +87,7 @@ const detailMap: Record<
     finalPrice: 75000,
     wonAt: '2026-03-01T23:00:00Z',
     courierName: 'CJ대한통운',
-    trackingNumber: '580123456789',
+    trackingNumber: '521465873135',
   },
   '102': {
     image: 'https://picsum.photos/seed/jacket/140/140',
@@ -95,7 +95,7 @@ const detailMap: Record<
     finalPrice: 120000,
     wonAt: '2026-02-20T19:30:00Z',
     courierName: 'CJ대한통운',
-    trackingNumber: '120312319124',
+    trackingNumber: '521465873135',
   },
   '201': {
     image: 'https://picsum.photos/seed/watch/140/140',
@@ -108,16 +108,16 @@ const detailMap: Record<
     itemName: 'Pokemon Card Charizard',
     finalPrice: 180000,
     wonAt: '2026-03-10T14:10:00Z',
-    courierName: '우체국택배',
-    trackingNumber: '777123456789',
+    courierName: 'CJ대한통운',
+    trackingNumber: '521465873135',
   },
   '203': {
     image: 'https://picsum.photos/seed/bag/140/140',
     itemName: 'Luxury Handbag',
     finalPrice: 420000,
     wonAt: '2026-03-08T11:05:00Z',
-    courierName: '롯데택배',
-    trackingNumber: '880123456789',
+    courierName: 'CJ대한통운',
+    trackingNumber: '521465873135',
   },
   '204': {
     image: 'https://picsum.photos/seed/figure/140/140',
