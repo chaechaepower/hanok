@@ -8,7 +8,7 @@ export default function AuctionCommentToast({ message }: Props) {
   }
 
   return (
-    <div className="pointer-events-none absolute top-16 left-1/2 z-40 w-[min(92%,40rem)] -translate-x-1/2 md:top-14">
+    <div className="pointer-events-none absolute top-4 left-1/2 z-40 w-[min(70%,24rem)] -translate-x-1/2">
       <div className="animate-toast-in relative overflow-hidden rounded-[28px] border border-accent/30 bg-background/92 shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-xl">
         <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-accent via-gold to-accent-light" />
         <div className="absolute -top-10 right-8 h-24 w-24 rounded-full bg-accent/20 blur-3xl" />
