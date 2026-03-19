@@ -25,7 +25,7 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const initialTab = SETTINGS_TABS.includes(tabParam as SettingsTab) ? (tabParam as SettingsTab) : 'account';
+  const initialTab = SETTINGS_TABS.includes(tabParam as SettingsTab) ? (tabParam as SettingsTab) : 'order';
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
 
   const { data: meData, isLoading: isMeLoading } = useGetMe();
@@ -110,11 +110,7 @@ export default function SettingsPage() {
             <h1 className="m-0 text-3xl font-bold tracking-tight text-white">{user?.nickname}</h1>
             <div className="flex items-center gap-3">
               <span className="text-lg text-neutral-400">({user?.email?.split('@')[0]})</span>
-              <button
-                onClick={handleLogout}
-                disabled={isLogoutPending}
-                className="btn btn-primary-outline"
-              >
+              <button onClick={handleLogout} disabled={isLogoutPending} className="btn btn-primary-outline">
                 {isLogoutPending ? '로그아웃 중...' : '로그아웃'}
               </button>
             </div>
@@ -160,11 +156,11 @@ export default function SettingsPage() {
         />
 
         <div className="w-full flex flex-1 flex-col gap-6">
-          {activeTab === 'account' && <AccountSection />}
+          {activeTab === 'order' && <OrderHistorySection />}
           {activeTab === 'stores' && <FollowedStoresSection />}
           {activeTab === 'shipping' && <ShippingSection />}
           {activeTab === 'payment' && <PaymentSection />}
-          {activeTab === 'order' && <OrderHistorySection />}
+          {activeTab === 'account' && <AccountSection />}
         </div>
       </div>
     </div>
