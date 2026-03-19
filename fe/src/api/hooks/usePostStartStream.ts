@@ -7,6 +7,7 @@ export const usePostStartStream = () => {
   const queryClient = useQueryClient();
 
   return useMutation<StartStreamResponse, Error, { streamId: number } & StreamMultipartPayload>({
+    throwOnError: false,
     mutationFn: async ({ streamId, ...payload }) => {
       const formData = buildStreamFormData(payload);
       const res = await getFetchInstance().post<StartStreamResponse>(

@@ -5,6 +5,7 @@ const patchProfileImagePath = () => `/v1/users/me/profile-image`;
 
 export const usePatchProfileImage = (sellerId?: number | null) => {
   return useMutation({
+    throwOnError: false,
     mutationFn: async (image: File) => {
       const formData = new FormData();
       formData.append('image', image);

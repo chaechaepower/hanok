@@ -3,10 +3,10 @@ import type { TrackingResult, TrackingErrorResponse } from '@/types';
 
 const SWEETTRACKER_API_KEY = import.meta.env.VITE_SWEETTRACKER_API_KEY as string;
 
-const fetchTracking = async (courierCode: string, trackingNumber: string): Promise<TrackingResult> => {
+const fetchTracking = async (carrierCode: string, trackingNumber: string): Promise<TrackingResult> => {
   const params = new URLSearchParams({
     t_key: SWEETTRACKER_API_KEY,
-    t_code: courierCode,
+    t_code: carrierCode,
     t_invoice: trackingNumber,
   });
 
@@ -30,11 +30,11 @@ const fetchTracking = async (courierCode: string, trackingNumber: string): Promi
   return data as TrackingResult;
 };
 
-export const useGetTracking = (courierCode: string, trackingNumber: string) => {
+export const useGetTracking = (carrierCode: string, trackingNumber: string) => {
   return useQuery({
-    queryKey: ['tracking', courierCode, trackingNumber],
-    queryFn: () => fetchTracking(courierCode, trackingNumber),
-    enabled: !!courierCode && !!trackingNumber && !!SWEETTRACKER_API_KEY,
+    queryKey: ['tracking', carrierCode, trackingNumber],
+    queryFn: () => fetchTracking(carrierCode, trackingNumber),
+    enabled: !!carrierCode && !!trackingNumber && !!SWEETTRACKER_API_KEY,
     staleTime: 1000 * 60 * 5,
     retry: false,
   });

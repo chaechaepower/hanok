@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { FaArrowLeft, FaCalendarAlt, FaCamera, FaCircle, FaTimes, FaVideo, FaVideoSlash } from 'react-icons/fa';
 import { MdLiveTv } from 'react-icons/md';
@@ -473,10 +473,7 @@ export default function LiveRegisterPage() {
                 ] ?? item.itemCondition;
 
               return (
-                <div
-                  key={item.itemId}
-                  className="flex gap-3 rounded-2xl border border-neutral-800 bg-white/[0.02] p-3"
-                >
+                <div key={item.itemId} className="flex gap-3 rounded-2xl border border-neutral-800 bg-white/[0.02] p-3">
                   <div
                     className="h-14 w-14 shrink-0 rounded-xl bg-neutral-800"
                     style={
@@ -492,9 +489,7 @@ export default function LiveRegisterPage() {
                   <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
                     <span className="truncate text-xs font-bold leading-snug text-neutral-100">{item.name}</span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-black text-gold">
-                        {item.startPrice.toLocaleString()}원
-                      </span>
+                      <span className="text-[11px] font-black text-gold">{item.startPrice.toLocaleString()}원</span>
                       <span className="rounded-full bg-gold/10 px-1.5 py-0.5 text-[9px] font-extrabold text-gold-light">
                         {conditionLabel}
                       </span>
@@ -548,9 +543,7 @@ export default function LiveRegisterPage() {
               type="button"
               onClick={isCameraOn ? stopCamera : startCamera}
               className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${
-                isCameraOn
-                  ? 'text-neutral-400 hover:text-neutral-200'
-                  : 'text-accent hover:text-accent-light'
+                isCameraOn ? 'text-neutral-400 hover:text-neutral-200' : 'text-accent hover:text-accent-light'
               }`}
             >
               {isCameraOn ? <FaVideo size={14} /> : <FaVideoSlash size={14} />}
@@ -577,7 +570,7 @@ export default function LiveRegisterPage() {
                 ) : (
                   <>
                     <FaCamera size={18} className="text-neutral-600" />
-                    <span className="text-[11px] font-bold text-neutral-600">이미지 첨부</span>
+                    <span className="text-[11px] font-bold text-neutral-600">이미지 첨부(10MB 이하)</span>
                   </>
                 )}
               </button>
@@ -616,7 +609,9 @@ export default function LiveRegisterPage() {
 
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">카테고리 매크로</label>
+                <label className="text-[10px] font-bold uppercase tracking-wider text-neutral-500">
+                  카테고리 매크로
+                </label>
               </div>
               <div className="flex flex-col gap-2">
                 {macroFields.map((macro) => {
