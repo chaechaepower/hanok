@@ -220,6 +220,10 @@ public class AuctionService {
 
         Bid topBid = auctionBidRepository.findTopBid(auctionId).orElse(null);
 
+        // 배송지 먼저 등록되있는지 검증 -> 배송지 없으면 낙찰 불가
+        ShippingAddress shippingAddress = shippingAddressRepository.findByUserIdAndIsDefaultTrue(topBid.userId())
+                .orElseThrow(() -> new StompException(ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
+
         // AUCTION_END로 경매 종료 broadcast
         StreamPublishTask endPublishTask = buildStreamPublishTask(
                 BROADCAST,
@@ -245,9 +249,6 @@ public class AuctionService {
         }
 
         // 낙찰
-        ShippingAddress shippingAddress = shippingAddressRepository.findByUserIdAndIsDefaultTrue(topBid.userId())
-                .orElseThrow(() -> new StompException(ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
-
         auction.sold(topBid.amount());
         auction.getItem().sold(LocalDateTime.now());
 
