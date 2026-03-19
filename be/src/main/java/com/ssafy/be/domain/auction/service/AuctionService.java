@@ -66,7 +66,7 @@ public class AuctionService {
     private final EscrowService escrowService;
 
     @Transactional
-    public void introduceItem(ItemIntroduceRequest request, Long streamId, Long userId) {
+    public StreamPublishTask introduceItem(ItemIntroduceRequest request, Long streamId, Long userId) {
         // 1. 호스트인지 확인
         Seller seller = sellerRepository.findByUserId(userId)
                 .orElseThrow(() -> new StompException(SellerErrorCode.SELLER_NOT_FOUND));
@@ -78,6 +78,15 @@ public class AuctionService {
                 .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
 
         auction.introduceAuction();
+
+        // 3. AUCTION_COMMENT로 경매 중계 메시지 브로드캐스트
+        return buildStreamPublishTask(
+                BROADCAST,
+                streamId,
+                null,
+                AUCTION_COMMENT,
+                buildAuctionCommentResponse(INTRODUCE.getValue())
+        );
     }
 
     @Transactional
