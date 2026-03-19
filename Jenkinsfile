@@ -77,6 +77,10 @@ pipeline {
                         sh '''
 cp /var/jenkins_home/env/.env.prod infra/.env.prod
 
+# nginx-reload.sh 영구화
+sudo cp infra/nginx-reload.sh /usr/local/bin/nginx-reload.sh
+sudo chmod +x /usr/local/bin/nginx-reload.sh
+
 LIVEKIT_SECRET=$(grep LIVEKIT_API_SECRET infra/.env.prod | cut -d '=' -f2)
 cat > infra/livekit.yaml << LKEOF
 port: 7880
