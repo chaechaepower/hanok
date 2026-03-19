@@ -75,6 +75,7 @@ pipeline {
                 stage('Deploy') {
                     steps {
                         sh '''
+set +e
 cp /var/jenkins_home/env/.env.prod infra/.env.prod
 
 # nginx-reload.sh 영구화
