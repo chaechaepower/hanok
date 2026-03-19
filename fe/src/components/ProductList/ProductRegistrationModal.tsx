@@ -18,8 +18,7 @@ interface ProductRegistrationModalProps {
 const inputClass =
   'w-full h-12 bg-background border border-neutral-800 rounded-lg text-neutral-100 text-sm px-4 outline-none focus:border-primary transition-colors';
 const selectArrowStyle = {
-  backgroundImage:
-    `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a89a8c' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a89a8c' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
 };
 const selectClass = `${inputClass} pr-10 cursor-pointer appearance-none bg-no-repeat bg-[position:right_14px_center]`;
 const labelClass = 'block text-neutral-100 text-sm font-semibold mb-2';
@@ -94,7 +93,9 @@ export default function ProductRegistrationModal({
       setBidUnit(initialData.bidUnit ? String(initialData.bidUnit) : '');
       setAuctionDuration(initialData.auctionDuration ? String(initialData.auctionDuration) : '');
       setAuctionType(initialData.auctionType);
-      setHashtags(initialData.tags && initialData.tags.length > 0 ? initialData.tags.map((t) => `#${t}`).join(' ') : '');
+      setHashtags(
+        initialData.tags && initialData.tags.length > 0 ? initialData.tags.map((t) => `#${t}`).join(' ') : '',
+      );
       setExistingImages(initialData.images && initialData.images.length > 0 ? initialData.images : []);
       return;
     }
@@ -212,9 +213,7 @@ export default function ProductRegistrationModal({
       .filter((tag) => tag.length > 0);
     const normalizedBidUnitValue =
       bidUnit && maxBidUnit >= MIN_BID_UNIT ? normalizeBidUnitValue(Number(bidUnit), maxBidUnit) : Number(bidUnit || 0);
-    const normalizedStartPriceValue = startPrice
-      ? normalizeStartPriceValue(startPriceValue)
-      : startPriceValue;
+    const normalizedStartPriceValue = startPrice ? normalizeStartPriceValue(startPriceValue) : startPriceValue;
     const normalizedTotalStartPrice = normalizedStartPriceValue + shippingFeeValue;
     const normalizedMaxBidUnit = Math.floor((normalizedStartPriceValue * 0.1) / BID_UNIT_STEP) * BID_UNIT_STEP;
 
@@ -247,9 +246,7 @@ export default function ProductRegistrationModal({
     }
 
     if (normalizedBidUnitValue > normalizedMaxBidUnit) {
-      setError(
-        `입찰단가는 시작가의 10% 이내인 ${formatPriceLabel(normalizedMaxBidUnit)}까지 입력할 수 있습니다.`,
-      );
+      setError(`입찰단가는 시작가의 10% 이내인 ${formatPriceLabel(normalizedMaxBidUnit)}까지 입력할 수 있습니다.`);
       return;
     }
 
@@ -303,7 +300,9 @@ export default function ProductRegistrationModal({
           <FaTimes size={20} />
         </button>
 
-        <h2 className="text-neutral-100 text-xl font-bold mt-0 mb-6">{initialData ? '상품 정보 수정' : '새 상품 등록'}</h2>
+        <h2 className="text-neutral-100 text-xl font-bold mt-0 mb-6">
+          {initialData ? '상품 정보 수정' : '새 상품 등록'}
+        </h2>
 
         <input
           type="file"
@@ -321,7 +320,10 @@ export default function ProductRegistrationModal({
           }}
         >
           {existingImages.length > 0 || images.length > 0 ? (
-            <div className="flex gap-3 w-full overflow-x-auto macro-scroll p-2 pb-3" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="flex gap-3 w-full overflow-x-auto macro-scroll p-2 pb-3"
+              onClick={(e) => e.stopPropagation()}
+            >
               {existingImages.map((url, idx) => (
                 <div key={`exist-${idx}`} className="relative w-[120px] h-[120px] shrink-0">
                   <img src={url} alt="기존 이미지" className="w-full h-full object-cover rounded-lg" />
@@ -337,7 +339,11 @@ export default function ProductRegistrationModal({
 
               {images.map((file, idx) => (
                 <div key={`new-${idx}`} className="relative w-[120px] h-[120px] shrink-0">
-                  <img src={URL.createObjectURL(file)} alt="preview" className="w-full h-full object-cover rounded-lg" />
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt="preview"
+                    className="w-full h-full object-cover rounded-lg"
+                  />
                   <button
                     type="button"
                     onClick={() => removeNewImage(idx)}
@@ -361,7 +367,7 @@ export default function ProductRegistrationModal({
             <>
               <FaCloudUploadAlt size={32} className="text-neutral-100 mb-3" />
               <div className="text-neutral-100 text-[15px] font-semibold">상품 이미지 업로드 최대 3개</div>
-              <div className="text-neutral-500 text-[13px] mt-1">PNG, JPG 5MB</div>
+              <div className="text-neutral-500 text-[13px] mt-1">PNG, JPG 10MB</div>
             </>
           )}
         </div>
@@ -447,7 +453,9 @@ export default function ProductRegistrationModal({
           </div>
         </div>
 
-        <p className={helperClass}>경매 가격은 배송비 포함된 가격으로 표시됩니다. 현재 총 가격 {formatPriceLabel(totalStartPrice)}</p>
+        <p className={helperClass}>
+          경매 가격은 배송비 포함된 가격으로 표시됩니다. 현재 총 가격 {formatPriceLabel(totalStartPrice)}
+        </p>
 
         <div className="mb-5 mt-5">
           <label className={labelClass}>입찰단가</label>
@@ -530,25 +538,23 @@ export default function ProductRegistrationModal({
               setHashtags(e.target.value);
             }}
           />
-          {hashtags.trim() && (() => {
-            const parsed = hashtags
-              .split(/\s+/)
-              .map((tag) => tag.replace(/^#/, '').trim())
-              .filter((tag) => tag.length > 0);
-            return (
-              <div className="flex flex-wrap items-center gap-2 mt-3">
-                {parsed.map((tag, idx) => (
-                  <span
-                    key={idx}
-                    className="badge-gold-outline text-[13px] font-medium px-3 py-1.5"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-                <span className="text-[12px] text-neutral-500">{parsed.length}/7</span>
-              </div>
-            );
-          })()}
+          {hashtags.trim() &&
+            (() => {
+              const parsed = hashtags
+                .split(/\s+/)
+                .map((tag) => tag.replace(/^#/, '').trim())
+                .filter((tag) => tag.length > 0);
+              return (
+                <div className="flex flex-wrap items-center gap-2 mt-3">
+                  {parsed.map((tag, idx) => (
+                    <span key={idx} className="badge-gold-outline text-[13px] font-medium px-3 py-1.5">
+                      #{tag}
+                    </span>
+                  ))}
+                  <span className="text-[12px] text-neutral-500">{parsed.length}/7</span>
+                </div>
+              );
+            })()}
         </div>
 
         {error && <div className="text-accent-light text-sm mb-4">{error}</div>}

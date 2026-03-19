@@ -1,23 +1,17 @@
 import { useState } from 'react';
 import { FiPackage, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { useGetTracking } from '@/api/hooks/useGetTracking';
-import { COURIERS } from '@/pages/SellerOnboarding/constants';
+import { CARRIERS } from '@/pages/SellerOnboarding/constants';
+import type { PostTrackingInfoPayload } from '@/types';
 
-const COURIER_CODE_MAP = Object.fromEntries(
-  COURIERS.map((c) => [c.name, c.code]),
-);
+const CARRIER_CODE_MAP = Object.fromEntries(CARRIERS.map((c) => [c.name, c.code]));
 
-type DeliveryTrackerProps = {
-  courierName: string;
-  trackingNumber: string;
-};
-
-export default function DeliveryTracker({ courierName, trackingNumber }: DeliveryTrackerProps) {
+export default function DeliveryTracker({ carrierName, trackingNumber }: PostTrackingInfoPayload) {
   const [isOpen, setIsOpen] = useState(false);
-  const courierCode = COURIER_CODE_MAP[courierName] ?? '';
-  const { data: tracking, isLoading, error } = useGetTracking(courierCode, trackingNumber);
+  const carrierCode = CARRIER_CODE_MAP[carrierName] ?? '';
+  const { data: tracking, isLoading, error } = useGetTracking(carrierCode, trackingNumber);
 
-  if (!courierCode) return null;
+  if (!carrierCode) return null;
 
   const levelLabels = ['인수', '이동중', '배달중', '도착'];
 
@@ -32,10 +26,16 @@ export default function DeliveryTracker({ courierName, trackingNumber }: Deliver
           <FiPackage size={16} />
           <span>배송 추적</span>
           {tracking?.complete && (
-            <span className="ml-2 text-xs font-medium text-ember-light bg-ember/15 px-2 py-0.5 rounded-full">배송완료</span>
+            <span className="ml-2 text-xs font-medium text-ember-light bg-ember/15 px-2 py-0.5 rounded-full">
+              배송완료
+            </span>
           )}
         </div>
-        {isOpen ? <FiChevronUp size={16} className="text-neutral-500" /> : <FiChevronDown size={16} className="text-neutral-500" />}
+        {isOpen ? (
+          <FiChevronUp size={16} className="text-neutral-500" />
+        ) : (
+          <FiChevronDown size={16} className="text-neutral-500" />
+        )}
       </button>
 
       {isOpen && (
@@ -87,21 +87,21 @@ export default function DeliveryTracker({ courierName, trackingNumber }: Deliver
                     return (
                       <div key={idx} className="flex gap-3">
                         <div className="flex flex-col items-center">
-                          <div className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${isFirst ? 'bg-gold-light' : 'bg-neutral-600'}`} />
+                          <div
+                            className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${isFirst ? 'bg-gold-light' : 'bg-neutral-600'}`}
+                          />
                           {idx < tracking.trackingDetails.length - 1 && (
                             <div className="w-px flex-1 bg-neutral-700 my-1" />
                           )}
                         </div>
                         <div className={`flex-1 pb-4 ${isFirst ? '' : 'opacity-70'}`}>
-                          <p className={`m-0 text-[13px] font-medium ${isFirst ? 'text-neutral-100' : 'text-neutral-300'}`}>
+                          <p
+                            className={`m-0 text-[13px] font-medium ${isFirst ? 'text-neutral-100' : 'text-neutral-300'}`}
+                          >
                             {detail.kind}
                           </p>
-                          <p className="m-0 text-[12px] text-neutral-500 mt-0.5">
-                            {detail.where}
-                          </p>
-                          <p className="m-0 text-[11px] text-neutral-600 mt-0.5">
-                            {detail.timeString}
-                          </p>
+                          <p className="m-0 text-[12px] text-neutral-500 mt-0.5">{detail.where}</p>
+                          <p className="m-0 text-[11px] text-neutral-600 mt-0.5">{detail.timeString}</p>
                         </div>
                       </div>
                     );

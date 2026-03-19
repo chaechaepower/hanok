@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { usePostFollow } from '@/api/hooks/usePostFollow';
 import { useStompChat } from '@/hooks/useStompChat';
@@ -17,6 +18,7 @@ interface Props {
 const getSellerInitial = (nickname?: string) => nickname?.trim().charAt(0).toUpperCase() || 'Y';
 
 export default function RightPanel({ isSeller, auctionType, auctionStatistics, uniqueBidSync, streamEnter }: Props) {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'chat' | 'auction'>('chat');
   const { messages, sendMessage, sendMacro, connectionState } = useStompChat(streamEnter?.category ?? '');
   const [followStateOverride, setFollowStateOverride] = useState<{ sellerId: number; value: boolean } | null>(null);
@@ -47,7 +49,11 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
   return (
     <div className="flex h-full w-full flex-col rounded-2xl bg-background text-point">
       <div className="flex items-center justify-between gap-2.5 px-3 py-2">
-        <div className="flex min-w-0 items-center gap-2.5">
+        <button
+          type="button"
+          onClick={() => sellerId > 0 && navigate(`/profile/${sellerId}`)}
+          className="flex min-w-0 items-center gap-2.5 rounded-lg transition hover:opacity-80"
+        >
           {sellerProfileImage ? (
             <img src={sellerProfileImage} alt={sellerNickname} className="h-7 w-7 shrink-0 rounded-full object-cover" />
           ) : (
@@ -55,8 +61,8 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
               {getSellerInitial(sellerNickname)}
             </div>
           )}
-          <div className="min-w-0 truncate text-xs font-bold text-neutral-100">{sellerNickname}</div>
-        </div>
+          <span className="min-w-0 truncate text-xs font-bold text-neutral-100">{sellerNickname}</span>
+        </button>
 
         {sellerId > 0 && !isSeller && (
           <button
