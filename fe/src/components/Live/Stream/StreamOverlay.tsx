@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { LuShare, LuWallet } from 'react-icons/lu';
+import { LuWallet } from 'react-icons/lu';
 
 import { useGetAccount } from '@/api/hooks/useGetAccount';
 import { completeWalletCharge } from '@/api/hooks/usePostCompleteWalletCharge';
@@ -10,6 +10,7 @@ import { useToast } from '@/components/common/Toast';
 import PointManagementModal, { type PointModalType } from '@/components/Wallet/PointManagementModal';
 import { MIN_WALLET_CHARGE_AMOUNT } from '@/constants/wallet';
 import { requestPointChargePayment } from '@/utils/requestPointChargePayment';
+import { IoMdShare } from 'react-icons/io';
 
 interface Props {
   viewerCount?: number;
@@ -157,7 +158,7 @@ export default function StreamOverlay({ viewerCount = 0, isSeller = false }: Pro
             className="flex h-10 w-10 items-center justify-center rounded-full bg-surface/70 text-neutral-300 backdrop-blur-md transition hover:bg-surface hover:text-neutral-100"
             aria-label="공유하기"
           >
-            <LuShare size={18} />
+            <IoMdShare size={18} />
           </button>
           <button
             type="button"

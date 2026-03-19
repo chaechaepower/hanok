@@ -1,5 +1,3 @@
-@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800;900&display=swap');
 @import 'tailwindcss';
 
 /* ══════════════════════════════════════════════════════════
@@ -60,13 +58,13 @@
   /* ── 타이포그래피 ── */
 
   /* 제목 전용 (Pretendard — 모던, 웨이트 풍부) */
-  --font-heading: 'Pretendard Variable', 'Pretendard', sans-serif;
+  --font-heading: 'MapoAemin', sans-serif;
 
   /* 본문/UI 전용 */
-  --font-base: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-base: 'MapoAemin', sans-serif;
 
   /* 가격/숫자 전용 (Noto Sans KR — 숫자 자간이 균일, 가격 표시에 최적) */
-  --font-mono-num: 'Noto Sans KR', sans-serif;
+  --font-mono-num: 'MapoAemin', sans-serif;
 
   /* 제목 (Heading) — 800 ExtraBold */
   --text-h1: 28px;
@@ -102,6 +100,13 @@
   --animate-badge-pulse: badgePulse 2s ease-in-out infinite;
   --animate-toast-in: toastIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   --animate-toast-out: toastOut 0.3s ease forwards;
+}
+
+@font-face {
+  font-family: 'MapoAemin';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/MapoAgapeA.woff') format('woff');
+  font-weight: normal;
+  font-display: swap;
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -187,7 +192,6 @@
       0 0 8px rgba(166, 61, 46, 0.6);
   }
 }
-
 
 /* ══════════════════════════════════════════════════════════
    글로벌 리셋 & 베이스

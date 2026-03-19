@@ -39,9 +39,8 @@ export default function CategorySelectModal({ onConfirm, onClose }: Props) {
           </button>
 
           <h2 className="text-2xl font-bold text-neutral-100 mb-2">방송 카테고리 설정</h2>
-          <p className="text-neutral-500 text-sm mb-8">
-            방송의 카테고리를 설정해주세요. 카테고리에 일치하는 물품만 등록 가능합니다
-          </p>
+          <p className="text-neutral-500 text-sm whitespace-pre-line">{`방송의 카테고리를 설정해주세요`}</p>
+          <p className="text-accent-light text-sm mb-8 whitespace-pre-line">{`카테고리에 일치하는 물품만 등록 가능합니다`}</p>
 
           <div className="flex flex-col gap-2 mb-10">
             <label className="text-neutral-100 text-sm font-medium">카테고리</label>
