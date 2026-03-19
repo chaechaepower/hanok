@@ -83,6 +83,11 @@ const isStreamFailedEvent = (
 ): event is Extract<BroadcastStreamEvent, { eventType: 'STREAM_FAILED' }> =>
   event.eventType === 'STREAM_FAILED' || ('event' in event && event.event === 'stream:failed');
 
+const isSystemStreamEndEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'SYSTEM_STREAM_END' }> =>
+  event.eventType === 'SYSTEM_STREAM_END';
+
 const isLegacyUniqueAuctionEndEvent = (event: {
   eventType: string;
   payload?: unknown;
@@ -377,6 +382,15 @@ export function useLiveStream(
         setStreamState('ended');
         setLiveStateOverride(false);
         setTimer(null);
+        return;
+      }
+
+      if (isSystemStreamEndEvent(event)) {
+        setStreamState('ended');
+        setLiveStateOverride(false);
+        setTimer(null);
+        setBidSync(null);
+        setUniqueBidSync(null);
         return;
       }
 

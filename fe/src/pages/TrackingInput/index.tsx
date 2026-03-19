@@ -10,7 +10,7 @@ import EscrowDetailCard from '@/components/common/EscrowDetailCard';
 import { useToast } from '@/components/common/Toast';
 import SideBar from '@/components/common/layouts/SideBar';
 import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
-import { COURIERS } from '@/pages/SellerOnboarding/constants';
+import { CARRIERS } from '@/pages/SellerOnboarding/constants';
 import type { EscrowItem } from '@/types';
 import {
   getEscrowStateUI,
@@ -134,22 +134,22 @@ export default function TrackingInput() {
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [courier, setCourier] = useState('');
-  const [courierName, setCourierName] = useState('');
+  const [carrier, setCarrier] = useState('');
+  const [carrierName, setCarrierName] = useState('');
   const [trackingNumber, setTrackingNumber] = useState('');
-  const [showCourierModal, setShowCourierModal] = useState(false);
-  const courierDropdownRef = useRef<HTMLDivElement>(null);
+  const [showCarrierModal, setShowCarrierModal] = useState(false);
+  const carrierDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!showCourierModal) return;
+    if (!showCarrierModal) return;
     const handleClickOutside = (e: MouseEvent) => {
-      if (courierDropdownRef.current && !courierDropdownRef.current.contains(e.target as Node)) {
-        setShowCourierModal(false);
+      if (carrierDropdownRef.current && !carrierDropdownRef.current.contains(e.target as Node)) {
+        setShowCarrierModal(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showCourierModal]);
+  }, [showCarrierModal]);
 
   const currentSelectedItem = items.find((item) => String(item.escrowId) === selectedItemId);
   const isTrackingSubmitted = currentSelectedItem
@@ -167,8 +167,8 @@ export default function TrackingInput() {
     if (!id) return;
 
     setSelectedItemId(String(id));
-    setCourier('');
-    setCourierName('');
+    setCarrier('');
+    setCarrierName('');
     setTrackingNumber('');
   };
 
@@ -325,7 +325,6 @@ export default function TrackingInput() {
             <EscrowDetailCard
               detail={selectedItemDetail}
               onClose={() => setSelectedItemId(null)}
-              counterpartyLabel="구매자"
               footer={
                 isTrackingSubmitted ? (
                   <div className="bg-neutral-800 rounded-xl p-5 border border-neutral-700 text-center text-neutral-500 text-sm">
@@ -334,34 +333,34 @@ export default function TrackingInput() {
                 ) : (
                   <>
                     <div className="flex gap-2 mb-8">
-                      <div className="relative w-[160px]" ref={courierDropdownRef}>
+                      <div className="relative w-[160px]" ref={carrierDropdownRef}>
                         <button
                           type="button"
-                          onClick={() => selectedItemId && setShowCourierModal((prev) => !prev)}
+                          onClick={() => selectedItemId && setShowCarrierModal((prev) => !prev)}
                           disabled={!selectedItemId}
                           className="w-full h-[48px] bg-transparent border border-neutral-700 rounded-lg px-3 text-left cursor-pointer flex items-center justify-between hover:border-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <span className={courier ? 'text-neutral-100 text-sm' : 'text-neutral-500 text-sm'}>
-                            {courier ? courierName : '택배사 선택'}
+                          <span className={carrier ? 'text-neutral-100 text-sm' : 'text-neutral-500 text-sm'}>
+                            {carrier ? carrierName : '택배사 선택'}
                           </span>
                           <span
-                            className={`text-gold transition-transform text-sm ${showCourierModal ? 'rotate-180' : ''}`}
+                            className={`text-gold transition-transform text-sm ${showCarrierModal ? 'rotate-180' : ''}`}
                           >
                             ▾
                           </span>
                         </button>
-                        {showCourierModal && (
+                        {showCarrierModal && (
                           <div className="absolute z-10 left-0 right-0 top-[calc(100%+4px)] bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-lg max-h-[240px] overflow-y-auto custom-scrollbar min-w-[200px]">
-                            {COURIERS.map((item) => {
-                              const isSelected = courier === item.code;
+                            {CARRIERS.map((item) => {
+                              const isSelected = carrier === item.code;
                               return (
                                 <button
                                   key={item.code}
                                   type="button"
                                   onClick={() => {
-                                    setCourier(item.code);
-                                    setCourierName(item.name);
-                                    setShowCourierModal(false);
+                                    setCarrier(item.code);
+                                    setCarrierName(item.name);
+                                    setShowCarrierModal(false);
                                   }}
                                   className={`w-full text-left px-4 py-2.5 text-[14px] transition-colors cursor-pointer ${
                                     isSelected
@@ -389,13 +388,13 @@ export default function TrackingInput() {
                       <button
                         type="button"
                         onClick={() => {
-                          if (!courier || !trackingNumber || !selectedItemId) {
+                          if (!carrier || !trackingNumber || !selectedItemId) {
                             showToast({ message: '택배사와 송장 번호를 모두 입력해주세요.' });
                             return;
                           }
 
                           submitTracking(
-                            { escrowId: selectedItemId, carrierName: courier, trackingNumber },
+                            { escrowId: selectedItemId, carrierName: carrier, trackingNumber },
                             {
                               onSuccess: () => {
                                 showToast({ message: '운송장 번호가 등록되었습니다.' });

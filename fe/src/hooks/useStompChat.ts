@@ -33,6 +33,67 @@ const appendMessage = (messages: ChatMessageType[], message: ChatMessageType) =>
   return nextMessages.slice(nextMessages.length - MAX_CHAT_HISTORY);
 };
 
+const createChatMessage = (
+  payload: { nickname?: string; content?: string } | null,
+): ChatMessageType | null => {
+  if (!payload?.content) {
+    return null;
+  }
+
+  return {
+    id: createMessageId(),
+    type: 'chat',
+    nickname: payload.nickname ?? 'guest',
+    message: payload.content,
+  };
+};
+
+const createSystemMessage = (payload: { message?: string } | null): ChatMessageType | null => {
+  if (!payload?.message) {
+    return null;
+  }
+
+  return {
+    id: createMessageId(),
+    type: 'system',
+    message: payload.message,
+  };
+};
+
+const createMacroResponseMessage = (
+  category: string,
+  payload: MacroTemplatePayload,
+): ChatMessageType | null => {
+  if (!payload.questionType || typeof payload.answer !== 'string') {
+    return null;
+  }
+
+  return {
+    id: createMessageId(),
+    type: 'macro_response',
+    sender: '판매자',
+    question: getCategoryMacroCommandLabel(category, payload.questionType),
+    answer: payload.answer,
+    createdAt: payload.createdAt,
+  };
+};
+
+const createBroadcastMessage = (
+  response: StompResponse<unknown>,
+): ChatMessageType | null => {
+  switch (response.eventType) {
+    case 'CHAT_MESSAGE':
+    case 'CHAT_FILTERED':
+      return createChatMessage(response.payload as { nickname?: string; content?: string } | null);
+    case 'SYSTEM_NOTICE':
+    case 'SYSTEM_STREAM_START':
+    case 'SYSTEM_STREAM_END':
+      return createSystemMessage(response.payload as { message?: string } | null);
+    default:
+      return null;
+  }
+};
+
 export function useStompChat(category: string) {
   const { id: streamIdParam } = useParams<{ id: string }>();
   const streamId = streamIdParam ?? '';
@@ -41,6 +102,17 @@ export function useStompChat(category: string) {
   const [messagesByStream, setMessagesByStream] = useState<Record<string, ChatMessageType[]>>({});
   const [connectionState, setConnectionState] = useState<StompConnectionState>(getStompConnectionState());
   const messages = messagesByStream[streamId] ?? [];
+
+  const appendMessageForStream = useCallback((nextMessage: ChatMessageType | null) => {
+    if (!streamId || !nextMessage) {
+      return;
+    }
+
+    setMessagesByStream((prev) => ({
+      ...prev,
+      [streamId]: appendMessage(prev[streamId] ?? [], nextMessage),
+    }));
+  }, [streamId]);
 
   useEffect(() => {
     return subscribeToStompConnectionState(setConnectionState);
@@ -54,67 +126,17 @@ export function useStompChat(category: string) {
     let isDisposed = false;
     let unsubscribe: (() => void) | null = null;
 
-    void subscribeStream<StompResponse<unknown>>({
+    void subscribeStream<StompResponse<unknown>, StompResponse<MacroTemplatePayload>>({
       streamId,
       onBroadcast: (response) => {
-        let nextMessage: ChatMessageType | null = null;
-
-        switch (response.eventType) {
-          case 'CHAT_MESSAGE':
-          case 'CHAT_FILTERED': {
-            const payload = response.payload as { nickname?: string; content?: string } | null;
-
-            if (payload?.content) {
-              nextMessage = {
-                id: createMessageId(),
-                type: 'chat',
-                nickname: payload.nickname ?? 'guest',
-                message: payload.content,
-              };
-            }
-            break;
-          }
-          case 'MACRO_TEMPLATE': {
-            const payload = response.payload as MacroTemplatePayload | null;
-
-            if (payload?.questionType && typeof payload.answer === 'string') {
-              nextMessage = {
-                id: createMessageId(),
-                type: 'macro_response',
-                sender: '판매자',
-                question: getCategoryMacroCommandLabel(category, payload.questionType),
-                answer: payload.answer,
-                createdAt: payload.createdAt,
-              };
-            }
-            break;
-          }
-          case 'SYSTEM_NOTICE':
-          case 'SYSTEM_STREAM_START':
-          case 'SYSTEM_STREAM_END': {
-            const payload = response.payload as { message?: string } | null;
-
-            if (payload?.message) {
-              nextMessage = {
-                id: createMessageId(),
-                type: 'system',
-                message: payload.message,
-              };
-            }
-            break;
-          }
-          default:
-            break;
-        }
-
-        if (!nextMessage) {
+        appendMessageForStream(createBroadcastMessage(response));
+      },
+      onPrivate: (response) => {
+        if (response.eventType !== 'MACRO_TEMPLATE') {
           return;
         }
 
-        setMessagesByStream((prev) => ({
-          ...prev,
-          [streamId]: appendMessage(prev[streamId] ?? [], nextMessage),
-        }));
+        appendMessageForStream(createMacroResponseMessage(category, response.payload));
       },
     })
       .then((cleanup) => {
@@ -133,7 +155,7 @@ export function useStompChat(category: string) {
       isDisposed = true;
       unsubscribe?.();
     };
-  }, [category, streamId]);
+  }, [appendMessageForStream, category, streamId]);
 
   const sendMessage = useCallback(
     async (message: string) => {
@@ -160,15 +182,12 @@ export function useStompChat(category: string) {
       const normalizedQuestionType = mappedQuestionType ?? question.trim();
       const questionLabel = getCategoryMacroCommandLabel(category, normalizedQuestionType);
 
-      setMessagesByStream((prev) => ({
-        ...prev,
-        [streamId]: appendMessage(prev[streamId] ?? [], {
-          id: createMessageId(),
-          type: 'macro_request',
-          nickname: me?.nickname ?? '나',
-          question: questionLabel,
-        }),
-      }));
+      appendMessageForStream({
+        id: createMessageId(),
+        type: 'macro_request',
+        nickname: me?.nickname ?? '나',
+        question: questionLabel,
+      });
 
       const payload: MacroPayload = { questionType: normalizedQuestionType };
       await sendStreamMessage(streamId, {
@@ -176,7 +195,7 @@ export function useStompChat(category: string) {
         payload,
       });
     },
-    [category, me?.nickname, streamId],
+    [appendMessageForStream, category, me?.nickname, streamId],
   );
 
   return { messages, sendMessage, sendMacro, connectionState, streamId };

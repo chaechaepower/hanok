@@ -1,31 +1,25 @@
+﻿import { useState } from 'react';
+import { FiTrash2, FiUpload, FiX } from 'react-icons/fi';
 import { useToast } from '@/components/common/Toast';
-import { useState } from 'react';
-import { FiX, FiUpload, FiTrash2 } from 'react-icons/fi';
-
 const REPORT_REASONS = ['허위 매물 / 사기 의심', '욕설 / 비방', '부적절한 콘텐츠', '스팸 / 광고', '기타'] as const;
-
 type ReportModalProps = {
   sellerNickname: string;
   onClose: () => void;
   onSubmit: (data: { reason: string; detail: string; images: File[] }) => void;
 };
-
 export default function ReportModal({ sellerNickname, onClose, onSubmit }: ReportModalProps) {
   const [reason, setReason] = useState('');
   const [detail, setDetail] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const { showToast } = useToast();
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     setImages((prev) => [...prev, ...files].slice(0, 3));
     e.target.value = '';
   };
-
   const handleRemoveImage = (index: number) => {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
-
   const handleSubmit = () => {
     if (!reason) {
       showToast({ message: '신고 사유를 선택해주세요.' });
@@ -37,7 +31,6 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
     }
     onSubmit({ reason, detail, images });
   };
-
   return (
     <div
       className="fixed top-0 left-0 w-full h-full bg-black/70 z-[999] flex items-center justify-center"
@@ -56,11 +49,9 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
             <FiX size={22} />
           </button>
         </div>
-
         <p className="m-0 text-[14px] text-neutral-400">
           <span className="text-gold-light font-bold">{sellerNickname}</span> 스토어를 신고합니다.
         </p>
-
         <div className="flex flex-col gap-2">
           <label className="text-[14px] text-neutral-300 font-semibold">신고 사유</label>
           <div className="flex flex-col gap-2">
@@ -86,7 +77,6 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
             ))}
           </div>
         </div>
-
         <div className="flex flex-col gap-2">
           <label className="text-[14px] text-neutral-300 font-semibold">상세 설명</label>
           <textarea
@@ -96,12 +86,10 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
             onChange={(e) => setDetail(e.target.value)}
           />
         </div>
-
         <div className="flex flex-col gap-2">
           <label className="text-[14px] text-neutral-300 font-semibold">
-            스크린샷 첨부 <span className="text-neutral-600 font-normal">({images.length}/3)</span>
+            스크린샷 첨부(10MB 이하) <span className="text-neutral-600 font-normal">({images.length}/3)</span>
           </label>
-
           {images.length > 0 && (
             <div className="flex gap-3">
               {images.map((img, i) => (
@@ -117,11 +105,10 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
               ))}
             </div>
           )}
-
           {images.length < 3 && (
             <label className="flex items-center justify-center gap-2 py-3 border border-dashed border-neutral-800 rounded-lg text-neutral-600 text-[14px] cursor-pointer hover:border-gold-light hover:text-gold-light transition-colors">
               <FiUpload size={16} />
-              이미지 업로드
+              이미지 업로드(10MB 이하)
               <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
             </label>
           )}

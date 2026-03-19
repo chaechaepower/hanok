@@ -6,6 +6,7 @@ const postItemPath = () => '/v1/items';
 
 export const usePostItem = () => {
   return useMutation<CreateItemResponse, Error, CreateItemPayload>({
+    throwOnError: false,
     mutationFn: async (payload) => {
       const { images, ...request } = payload;
       const formData = new FormData();
