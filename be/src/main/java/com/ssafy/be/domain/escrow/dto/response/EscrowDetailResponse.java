@@ -34,7 +34,7 @@ public record EscrowDetailResponse(
 
     @Builder
     public record DeliveryDto(
-            String courierName,
+            String carrierName,
             String trackingNumber
     ) {
     }

@@ -329,7 +329,7 @@ public class EscrowService {
 
     private EscrowDetailResponse.DeliveryDto buildDelivery(Escrow escrow) {
         return EscrowDetailResponse.DeliveryDto.builder()
-                .courierName(escrow.getCourierName())
+                .carrierName(escrow.getCarrierName())
                 .trackingNumber(escrow.getTrackingNumber())
                 .build();
     }

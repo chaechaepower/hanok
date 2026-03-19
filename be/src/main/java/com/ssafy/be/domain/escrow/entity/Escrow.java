@@ -34,7 +34,7 @@ public class Escrow {
     @Enumerated(EnumType.STRING)
     private EscrowStatus escrowStatus;
 
-    private String courierName;
+    private String carrierName;
 
     private String trackingNumber;
 
@@ -69,7 +69,7 @@ public class Escrow {
     private Escrow(Long winningPrice,
                    Long feeAmount,
                    EscrowStatus escrowStatus,
-                   String courierName,
+                   String carrierName,
                    String trackingNumber,
                    LocalDateTime submittedAt,
                    Auction auction,
@@ -81,7 +81,7 @@ public class Escrow {
         this.winningPrice = winningPrice;
         this.feeAmount = feeAmount;
         this.escrowStatus = escrowStatus;
-        this.courierName = courierName;
+        this.carrierName = carrierName;
         this.trackingNumber = trackingNumber;
         this.submittedAt = submittedAt;
         this.auction = auction;
@@ -98,7 +98,7 @@ public class Escrow {
         }
 
         this.escrowStatus = SHIPPED;
-        this.courierName = carrierName;
+        this.carrierName = carrierName;
         this.trackingNumber = trackingNumber;
         this.submittedAt = submittedAt;
     }
