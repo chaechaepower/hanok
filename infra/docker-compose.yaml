@@ -1,4 +1,17 @@
 services:
+  nginx:
+    image: nginx:latest
+    container_name: hanok-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d          # Nginx 설정 파일 폴더
+      - /var/www/hanok:/var/www/hanok             # 프론트엔드 빌드 파일
+      - /etc/letsencrypt:/etc/letsencrypt         # SSL 인증서 (HTTPS 용)
+    restart: always
+    networks:
+      - hanok-network # 백엔드와 같은 네트워크 사용
   # =============================================
   # MySQL
   # =============================================

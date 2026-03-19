@@ -78,10 +78,6 @@ pipeline {
 set +e
 cp /var/jenkins_home/env/.env.prod infra/.env.prod
 
-# nginx-reload.sh 영구화
-sudo cp infra/nginx-reload.sh /usr/local/bin/nginx-reload.sh
-sudo chmod +x /usr/local/bin/nginx-reload.sh
-
 LIVEKIT_SECRET=$(grep LIVEKIT_API_SECRET infra/.env.prod | cut -d '=' -f2)
 cat > infra/livekit.yaml << LKEOF
 port: 7880
@@ -93,31 +89,32 @@ webhook:
   api_key: devkey
 LKEOF
 
-docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis
-docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d livekit
-docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d prometheus grafana
-docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d loki promtail
+# 기본 인프라 컨테이너 실행 (여기에 Nginx도 포함되어 있다고 가정)
+docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis livekit prometheus grafana loki promtail nginx
 
-# 현재 active 컨테이너 확인
-ACTIVE=$(grep "server localhost:808" /etc/nginx/sites-enabled/default | grep -v "down" | grep -o "808[01]" | head -1)
+# Nginx 컨테이너 내부의 설정 파일에서 현재 활성화된(down이 없는) 타겟 찾기
+ACTIVE_TARGET=$(docker exec hanok-nginx grep "server hanok-backend" /etc/nginx/conf.d/default.conf | grep -v "down" | awk '{print $2}' | cut -d':' -f1)
 
-if [ "$ACTIVE" = "8080" ] || [ -z "$ACTIVE" ]; then
-    # blue가 active → green에 배포
+if [ "$ACTIVE_TARGET" = "hanok-backend-prod" ] || [ -z "$ACTIVE_TARGET" ]; then
+    echo "현재 Blue(prod) 활성 상태 → Green 배포 시작"
     docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} pull backend-green
     docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps backend-green
     GREEN_HEALTH="000"
     for i in $(seq 1 30); do
+        # 백엔드 컨테이너 포트가 호스트에 8081로 뚫려있다고 가정한 헬스체크
         GREEN_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://172.26.0.24:8081/actuator/health)
-        if [ "$GREEN_HEALTH" = "200" ]; then
-            break
-        fi
+        if [ "$GREEN_HEALTH" = "200" ]; then break; fi
         echo "헬스체크 대기 중... ($i/30)"
         sleep 10
     done
+    
     if [ "$GREEN_HEALTH" = "200" ]; then
-        sudo sed -i "s|server localhost:8081 down;|server localhost:8081;|" /etc/nginx/sites-enabled/default
-        sudo sed -i "s|server localhost:8080;  # blue|server localhost:8080 down;  # blue|" /etc/nginx/sites-enabled/default    
-        sudo /usr/local/bin/nginx-reload.sh
+        # Nginx 컨테이너 안에서 직접 sed로 설정 파일 수정
+        docker exec hanok-nginx sed -i "s|server hanok-backend-green:8080 down;|server hanok-backend-green:8080;|" /etc/nginx/conf.d/default.conf
+        docker exec hanok-nginx sed -i "s|server hanok-backend-prod:8080;|server hanok-backend-prod:8080 down;|" /etc/nginx/conf.d/default.conf
+        
+        # Nginx 리로드 (핵심!)
+        docker exec hanok-nginx nginx -s reload
         sleep 3
         docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} stop backend-prod
         echo "배포 완료 - green 활성화"
@@ -127,22 +124,24 @@ if [ "$ACTIVE" = "8080" ] || [ -z "$ACTIVE" ]; then
         exit 1
     fi
 else
-    # green이 active → blue에 배포
+    echo "현재 Green 활성 상태 → Blue(prod) 배포 시작"
     docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} pull backend-prod
     docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps backend-prod
     BLUE_HEALTH="000"
     for i in $(seq 1 30); do
         BLUE_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://172.26.0.24:8080/actuator/health)
-        if [ "$BLUE_HEALTH" = "200" ]; then
-            break
-        fi
+        if [ "$BLUE_HEALTH" = "200" ]; then break; fi
         echo "헬스체크 대기 중... ($i/30)"
         sleep 10
     done
+    
     if [ "$BLUE_HEALTH" = "200" ]; then
-        sudo sed -i "s|server localhost:8080 down;|server localhost:8080;|" /etc/nginx/sites-enabled/default
-        sudo sed -i "s|server localhost:8081;  # green|server localhost:8081 down;  # green|" /etc/nginx/sites-enabled/default
-        sudo /usr/local/bin/nginx-reload.sh
+        # Nginx 컨테이너 안에서 직접 sed로 설정 파일 수정
+        docker exec hanok-nginx sed -i "s|server hanok-backend-prod:8080 down;|server hanok-backend-prod:8080;|" /etc/nginx/conf.d/default.conf
+        docker exec hanok-nginx sed -i "s|server hanok-backend-green:8080;|server hanok-backend-green:8080 down;|" /etc/nginx/conf.d/default.conf
+        
+        # Nginx 리로드 (핵심!)
+        docker exec hanok-nginx nginx -s reload
         sleep 3
         docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} stop backend-green
         echo "배포 완료 - blue 활성화"
@@ -153,6 +152,7 @@ else
     fi
 fi
 
+# 프론트엔드 파일 복사 (볼륨으로 연결되어 있으므로 즉시 반영됨)
 rm -rf /var/www/hanok/*
 cp -r fe/dist/* /var/www/hanok/
 '''
