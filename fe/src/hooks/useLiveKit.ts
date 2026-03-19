@@ -18,6 +18,7 @@ interface UseLiveKitOptions {
 interface UseLiveKitReturn {
   state: LiveKitState;
   videoRef: React.RefObject<HTMLVideoElement | null>;
+  bgVideoRef: React.RefObject<HTMLVideoElement | null>;
   disconnect: () => void;
   toggleMic: () => void;
   toggleCamera: () => void;
@@ -35,6 +36,7 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
   const [isRemoteAudioMuted, setIsRemoteAudioMuted] = useState(false);
   const [viewerCount, setViewerCount] = useState(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const bgVideoRef = useRef<HTMLVideoElement | null>(null);
   const roomRef = useRef<Room | null>(null);
   const isHostRef = useRef(isHost);
   const togglingMicRef = useRef(false);
@@ -59,6 +61,9 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
     const tryAttach = (attempt: number) => {
       if (videoRef.current) {
         track.attach(videoRef.current);
+        if (bgVideoRef.current) {
+          track.attach(bgVideoRef.current);
+        }
         return;
       }
       if (attempt < 10) {
@@ -226,6 +231,7 @@ export function useLiveKit({ serverUrl, token, isHost }: UseLiveKitOptions): Use
   return {
     state,
     videoRef,
+    bgVideoRef,
     disconnect,
     toggleMic,
     toggleCamera,

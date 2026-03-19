@@ -57,8 +57,9 @@ export default function OrderHistorySection() {
   const selectedEscrow = items.find((item) => String(item.escrowId) === selectedItemId) ?? null;
   const canCompletePurchase = selectedEscrow?.escrowStatus === 'SHIPPED';
 
-  const totalCount = items.length;
-  const totalAmount = items.reduce((sum, item) => sum + item.amount, 0);
+  const activeItems = items.filter((item) => item.escrowStatus !== 'CANCELLED');
+  const totalCount = activeItems.length;
+  const totalAmount = activeItems.reduce((sum, item) => sum + item.amount, 0);
 
   const filteredItems = statusFilter === 'ALL' ? items : items.filter((item) => item.escrowStatus === statusFilter);
   const filteredAndSorted =

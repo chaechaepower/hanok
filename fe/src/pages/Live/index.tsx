@@ -88,6 +88,7 @@ export default function LivePage() {
   const {
     state: livekitState,
     videoRef,
+    bgVideoRef,
     toggleMic,
     toggleCamera,
     toggleRemoteAudio,
@@ -235,11 +236,18 @@ export default function LivePage() {
           <StreamOverlay viewerCount={viewerCount} isSeller={isSeller} />
           {isSeller && <SellerGuideOverlay />}
           <video
+            ref={bgVideoRef}
+            autoPlay
+            playsInline
+            muted
+            className={`absolute inset-0 h-full w-full object-cover -scale-x-100 blur-2xl brightness-50 saturate-120 ${livekitState === 'connected' ? '' : 'hidden'}`}
+          />
+          <video
             ref={videoRef}
             autoPlay
             playsInline
             muted
-            className={`h-full w-full object-contain -scale-x-100 ${livekitState === 'connected' ? '' : 'hidden'}`}
+            className={`relative h-full w-full object-contain -scale-x-100 ${livekitState === 'connected' ? '' : 'hidden'}`}
           />
           {livekitState !== 'connected' && <StreamPlaceholder />}
           <ControlBar
@@ -321,9 +329,9 @@ export default function LivePage() {
             <motion.div
               key="right-panel"
               className="min-w-0 overflow-hidden rounded-2xl"
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 'auto', opacity: 1, flex: 1 }}
-              exit={{ width: 0, opacity: 0, flex: 0 }}
+              initial={{ flex: 0, opacity: 0 }}
+              animate={{ flex: 1, opacity: 1 }}
+              exit={{ flex: 0, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             >
               <RightPanel
