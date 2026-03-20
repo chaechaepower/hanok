@@ -73,7 +73,7 @@ public class StreamService {
     private final UserRepository userRepository;
     private final MacroRedisRepository macroRedisRepository;
     private final StreamPublisher streamPublisher; // 추가
-    private final UniqueBidAuctionDetailRepository uniqueBidAuctionDetailRepository;
+
 
     @Transactional
     public StreamRegisterResponse register(
@@ -111,15 +111,15 @@ public class StreamService {
                                         .stream(saved)
                                         .item(item)
                                         .build());
-                        if (item.getAuctionType() == AuctionType.UNIQUE_TOP) {
-                            uniqueBidAuctionDetailRepository.save(
-                                    UniqueBidAuctionDetail.builder()
-                                            .auction(auction)
-                                            .minPrice(auctionItemReq.minPrice())
-                                            .maxPrice(auctionItemReq.maxPrice())
-                                            .build()
-                            );
-                        }
+//                        if (item.getAuctionType() == AuctionType.UNIQUE_TOP) {
+//                            uniqueBidAuctionDetailRepository.save(
+//                                    UniqueBidAuctionDetail.builder()
+//                                            .auction(auction)
+//                                            .minPrice(auctionItemReq.minPrice())
+//                                            .maxPrice(auctionItemReq.maxPrice())
+//                                            .build()
+//                            );
+//                        }
 
 
                         return new ItemSummaryResponse(
