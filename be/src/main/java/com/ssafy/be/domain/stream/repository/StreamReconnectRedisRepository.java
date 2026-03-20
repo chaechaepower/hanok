@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class StreamReconnectRedisRepository {
     private static final String RECONNECT_KEY = "stream:reconnect:";
-    private static final long RECONNECT_TIMEOUT_SECONDS = 60L;
+    private static final long RECONNECT_TIMEOUT_SECONDS = 300L;
 
     private final RedisOperator redisOperator;
 
