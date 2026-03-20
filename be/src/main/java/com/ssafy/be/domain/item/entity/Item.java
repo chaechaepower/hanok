@@ -32,11 +32,13 @@ public class Item {
     @Enumerated(EnumType.STRING)
     private Category category;
 
+    // TODO: 경매 관련 데이터 추후 삭제 필요
     private Long startPrice;
 
     private Long bidUnit;
 
     private Integer auctionDuration;
+    // TODO:
 
     @Enumerated(EnumType.STRING)
     private ItemStatus status;

@@ -3,7 +3,7 @@ package com.ssafy.be.domain.uniqueaction.service;
 import com.ssafy.be.domain.auction.dto.response.AuctionCommentResponse;
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
-import com.ssafy.be.domain.auction.entity.UniqueBidAuctionDetail;
+import com.ssafy.be.domain.uniqueaction.entity.UniqueBidAuctionDetail;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
 import com.ssafy.be.domain.shippingaddress.exception.ShippingAddressErrorCode;

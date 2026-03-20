@@ -1,7 +1,10 @@
 package com.ssafy.be.domain.auction.entity;
 
+import com.ssafy.be.domain.bottomauction.entity.BottomUpAuctionDetail;
+import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.stream.entity.Stream;
+import com.ssafy.be.domain.uniqueaction.entity.UniqueBidAuctionDetail;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -20,10 +23,13 @@ public class Auction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long finalPrice;
+    @Enumerated(EnumType.STRING)
+    private AuctionType auctionType;
 
     @Enumerated(EnumType.STRING)
     private AuctionStatus auctionStatus;
+
+    private Long finalPrice;
 
     private String startedAt;
 
@@ -39,23 +45,24 @@ public class Auction {
     @OneToOne(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private UniqueBidAuctionDetail uniqueBidAuctionDetail;
 
+    @OneToOne(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private BottomUpAuctionDetail bottomUpAuctionDetail;
+
     @Builder
-    private Auction(AuctionStatus auctionStatus,
-                    Long finalPrice,
-                    String startedAt,
-                    Stream stream,
-                    Item item) {
+    private Auction(
+            AuctionType auctionType,
+            AuctionStatus auctionStatus,
+            Long finalPrice,
+            String startedAt,
+            Stream stream,
+            Item item) {
+        this.auctionType = auctionType;
         this.auctionStatus = auctionStatus;
         this.finalPrice = finalPrice;
         this.startedAt = startedAt;
         this.stream = stream;
         this.item = item;
     }
-
-//    // --- 연관관계 편의 메서드 추가 ---
-//    public void assignUniqueBidDetail(UniqueBidAuctionDetail detail) {
-//        this.uniqueBidAuctionDetail = detail;
-//    }
 
     public void startAuction(String startedAt) {
         if (auctionStatus != INTRODUCING) {
@@ -111,7 +118,11 @@ public class Auction {
         return Objects.equals(sellerId, userId);
     }
 
+    // TODO: BottomUpAuctionDetail로 옮기기
     public boolean isBelowStartPrice(Long amount) {
-        return this.item.getStartPrice() > amount;
+        Long startPrice = bottomUpAuctionDetail != null
+                ? bottomUpAuctionDetail.getStartPrice()
+                : item.getStartPrice();
+        return startPrice > amount;
     }
 }

@@ -1,5 +1,6 @@
-package com.ssafy.be.domain.auction.entity;
+package com.ssafy.be.domain.uniqueaction.entity;
 
+import com.ssafy.be.domain.auction.entity.Auction;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -30,7 +31,6 @@ public class UniqueBidAuctionDetail {
         this.minPrice = minPrice;
         this.maxPrice = maxPrice;
     }
-
 
     public void validateSetting() {
         long unit = auction.getItem().getBidUnit();
