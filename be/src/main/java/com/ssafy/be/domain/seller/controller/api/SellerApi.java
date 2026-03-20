@@ -3,10 +3,7 @@ package com.ssafy.be.domain.seller.controller.api;
 import com.ssafy.be.domain.escrow.dto.response.EscrowListResponse;
 import com.ssafy.be.domain.seller.dto.request.SellerProfileUpdateRequest;
 import com.ssafy.be.domain.seller.dto.request.SellerRegisterRequest;
-import com.ssafy.be.domain.seller.dto.response.BiznoVerifyResponse;
-import com.ssafy.be.domain.seller.dto.response.SellerProfileResponse;
-import com.ssafy.be.domain.seller.dto.response.SellerRegisterResponse;
-import com.ssafy.be.domain.seller.dto.response.SellerReputationResponse;
+import com.ssafy.be.domain.seller.dto.response.*;
 import com.ssafy.be.global.common.response.ApiResponse;
 import com.ssafy.be.global.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -66,6 +63,15 @@ public interface SellerApi {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
     @GetMapping("/{sellerId}/reputation")
     ResponseEntity<ApiResponse<SellerReputationResponse>> getReputation(
+            @PathVariable Long sellerId,
+            @AuthenticationPrincipal String principal);
+
+    @Operation(summary = "판매자 대시보드 리포트 조회", description = "판매자의 누적 판매 통계, 에스크로 현황, 매출 추이, 인기 경매 상품 Top 3 등을 조회합니다. (본인만 조회 가능)")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "본인 아님 (권한 없음)",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @GetMapping("/{sellerId}/report")
+    ResponseEntity<ApiResponse<SellerReportResponse>> getSellerReport(
             @PathVariable Long sellerId,
             @AuthenticationPrincipal String principal);
 }
