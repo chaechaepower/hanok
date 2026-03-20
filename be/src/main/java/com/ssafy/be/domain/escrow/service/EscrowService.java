@@ -137,6 +137,7 @@ public class EscrowService {
         // 취소
         escrow.manualCancelEscrow(request.cancelReason());
         escrow.getBuyer().cancelDepositedEscrowBalance(escrow.getWinningPrice());
+        escrow.getAuction().getItem().ready();
 
         // 운송장번호 등록 72시간 타임아웃 스케줄러 예약 취소
         escrowShipmentScheduler.cancelScheduledEscrow(escrowId);

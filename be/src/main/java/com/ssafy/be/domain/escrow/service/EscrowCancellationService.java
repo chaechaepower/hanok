@@ -27,6 +27,7 @@ public class EscrowCancellationService {
 
         escrow.autoCancelEscrow();
         escrow.getBuyer().cancelDepositedEscrowBalance(escrow.getWinningPrice());
+        escrow.getAuction().getItem().ready();
 
         // 판매자 평점 감소
         escrow.getSeller().increasePenaltyCount();
