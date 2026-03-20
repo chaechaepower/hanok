@@ -14,7 +14,7 @@ type Step3Props = {
 const BANK_LIST = BANKS.filter((b) => Number(b.code) < 200);
 const STOCK_LIST = BANKS.filter((b) => Number(b.code) >= 200);
 
-const inputClass = 'w-full h-12 bg-background border border-neutral-800 rounded-lg text-white text-sm px-4 outline-none font-[inherit]';
+const inputClass = 'w-full h-14 bg-background border border-neutral-800 rounded-xl text-base px-5 outline-none font-[inherit] text-white';
 
 export default function Step3({ onPrev, onNext, hasExistingAccount, existingAccount }: Step3Props) {
   const existingBankCode = existingAccount?.bankName
@@ -60,40 +60,40 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
 
   return (
     <>
-      <div className="mb-7">
-        <h2 className="text-[17px] font-bold text-white mb-2">
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-white mb-3">
           정산받을 은행 계좌 인증을 진행해주세요.
         </h2>
-        <p className="text-sm text-neutral-300">판매 금액이 정산되는 계좌입니다.</p>
+        <p className="text-base text-neutral-300">판매 금액이 정산되는 계좌입니다.</p>
       </div>
 
       {hasExistingAccount ? (
-        <div className="bg-surface border border-neutral-800 rounded-xl p-6 mb-4">
-          <div className="flex items-center gap-2 mb-5">
-            <p className="text-[15px] text-neutral-200 font-semibold m-0">계좌 정보</p>
-            <span className="text-xs text-background bg-primary-light rounded px-2 py-0.5 font-semibold">등록됨</span>
+        <div className="bg-surface border border-neutral-800 rounded-2xl p-8 mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <p className="text-lg text-neutral-200 font-semibold m-0">계좌 정보</p>
+            <span className="text-sm text-background bg-primary-light rounded-md px-2.5 py-1 font-semibold">등록됨</span>
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             <div className="flex justify-between">
-              <span className="text-sm text-neutral-500">예금주</span>
-              <span className="text-sm text-white">{existingAccount?.accountName}</span>
+              <span className="text-base text-neutral-500">예금주</span>
+              <span className="text-base text-white">{existingAccount?.accountName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-neutral-500">은행</span>
-              <span className="text-sm text-white">{existingAccount?.bankName}</span>
+              <span className="text-base text-neutral-500">은행</span>
+              <span className="text-base text-white">{existingAccount?.bankName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm text-neutral-500">계좌번호</span>
-              <span className="text-sm text-white">{existingAccount?.accountNum}</span>
+              <span className="text-base text-neutral-500">계좌번호</span>
+              <span className="text-base text-white">{existingAccount?.accountNum}</span>
             </div>
           </div>
-          <p className="text-xs text-neutral-600 mt-4 mb-0">계좌 변경은 설정에서 가능합니다.</p>
+          <p className="text-sm text-neutral-600 mt-5 mb-0">계좌 변경은 설정에서 가능합니다.</p>
         </div>
       ) : (
         <>
-          <p className="text-sm text-neutral-200 mb-3 font-semibold">계좌 정보 입력</p>
+          <p className="text-base text-neutral-200 mb-4 font-semibold">계좌 정보 입력</p>
 
-          <div className="mb-4">
+          <div className="mb-5">
             <input
               type="text"
               value={accountName}
@@ -106,7 +106,7 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
             />
           </div>
 
-          <div className="mb-4">
+          <div className="mb-5">
             <button
               type="button"
               onClick={() => setShowBankModal(true)}
@@ -178,7 +178,7 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
             </div>
           )}
 
-          <div className="mb-4">
+          <div className="mb-5">
             <input
               type="text"
               value={accountNumber}
@@ -192,15 +192,15 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
             />
           </div>
 
-          {error && <p className="text-accent-light text-[13px] pl-1 mb-2">{error}</p>}
+          {error && <p className="text-accent-light text-sm pl-1 mb-3">{error}</p>}
         </>
       )}
 
-      <div className="flex justify-between sticky bottom-0 pt-6 pb-6">
-        <Button variant="outline" onClick={onPrev} className="w-30!">
+      <div className="flex justify-between sticky bottom-0 pt-8 pb-6 bg-background">
+        <Button variant="outline" onClick={onPrev} className="w-32! h-12! rounded-xl! text-base!">
           이전
         </Button>
-        <Button onClick={handleNext} className="w-30!">
+        <Button onClick={handleNext} className="w-32! h-12! rounded-xl! text-base!">
           다음
         </Button>
       </div>
