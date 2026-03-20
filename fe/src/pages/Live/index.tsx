@@ -249,7 +249,15 @@ export default function LivePage() {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [hasStartedThisStream, isSeller, isStreamLive, numericStreamId, shouldAutoOpenStartModal, startRequest, streamEnter]);
+  }, [
+    hasStartedThisStream,
+    isSeller,
+    isStreamLive,
+    numericStreamId,
+    shouldAutoOpenStartModal,
+    startRequest,
+    streamEnter,
+  ]);
 
   useEffect(() => {
     if (!Number.isFinite(numericStreamId) || numericStreamId <= 0 || streamState !== 'ended') {
@@ -374,11 +382,19 @@ export default function LivePage() {
               onClose={handleUniqueAuctionResultClose}
             />
           )}
-          {streamState === 'disconnected' && <StreamDisconnected initialSeconds={60} onTimeout={markStreamEnded} />}
+          {streamState === 'disconnected' && (
+            <StreamDisconnected
+              initialSeconds={300}
+              onTimeout={markStreamEnded}
+              onExit={() => {
+                navigate('/');
+              }}
+            />
+          )}
           {streamState === 'ended' && (
             <StreamEnded
               onClose={() => {
-                navigate(-1);
+                navigate('/');
               }}
             />
           )}
