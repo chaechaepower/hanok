@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { FaBroadcastTower, FaPlus } from 'react-icons/fa';
+import { MdLiveTv } from 'react-icons/md';
 import { useToast } from '@/components/common/Toast';
 import { useDeleteStream } from '@/api/hooks/useDeleteStream';
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
+import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { getCategoryLabel } from '@/constants/category';
 import SideBar from '@/components/common/layouts/SideBar';
 import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
@@ -26,8 +28,26 @@ export default function LiveCreatePage() {
     return 0;
   });
   const deleteMutation = useDeleteStream();
+  const startStreamMutation = usePostStartStream();
   const [showModal, setShowModal] = useState(false);
   const { showToast } = useToast();
+
+  const handleQuickStart = async (stream: (typeof streams)[number]) => {
+    try {
+      await startStreamMutation.mutateAsync({
+        streamId: stream.streamId,
+        request: {
+          title: stream.title,
+          category: stream.category,
+          startType: 'IMMEDIATE',
+          itemIds: [],
+        },
+      });
+      navigate(`/live/${stream.streamId}`);
+    } catch {
+      showToast({ message: '방송 시작에 실패했습니다. 다시 시도해주세요.' });
+    }
+  };
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
@@ -85,20 +105,42 @@ export default function LiveCreatePage() {
         </div>
 
         <div className="flex items-center gap-4 shrink-0 pr-2">
-          <button
-            type="button"
-            onClick={() => navigate(`/live/register?streamId=${stream.streamId}`)}
-            className="text-sm transition-colors text-neutral-300 hover:text-neutral-100"
-          >
-            수정
-          </button>
-          <button
-            type="button"
-            onClick={() => handleDelete(stream.streamId)}
-            className="text-neutral-300 text-sm hover:text-accent-light transition-colors"
-          >
-            삭제
-          </button>
+          {stream.state === 'LIVE' ? (
+            <button
+              type="button"
+              onClick={() => navigate(`/live/${stream.streamId}`)}
+              className="flex items-center gap-1.5 rounded-lg border border-accent/35 bg-accent/12 px-3 py-1.5 text-xs font-bold text-accent-light transition-colors hover:bg-accent/25"
+            >
+              <MdLiveTv size={14} />
+              입장
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => handleQuickStart(stream)}
+                disabled={startStreamMutation.isPending}
+                className="flex items-center gap-1.5 rounded-lg border border-accent/35 bg-accent/12 px-3 py-1.5 text-xs font-bold text-accent-light transition-colors hover:bg-accent/25 disabled:opacity-50"
+              >
+                <MdLiveTv size={14} />
+                {startStreamMutation.isPending ? '시작 중...' : '즉시 시작'}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate(`/live/register?streamId=${stream.streamId}`)}
+                className="text-sm transition-colors text-neutral-300 hover:text-neutral-100"
+              >
+                수정
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDelete(stream.streamId)}
+                className="text-neutral-300 text-sm hover:text-accent-light transition-colors"
+              >
+                삭제
+              </button>
+            </>
+          )}
         </div>
       </div>
     ))

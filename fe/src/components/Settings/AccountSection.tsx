@@ -109,7 +109,7 @@ export default function AccountSection() {
             <FaUserAlt size={18} className="text-neutral-400" />
             계정 관리
           </h3>
-          <button onClick={handleOpenPasswordModal} className="btn btn-gold-outline">
+          <button onClick={handleOpenPasswordModal} className="btn btn-gold">
             비밀번호 수정
           </button>
         </div>

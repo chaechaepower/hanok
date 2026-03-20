@@ -300,6 +300,10 @@ html {
     text-decoration: none;
   }
 
+  button {
+    cursor: pointer;
+  }
+
   /* ── 타이포그래피 프리셋 ── */
 
   h1 {

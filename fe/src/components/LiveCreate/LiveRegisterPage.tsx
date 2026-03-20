@@ -38,6 +38,7 @@ export default function LiveRegisterPage() {
   const rawStreamId = Number(searchParams.get('streamId') ?? 0);
   const streamId = Number.isFinite(rawStreamId) ? rawStreamId : 0;
   const isEditMode = streamId > 0;
+  const autoStart = searchParams.get('autoStart') === 'true';
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -230,6 +231,14 @@ export default function LiveRegisterPage() {
 
     void submitReadyEntry();
   };
+
+  const autoStartTriggeredRef = useRef(false);
+  useEffect(() => {
+    if (autoStart && isEditMode && !streamLoading && title.trim() && !autoStartTriggeredRef.current) {
+      autoStartTriggeredRef.current = true;
+      handleEnter();
+    }
+  });
 
   const postStream = usePostStream();
   const postStartStream = usePostStartStream();

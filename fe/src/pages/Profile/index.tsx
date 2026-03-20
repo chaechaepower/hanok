@@ -413,14 +413,30 @@ export default function ProfilePage() {
             )}
 
             {isOwner && data?.stats !== undefined && (
-              <div className="grid grid-cols-3 gap-[1px] bg-neutral-800 border border-white/5 rounded-xl overflow-hidden">
+              <div className="grid grid-cols-3 gap-[1px] bg-neutral-800 border border-white/5 rounded-xl">
                 <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated">
                   <span className="text-subtitle-sm text-neutral-500">팔로워</span>
                   <span className="text-price-lg text-white">{data.stats.followerCount ?? '-'}</span>
                 </div>
-                <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated">
-                  <span className="text-subtitle-sm text-neutral-500">평점</span>
+                <div className="relative flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated group">
+                  <span className="text-subtitle-sm text-neutral-500 flex items-center gap-1">
+                    평점
+                    <svg className="w-3.5 h-3.5 text-neutral-600 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </span>
                   <span className="text-price-lg text-white">{data.stats.rating ?? '-'}</span>
+                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-64 p-3 bg-neutral-900 border border-white/10 rounded-lg shadow-xl text-xs text-neutral-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <p className="font-semibold text-white mb-1.5">평점 산정 기준</p>
+                    <ul className="space-y-1 list-disc list-inside">
+                      <li>거래 완료 후 구매자 평가 (5점 만점)</li>
+                      <li>상품 상태 정확도 30%</li>
+                      <li>배송 속도 30%</li>
+                      <li>커뮤니케이션 20%</li>
+                      <li>포장 상태 20%</li>
+                    </ul>
+                    <p className="mt-1.5 text-neutral-500">최근 30건 거래 기준 가중 평균</p>
+                  </div>
                 </div>
                 <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated">
                   <span className="text-subtitle-sm text-neutral-500">평균 배송</span>
