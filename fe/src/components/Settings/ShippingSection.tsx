@@ -34,8 +34,17 @@ export default function ShippingSection() {
     removeAddress(id);
   };
 
-  const handleSetDefault = (id: number) => {
-    updateAddress({ id, isDefault: true });
+  const handleSetDefault = (address: Address) => {
+    updateAddress({
+      id: address.id,
+      addressName: address.addressName,
+      postalCode: address.postalCode,
+      address: address.address,
+      addressDetail: address.addressDetail,
+      phone: address.phone,
+      recipientName: address.recipientName,
+      isDefault: true,
+    });
   };
 
   if (isLoading) {
@@ -92,7 +101,7 @@ export default function ShippingSection() {
                   {!address.isDefault ? (
                     <button
                       type="button"
-                      onClick={() => handleSetDefault(address.id)}
+                      onClick={() => handleSetDefault(address)}
                       className="btn btn-primary-outline !px-3 !py-1.5 !text-[12px]"
                     >
                       기본 배송지로 설정

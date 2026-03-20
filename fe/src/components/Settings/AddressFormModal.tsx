@@ -189,6 +189,7 @@ export default function AddressFormModal({
         addressDetail: form.addressDetail,
         phone: form.phone,
         recipientName: form.recipientName,
+        isDefault: initialAddress.isDefault,
       },
       {
         onSuccess: () => {
