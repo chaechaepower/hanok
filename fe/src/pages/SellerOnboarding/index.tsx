@@ -89,10 +89,10 @@ export default function SellerOnboardingPage() {
   };
 
   return (
-    <div className="text-neutral-200 flex flex-col items-center pt-16 pb-20 px-4">
-      <div className="w-full max-w-[720px]">
+    <div className="text-neutral-200 flex flex-col items-center pt-16 pb-20 px-6">
+      <div className="w-full max-w-[1100px]">
         <StepIndicator current={currentStep} />
-        <hr className="border-neutral-800 mb-10" />
+        <hr className="border-neutral-800 mb-12" />
 
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div

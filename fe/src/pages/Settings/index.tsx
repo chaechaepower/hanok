@@ -107,13 +107,17 @@ export default function SettingsPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <h1 className="m-0 text-3xl font-bold tracking-tight text-white">{user?.nickname}</h1>
             <div className="flex items-center gap-3">
-              <span className="text-lg text-neutral-400">({user?.email?.split('@')[0]})</span>
-              <button onClick={handleLogout} disabled={isLogoutPending} className="btn btn-primary-outline">
+              <h1 className="m-0 text-3xl font-bold tracking-tight text-white">{user?.nickname}</h1>
+              <button
+                onClick={handleLogout}
+                disabled={isLogoutPending}
+                className="btn btn-primary-outline"
+              >
                 {isLogoutPending ? '로그아웃 중...' : '로그아웃'}
               </button>
             </div>
+            <span className="text-lg text-neutral-400">{user?.email?.split('@')[0]}</span>
           </div>
         </div>
 

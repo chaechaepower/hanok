@@ -12,12 +12,6 @@ export type StreamEnterSeller = {
   profileImage: string | null;
 };
 
-export type StreamEnterTopBidder = {
-  rank: number;
-  nickname: string;
-  amount: number;
-};
-
 export type StreamEnterResponse = {
   streamId: number;
   title: string;
@@ -31,7 +25,6 @@ export type StreamEnterResponse = {
   createdAt: string;
   items: LiveStreamItem[];
   seller: StreamEnterSeller;
-  topBidders: StreamEnterTopBidder[];
   token: string;
   identity: string;
   isFollowing: boolean;

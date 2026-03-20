@@ -115,6 +115,9 @@ export default function ProductRegistrationModal({
   const [bidUnit, setBidUnit] = useState('');
   const [auctionDuration, setAuctionDuration] = useState('');
   const [auctionType, setAuctionType] = useState<ItemAuctionType | ''>('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [uniquePriceError, setUniquePriceError] = useState('');
   const [hashtags, setHashtags] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -128,12 +131,16 @@ export default function ProductRegistrationModal({
   const totalStartPrice = startPriceValue + shippingFeeValue;
   const maxBidUnit = Math.floor((normalizedStartPriceForBid * 0.1) / BID_UNIT_STEP) * BID_UNIT_STEP;
   const isBidUnitDisabled = maxBidUnit < MIN_BID_UNIT;
+  const isUniqueTopAuction = auctionType === 'UNIQUE_TOP';
+  const showBottomUpPricing = Boolean(initialData) || auctionType === 'BOTTOM_UP';
+  const showUniqueTopPricing = !initialData && isUniqueTopAuction;
 
   React.useEffect(() => {
     if (!isOpen) return;
 
     setImages([]);
     setError('');
+    setUniquePriceError('');
 
     if (initialData) {
       setName(initialData.name);
@@ -150,6 +157,8 @@ export default function ProductRegistrationModal({
       setBidUnit(initialData.bidUnit ? String(initialData.bidUnit) : '');
       setAuctionDuration(initialData.auctionDuration ? String(initialData.auctionDuration) : '');
       setAuctionType(initialData.auctionType);
+      setMinPrice(initialData.minPrice != null ? String(initialData.minPrice) : '');
+      setMaxPrice(initialData.maxPrice != null ? String(initialData.maxPrice) : '');
       setHashtags(
         initialData.tags && initialData.tags.length > 0 ? initialData.tags.map((t) => `#${t}`).join(' ') : '',
       );
@@ -166,6 +175,9 @@ export default function ProductRegistrationModal({
     setBidUnit('');
     setAuctionDuration('');
     setAuctionType('');
+    setMinPrice('');
+    setMaxPrice('');
+    setUniquePriceError('');
     setHashtags('');
     setExistingImages([]);
   }, [initialData, isOpen]);
@@ -255,6 +267,22 @@ export default function ProductRegistrationModal({
     setBidUnit(String(normalizeBidUnitValue(Number(bidUnit), maxBidUnit)));
   };
 
+  const handleUniquePriceChange = (setter: (value: string) => void, value: string) => {
+    setter(toDigitsOnly(value));
+    setError('');
+    setUniquePriceError('');
+  };
+
+  const getUniquePriceRangeError = (minValue: string, maxValue: string) => {
+    if (!minValue || !maxValue) return '';
+
+    return Number(maxValue) < Number(minValue) ? '최대가격은 최소가격보다 크거나 같아야 합니다.' : '';
+  };
+
+  const handleUniquePriceBlur = (nextMinPrice = minPrice, nextMaxPrice = maxPrice) => {
+    setUniquePriceError(getUniquePriceRangeError(nextMinPrice, nextMaxPrice));
+  };
+
   const handleSubmit = async () => {
     if (!name) {
       setError('상품명을 입력해주세요.');
@@ -295,6 +323,7 @@ export default function ProductRegistrationModal({
       setError('상품 설명을 입력해주세요.');
       return;
     }
+  }
 
     const parsedTags = hashtags
       .split(/\s+/)
@@ -305,38 +334,53 @@ export default function ProductRegistrationModal({
     const normalizedStartPriceValue = startPrice ? normalizeStartPriceValue(startPriceValue) : startPriceValue;
     const normalizedTotalStartPrice = normalizedStartPriceValue + shippingFeeValue;
     const normalizedMaxBidUnit = Math.floor((normalizedStartPriceValue * 0.1) / BID_UNIT_STEP) * BID_UNIT_STEP;
+    const uniqueMinPriceValue = Number(minPrice || 0);
+    const uniqueMaxPriceValue = Number(maxPrice || 0);
 
-    if (startPrice && normalizedStartPriceValue !== startPriceValue) {
+    if (showBottomUpPricing && startPrice && normalizedStartPriceValue !== startPriceValue) {
       setStartPrice(String(normalizedStartPriceValue));
     }
 
-    if (bidUnit && normalizedBidUnitValue !== Number(bidUnit)) {
+    if (showBottomUpPricing && bidUnit && normalizedBidUnitValue !== Number(bidUnit)) {
       setBidUnit(String(normalizedBidUnitValue));
     }
 
-    if (normalizedStartPriceValue < MIN_START_PRICE) {
+    if (showBottomUpPricing && normalizedStartPriceValue < MIN_START_PRICE) {
       setError(`시작가는 최소 ${formatPriceLabel(MIN_START_PRICE)}부터 입력할 수 있습니다.`);
       return;
     }
 
-    if (normalizedMaxBidUnit < MIN_BID_UNIT) {
+    if (showBottomUpPricing && normalizedMaxBidUnit < MIN_BID_UNIT) {
       setError('배송비 제외 시작가가 5,000P 이상이어야 입찰단가를 설정할 수 있습니다.');
       return;
     }
 
-    if (normalizedBidUnitValue < MIN_BID_UNIT) {
+    if (showBottomUpPricing && normalizedBidUnitValue < MIN_BID_UNIT) {
       setError(`입찰단가는 최소 ${formatPriceLabel(MIN_BID_UNIT)}부터 입력할 수 있습니다.`);
       return;
     }
 
-    if (normalizedBidUnitValue % BID_UNIT_STEP !== 0) {
+    if (showBottomUpPricing && normalizedBidUnitValue % BID_UNIT_STEP !== 0) {
       setError('입찰단가는 100P 단위로만 입력할 수 있습니다.');
       return;
     }
 
-    if (normalizedBidUnitValue > normalizedMaxBidUnit) {
+    if (showBottomUpPricing && normalizedBidUnitValue > normalizedMaxBidUnit) {
       setError(`입찰단가는 시작가의 10% 이내인 ${formatPriceLabel(normalizedMaxBidUnit)}까지 입력할 수 있습니다.`);
       return;
+    }
+
+    if (showUniqueTopPricing) {
+      if (!minPrice || !maxPrice) {
+        setError('유일최고가 경매는 최소가격과 최대가격을 모두 입력해주세요.');
+        return;
+      }
+
+      const uniqueRangeError = getUniquePriceRangeError(minPrice, maxPrice);
+      if (uniqueRangeError) {
+        setUniquePriceError(uniqueRangeError);
+        return;
+      }
     }
 
     try {
@@ -359,9 +403,11 @@ export default function ProductRegistrationModal({
         await createItem({
           name,
           description,
-          startPrice: normalizedTotalStartPrice,
+          startPrice: showUniqueTopPricing ? null : normalizedTotalStartPrice,
+          minPrice: showUniqueTopPricing ? uniqueMinPriceValue : null,
+          maxPrice: showUniqueTopPricing ? uniqueMaxPriceValue : null,
           auctionDuration: Number(auctionDuration) || 30,
-          bidUnit: normalizedBidUnitValue,
+          bidUnit: showUniqueTopPricing ? null : normalizedBidUnitValue,
           category,
           itemCondition,
           auctionType: auctionType || 'BOTTOM_UP',
@@ -502,12 +548,44 @@ export default function ProductRegistrationModal({
           </div>
         </div>
 
+
+                <div className="flex gap-4 mb-5">
+          <div className="flex-1">
+            <label className={labelClass}>경매시간</label>
+            <CustomSelect
+              value={auctionDuration}
+              onChange={setAuctionDuration}
+              placeholder="경매시간을 선택하세요"
+              options={[
+                { value: '10', label: '10초' },
+                { value: '30', label: '30초' },
+                { value: '60', label: '1분' },
+              ]}
+            />
+          </div>
+
+          <div className="flex-1">
+            <label className={labelClass}>경매방식</label>
+            <CustomSelect
+              value={auctionType}
+              onChange={(v) => setAuctionType(v as ItemAuctionType | '')}
+              placeholder="경매방식을 선택하세요"
+              options={[
+                { value: 'BOTTOM_UP', label: '상향식' },
+                { value: 'UNIQUE_TOP', label: '유일최고가' },
+              ]}
+            />
+        </div>
+        </div>
+
+        {showBottomUpPricing && (
+          <>
         <div className="flex gap-4 mb-2">
           <div className="flex-1">
             <label className={labelClass}>시작가</label>
             <input
               className={inputClass}
-              placeholder="최소 1,000P"
+              placeholder="최소 1000P"
               inputMode="numeric"
               value={formatKoreanNumberInput(startPrice)}
               onChange={(e) => handleStartPriceChange(e.target.value)}
@@ -551,35 +629,40 @@ export default function ProductRegistrationModal({
               : `입찰단가는 100P 단위이며 최소 ${formatPriceLabel(MIN_BID_UNIT)}, 최대 시작가의 10%까지 가능합니다.`}
           </p>
         </div>
+          </>
+        )}
 
-        <div className="flex gap-4 mb-5">
-          <div className="flex-1">
-            <label className={labelClass}>경매시간</label>
-            <CustomSelect
-              value={auctionDuration}
-              onChange={setAuctionDuration}
-              placeholder="경매시간을 선택하세요"
-              options={[
-                { value: '10', label: '10초' },
-                { value: '30', label: '30초' },
-                { value: '60', label: '1분' },
-              ]}
-            />
-          </div>
+        {showUniqueTopPricing && (
+          <div className="flex gap-4 mb-5">
+            <div className="flex-1">
+              <label className={labelClass}>최소가격</label>
+              <input
+                className={inputClass}
+                placeholder="0P"
+                inputMode="numeric"
+                value={formatKoreanNumberInput(minPrice)}
+                onChange={(e) => handleUniquePriceChange(setMinPrice, e.target.value)}
+                onBlur={(e) => handleUniquePriceBlur(toDigitsOnly(e.target.value), maxPrice)}
+              />
+            </div>
 
-          <div className="flex-1">
-            <label className={labelClass}>경매방식</label>
-            <CustomSelect
-              value={auctionType}
-              onChange={(v) => setAuctionType(v as ItemAuctionType | '')}
-              placeholder="경매방식을 선택하세요"
-              options={[
-                { value: 'BOTTOM_UP', label: '상향식' },
-                { value: 'UNIQUE_TOP', label: '유일최고가' },
-              ]}
-            />
+            <div className="flex-1">
+              <label className={labelClass}>최대가격</label>
+              <input
+                className={inputClass}
+                placeholder="최대가격 입력"
+                inputMode="numeric"
+                value={formatKoreanNumberInput(maxPrice)}
+                onChange={(e) => handleUniquePriceChange(setMaxPrice, e.target.value)}
+                onBlur={(e) => handleUniquePriceBlur(minPrice, toDigitsOnly(e.target.value))}
+              />
+            </div>
           </div>
-        </div>
+        )}
+
+        {showUniqueTopPricing && uniquePriceError && (
+          <p className="mt-[-8px] mb-5 text-accent-light text-sm">{uniquePriceError}</p>
+        )}
 
         <div className="mb-5">
           <label className={labelClass}>상품 설명 ({description.length}/50)</label>

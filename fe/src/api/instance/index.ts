@@ -8,6 +8,7 @@ let refreshRequestPromise: Promise<ApiResponse<LoginResponseData>> | null = null
 
 export const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const REFRESH_TOKEN_PATH = '/v1/auth/refresh';
+const STARTED_STREAM_IDS_STORAGE_KEY = 'startedLiveStreamIds';
 
 type RetriableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
@@ -19,6 +20,9 @@ export const clearAuthSession = ({ redirectToLogin = true }: { redirectToLogin?:
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('userId');
+  if (typeof window !== 'undefined') {
+    window.sessionStorage.removeItem(STARTED_STREAM_IDS_STORAGE_KEY);
+  }
   queryClient.clear();
 
   if (!redirectToLogin || typeof window === 'undefined') {

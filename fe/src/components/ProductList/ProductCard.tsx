@@ -38,7 +38,7 @@ const conditionLabels: Record<string, string> = {
 const statusClassMap: Record<string, { label: string; bg: string }> = {
   READY: { label: '대기', bg: 'bg-neutral-800' },
   SCHEDULED: { label: '대기', bg: 'bg-neutral-800' },
-  PENDING: { label: '경매중', bg: 'bg-accent' },
+  PENDING: { label: '거래중', bg: 'bg-accent' },
   SOLD: { label: '판매완료', bg: 'bg-ember' },
 };
 
