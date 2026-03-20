@@ -117,7 +117,7 @@ export default function LiveCreatePage() {
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-[24px] font-semibold text-warm leading-tight m-0 mb-2">라이브 방송 관리</h2>
-            <p className="text-body-md text-neutral-500 m-0">라이브 방송 예약 목록입니다.</p>
+            <p className="text-body-md text-neutral-500 m-0">내가 바로 경매의 왕이다!</p>
           </div>
           <button
             type="button"
