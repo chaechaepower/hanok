@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 
 import java.security.Principal;
 
+import static com.ssafy.be.global.websocket.enums.StreamEventType.MACRO_TEMPLATE;
+
 @RequiredArgsConstructor
 @Component
 public class MacroChatHandler implements StreamEventHandler {
@@ -22,7 +24,7 @@ public class MacroChatHandler implements StreamEventHandler {
 
     @Override
     public StreamEventType getEventType() {
-        return StreamEventType.MACRO_TEMPLATE;
+        return MACRO_TEMPLATE;
     }
 
     @Override
@@ -30,10 +32,10 @@ public class MacroChatHandler implements StreamEventHandler {
         MacroTemplateRequest payload =
                 jsonConverter.convert(request.getPayload(), MacroTemplateRequest.class);
 
+        Long userId = Long.parseLong(principal.getName());
         MacroTemplatePayload responsePayload = macroService.handleMacro(streamId, payload);
 
-        streamPublisher.broadcast(streamId, StreamEventType.MACRO_TEMPLATE, responsePayload);
-    }
+        streamPublisher.sendToUser(userId, streamId, MACRO_TEMPLATE, responsePayload);    }
 
 
 
