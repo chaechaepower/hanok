@@ -72,7 +72,6 @@ public class StreamService {
     private final MacroRedisRepository macroRedisRepository;
     private final StreamPublisher streamPublisher; // 추가
 
-
     @Transactional
     public StreamRegisterResponse register(
             Long userId, StreamRegisterRequest request, MultipartFile thumbnail) {
@@ -94,11 +93,11 @@ public class StreamService {
 
         // 경매 등록
         List<ItemSummaryResponse> items = List.of();
-        if (request.auctionItems() != null && !request.auctionItems().isEmpty()) {
-            items = request.auctionItems().stream()
+        if (request.itemIds() != null && !request.itemIds().isEmpty()) {
+            items = request.itemIds().stream()
                     .map(auctionItemReq -> {
                         Item item = itemRepository
-                                .findByIdAndSellerId(auctionItemReq.itemId(), seller.getId())
+                                .findByIdAndSellerId(auctionItemReq, seller.getId())
                                 .orElseThrow(() -> new GlobalException(ItemErrorCode.ITEM_NOT_FOUND));
 
                         item.schedule();
