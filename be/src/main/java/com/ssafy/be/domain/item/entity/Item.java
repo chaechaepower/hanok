@@ -125,4 +125,8 @@ public class Item {
     public void schedule() {
         this.status= SCHEDULED;
     }
+
+    public void ready() {
+        this.status= READY;
+    }
 }

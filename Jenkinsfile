@@ -89,19 +89,23 @@ webhook:
   api_key: devkey
 LKEOF
 
-# 기본 인프라 컨테이너 실행 (여기에 Nginx도 포함되어 있다고 가정)
+# ★ 1. upstream.conf 파일이 없으면 초기값(prod)으로 자동 생성
+if [ ! -f infra/nginx/conf.d/upstream.conf ]; then
+    echo "upstream backend { server backend-prod:8080; }" > infra/nginx/conf.d/upstream.conf
+fi
+
+# 기본 인프라 컨테이너 실행 (Nginx도 여기서 켜짐)
 docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis livekit prometheus grafana loki promtail nginx
 
-# Nginx 컨테이너 내부의 설정 파일에서 현재 활성화된(down이 없는) 타겟 찾기
-ACTIVE_TARGET=$(docker exec hanok-nginx grep "server hanok-backend" /etc/nginx/conf.d/default.conf | grep -v "down" | awk '{print $2}' | cut -d':' -f1)
+# ★ 2. upstream.conf 파일 안에서 현재 활성화된 컨테이너 이름 가져오기
+ACTIVE_TARGET=$(grep "server backend" infra/nginx/conf.d/upstream.conf | awk '{print $2}' | cut -d':' -f1 || echo "backend-green")
 
-if [ "$ACTIVE_TARGET" = "hanok-backend-prod" ] || [ -z "$ACTIVE_TARGET" ]; then
+if [ "$ACTIVE_TARGET" = "backend-prod" ] || [ -z "$ACTIVE_TARGET" ]; then
     echo "현재 Blue(prod) 활성 상태 → Green 배포 시작"
     docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} pull backend-green
     docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps backend-green
     GREEN_HEALTH="000"
     for i in $(seq 1 30); do
-        # 백엔드 컨테이너 포트가 호스트에 8081로 뚫려있다고 가정한 헬스체크
         GREEN_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://172.26.0.24:8081/actuator/health)
         if [ "$GREEN_HEALTH" = "200" ]; then break; fi
         echo "헬스체크 대기 중... ($i/30)"
@@ -109,11 +113,9 @@ if [ "$ACTIVE_TARGET" = "hanok-backend-prod" ] || [ -z "$ACTIVE_TARGET" ]; then
     done
     
     if [ "$GREEN_HEALTH" = "200" ]; then
-        # Nginx 컨테이너 안에서 직접 sed로 설정 파일 수정
-        docker exec hanok-nginx sed -i "s|server hanok-backend-green:8080 down;|server hanok-backend-green:8080;|" /etc/nginx/conf.d/default.conf
-        docker exec hanok-nginx sed -i "s|server hanok-backend-prod:8080;|server hanok-backend-prod:8080 down;|" /etc/nginx/conf.d/default.conf
+        # ★ 핵심: 복잡한 sed 대신, 살아있는 green 1개만 파일에 덮어쓰기!
+        echo "upstream backend { server backend-green:8080; }" > infra/nginx/conf.d/upstream.conf
         
-        # Nginx 리로드 (핵심!)
         docker exec hanok-nginx nginx -s reload
         sleep 3
         docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} stop backend-prod
@@ -136,11 +138,9 @@ else
     done
     
     if [ "$BLUE_HEALTH" = "200" ]; then
-        # Nginx 컨테이너 안에서 직접 sed로 설정 파일 수정
-        docker exec hanok-nginx sed -i "s|server hanok-backend-prod:8080 down;|server hanok-backend-prod:8080;|" /etc/nginx/conf.d/default.conf
-        docker exec hanok-nginx sed -i "s|server hanok-backend-green:8080;|server hanok-backend-green:8080 down;|" /etc/nginx/conf.d/default.conf
+        # ★ 핵심: 복잡한 sed 대신, 살아있는 prod 1개만 파일에 덮어쓰기!
+        echo "upstream backend { server backend-prod:8080; }" > infra/nginx/conf.d/upstream.conf
         
-        # Nginx 리로드 (핵심!)
         docker exec hanok-nginx nginx -s reload
         sleep 3
         docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} stop backend-green
@@ -152,7 +152,7 @@ else
     fi
 fi
 
-# 프론트엔드 파일 복사 (볼륨으로 연결되어 있으므로 즉시 반영됨)
+# 프론트엔드 파일 복사
 rm -rf /var/www/hanok/*
 cp -r fe/dist/* /var/www/hanok/
 '''

@@ -15,4 +15,4 @@ public record StreamRegisterRequest(
         @NotNull StartType startType,
         LocalDateTime scheduledAt,
         String notice,
-        @Valid List<AuctionItemRequest> auctionItems) {}
+        List<Long> itemIds) {}

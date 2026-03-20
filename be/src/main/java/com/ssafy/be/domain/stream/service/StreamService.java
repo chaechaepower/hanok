@@ -2,11 +2,9 @@ package com.ssafy.be.domain.stream.service;
 
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
-import com.ssafy.be.domain.auction.entity.UniqueBidAuctionDetail;
 import com.ssafy.be.domain.auction.model.Bid;
 import com.ssafy.be.domain.auction.repository.AuctionBidRepository;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
-import com.ssafy.be.domain.auction.repository.UniqueBidAuctionDetailRepository;
 import com.ssafy.be.domain.follow.repository.FollowRepository;
 import com.ssafy.be.domain.item.dto.response.ItemSummaryResponse;
 import com.ssafy.be.domain.item.entity.AuctionType;
@@ -73,7 +71,6 @@ public class StreamService {
     private final UserRepository userRepository;
     private final MacroRedisRepository macroRedisRepository;
     private final StreamPublisher streamPublisher; // 추가
-    private final UniqueBidAuctionDetailRepository uniqueBidAuctionDetailRepository;
 
     @Transactional
     public StreamRegisterResponse register(
@@ -96,11 +93,11 @@ public class StreamService {
 
         // 경매 등록
         List<ItemSummaryResponse> items = List.of();
-        if (request.auctionItems() != null && !request.auctionItems().isEmpty()) {
-            items = request.auctionItems().stream()
+        if (request.itemIds() != null && !request.itemIds().isEmpty()) {
+            items = request.itemIds().stream()
                     .map(auctionItemReq -> {
                         Item item = itemRepository
-                                .findByIdAndSellerId(auctionItemReq.itemId(), seller.getId())
+                                .findByIdAndSellerId(auctionItemReq, seller.getId())
                                 .orElseThrow(() -> new GlobalException(ItemErrorCode.ITEM_NOT_FOUND));
 
                         item.schedule();
@@ -111,15 +108,15 @@ public class StreamService {
                                         .stream(saved)
                                         .item(item)
                                         .build());
-                        if (item.getAuctionType() == AuctionType.UNIQUE_TOP) {
-                            uniqueBidAuctionDetailRepository.save(
-                                    UniqueBidAuctionDetail.builder()
-                                            .auction(auction)
-                                            .minPrice(auctionItemReq.minPrice())
-                                            .maxPrice(auctionItemReq.maxPrice())
-                                            .build()
-                            );
-                        }
+//                        if (item.getAuctionType() == AuctionType.UNIQUE_TOP) {
+//                            uniqueBidAuctionDetailRepository.save(
+//                                    UniqueBidAuctionDetail.builder()
+//                                            .auction(auction)
+//                                            .minPrice(auctionItemReq.minPrice())
+//                                            .maxPrice(auctionItemReq.maxPrice())
+//                                            .build()
+//                            );
+//                        }
 
 
                         return new ItemSummaryResponse(

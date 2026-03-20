@@ -3,6 +3,7 @@ package com.ssafy.be.domain.notification.controller;
 import com.ssafy.be.domain.notification.controller.api.NotificationApi;
 import com.ssafy.be.domain.notification.dto.response.NotificationPageResponse;
 import com.ssafy.be.domain.notification.service.NotificationService;
+import com.ssafy.be.global.common.response.ApiResponse;
 import com.ssafy.be.global.sse.service.SseEmitterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -24,14 +25,14 @@ public class NotificationController implements NotificationApi {
 
     // 1. 알림 목록 조회
     @GetMapping
-    public ResponseEntity<NotificationPageResponse> getNotifications(
+    public ResponseEntity<ApiResponse<NotificationPageResponse>> getNotifications(
             @AuthenticationPrincipal String principal,
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "20") int limit
     ) {
         Long userId = getUserId(principal);
         NotificationPageResponse response = notificationService.getNotifications(userId, cursor, limit);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 
     // 2. 알림 읽음 처리
