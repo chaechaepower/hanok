@@ -1,27 +1,10 @@
 import { useState } from 'react';
 
-import type { ItemSyncItem } from '@/types';
+import type { AuctionItem, ItemStatus, ItemSyncItem } from '@/types';
 
-import { ActiveItemCard, DoneItemCard } from './AuctionItemCard';
 import AuctionReportModal from './AuctionReportModal';
-
-export type ItemStatus = ItemSyncItem['auctionStatus'];
-export type ItemCondition = ItemSyncItem['itemCondition'];
-
-export interface AuctionItem {
-  id: number;
-  name: string;
-  startPrice: number;
-  finalPrice?: number;
-  status: ItemStatus;
-  auctionType: ItemSyncItem['auctionType'];
-  condition: ItemCondition;
-  thumbnailUrl?: string;
-  description?: string;
-  bidUnit?: number;
-  auctionTime?: number;
-  images?: string[];
-}
+import ActiveItemCard from '@/components/Live/Auction/shared/ActiveItemCard';
+import DoneItemCard from '@/components/Live/Auction/shared/DoneItemCard';
 
 interface Props {
   isSeller: boolean;
