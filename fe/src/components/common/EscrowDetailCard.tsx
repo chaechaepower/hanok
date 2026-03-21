@@ -4,6 +4,7 @@ import { FiX } from 'react-icons/fi';
 
 import DeliveryTracker from '@/components/common/DeliveryTracker';
 import type { EscrowDetailResponse } from '@/types';
+import { formatPrice } from '@/utils/formatPrice';
 
 type EscrowDetailCardProps = {
   detail: EscrowDetailResponse;
@@ -14,7 +15,6 @@ type EscrowDetailCardProps = {
   showHeaderCloseButton?: boolean;
 };
 
-const formatPrice = (price: number) => `${price.toLocaleString('ko-KR')}원`;
 const formatDate = (dateStr: string) =>
   dateStr
     .replace(/T/, ' ')

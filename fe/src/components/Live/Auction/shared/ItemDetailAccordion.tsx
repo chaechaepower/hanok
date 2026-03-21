@@ -1,6 +1,6 @@
 import { AUCTION_TYPE_LABELS } from '@/constants/auction';
-import { formatPrice } from '@/constants/live';
 import type { AuctionItem } from '@/types';
+import { formatPrice } from '@/utils/formatPrice';
 
 function formatAuctionTime(seconds: number) {
   if (seconds >= 60) {

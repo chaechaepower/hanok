@@ -2,6 +2,7 @@ import SellerStats from '../Seller/SellerStats';
 import SellerPriceInfo from '../Seller/SellerPriceInfo';
 import BidFeed from '../Seller/BidFeed';
 import type { AuctionStatisticsPayload, LiveAuctionType, UniqueBidSyncPayload } from '@/types';
+import { formatPrice } from '@/utils/formatPrice';
 
 interface Props {
   isSeller: boolean;
@@ -9,10 +10,6 @@ interface Props {
   auctionStatistics: AuctionStatisticsPayload | null;
   uniqueBidSync: UniqueBidSyncPayload | null;
   currentUserId: number | null;
-}
-
-function formatPrice(value: number) {
-  return value.toLocaleString('ko-KR');
 }
 
 export default function AuctionPanel({ isSeller, auctionType, auctionStatistics, uniqueBidSync, currentUserId }: Props) {
@@ -33,13 +30,15 @@ export default function AuctionPanel({ isSeller, auctionType, auctionStatistics,
           <div className="rounded-2xl bg-neutral-900 p-4">
             <div className="text-[10px] font-bold text-neutral-500">입찰 범위</div>
             <div className="mt-2 text-sm font-black text-neutral-100">
-              {bidRange ? `${formatPrice(bidRange.minPrice)} ~ ${formatPrice(bidRange.maxPrice)}` : '-'}
+              {bidRange
+                ? `${formatPrice(bidRange.minPrice, { suffix: false })} ~ ${formatPrice(bidRange.maxPrice, { suffix: false })}`
+                : '-'}
             </div>
           </div>
           <div className="rounded-2xl bg-neutral-900 p-4">
             <div className="text-[10px] font-bold text-neutral-500">입찰 단위</div>
             <div className="mt-2 text-sm font-black text-neutral-100">
-              {bidRange ? `${formatPrice(bidRange.bidUnit)}원` : '-'}
+              {bidRange ? formatPrice(bidRange.bidUnit) : '-'}
             </div>
           </div>
         </div>

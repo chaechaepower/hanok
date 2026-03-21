@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 
 import { AUCTION_STATUS_BADGES } from '@/constants/auction';
 import type { AuctionItem } from '@/types';
+import { formatPrice } from '@/utils/formatPrice';
 
 interface Props {
   open: boolean;
@@ -10,10 +11,6 @@ interface Props {
 }
 
 const STAT_COLORS = ['text-neutral-400', 'text-gold', 'text-ember'] as const;
-
-function formatPrice(n: number) {
-  return n.toLocaleString('ko-KR');
-}
 
 export default function AuctionReportModal({ open, onClose, items }: Props) {
   const doneItems = items.filter((item) => item.status === 'SOLD' || item.status === 'UNSOLD');
@@ -113,11 +110,11 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
           <div className="flex items-center justify-between rounded-[20px] border border-gold/12 bg-gold/5 px-5 py-4">
             <div className="flex flex-col gap-0.5">
               <span className="text-[10px] font-bold uppercase text-neutral-600">총 낙찰 금액</span>
-              <span className="text-2xl font-black text-gold">{formatPrice(totalSales)}원</span>
+              <span className="text-2xl font-black text-gold">{formatPrice(totalSales)}</span>
             </div>
             <div className="flex flex-col items-end gap-0.5">
               <span className="text-[10px] font-bold text-neutral-600">평균 낙찰가</span>
-              <span className="text-base font-black text-gold/70">{formatPrice(avgSales)}원</span>
+              <span className="text-base font-black text-gold/70">{formatPrice(avgSales)}</span>
             </div>
           </div>
 
@@ -148,10 +145,10 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
                   </span>
                   <div className="flex flex-col items-end gap-0.5">
                     <span className="text-[10px] font-medium text-neutral-600">
-                      시작가 {formatPrice(item.startPrice)}원
+                      시작가 {formatPrice(item.startPrice)}
                     </span>
                     {isDone && item.finalPrice ? (
-                      <span className="text-xs font-black text-gold">{formatPrice(item.finalPrice)}원</span>
+                      <span className="text-xs font-black text-gold">{formatPrice(item.finalPrice)}</span>
                     ) : (
                       <span className="text-[11px] font-semibold text-neutral-700">
                         {item.status === 'LIVE' || item.status === 'INTRODUCING' ? '진행중' : '대기'}

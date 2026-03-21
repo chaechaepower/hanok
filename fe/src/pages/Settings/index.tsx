@@ -15,6 +15,7 @@ import FollowedStoresSection from '@/components/Settings/FollowedStoresSection';
 import OrderHistorySection from '@/components/Settings/OrderHistorySection';
 import PaymentSection from '@/components/Settings/PaymentSection';
 import ShippingSection from '@/components/Settings/ShippingSection';
+import { formatPrice } from '@/utils/formatPrice';
 import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
 import { useToast } from '@/hooks/useToast';
 
@@ -64,8 +65,6 @@ export default function SettingsPage() {
       },
     });
   };
-
-  const formatPrice = (price?: number) => (price || 0).toLocaleString('ko-KR');
 
   if (isMeLoading || isNotiLoading || isWalletLoading) {
     return (
@@ -135,7 +134,7 @@ export default function SettingsPage() {
             <span className="text-[17px] font-medium text-neutral-400">보유머니</span>
             <div className="flex items-center gap-3">
               <span className="text-2xl font-bold text-gold-light">
-                {formatPrice(walletData?.balance)} <span className="text-xl">원</span>
+                {formatPrice(walletData?.balance, { suffix: false })} <span className="text-xl">원</span>
               </span>
               <span className="text-xl font-bold text-gold-light">&gt;</span>
             </div>

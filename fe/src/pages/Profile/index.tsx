@@ -12,11 +12,14 @@ import { useGetMe } from '@/api/hooks/useGetMe';
 import { usePostFollow } from '@/api/hooks/usePostFollow';
 import { useGetFollowedStores } from '@/api/hooks/useGetFollowedStores';
 import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
+import NoticeList from '@/components/Profile/NoticeList';
+import ProfileEditModal, { type ProfileFormState } from '@/components/Profile/ProfileEditModal';
 import ReportModal from '@/components/Profile/ReportModal';
 import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
 import { usePatchSellerProfile } from '@/api/hooks/usePatchSellerProfile';
 import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
 import type { ScheduledStream } from '@/types';
+import { formatPrice } from '@/utils/formatPrice';
 import { getEscrowStateUI } from '@/utils/getEscrowStateUI';
 import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
 import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2, FiX, FiCamera, FiTv, FiChevronDown } from 'react-icons/fi';
@@ -71,8 +74,6 @@ const formatDate = (iso: string) => {
   return `${year}-${month}-${day} ${hour}:${min}`;
 };
 
-const formatPrice = (price: number) => price.toLocaleString('ko-KR') + '원';
-
 export default function ProfilePage() {
   const { id } = useParams<{ id: string }>();
   const sellerId = Number(id);
@@ -86,7 +87,7 @@ export default function ProfilePage() {
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isProfileEditOpen, setIsProfileEditOpen] = useState(false);
-  const [profileForm, setProfileForm] = useState({
+  const [profileForm, setProfileForm] = useState<ProfileFormState>({
     nickname: '',
     intro: '',
     instaUrl: '',
@@ -517,70 +518,13 @@ export default function ProfilePage() {
         </div>
 
         {activeTab === 'posts' && (
-          <div className="flex flex-col gap-5">
-            {notices.length === 0 ? (
-              <p className="text-center text-neutral-600 py-16 text-subtitle-lg">등록된 공지사항이 없습니다.</p>
-            ) : (
-              notices.map((post) => {
-                const streamMatch = post.content.match(/\[방송 안내\]\s*([\s\S]+)$/);
-                const mainContent = streamMatch
-                  ? post.content.slice(0, post.content.indexOf('[방송 안내]')).trim()
-                  : post.content;
-                const streamInfo = streamMatch ? streamMatch[1].trim() : null;
-
-                return (
-                  <div
-                    key={post.noticeId}
-                    className="border border-white/[0.06] rounded-xl py-7 px-8 bg-white/[0.02] flex flex-col gap-3 cursor-pointer hover:border-gold-light/40 transition-colors"
-                    onClick={() => setViewNoticeId(post.noticeId)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <BellIcon />
-                          <h3 className="m-0 text-neutral-100">{post.title}</h3>
-                        </div>
-                        {mainContent && (
-                          <p className="m-0 mt-1 ml-8 text-body-md text-neutral-400 leading-relaxed">{mainContent}</p>
-                        )}
-                        {streamInfo && (
-                          <p className="m-0 mt-1 ml-8 text-body-md text-neutral-400 leading-relaxed">{streamInfo}</p>
-                        )}
-                        <div className="flex items-center gap-2 mt-2 ml-8">
-                          <CalendarIcon />
-                          <span className="text-body-md text-neutral-600">
-                            {formatDate(post.createdAt).split(' ')[0]}
-                          </span>
-                        </div>
-                      </div>
-                      {isMyProfile && (
-                        <div className="flex gap-3">
-                          <button
-                            className="bg-transparent border-none text-neutral-500 text-body-md cursor-pointer rounded-md px-2 py-1 hover:bg-white/5 hover:text-neutral-200 transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenEditModal(post.noticeId, post.title, post.content);
-                            }}
-                          >
-                            수정
-                          </button>
-                          <button
-                            className="bg-transparent border-none text-accent-light/70 text-body-md cursor-pointer rounded-md px-2 py-1 hover:bg-accent/10 hover:text-accent-light transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteNotice(post.noticeId);
-                            }}
-                          >
-                            삭제
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+          <NoticeList
+            notices={notices}
+            isMyProfile={isMyProfile}
+            onOpenNotice={setViewNoticeId}
+            onEditNotice={(notice) => handleOpenEditModal(notice.noticeId, notice.title, notice.content)}
+            onDeleteNotice={handleDeleteNotice}
+          />
         )}
 
         {activeTab === 'sales' && (
@@ -736,12 +680,6 @@ export default function ProfilePage() {
                 <BellIcon />
                 <h2 className="m-0 text-neutral-100">{noticeDetail.title}</h2>
               </div>
-              <button
-                onClick={() => setViewNoticeId(null)}
-                className="bg-transparent border-none text-neutral-600 cursor-pointer hover:text-white transition-colors"
-              >
-                <FiX size={22} />
-              </button>
             </div>
 
             <p className="m-0 text-subtitle-lg text-neutral-200 leading-relaxed whitespace-pre-wrap">
@@ -773,106 +711,21 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {isProfileEditOpen && (
-        <div
-          className="fixed top-0 left-0 w-full h-full bg-black/90 z-[999] flex items-center justify-center backdrop-blur-sm"
-          onClick={() => setIsProfileEditOpen(false)}
-        >
-          <div
-            className="bg-surface border border-neutral-800 rounded-2xl w-[600px] p-10 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="m-0 text-neutral-100">프로필 수정</h2>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-body-lg text-neutral-400 font-medium">닉네임</label>
-              <input
-                className="w-full box-border bg-background text-white border border-neutral-800 rounded-lg px-4 py-3 text-subtitle-lg outline-none focus:border-gold-light transition-colors"
-                value={profileForm.nickname}
-                onChange={(e) => setProfileForm((prev) => ({ ...prev, nickname: e.target.value }))}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-body-lg text-neutral-400 font-medium">소개</label>
-              <textarea
-                className="w-full box-border bg-background text-white border border-neutral-800 rounded-lg px-4 py-3 text-subtitle-lg outline-none focus:border-gold-light transition-colors min-h-[100px] resize-none"
-                value={profileForm.intro}
-                onChange={(e) => setProfileForm((prev) => ({ ...prev, intro: e.target.value }))}
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-body-lg text-neutral-400 font-medium">Instagram</label>
-              <div className="flex items-center bg-background border border-neutral-800 rounded-lg overflow-hidden focus-within:border-gold-light transition-colors">
-                <span className="shrink-0 px-4 py-3 text-neutral-500 text-body-md bg-neutral-900 border-r border-neutral-800 select-none">
-                  {SOCIAL_PREFIX.instagram}
-                </span>
-                <input
-                  className="flex-1 bg-transparent text-white border-none px-4 py-3 text-subtitle-lg outline-none"
-                  placeholder="username"
-                  value={profileForm.instaUrl}
-                  onChange={(e) => setProfileForm((prev) => ({ ...prev, instaUrl: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-body-lg text-neutral-400 font-medium">YouTube</label>
-              <div className="flex items-center bg-background border border-neutral-800 rounded-lg overflow-hidden focus-within:border-gold-light transition-colors">
-                <span className="shrink-0 px-4 py-3 text-neutral-500 text-body-md bg-neutral-900 border-r border-neutral-800 select-none">
-                  {SOCIAL_PREFIX.youtube}
-                </span>
-                <input
-                  className="flex-1 bg-transparent text-white border-none px-4 py-3 text-subtitle-lg outline-none"
-                  placeholder="channel"
-                  value={profileForm.youtubeUrl}
-                  onChange={(e) => setProfileForm((prev) => ({ ...prev, youtubeUrl: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-body-lg text-neutral-400 font-medium">TikTok</label>
-              <div className="flex items-center bg-background border border-neutral-800 rounded-lg overflow-hidden focus-within:border-gold-light transition-colors">
-                <span className="shrink-0 px-4 py-3 text-neutral-500 text-body-md bg-neutral-900 border-r border-neutral-800 select-none">
-                  {SOCIAL_PREFIX.tiktok}
-                </span>
-                <input
-                  className="flex-1 bg-transparent text-white border-none px-4 py-3 text-subtitle-lg outline-none"
-                  placeholder="username"
-                  value={profileForm.tiktokUrl}
-                  onChange={(e) => setProfileForm((prev) => ({ ...prev, tiktokUrl: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-4 mt-4">
-              <button
-                className="py-3 px-8 bg-neutral-700 text-neutral-200 border-none rounded-lg cursor-pointer text-subtitle-sm hover:bg-neutral-600 transition-colors"
-                onClick={() => setIsProfileEditOpen(false)}
-              >
-                취소
-              </button>
-              <button
-                className="py-3 px-8 bg-gold-light text-background font-bold border-none rounded-lg cursor-pointer text-subtitle-sm hover:bg-gold-dark transition-colors disabled:opacity-50"
-                onClick={handleSubmitProfileEdit}
-                disabled={isProfilePending}
-              >
-                {isProfilePending ? '저장 중...' : '저장'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ProfileEditModal
+        isOpen={isProfileEditOpen}
+        form={profileForm}
+        socialPrefix={SOCIAL_PREFIX}
+        isPending={isProfilePending}
+        onClose={() => setIsProfileEditOpen(false)}
+        onChange={setProfileForm}
+        onSubmit={handleSubmitProfileEdit}
+      />
 
       {isReportModalOpen && (
         <ReportModal
           sellerNickname={nickname}
           onClose={() => setIsReportModalOpen(false)}
-          onSubmit={(reportData) => {
-            // TODO: 신고 API 연결
-            console.log('신고 데이터:', reportData);
+          onSubmit={() => {
             showToast({ message: '신고가 접수되었습니다.' });
             setIsReportModalOpen(false);
           }}
