@@ -234,14 +234,16 @@ public class SellerService {
             throw new GlobalException(SellerErrorCode.SELLER_FORBIDDEN);
         }
 
-        // 1. 에스크로 정산 요약
+        // 1. 에스크로 정산 요약 계산 부분
         List<Object[]> escrowStats = escrowRepository.findSettlementSummaryBySellerId(sellerId);
         long completedAmount = 0L;
         long pendingAmount = 0L;
 
         for (Object[] stat : escrowStats) {
             EscrowStatus status = (EscrowStatus) stat[0];
-            Long amount = (Long) stat[1];
+
+            if (stat[1] == null) continue;
+            long amount = ((Number) stat[1]).longValue();
 
             if (status == EscrowStatus.COMPLETED) {
                 completedAmount += amount;
