@@ -11,15 +11,23 @@ import LoginPage from './pages/Login';
 import WalletPage from './pages/Wallet';
 import SettingsPage from './pages/Settings';
 import MainLayout from '@/components/common/layouts/MainLayout';
-import SellerOnlyRoute from '@/components/common/layouts/SellerOnlyRoute';
+import SellerOnlyRoute from '@/routes/SellerOnlyRoute';
 import LiveRegisterPage from './components/LiveCreate/LiveRegisterPage';
 import SearchPage from './pages/Search';
+import SellerReportPage from './pages/SellerReport';
+import AdminPage from './pages/Admin';
+import AdminOnlyRoute from '@/routes/AdminOnlyRoute';
 
 function App() {
   return (
     <Routes>
       {/* 풀스크린 (Header/Footer 없음) */}
       <Route path="live/:id" element={<LivePage />} />
+
+      {/* 관리자 전용 (Header/Footer 없음) */}
+      <Route element={<AdminOnlyRoute />}>
+        <Route path="admin" element={<AdminPage />} />
+      </Route>
 
       <Route path="/" element={<MainLayout />}>
         <Route index element={<MainPage />} />
@@ -36,6 +44,7 @@ function App() {
           <Route path="lives" element={<LiveCreatePage />} />
           <Route path="live/register" element={<LiveRegisterPage />} />
           <Route path="products" element={<ProductListPage />} />
+          <Route path="seller/report" element={<SellerReportPage />} />
         </Route>
       </Route>
     </Routes>

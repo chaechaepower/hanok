@@ -1,13 +1,10 @@
 import { FaCrown } from 'react-icons/fa6';
 import type { AuctionStatisticsPayload } from '@/types';
+import { formatPrice } from '@/utils/formatPrice';
 
 interface Props {
   auctionStatistics: AuctionStatisticsPayload | null;
   currentUserId: number | null;
-}
-
-function formatPrice(value: number) {
-  return `${value.toLocaleString('ko-KR')}원`;
 }
 
 function formatPlacedAt(placedAt: string) {

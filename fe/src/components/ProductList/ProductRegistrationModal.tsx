@@ -14,6 +14,7 @@ import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
 type SelectOption = {
   value: string;
   label: string;
+  description?: string;
 };
 
 type CustomSelectProps = {
@@ -59,8 +60,10 @@ const parseHashtags = (value: string) =>
 
 function CustomSelect({ value, onChange, options, placeholder = '선택', disabled = false }: CustomSelectProps) {
   const [open, setOpen] = useState(false);
+  const [hoveredOptionValue, setHoveredOptionValue] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
   const selectedLabel = options.find((option) => option.value === value)?.label;
+  const hoveredOption = options.find((option) => option.value === hoveredOptionValue) ?? null;
 
   useEffect(() => {
     if (!open || disabled) {
@@ -96,24 +99,38 @@ function CustomSelect({ value, onChange, options, placeholder = '선택', disabl
       </button>
 
       {open && !disabled ? (
-        <div className="absolute z-50 left-0 right-0 top-[calc(100%+4px)] bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-lg max-h-[240px] overflow-y-auto custom-scrollbar">
-          {options.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => {
-                onChange(option.value);
-                setOpen(false);
-              }}
-              className={`w-full text-left px-4 py-2.5 text-[14px] transition-colors ${
-                value === option.value
-                  ? 'bg-gold/15 text-gold-light font-semibold'
-                  : 'text-neutral-300 hover:bg-warm/8 hover:text-neutral-100'
-              }`}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="absolute z-50 left-0 right-0 top-[calc(100%+4px)] bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-lg">
+          <div className="max-h-[240px] overflow-y-auto custom-scrollbar">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onMouseEnter={() => setHoveredOptionValue(option.value)}
+                onMouseLeave={() => setHoveredOptionValue((prev) => (prev === option.value ? null : prev))}
+                onClick={() => {
+                  onChange(option.value);
+                  setOpen(false);
+                  setHoveredOptionValue(null);
+                }}
+                className={`w-full text-left px-4 py-2.5 text-[14px] transition-colors ${
+                  value === option.value
+                    ? 'bg-gold/15 text-gold-light font-semibold'
+                    : 'text-neutral-300 hover:bg-warm/8 hover:text-neutral-100'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+
+          {hoveredOption?.description ? (
+            <div className="border-t border-neutral-800 bg-background/80 px-4 py-3">
+              <p className="mb-2 text-sm font-semibold text-gold-light">{hoveredOption.label}</p>
+              <p className="whitespace-pre-line text-[13px] leading-5 text-neutral-300">
+                {hoveredOption.description}
+              </p>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

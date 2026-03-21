@@ -17,6 +17,7 @@ import {
   isPendingEscrowState,
   isTrackingSubmittedEscrowState,
 } from '@/utils/getEscrowStateUI';
+import { formatPrice } from '@/utils/formatPrice';
 import { useToast } from '@/hooks/useToast';
 
 function CompletedItemRow({
@@ -191,7 +192,6 @@ export default function TrackingInput() {
     );
   };
 
-  const formatPrice = (price: number) => `${price.toLocaleString('ko-KR')}원`;
   const formatDate = (dateStr: string) =>
     dateStr
       .replace(/T/, ' ')

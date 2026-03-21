@@ -4,7 +4,7 @@ import { AUCTION_STATUS_BADGES } from '@/constants/auction';
 
 import ItemDetailAccordion from './ItemDetailAccordion';
 import type { AuctionItem } from '@/types';
-import { formatPrice } from '@/constants/live';
+import { formatPrice } from '@/utils/formatPrice';
 
 export default function DoneItemCard({ item }: { item: AuctionItem }) {
   const [expanded, setExpanded] = useState(false);

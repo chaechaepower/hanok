@@ -15,12 +15,9 @@ export default function BidAccessModal({ isOpen, onClose, onAction }: BidAccessM
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-[28px] border border-white/12 bg-background/92 p-6 text-white shadow-[0_24px_80px_rgba(0,0,0,.45)]"
+        className="w-full max-w-sm rounded-[28px] border border-white/12 bg-background/92 px-6 py-10 text-white shadow-[0_24px_80px_rgba(0,0,0,.45)]"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="mb-5 inline-flex rounded-full border border-white/10 bg-white/8 px-3 py-1 text-[11px] font-bold text-white/75">
-          입찰 전 로그인
-        </div>
         <div className="space-y-2">
           <h2 className="text-[22px] font-black leading-snug">로그인 후 입찰할 수 있습니다.</h2>
           <p className="text-[14px] leading-6 text-white/68">입찰과 결제 기능을 이용하려면 먼저 로그인해주세요.</p>

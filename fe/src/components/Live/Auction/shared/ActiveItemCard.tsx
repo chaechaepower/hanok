@@ -2,9 +2,10 @@ import { useState } from 'react';
 
 import { AUCTION_STATUS_BADGES } from '@/constants/auction';
 import { ITEM_CONDITION_BADGE } from '@/constants/itemCondition';
+import { CARD_BORDER_CLASS, PRICE_CLASS } from '@/constants/live';
 
 import type { AuctionItem } from '@/types';
-import { CARD_BORDER_CLASS, formatPrice, PRICE_CLASS } from '@/constants/live';
+import { formatPrice } from '@/utils/formatPrice';
 import ItemDetailAccordion from './ItemDetailAccordion';
 
 interface ActiveCardProps {

@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { FaImage, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaImage, FaChevronLeft, FaChevronRight, FaInfoCircle } from 'react-icons/fa';
 import type { Product } from '@/types';
 import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
-import { getAuctionTypeLabel } from '@/constants/auction';
+import { AUCTION_TYPE_DESCRIPTIONS, getAuctionTypeLabel } from '@/constants/auction';
 import { getItemConditionLabel } from '@/constants/itemCondition';
 
 const formatKoreanPrice = (num: number): string => {
@@ -135,24 +135,48 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
         </div>
         <p className="text-neutral-500 text-sm m-0 mb-4 leading-relaxed">{product.description}</p>
 
-        <div className="grid grid-cols-5 border border-neutral-700 rounded-xl bg-neutral-800 mt-auto overflow-hidden">
+        <div className="grid grid-cols-5 border border-neutral-700 rounded-xl bg-neutral-800 mt-auto">
           <MetricBox label="시작가격" value={formatKoreanPrice(product.startPrice)} />
           <MetricBox label="최소 입찰단위" value={formatKoreanPrice(product.bidUnit)} />
           <MetricBox label="경매 시간" value={`${product.auctionDuration} 초`} />
           <MetricBox label="물품 상태" value={getItemConditionLabel(product.itemCondition)} />
-          <MetricBox label="경매 방식" value={getAuctionTypeLabel(product.auctionType)} isLast />
+          <MetricBox
+            label="경매 방식"
+            value={getAuctionTypeLabel(product.auctionType)}
+            description={AUCTION_TYPE_DESCRIPTIONS[product.auctionType]}
+            isLast
+          />
         </div>
       </div>
     </div>
   );
 }
 
-function MetricBox({ label, value, isLast = false }: { label: string; value: string; isLast?: boolean }) {
+function MetricBox({
+  label,
+  value,
+  description,
+  isLast = false,
+}: {
+  label: string;
+  value: string;
+  description?: string;
+  isLast?: boolean;
+}) {
   return (
-    <div
-      className={`px-4 py-3 flex flex-col justify-center overflow-hidden ${isLast ? '' : 'border-r border-neutral-700'}`}
-    >
-      <div className="text-neutral-400 text-xs mb-1">{label}</div>
+    <div className={`relative px-4 py-3 flex flex-col justify-center ${isLast ? '' : 'border-r border-neutral-700'}`}>
+      <div className="mb-1 flex items-center gap-1.5 text-neutral-400 text-xs">
+        <span>{label}</span>
+        {description ? (
+          <div className="relative group flex items-center">
+            <FaInfoCircle className="text-[11px] text-neutral-500 transition-colors group-hover:text-gold-light" />
+            <div className="pointer-events-none absolute bottom-[calc(100%+10px)] right-0 z-20 hidden w-[240px] rounded-2xl border border-gold/20 bg-[#111315] px-4 py-3 text-left shadow-[0_20px_50px_rgba(0,0,0,0.35)] group-hover:block">
+              <p className="mb-2 text-sm font-semibold text-gold-light">{value}</p>
+              <p className="whitespace-pre-line text-[12px] leading-5 text-neutral-300">{description}</p>
+            </div>
+          </div>
+        ) : null}
+      </div>
       <div className="text-neutral-100 text-[15px] font-semibold break-all">{value}</div>
     </div>
   );
