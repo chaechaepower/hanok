@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { FaArrowLeft, FaCalendarAlt, FaCamera, FaCircle, FaTimes, FaVideo, FaVideoSlash } from 'react-icons/fa';
 import { MdLiveTv } from 'react-icons/md';
 import { CATEGORY_MACROS } from '@/constants/macro';
+import { getItemConditionLabel } from '@/constants/itemCondition';
 import { useGetItemsByCategory } from '@/api/hooks/useGetItems';
 import { useGetStream } from '@/api/hooks/useGetStream';
 import { useGetStreamMacros } from '@/api/hooks/useGetStreamMacros';
@@ -10,13 +11,13 @@ import { usePatchStream } from '@/api/hooks/usePatchStream';
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { usePostStream } from '@/api/hooks/usePostStream';
 import { usePostStreamMacros } from '@/api/hooks/usePostStreamMacros';
-import { useToast } from '@/components/common/Toast';
 import type { LiveStreamItem, Product, StreamRequest } from '@/types';
 import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
-import { CATEGORIES } from './categories';
 import InventorySelectModal from './InventorySelectModal';
 import ScheduleModal from './ScheduleModal';
-import { normalizeStreamScheduledAt } from './streamDateTime';
+import { CATEGORIES } from '@/constants/category';
+import { useToast } from '@/hooks/useToast';
+import { normalizeStreamScheduledAt } from '@/utils/streamDateTime';
 
 const toFallbackProduct = (item: LiveStreamItem): Product => ({
   itemId: item.itemId,
@@ -38,6 +39,7 @@ export default function LiveRegisterPage() {
   const rawStreamId = Number(searchParams.get('streamId') ?? 0);
   const streamId = Number.isFinite(rawStreamId) ? rawStreamId : 0;
   const isEditMode = streamId > 0;
+  const autoStart = searchParams.get('autoStart') === 'true';
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -230,6 +232,14 @@ export default function LiveRegisterPage() {
 
     void submitReadyEntry();
   };
+
+  const autoStartTriggeredRef = useRef(false);
+  useEffect(() => {
+    if (autoStart && isEditMode && !streamLoading && title.trim() && !autoStartTriggeredRef.current) {
+      autoStartTriggeredRef.current = true;
+      handleEnter();
+    }
+  });
 
   const postStream = usePostStream();
   const postStartStream = usePostStartStream();
@@ -467,10 +477,7 @@ export default function LiveRegisterPage() {
 
           <div className="flex flex-col gap-2 overflow-y-auto pr-2">
             {selectedItems.map((item) => {
-              const conditionLabel =
-                { BRAND_NEW: '미개봉', OPEN_BOX: '개봉된 새상품', REFURBISHED: '리퍼비시', USED: '중고' }[
-                  item.itemCondition
-                ] ?? item.itemCondition;
+              const conditionLabel = getItemConditionLabel(item.itemCondition);
 
               return (
                 <div key={item.itemId} className="flex gap-3 rounded-2xl border border-neutral-800 bg-white/[0.02] p-3">

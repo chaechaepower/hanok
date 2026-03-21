@@ -1,4 +1,5 @@
 export * from './auth';
+export * from './auction';
 export * from './bizno';
 export * from './common';
 export * from './escrow';

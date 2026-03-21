@@ -217,18 +217,18 @@ export default function MainPage() {
             <button
               type="button"
               onClick={() => setIsSortDropdownOpen((prev) => !prev)}
-              className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-primary/15 px-4 py-2 transition hover:bg-primary/25"
+              className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-warm/6 px-4 py-2 transition hover:bg-warm/12"
             >
-              <span className="text-body-md font-semibold text-primary-light">{selectedSortLabel}</span>
+              <span className="text-body-md font-semibold text-warm">{selectedSortLabel}</span>
               <span
-                className={`text-caption text-point/70 transition-transform ${isSortDropdownOpen ? 'rotate-180' : ''}`}
+                className={`text-caption text-warm/70 transition-transform ${isSortDropdownOpen ? 'rotate-180' : ''}`}
               >
                 <MdKeyboardArrowDown />
               </span>
             </button>
 
             {isSortDropdownOpen && (
-              <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-full overflow-hidden rounded-[10px] bg-primary/15 p-1 shadow-primary-glow backdrop-blur-md">
+              <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-full overflow-hidden rounded-[10px] bg-warm/6 p-1 backdrop-blur-md">
                 {SORT_OPTIONS.map((option) => {
                   const isSelected = sortFilter === option.value;
                   return (
@@ -240,7 +240,7 @@ export default function MainPage() {
                         setIsSortDropdownOpen(false);
                       }}
                       className={`flex w-full items-center justify-center rounded-lg px-3 py-2 text-center text-body-md transition ${
-                        isSelected ? 'bg-primary font-semibold text-neutral-100' : 'text-neutral-300 hover:bg-warm/10'
+                        isSelected ? 'bg-warm/15 font-semibold text-warm' : 'text-neutral-300 hover:bg-warm/10'
                       }`}
                     >
                       <span>{option.label}</span>
@@ -261,7 +261,7 @@ export default function MainPage() {
           />
         )}
 
-        <section className="mx-10 mt-6 flex flex-1 flex-col gap-6 rounded-2xl bg-surface px-8 pb-10 pt-6">
+        <section className="mx-10 mt-6 flex flex-1 flex-col gap-6 rounded-2xl bg-background px-8 pb-10 pt-6">
           <h2 className="text-[28px] font-semibold text-warm">
             {isLiveStatus ? '현재 진행 중인 경매!' : '예정된 경매를 살펴보세요'}
           </h2>

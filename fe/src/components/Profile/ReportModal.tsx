@@ -1,6 +1,6 @@
-﻿import { useState } from 'react';
+﻿import { useToast } from '@/hooks/useToast';
+import { useState } from 'react';
 import { FiTrash2, FiUpload, FiX } from 'react-icons/fi';
-import { useToast } from '@/components/common/Toast';
 const REPORT_REASONS = ['허위 매물 / 사기 의심', '욕설 / 비방', '부적절한 콘텐츠', '스팸 / 광고', '기타'] as const;
 type ReportModalProps = {
   sellerNickname: string;

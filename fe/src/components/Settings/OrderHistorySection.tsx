@@ -7,8 +7,8 @@ import { usePostCompleteEscrow } from '@/api/hooks/usePostCompleteEscrow';
 import { useGetEscrowDetail } from '@/api/hooks/useGetEscrowDetail';
 import { useGetEscrowsBuyer } from '@/api/hooks/useGetEscrowsBuyer';
 import EscrowDetailCard from '@/components/common/EscrowDetailCard';
-import { useToast } from '@/components/common/Toast';
 import { ESCROW_STATUS_OPTIONS, getEscrowStateUI, type EscrowStatusFilter } from '@/utils/getEscrowStateUI';
+import { useToast } from '@/hooks/useToast';
 
 const formatDate = (iso: string) => {
   const d = new Date(iso);
@@ -144,7 +144,7 @@ export default function OrderHistorySection() {
             </button>
 
             {isSortOpen && (
-              <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-full overflow-hidden rounded-[10px] bg-primary/15 p-1 shadow-primary-glow backdrop-blur-md">
+              <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-[120px] overflow-hidden rounded-[10px] bg-primary/15 p-1 shadow-primary-glow backdrop-blur-md">
                 {SORT_OPTIONS.map((option) => {
                   const isSelected = sortBy === option.value;
                   return (
@@ -155,7 +155,7 @@ export default function OrderHistorySection() {
                         setSortBy(option.value);
                         setIsSortOpen(false);
                       }}
-                      className={`flex w-full items-center justify-center rounded-lg px-3 py-2 text-center text-body-md transition ${
+                      className={`flex w-full items-center justify-center whitespace-nowrap rounded-lg px-4 py-2 text-center text-body-md transition ${
                         isSelected ? 'bg-primary font-semibold text-neutral-100' : 'text-neutral-300 hover:bg-warm/10'
                       }`}
                     >

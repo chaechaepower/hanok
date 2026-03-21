@@ -5,7 +5,7 @@ import Button from '@/components/common/Button';
 import type { AccountData, BusinessType } from '@/types';
 import axios from 'axios';
 
-const inputClass = 'w-full h-12 bg-surface border border-neutral-700 rounded-lg text-white text-sm px-4 outline-none font-[inherit]';
+const inputClass = 'w-full h-14 bg-surface border border-neutral-700 rounded-xl text-base px-5 outline-none font-[inherit] text-white';
 
 export default function Step4({
   onPrev,
@@ -60,8 +60,8 @@ export default function Step4({
 
   return (
     <>
-      <div className="mb-5">
-        <label className="text-sm text-neutral-200 font-semibold mb-2.5 block">판매자명</label>
+      <div className="mb-6">
+        <label className="text-base text-neutral-200 font-semibold mb-3 block">판매자명</label>
         <input
           type="text"
           value={nickname}
@@ -75,8 +75,8 @@ export default function Step4({
         />
       </div>
 
-      <div className="mb-5">
-        <label className="text-sm text-neutral-200 font-semibold mb-2.5 block">판매자 소개글</label>
+      <div className="mb-6">
+        <label className="text-base text-neutral-200 font-semibold mb-3 block">판매자 소개글</label>
         <input
           type="text"
           value={intro}
@@ -87,9 +87,9 @@ export default function Step4({
         />
       </div>
 
-      <div className="mb-6">
-        <label className="text-sm text-neutral-200 font-semibold mb-2.5 block">SNS 링크(선택)</label>
-        <div className="flex flex-col gap-2.5">
+      <div className="mb-8">
+        <label className="text-base text-neutral-200 font-semibold mb-3 block">SNS 링크(선택)</label>
+        <div className="flex flex-col gap-3">
           <input
             type="url"
             value={youtubeLink}
@@ -114,13 +114,13 @@ export default function Step4({
         </div>
       </div>
 
-      {error && <p className="text-accent-light text-[13px] mb-3">{error}</p>}
+      {error && <p className="text-accent-light text-sm mb-3">{error}</p>}
 
-      <div className="flex justify-between sticky bottom-0 pt-6 pb-6">
-        <Button variant="outline" onClick={onPrev} className="w-30!">
+      <div className="flex justify-between sticky bottom-0 pt-8 pb-6 bg-background">
+        <Button variant="outline" onClick={onPrev} className="w-32! h-12! rounded-xl! text-base!">
           이전
         </Button>
-        <Button onClick={handleRegister} disabled={isPending} className="w-30!">
+        <Button onClick={handleRegister} disabled={isPending} className="w-32! h-12! rounded-xl! text-base!">
           {isPending ? '등록 중...' : '등록'}
         </Button>
       </div>

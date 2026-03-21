@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { FaPlus } from 'react-icons/fa';
 import type { Product } from '@/types';
-import { useToast } from '@/components/common/Toast';
 import ProductCard from '@/components/ProductList/ProductCard';
 import ProductRegistrationModal from '@/components/ProductList/ProductRegistrationModal';
 import { useDeleteItem } from '@/api/hooks/useDeleteItem';
 import { useGetItems } from '@/api/hooks/useGetItems';
 import SideBar from '@/components/common/layouts/SideBar';
 import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
+import { useToast } from '@/hooks/useToast';
 
 export default function ProductListPage() {
   const [activeMenu, setActiveMenu] = useState('inventory');
@@ -55,7 +55,7 @@ export default function ProductListPage() {
   const tabs = [
     { id: 'ALL', label: '전체' },
     { id: 'READY', label: `대기(${countByStatus.READY})` },
-    { id: 'PENDING', label: `경매중(${countByStatus.PENDING})` },
+    { id: 'PENDING', label: `거래중(${countByStatus.PENDING})` },
     { id: 'SOLD', label: `판매 완료(${countByStatus.SOLD})` },
   ] as const;
 
@@ -73,7 +73,7 @@ export default function ProductListPage() {
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-[24px] font-semibold text-warm leading-tight m-0 mb-2">내 인벤토리</h2>
-            <p className="text-body-md text-neutral-500 m-0">라이브 경매를 위해 등록된 품목입니다.</p>
+            <p className="text-body-md text-neutral-500 m-0">판매하고 싶은 물건을 마음껏 등록해보세요!</p>
           </div>
           <button
             onClick={() => {

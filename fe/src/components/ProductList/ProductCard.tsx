@@ -2,18 +2,38 @@ import { useState } from 'react';
 import { FaImage, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import type { Product } from '@/types';
 import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
+import { getAuctionTypeLabel } from '@/constants/auction';
+import { getItemConditionLabel } from '@/constants/itemCondition';
 
-const conditionLabels: Record<string, string> = {
-  BRAND_NEW: '미개봉',
-  OPEN_BOX: '개봉된 새상품',
-  REFURBISHED: '리퍼비시',
-  USED: '중고',
+const formatKoreanPrice = (num: number): string => {
+  if (!Number.isFinite(num) || num < 0) return '0 원';
+  if (num < 100_000_000) return `${num.toLocaleString('ko-KR')} 원`;
+
+  const units = [
+    { val: 1_000_000_000_000, label: '조' },
+    { val: 100_000_000, label: '억' },
+    { val: 10_000, label: '만' },
+  ];
+
+  const parts: string[] = [];
+  let remaining = Math.round(num);
+
+  for (const { val, label } of units) {
+    const count = Math.floor(remaining / val);
+    if (count > 0) {
+      parts.push(`${count.toLocaleString('ko-KR')}${label}`);
+      remaining = Math.round(remaining % val);
+    }
+  }
+
+  if (remaining > 0) parts.push(remaining.toLocaleString('ko-KR'));
+  return (parts.length > 0 ? parts.join(' ') : '0') + ' 원';
 };
 
 const statusClassMap: Record<string, { label: string; bg: string }> = {
   READY: { label: '대기', bg: 'bg-neutral-800' },
   SCHEDULED: { label: '대기', bg: 'bg-neutral-800' },
-  PENDING: { label: '경매중', bg: 'bg-accent' },
+  PENDING: { label: '거래중', bg: 'bg-accent' },
   SOLD: { label: '판매완료', bg: 'bg-ember' },
 };
 
@@ -41,7 +61,7 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
   };
 
   return (
-    <div className="flex bg-surface rounded-2xl p-6 gap-6 mb-4 border border-neutral-800 hover:bg-surface-elevated transition-colors">
+    <div className="flex bg-surface-elevated rounded-2xl p-6 gap-6 mb-4 border border-neutral-800 hover:bg-surface transition-colors items-center justify-center">
       <div className="relative w-[160px] h-[160px] rounded-xl overflow-hidden shrink-0 bg-white group">
         <div
           className={`absolute top-3 left-3 ${currentStatus.bg} text-white px-3 py-1 rounded-full text-xs font-semibold z-10`}
@@ -85,40 +105,42 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
         )}
       </div>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col">
         <div className="flex justify-between mb-2">
           <div className="text-neutral-500 text-[13px]">{product.tags.map((tag) => `#${tag}`).join(' ')}</div>
-          {(product.status === 'READY' || product.status === 'SCHEDULED') && (
-            <div className="flex gap-3">
-              <button
-                onClick={() => onEdit(product.itemId)}
-                className="bg-transparent border-none text-neutral-300 text-[13px] cursor-pointer hover:text-neutral-100 transition-colors"
-              >
-                수정
-              </button>
-              <button
-                onClick={() => onDelete(product.itemId)}
-                className="bg-transparent border-none text-neutral-300 text-[13px] cursor-pointer hover:text-accent-light transition-colors"
-              >
-                삭제
-              </button>
-            </div>
-          )}
+          <div className="flex flex-col items-end gap-1">
+            {(product.status === 'READY' || product.status === 'SCHEDULED') && (
+              <div className="flex gap-3">
+                <button
+                  onClick={() => onEdit(product.itemId)}
+                  className="bg-transparent border-none text-neutral-300 text-[13px] cursor-pointer hover:text-neutral-100 transition-colors"
+                >
+                  수정
+                </button>
+                <button
+                  onClick={() => onDelete(product.itemId)}
+                  className="bg-transparent border-none text-neutral-300 text-[13px] cursor-pointer hover:text-accent-light transition-colors"
+                >
+                  삭제
+                </button>
+              </div>
+            )}
+          </div>
         </div>
+        <div className="flex justify-between">
+          <h3 className="text-neutral-100 text-lg font-bold m-0">{product.name}</h3>
+          <span className="text-gold-dark text-xs">
+            {MAIN_CATEGORY_ITEMS.find((c) => c.id === product.category)?.label || product.category}
+          </span>
+        </div>
+        <p className="text-neutral-500 text-sm m-0 mb-4 leading-relaxed">{product.description}</p>
 
-        <h3 className="text-neutral-100 text-lg font-bold m-0 mb-1.5">{product.name}</h3>
-        <p className="text-neutral-500 text-sm m-0 mb-6 leading-relaxed">{product.description}</p>
-
-        <div className="grid grid-cols-6 border border-neutral-700 rounded-xl bg-neutral-800 mt-auto overflow-hidden">
-          <MetricBox label="시작가격" value={`${product.startPrice.toLocaleString()} 원`} />
-          <MetricBox label="최소 입찰단위" value={`${product.bidUnit.toLocaleString()} 원`} />
+        <div className="grid grid-cols-5 border border-neutral-700 rounded-xl bg-neutral-800 mt-auto overflow-hidden">
+          <MetricBox label="시작가격" value={formatKoreanPrice(product.startPrice)} />
+          <MetricBox label="최소 입찰단위" value={formatKoreanPrice(product.bidUnit)} />
           <MetricBox label="경매 시간" value={`${product.auctionDuration} 초`} />
-          <MetricBox label="물품 상태" value={conditionLabels[product.itemCondition] || product.itemCondition} />
-          <MetricBox
-            label="카테고리"
-            value={MAIN_CATEGORY_ITEMS.find((c) => c.id === product.category)?.label || product.category}
-          />
-          <MetricBox label="경매 방식" value={product.auctionType === 'UNIQUE_TOP' ? '유일최고가' : '상향식'} isLast />
+          <MetricBox label="물품 상태" value={getItemConditionLabel(product.itemCondition)} />
+          <MetricBox label="경매 방식" value={getAuctionTypeLabel(product.auctionType)} isLast />
         </div>
       </div>
     </div>
@@ -127,9 +149,11 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
 
 function MetricBox({ label, value, isLast = false }: { label: string; value: string; isLast?: boolean }) {
   return (
-    <div className={`px-4 py-3 flex flex-col justify-center ${isLast ? '' : 'border-r border-neutral-700'}`}>
+    <div
+      className={`px-4 py-3 flex flex-col justify-center overflow-hidden ${isLast ? '' : 'border-r border-neutral-700'}`}
+    >
       <div className="text-neutral-400 text-xs mb-1">{label}</div>
-      <div className="text-neutral-100 text-[15px] font-semibold">{value}</div>
+      <div className="text-neutral-100 text-[15px] font-semibold break-all">{value}</div>
     </div>
   );
 }

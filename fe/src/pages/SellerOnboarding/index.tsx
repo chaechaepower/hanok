@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useToast } from '@/components/common/Toast';
 import type { AccountData, BusinessType } from '@/types';
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
 import { useGetAccount } from '@/api/hooks/useGetAccount';
@@ -10,6 +9,7 @@ import StepIndicator from '@/components/SellerOnboarding/StepIndicator';
 import Step2 from '@/components/SellerOnboarding/Step2';
 import Step3 from '@/components/SellerOnboarding/Step3';
 import Step4 from '@/components/SellerOnboarding/Step4';
+import { useToast } from '@/hooks/useToast';
 
 export default function SellerOnboardingPage() {
   const navigate = useNavigate();
@@ -37,11 +37,7 @@ export default function SellerOnboardingPage() {
   const hasExistingAccount = !!(accountData?.bankName && accountData?.accountNum);
 
   if (isLoading || isAccountLoading) {
-    return (
-      <div className="flex items-center justify-center text-neutral-200">
-        로딩 중...
-      </div>
-    );
+    return <div className="flex items-center justify-center text-neutral-200">로딩 중...</div>;
   }
 
   if (sellerStatus?.isSeller) {
@@ -89,10 +85,10 @@ export default function SellerOnboardingPage() {
   };
 
   return (
-    <div className="text-neutral-200 flex flex-col items-center pt-16 pb-20 px-4">
-      <div className="w-full max-w-[720px]">
+    <div className="text-neutral-200 flex flex-col items-center pt-16 pb-20 px-6">
+      <div className="w-full max-w-[1100px]">
         <StepIndicator current={currentStep} />
-        <hr className="border-neutral-800 mb-10" />
+        <hr className="border-neutral-800 mb-12" />
 
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div

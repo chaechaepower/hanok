@@ -14,7 +14,7 @@ export default function StepIndicator({ current }: { current: number }) {
             <div className="flex items-center gap-2">
               <div className="relative shrink-0">
                 <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-300 ${
+                  className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-300 ${
                     step.id === current
                       ? 'bg-ember text-white'
                       : step.id < current
@@ -42,7 +42,7 @@ export default function StepIndicator({ current }: { current: number }) {
               </div>
 
               <span
-                className={`text-body-sm whitespace-nowrap transition-colors duration-300 ${
+                className={`text-base whitespace-nowrap transition-colors duration-300 ${
                   step.id === current
                     ? 'text-neutral-100 font-semibold'
                     : step.id < current
@@ -57,7 +57,7 @@ export default function StepIndicator({ current }: { current: number }) {
             {/* 구분 화살표 */}
             {idx < STEPS.length - 1 && (
               <svg
-                className="w-4 h-4 mx-3 text-neutral-700 shrink-0"
+                className="w-5 h-5 mx-4 text-neutral-700 shrink-0"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"

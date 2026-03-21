@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/common/Toast';
 import { checkEmailDuplicate } from '@/api/hooks/useGetCheckEmailDuplicate';
 import { postIdentityVerification } from '@/api/hooks/usePostIdentityVerification';
 import { signUp } from '@/api/hooks/usePostSignUp';
 import { requestIdentityVerification } from '@/utils/requestIdentityVerification';
 import Button from '@/components/common/Button';
+import { useToast } from '@/hooks/useToast';
 
 function CheckboxIcon({ checked }: { checked: boolean }) {
   return (
@@ -103,11 +103,26 @@ export default function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isEmailVerified) { showToast({ message: '이메일 중복 확인을 해주세요.' }); return; }
-    if (!nickname) { showToast({ message: '닉네임을 입력해주세요.' }); return; }
-    if (validatePassword(password) || password !== passwordConfirm) { showToast({ message: '비밀번호를 바르게 입력 및 확인해주세요.' }); return; }
-    if (!isIdentityVerified || !phone) { showToast({ message: '휴대폰 본인 인증을 완료해주세요.' }); return; }
-    if (!termsAgreed || !privacyAgreed) { showToast({ message: '필수 약관에 모두 동의해주세요.' }); return; }
+    if (!isEmailVerified) {
+      showToast({ message: '이메일 중복 확인을 해주세요.' });
+      return;
+    }
+    if (!nickname) {
+      showToast({ message: '닉네임을 입력해주세요.' });
+      return;
+    }
+    if (validatePassword(password) || password !== passwordConfirm) {
+      showToast({ message: '비밀번호를 바르게 입력 및 확인해주세요.' });
+      return;
+    }
+    if (!isIdentityVerified || !phone) {
+      showToast({ message: '휴대폰 본인 인증을 완료해주세요.' });
+      return;
+    }
+    if (!termsAgreed || !privacyAgreed) {
+      showToast({ message: '필수 약관에 모두 동의해주세요.' });
+      return;
+    }
 
     try {
       await signUp({ email, nickname, password, phone });
@@ -121,7 +136,8 @@ export default function SignUpPage() {
 
   const inputContainerClass =
     'flex items-center border border-neutral-800 rounded-[10px] h-[52px] px-3 bg-transparent focus-within:border-primary transition-colors';
-  const inputClass = 'flex-1 bg-transparent text-[15px] text-neutral-100 px-2 focus:outline-none placeholder-neutral-600';
+  const inputClass =
+    'flex-1 bg-transparent text-[15px] text-neutral-100 px-2 focus:outline-none placeholder-neutral-600';
   const iconClass = 'w-5 h-5 text-neutral-600';
 
   return (
@@ -131,10 +147,7 @@ export default function SignUpPage() {
         <p className="text-neutral-300 text-[15px]">한옥에 가입하고 경매에 참여해 보세요!</p>
       </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-[480px] flex flex-col gap-6 mx-auto"
-      >
+      <form onSubmit={handleSubmit} className="w-full max-w-[480px] flex flex-col gap-6 mx-auto">
         <div className="flex flex-col gap-2">
           <label className="text-[13px] font-medium text-neutral-300 ml-1">이메일</label>
           <div className={inputContainerClass}>
@@ -263,7 +276,9 @@ export default function SignUpPage() {
             </Button>
           </div>
           {phoneError && <p className="text-accent-light text-xs px-1">{phoneError}</p>}
-          {isIdentityVerified && <p className="text-ember-light text-xs px-1">본인인증이 완료되었습니다. ({verifiedName})</p>}
+          {isIdentityVerified && (
+            <p className="text-ember-light text-xs px-1">본인인증이 완료되었습니다. ({verifiedName})</p>
+          )}
         </div>
 
         <div className="flex flex-col gap-3 mt-4">
@@ -290,7 +305,12 @@ export default function SignUpPage() {
         </div>
 
         <div className="mt-4">
-          <Button type="submit" variant="white" size="large" className="!bg-neutral-200 !text-background hover:!bg-neutral-300">
+          <Button
+            type="submit"
+            variant="white"
+            size="large"
+            className="!bg-neutral-200 !text-background hover:!bg-neutral-300"
+          >
             가입 하기
           </Button>
         </div>

@@ -51,7 +51,7 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
       <div className="flex items-center justify-between gap-2.5 px-3 py-2">
         <button
           type="button"
-          onClick={() => sellerId > 0 && navigate(`/profile/${sellerId}`)}
+          onClick={() => sellerId > 0 && !isSeller && navigate(`/profile/${sellerId}`)}
           className="flex min-w-0 items-center gap-2.5 rounded-lg transition hover:opacity-80"
         >
           {sellerProfileImage ? (

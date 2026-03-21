@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { FaCreditCard } from 'react-icons/fa';
 import { useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/components/common/Toast';
 import { useGetAccount } from '@/api/hooks/useGetAccount';
 import { usePostUserAccount } from '@/api/hooks/usePostUserAccount';
 import { BANKS } from '@/pages/SellerOnboarding/constants';
+import { useToast } from '@/hooks/useToast';
 
 const BANK_LIST = BANKS.filter((b) => Number(b.code) < 200);
 const STOCK_LIST = BANKS.filter((b) => Number(b.code) >= 200);
@@ -80,10 +80,7 @@ export default function PaymentSection() {
             </div>
           )}
         </div>
-        <button
-          className="btn btn-gold"
-          onClick={() => setShowForm((prev) => !prev)}
-        >
+        <button className="btn btn-gold" onClick={() => setShowForm((prev) => !prev)}>
           {hasAccount ? '계좌 변경' : '계좌 등록'}
         </button>
       </div>

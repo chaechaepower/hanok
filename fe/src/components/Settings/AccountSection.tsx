@@ -1,12 +1,12 @@
 import { FaUserAlt } from 'react-icons/fa';
 import { FiBell, FiAlertTriangle, FiX } from 'react-icons/fi';
 import { useState } from 'react';
-import { useToast } from '@/components/common/Toast';
 import { useGetMe } from '@/api/hooks/useGetMe';
 import { useGetNotification } from '@/api/hooks/useGetNotification';
 import { usePatchNotification } from '@/api/hooks/usePatchNotification';
 import { useDeleteWithdraw } from '@/api/hooks/useDeleteWithdraw';
 import { usePatchPassword } from '@/api/hooks/usePatchPassword';
+import { useToast } from '@/hooks/useToast';
 
 export default function AccountSection() {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
@@ -109,7 +109,7 @@ export default function AccountSection() {
             <FaUserAlt size={18} className="text-neutral-400" />
             계정 관리
           </h3>
-          <button onClick={handleOpenPasswordModal} className="btn btn-gold-outline">
+          <button onClick={handleOpenPasswordModal} className="btn btn-gold">
             비밀번호 수정
           </button>
         </div>
