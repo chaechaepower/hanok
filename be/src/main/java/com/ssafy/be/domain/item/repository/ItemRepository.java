@@ -21,6 +21,8 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     Optional<Item> findByIdAndSellerId(Long id, Long sellerId);
     List<Item> findTop10BySellerIdAndStatusOrderBySoldAtDesc(Long sellerId, ItemStatus status);
 
+    long countBySellerIdAndStatus(Long sellerId, ItemStatus status);
+
     @Query("SELECT i, a.finalPrice FROM Item i " +
             "LEFT JOIN Auction a ON a.item.id = i.id " +
             "WHERE i.seller.id = :sellerId AND i.status = 'SOLD' " +
@@ -28,4 +30,15 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             "LIMIT 10")
 
     List<Object[]> findTop10SoldItemsWithFinalPrice(@Param("sellerId") Long sellerId);
+
+    @Query(value = "SELECT i.id, i.name, i.image1, COUNT(b.id) as bidCount, e.winning_price " +
+            "FROM item i " +
+            "JOIN auction a ON i.id = a.item_id " +
+            "LEFT JOIN bid b ON a.id = b.auction_id " +
+            "LEFT JOIN escrow e ON a.id = e.auction_id " +
+            "WHERE i.seller_id = :sellerId " +
+            "GROUP BY i.id " +
+            "ORDER BY bidCount DESC " +
+            "LIMIT 3", nativeQuery = true)
+    List<Object[]> findTopHotItemsBySellerId(@Param("sellerId") Long sellerId);
 }
