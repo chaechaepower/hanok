@@ -130,7 +130,7 @@ export const settingsHandlers = [
           accountNum: mockMeData.accountNum,
           sellerId: currentUser.isSeller ? currentUser.userId : null,
         }
-      : mockMeData;
+      : { ...mockMeData };
 
     return HttpResponse.json(
       {

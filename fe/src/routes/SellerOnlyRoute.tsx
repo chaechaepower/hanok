@@ -2,7 +2,7 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
 
-import Loading from './Loading';
+import Loading from '../components/common/layouts/Loading';
 
 export default function SellerOnlyRoute() {
   const location = useLocation();

@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { FiX } from 'react-icons/fi';
 
 import { login } from '@/api/hooks/usePostLogin';
+import { getMe } from '@/api/hooks/useGetMe';
 import Button from '@/components/common/Button';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [email, setEmail] = useState(() => localStorage.getItem('savedEmail') ?? '');
   const [password, setPassword] = useState('');
@@ -41,6 +45,9 @@ export default function LoginPage() {
         localStorage.removeItem('savedEmail');
       }
 
+      queryClient.clear();
+      const me = await getMe();
+      queryClient.setQueryData(['me'], me);
       navigate('/');
     } catch {
       setError('이메일 또는 비밀번호가 올바르지 않습니다.');
@@ -80,6 +87,15 @@ export default function LoginPage() {
               className={inputClass}
               autoComplete="email"
             />
+            {email && (
+              <button
+                type="button"
+                onClick={() => setEmail('')}
+                className="bg-transparent border-none p-1 cursor-pointer text-neutral-500 hover:text-neutral-300 transition-colors"
+              >
+                <FiX size={16} />
+              </button>
+            )}
           </div>
         </div>
 

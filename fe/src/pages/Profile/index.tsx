@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGetSellerProfile } from '@/api/hooks/useGetSellerProfile';
+import { useGetSellerReputation } from '@/api/hooks/useGetSellerReputation';
 import { useGetSellerNotice } from '@/api/hooks/useGetSellerNotice';
 import { usePostSellerNotice } from '@/api/hooks/usePostSellerNotice';
 import { usePatchSellerNotice } from '@/api/hooks/usePatchSellerNotice';
@@ -96,6 +97,7 @@ export default function ProfilePage() {
   const { data: soldAuctions = [] } = useGetSoldAuctions(sellerId);
 
   const { data, isLoading, isError } = useGetSellerProfile(sellerId);
+  const { data: reputation } = useGetSellerReputation(sellerId);
   const { data: mySellerStatus } = useGetSellerStatus();
   const { data: meData } = useGetMe();
   const { mutate: patchProfile, isPending: isProfilePending } = usePatchSellerProfile(sellerId);
@@ -413,46 +415,58 @@ export default function ProfilePage() {
             )}
 
             {isOwner && data?.stats !== undefined && (
-              <div className="grid grid-cols-3 gap-[1px] bg-neutral-800 border border-white/5 rounded-xl">
-                <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated">
-                  <span className="text-subtitle-sm text-neutral-500">팔로워</span>
-                  <span className="text-price-lg text-white">{data.stats.followerCount ?? '-'}</span>
-                </div>
-                <div className="relative flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated group">
-                  <span className="text-subtitle-sm text-neutral-500 flex items-center gap-1">
-                    평점
-                    <svg
-                      className="w-3.5 h-3.5 text-neutral-600 cursor-help"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </span>
-                  <span className="text-price-lg text-white">{data.stats.rating ?? '-'}</span>
-                  <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-64 p-3 bg-neutral-900 border border-white/10 rounded-lg shadow-xl text-xs text-neutral-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                    <p className="font-semibold text-white mb-1.5">평점 산정 기준</p>
-                    <ul className="space-y-1 list-disc list-inside">
-                      <li>거래 완료 후 구매자 평가 (5점 만점)</li>
-                      <li>상품 상태 정확도 30%</li>
-                      <li>배송 속도 30%</li>
-                      <li>커뮤니케이션 20%</li>
-                      <li>포장 상태 20%</li>
-                    </ul>
-                    <p className="mt-1.5 text-neutral-500">최근 30건 거래 기준 가중 평균</p>
+              <div className="flex flex-col gap-3">
+                <div className="grid grid-cols-3 gap-[1px] bg-neutral-800 border border-white/5 rounded-xl">
+                  <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated">
+                    <span className="text-subtitle-sm text-neutral-500">팔로워</span>
+                    <span className="text-price-lg text-white">{reputation?.followerCount ?? data.stats.followerCount ?? '-'}</span>
                   </div>
-                </div>
-                <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated">
-                  <span className="text-subtitle-sm text-neutral-500">평균 배송</span>
-                  <span className="text-price-lg text-white">
-                    {data.stats.avgShipDays != null ? `${data.stats.avgShipDays}일` : '-'}
-                  </span>
+                  <div className="relative flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated group">
+                    <span className="text-subtitle-sm text-neutral-500 flex items-center gap-1">
+                      평점
+                      <svg
+                        className="w-3.5 h-3.5 text-neutral-600 cursor-help"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </span>
+                    <span className="text-price-lg text-white">
+                      {reputation?.completionRate != null
+                        ? ((reputation.completionRate / 100) * 5).toFixed(1)
+                        : data.stats.rating ?? '-'}
+                    </span>
+                    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-72 p-3 bg-neutral-900 border border-white/10 rounded-lg shadow-xl text-xs text-neutral-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                      <p className="font-semibold text-white mb-1.5">평점 산정 기준</p>
+                      <ul className="space-y-1 list-disc list-inside">
+                        <li>완료된 거래와 거래 취소 건수로 산정</li>
+                        <li>성공률(%) × 5점 만점으로 계산</li>
+                        <li>거래가 없으면 기본 만점(5.0점)</li>
+                      </ul>
+                      {reputation?.totalTrades != null && (
+                        <div className="mt-2 pt-2 border-t border-white/10 space-y-0.5">
+                          <p>총 거래: <span className="text-white">{reputation.totalTrades}건</span></p>
+                          <p>거래 취소: <span className="text-white">{reputation.cancelCount ?? 0}건</span></p>
+                          <p>거래 성공률: <span className="text-white">{reputation.completionRate != null ? `${reputation.completionRate}%` : '-'}</span></p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated">
+                    <span className="text-subtitle-sm text-neutral-500">평균 배송</span>
+                    <span className="text-price-lg text-white">
+                      {reputation?.avgShipDays != null
+                        ? `${reputation.avgShipDays}일`
+                        : data.stats.avgShipDays != null ? `${data.stats.avgShipDays}일` : '-'}
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
