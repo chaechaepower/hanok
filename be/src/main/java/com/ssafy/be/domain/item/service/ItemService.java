@@ -1,13 +1,9 @@
 package com.ssafy.be.domain.item.service;
 
-import com.ssafy.be.domain.auction.entity.Auction;
-import com.ssafy.be.domain.auction.entity.AuctionStatus;
-import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.item.dto.request.ItemRegisterRequest;
 import com.ssafy.be.domain.item.dto.request.ItemUpdateRequest;
 import com.ssafy.be.domain.item.dto.response.ItemRegisterResponse;
 import com.ssafy.be.domain.item.dto.response.ItemSummaryResponse;
-import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.entity.ItemStatus;
 import com.ssafy.be.domain.item.entity.Tag;
@@ -36,7 +32,6 @@ public class ItemService {
 
     private final ItemRepository itemRepository;
     private final SellerRepository sellerRepository;
-    private final AuctionRepository auctionRepository;
     private final TagRepository tagRepository;
     private final GcsClient gcsClient;
 
@@ -76,12 +71,8 @@ public class ItemService {
                 .name(request.name())
                 .description(request.description())
                 .category(request.category())
-                .startPrice(request.startPrice())
-                .bidUnit(request.bidUnit())
-                .auctionDuration(request.auctionDuration())
                 .status(ItemStatus.READY)
                 .itemCondition(request.itemCondition())
-                .auctionType(request.auctionType())
                 .seller(seller)
                 .build();
     }
@@ -112,12 +103,6 @@ public class ItemService {
                         Stream.of(i.getImage1(), i.getImage2(), i.getImage3())  // 변경
                                 .filter(Objects::nonNull)
                                 .toList(),
-                        i.getAuctionType(),
-                        i.getAuctionDuration(),
-                        i.getAuctionType() == AuctionType.BOTTOM_UP
-                                ? new ItemSummaryResponse.BottomUpAuctionInfo(i.getStartPrice(), i.getBidUnit())
-                                : null,
-                        null,
                         i.getItemCondition(),
                         i.getCategory(),
                         i.getStatus(),
@@ -134,9 +119,12 @@ public class ItemService {
         Item item = itemRepository.findByIdAndSellerId(itemId, seller.getId())
                 .orElseThrow(() -> new GlobalException(ItemErrorCode.ITEM_NOT_FOUND));
 
-        item.update(request.name(), request.description(), request.category(),
-                request.startPrice(), request.bidUnit(), request.auctionDuration(),
-                request.itemCondition());
+        item.update(
+                request.name(),
+                request.description(),
+                request.category(),
+                request.itemCondition()
+        );
 
         if (request.tags() != null) {
             tagRepository.deleteAllByItemId(itemId);  // 기존 태그 전체 삭제

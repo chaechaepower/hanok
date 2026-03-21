@@ -9,9 +9,6 @@ public record ItemUpdateRequest(
         String name,
         String description,
         Category category,
-        Long startPrice,
-        Long bidUnit,
-        Integer auctionDuration,
         ItemCondition itemCondition,
         List<String> tags
 ) {}

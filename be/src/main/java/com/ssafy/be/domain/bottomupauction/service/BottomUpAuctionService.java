@@ -90,7 +90,7 @@ public class BottomUpAuctionService {
         Item auctionItem = auction.getItem(); // TODO: Item에서 경매 데이터 지운 뒤 수정 필요
         BottomUpAuctionDetail detail = auction.getBottomUpAuctionDetail();
 
-        auctionTimerRepository.save(auction.getId(), auctionItem.getAuctionDuration());
+        auctionTimerRepository.save(auction.getId(), auction.getAuctionDuration());
 
         // 6. 응답
         // 6-1. AUCTION_START로 입찰 시작 브로드캐스트
@@ -101,7 +101,7 @@ public class BottomUpAuctionService {
                 StreamEventType.AUCTION_START,
                 buildAuctionStartResponse(
                         buildItemDto(auctionItem, detail),
-                        buildTimerDto(auctionItem, serverNow)
+                        buildTimerDto(auction, serverNow)
                 )
         );
 
@@ -371,9 +371,9 @@ public class BottomUpAuctionService {
                 .build();
     }
 
-    private AuctionStartResponse.AuctionStartTimerDto buildTimerDto(Item auctionItem, String serverNow) {
+    private AuctionStartResponse.AuctionStartTimerDto buildTimerDto(Auction auction, String serverNow) {
         return AuctionStartResponse.AuctionStartTimerDto.builder()
-                .durationSeconds(auctionItem.getAuctionDuration())
+                .durationSeconds(auction.getAuctionDuration())
                 .serverNow(serverNow)
                 .serverStartedAt(serverNow) // 경매 시작 시에는 동일(늦참/새로고침 상황에는 다름)
                 .build();
@@ -493,7 +493,7 @@ public class BottomUpAuctionService {
                 .images(images)
                 .startPrice(auction.getBottomUpAuctionDetail().getStartPrice())
                 .auctionType(auction.getAuctionType())
-                .auctionTime(auction.getItem().getAuctionDuration())
+                .auctionTime(auction.getAuctionDuration())
                 .bidUnit(auction.getBottomUpAuctionDetail().getBidUnit())
                 .auctionStatus(auction.getAuctionStatus())
                 .finalPrice(auction.getAuctionStatus() == AuctionStatus.SOLD ? auction.getFinalPrice() : null)

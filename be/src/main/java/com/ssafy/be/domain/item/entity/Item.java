@@ -107,15 +107,10 @@ public class Item {
         if (image3 != null) this.image3 = image3;
     }
 
-    public void update(String name, String description, Category category,
-                       Long startPrice, Long bidUnit, Integer auctionDuration,
-                       ItemCondition itemCondition) {
+    public void update(String name, String description, Category category, ItemCondition itemCondition) {
         Optional.ofNullable(name).ifPresent(v -> this.name = v);
         Optional.ofNullable(description).ifPresent(v -> this.description = v);
         Optional.ofNullable(category).ifPresent(v -> this.category = v);
-        Optional.ofNullable(startPrice).ifPresent(v -> this.startPrice = v);
-        Optional.ofNullable(bidUnit).ifPresent(v -> this.bidUnit = v);
-        Optional.ofNullable(auctionDuration).ifPresent(v -> this.auctionDuration = v);
         Optional.ofNullable(itemCondition).ifPresent(v -> this.itemCondition = v);
     }
 

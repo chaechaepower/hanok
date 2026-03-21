@@ -8,7 +8,6 @@ import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.bottomupauction.entity.BottomUpAuctionDetail;
 import com.ssafy.be.domain.bottomupauction.repository.BottomUpAuctionDetailRepository;
 import com.ssafy.be.domain.follow.repository.FollowRepository;
-import com.ssafy.be.domain.item.dto.response.ItemSummaryResponse;
 import com.ssafy.be.domain.item.entity.Category;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.entity.Tag;
@@ -130,8 +129,6 @@ public class StreamService {
     }
 
     private void createAuctionWithDetail(Stream stream, Item item, StreamRegisterRequest.AuctionItemRequest request) {
-        validateAuctionTypeMatchesItem(item, request);
-
         Auction auction = auctionRepository.save(
                 Auction.builder()
                         .auctionType(request.auctionType())
@@ -178,13 +175,6 @@ public class StreamService {
 
     }
 
-    // TODO: Item 엔티티에서 경매 데이터 분리 시 삭제할 메서드
-    private void validateAuctionTypeMatchesItem(Item item, StreamRegisterRequest.AuctionItemRequest request) {
-        if (item.getAuctionType() != request.auctionType()) {
-            throw new IllegalArgumentException("상품의 경매 방식과 요청한 경매 방식이 일치하지 않습니다.");
-        }
-    }
-
     private void validateBottomUpRequest(StreamRegisterRequest.AuctionItemRequest request) {
         if (request.bottomUp() == null) {
             throw new IllegalArgumentException("상향식 경매 상세 정보가 필요합니다.");
@@ -203,8 +193,8 @@ public class StreamService {
         }
     }
 
-    private ItemSummaryResponse buildItemSummaryResponse(Item item, Auction auction) {
-        return new ItemSummaryResponse(
+    private StreamAuctionItemSummaryResponse buildItemSummaryResponse(Item item, Auction auction) {
+        return new StreamAuctionItemSummaryResponse(
                 item.getId(),
                 item.getName(),
                 item.getDescription(),
@@ -216,13 +206,13 @@ public class StreamService {
                 auction.getAuctionDuration(),
                 auction.getBottomUpAuctionDetail() == null
                         ? null
-                        : new ItemSummaryResponse.BottomUpAuctionInfo(
+                        : new StreamAuctionItemSummaryResponse.BottomUpAuctionInfo(
                                 auction.getBottomUpAuctionDetail().getStartPrice(),
                                 auction.getBottomUpAuctionDetail().getBidUnit()
                         ),
                 auction.getUniqueBidAuctionDetail() == null
                         ? null
-                        : new ItemSummaryResponse.UniqueTopAuctionInfo(
+                        : new StreamAuctionItemSummaryResponse.UniqueTopAuctionInfo(
                                 auction.getUniqueBidAuctionDetail().getMinPrice(),
                                 auction.getUniqueBidAuctionDetail().getMaxPrice()
                         ),
@@ -296,7 +286,7 @@ public class StreamService {
                 .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
         // auction에서 item + auctionType 함께 매핑
-        List<ItemSummaryResponse> items = auctionRepository.findByStreamId(streamId).stream()
+        List<StreamAuctionItemSummaryResponse> items = auctionRepository.findByStreamId(streamId).stream()
                 .map(auction -> {
                     Item item = auction.getItem();
                     return buildItemSummaryResponse(item, auction);
