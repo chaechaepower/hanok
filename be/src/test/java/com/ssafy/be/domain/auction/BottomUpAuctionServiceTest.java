@@ -211,10 +211,10 @@ class BottomUpAuctionServiceTest {
                 .build());
 
         // 3. 경매 타이머 설정
-        auctionTimerRepository.save(liveAuction.getId(), item.getAuctionDuration());
+        auctionTimerRepository.save(liveAuction.getId(), liveAuction.getAuctionDuration());
 
         // 4. request dto 생성
-        long bidAmount = liveAuction.getItem().getStartPrice() + item.getBidUnit(); // 시작가 + 입찰 단위
+        long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE + TestFixture.TEST_BOTTOM_UP_BID_UNIT;
 
         BidPlaceRequest request = BidPlaceRequest.builder()
                 .auctionId(liveAuction.getId())
@@ -260,7 +260,7 @@ class BottomUpAuctionServiceTest {
         );
 
         // 시작가보다 1원 낮게
-        long bidAmount = item.getStartPrice() - 1;
+        long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE - 1;
 
         BidPlaceRequest request = BidPlaceRequest.builder()
                 .auctionId(liveAuction.getId())
@@ -287,7 +287,7 @@ class BottomUpAuctionServiceTest {
                         .build()
         );
 
-        long bidAmount = item.getStartPrice() + item.getBidUnit(); // 10000L + 1000L
+        long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE + TestFixture.TEST_BOTTOM_UP_BID_UNIT;
 
         BidPlaceRequest request = BidPlaceRequest.builder()
                 .auctionId(liveAuction.getId())
@@ -314,7 +314,7 @@ class BottomUpAuctionServiceTest {
                         .build()
         );
 
-        long bidAmount = item.getStartPrice() + item.getBidUnit();
+        long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE + TestFixture.TEST_BOTTOM_UP_BID_UNIT;
 
         BidPlaceRequest request = BidPlaceRequest.builder()
                 .auctionId(liveAuction.getId())
@@ -375,7 +375,7 @@ class BottomUpAuctionServiceTest {
                         .build()
         );
 
-        long bidAmount = item.getStartPrice() + item.getBidUnit();
+        long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE + TestFixture.TEST_BOTTOM_UP_BID_UNIT;
 
         Bid topBid = new Bid(bidder.getId(), bidder.getNickname(), bidAmount, LocalDateTime.now());
         auctionBidRepository.save(liveAuction.getId(), topBid);

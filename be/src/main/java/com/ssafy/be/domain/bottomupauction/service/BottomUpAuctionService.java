@@ -87,7 +87,7 @@ public class BottomUpAuctionService {
         auction.startAuction(serverNow);
 
         // 5. 레디스에 경매 타이머 정보 저장 - TTL로 타이머 관리(MVP)
-        Item auctionItem = auction.getItem(); // TODO: Item에서 경매 데이터 지운 뒤 수정 필요
+        Item auctionItem = auction.getItem();
         BottomUpAuctionDetail detail = auction.getBottomUpAuctionDetail();
 
         auctionTimerRepository.save(auction.getId(), auction.getAuctionDuration());

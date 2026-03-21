@@ -32,22 +32,11 @@ public class Item {
     @Enumerated(EnumType.STRING)
     private Category category;
 
-    // TODO: 경매 관련 데이터 추후 삭제 필요
-    private Long startPrice;
-
-    private Long bidUnit;
-
-    private Integer auctionDuration;
-    // TODO:
-
     @Enumerated(EnumType.STRING)
     private ItemStatus status;
 
     @Enumerated(EnumType.STRING)
     private ItemCondition itemCondition;
-
-    @Enumerated(EnumType.STRING)
-    private AuctionType auctionType;
 
     private String image1;
 
@@ -72,12 +61,8 @@ public class Item {
     private Item(String name,
                  String description,
                  Category category,
-                 Long startPrice,
-                 Long bidUnit,
-                 Integer auctionDuration,
                  ItemStatus status,
                  ItemCondition itemCondition,
-                 AuctionType auctionType,
                  String image1,
                  String image2,
                  String image3,
@@ -87,12 +72,8 @@ public class Item {
         this.name = name;
         this.description = description;
         this.category = category;
-        this.startPrice = startPrice;
-        this.bidUnit = bidUnit;
-        this.auctionDuration = auctionDuration;
         this.status = status;
         this.itemCondition = itemCondition;
-        this.auctionType = auctionType;
         this.image1 = image1;
         this.image2 = image2;
         this.image3 = image3;

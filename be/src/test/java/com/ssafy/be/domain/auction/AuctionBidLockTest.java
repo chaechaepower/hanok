@@ -95,7 +95,7 @@ public class AuctionBidLockTest {
         BottomUpAuctionDetail detail = TestFixture.createBottomUpAuctionDetail(liveAuction, item);
         bottomUpAuctionDetailRepository.save(detail);
 
-        auctionTimerRepository.save(liveAuction.getId(), item.getAuctionDuration());
+        auctionTimerRepository.save(liveAuction.getId(), liveAuction.getAuctionDuration());
     }
 
     // ======================== 락 적용 ========================
@@ -104,7 +104,7 @@ public class AuctionBidLockTest {
     @DisplayName("#1. 락 적용 시, 1000명이 같은 가격으로 동시 입찰하는 경우 1명만 입찰된다.")
     void onlyOneSucceeds_whenSamePriceConcurrentBids_withLock() throws InterruptedException {
         // given
-        long bidAmount = liveAuction.getItem().getStartPrice() + item.getBidUnit(); // 시작가 + 입찰 단위
+        long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE + TestFixture.TEST_BOTTOM_UP_BID_UNIT;
 
         BidPlaceRequest bidPlaceRequest = BidPlaceRequest.builder()
                 .auctionId(liveAuction.getId())
@@ -140,7 +140,7 @@ public class AuctionBidLockTest {
     @DisplayName("#1. 락 미적용 시, 1000명이 같은 가격으로 동시 입찰하는 경우 여러 명이 중복 입찰된다.")
     void multipleSucceed_whenSamePriceConcurrentBids_noLock() throws InterruptedException {
         // given
-        long bidAmount = liveAuction.getItem().getStartPrice() + item.getBidUnit(); // 시작가 + 입찰 단위
+        long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE + TestFixture.TEST_BOTTOM_UP_BID_UNIT;
 
         BidPlaceRequest bidPlaceRequest = BidPlaceRequest.builder()
                 .auctionId(liveAuction.getId())
