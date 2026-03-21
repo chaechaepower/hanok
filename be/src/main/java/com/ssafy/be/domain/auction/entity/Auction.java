@@ -1,6 +1,6 @@
 package com.ssafy.be.domain.auction.entity;
 
-import com.ssafy.be.domain.bottomauction.entity.BottomUpAuctionDetail;
+import com.ssafy.be.domain.bottomupauction.entity.BottomUpAuctionDetail;
 import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.stream.entity.Stream;

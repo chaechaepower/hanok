@@ -47,16 +47,6 @@ public class UniqueBidAuctionService {
     private final ShippingAddressRepository shippingAddressRepository;
 
     @Transactional
-    public void introduceItem(Long auctionId, Long userId) {
-        Auction auction = findAuctionById(auctionId);
-
-        if (!auction.isSeller(userId))
-            throw new StompException(UniqueBidAuctionErrorCode.UNAUTHORIZED);
-
-        auction.introduceAuction();
-    }
-
-    @Transactional
     public List<StreamPublishTask> startAuction(Long streamId, UniqueBidStartRequest request, Long userId) {
         Auction auction = findAuctionById(request.auctionId());
 

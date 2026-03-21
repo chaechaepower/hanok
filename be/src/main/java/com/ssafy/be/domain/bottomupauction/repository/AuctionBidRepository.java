@@ -1,6 +1,6 @@
-package com.ssafy.be.domain.auction.repository;
+package com.ssafy.be.domain.bottomupauction.repository;
 
-import com.ssafy.be.domain.auction.model.Bid;
+import com.ssafy.be.domain.bottomupauction.model.Bid;
 import com.ssafy.be.domain.auction.util.AuctionRedisKeys;
 import com.ssafy.be.global.common.response.JsonConverter;
 import com.ssafy.be.global.infra.redis.RedisOperator;

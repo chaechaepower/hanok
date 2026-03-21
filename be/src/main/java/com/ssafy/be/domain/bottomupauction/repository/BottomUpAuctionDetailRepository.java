@@ -1,6 +1,6 @@
-package com.ssafy.be.domain.bottomauction.repository;
+package com.ssafy.be.domain.bottomupauction.repository;
 
-import com.ssafy.be.domain.bottomauction.entity.BottomUpAuctionDetail;
+import com.ssafy.be.domain.bottomupauction.entity.BottomUpAuctionDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -1,5 +1,6 @@
 package com.ssafy.be.domain.auction.listener;
 
+import com.ssafy.be.domain.bottomupauction.service.BottomUpAuctionService;
 import com.ssafy.be.global.websocket.dto.StreamPublishTask;
 import com.ssafy.be.global.websocket.publisher.StreamPublisher;
 import com.ssafy.be.domain.auction.service.AuctionService;
@@ -16,16 +17,16 @@ import java.util.List;
 @Slf4j
 @Component
 public class RedisAuctionTimerKeyExpirationListener extends KeyExpirationEventMessageListener {
-    private final AuctionService auctionService;
+    private final BottomUpAuctionService bottomUpAuctionService;
     private final StreamPublisher streamPublisher;
 
     public RedisAuctionTimerKeyExpirationListener(
             RedisMessageListenerContainer listenerContainer,
-            AuctionService auctionService,
+            BottomUpAuctionService bottomUpAuctionService,
             StreamPublisher streamPublisher
     ) {
         super(listenerContainer);
-        this.auctionService = auctionService;
+        this.bottomUpAuctionService = bottomUpAuctionService;
         this.streamPublisher = streamPublisher;
     }
 
@@ -53,7 +54,7 @@ public class RedisAuctionTimerKeyExpirationListener extends KeyExpirationEventMe
         log.info("경매 타이머 종료 auctionId={}", auctionId);
 
         // 경매 종료 처리
-        List<StreamPublishTask> streamPublishTasks = auctionService.endAuction(auctionId);
+        List<StreamPublishTask> streamPublishTasks = bottomUpAuctionService.endAuction(auctionId);
 
         streamPublishTasks.forEach(streamPublisher::publish);
     }

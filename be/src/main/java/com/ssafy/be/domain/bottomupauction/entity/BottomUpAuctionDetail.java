@@ -1,4 +1,4 @@
-package com.ssafy.be.domain.bottomauction.entity;
+package com.ssafy.be.domain.bottomupauction.entity;
 
 import com.ssafy.be.domain.auction.entity.Auction;
 import jakarta.persistence.Entity;

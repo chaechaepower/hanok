@@ -1,15 +1,15 @@
 package com.ssafy.be.domain.auction;
 
-import com.ssafy.be.domain.auction.dto.request.AuctionStartRequest;
-import com.ssafy.be.domain.auction.dto.request.BidPlaceRequest;
+import com.ssafy.be.domain.bottomupauction.dto.request.AuctionStartRequest;
+import com.ssafy.be.domain.bottomupauction.dto.request.BidPlaceRequest;
 import com.ssafy.be.domain.auction.dto.request.ItemIntroduceRequest;
-import com.ssafy.be.domain.auction.dto.response.AuctionStartResponse;
-import com.ssafy.be.domain.auction.dto.response.BidPlaceResponse;
+import com.ssafy.be.domain.bottomupauction.dto.response.AuctionStartResponse;
+import com.ssafy.be.domain.bottomupauction.dto.response.BidPlaceResponse;
 import com.ssafy.be.domain.auction.dto.response.BidWinnerResponse;
 import com.ssafy.be.domain.auction.entity.Auction;
-import com.ssafy.be.domain.auction.exception.AuctionErrorCode;
-import com.ssafy.be.domain.auction.model.Bid;
-import com.ssafy.be.domain.auction.repository.AuctionBidRepository;
+import com.ssafy.be.domain.bottomupauction.exception.AuctionErrorCode;
+import com.ssafy.be.domain.bottomupauction.model.Bid;
+import com.ssafy.be.domain.bottomupauction.repository.AuctionBidRepository;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.auction.repository.AuctionTimerRepository;
 import com.ssafy.be.domain.auction.service.AuctionService;
@@ -25,7 +25,6 @@ import com.ssafy.be.domain.stream.entity.Stream;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
-import com.ssafy.be.global.infra.portone.PortoneClient;
 import com.ssafy.be.global.websocket.dto.StreamPublishTask;
 import com.ssafy.be.global.websocket.exception.StompException;
 import com.ssafy.be.support.annotation.IntegrationTest;
@@ -49,7 +48,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 @IntegrationTest
-class AuctionServiceTest {
+class BottomUpAuctionServiceTest {
     @Autowired
     private AuctionService auctionService;
     @Autowired

@@ -1,7 +1,7 @@
-package com.ssafy.be.domain.auction.handler;
+package com.ssafy.be.domain.bottomupauction.handler;
 
-import com.ssafy.be.domain.auction.dto.request.AuctionStartRequest;
-import com.ssafy.be.domain.auction.service.AuctionService;
+import com.ssafy.be.domain.bottomupauction.dto.request.AuctionStartRequest;
+import com.ssafy.be.domain.bottomupauction.service.BottomUpAuctionService;
 import com.ssafy.be.global.common.response.JsonConverter;
 import com.ssafy.be.global.websocket.dto.StreamPublishTask;
 import com.ssafy.be.global.websocket.dto.request.StompRequest;
@@ -17,8 +17,8 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @Component
-public class AuctionStartHandler implements StreamEventHandler {
-    private final AuctionService auctionService;
+public class BottomUpAuctionStartHandler implements StreamEventHandler {
+    private final BottomUpAuctionService bottomUpAuctionService;
     private final JsonConverter jsonConverter;
     private final StreamPublisher streamPublisher;
 
@@ -31,7 +31,7 @@ public class AuctionStartHandler implements StreamEventHandler {
     public void handle(StompRequest<?> request, Long streamId, Principal principal) {
         AuctionStartRequest requestPayload = jsonConverter.convert(request.getPayload(), AuctionStartRequest.class);
 
-        List<StreamPublishTask> streamPublishTasks = auctionService.startAuction(requestPayload, streamId, Long.parseLong(principal.getName()));
+        List<StreamPublishTask> streamPublishTasks = bottomUpAuctionService.startAuction(requestPayload, streamId, Long.parseLong(principal.getName()));
 
         streamPublishTasks.forEach(streamPublisher::publish);
     }

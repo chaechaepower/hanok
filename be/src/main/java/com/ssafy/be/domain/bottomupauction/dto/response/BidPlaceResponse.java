@@ -1,4 +1,4 @@
-package com.ssafy.be.domain.auction.dto.response;
+package com.ssafy.be.domain.bottomupauction.dto.response;
 
 import lombok.Builder;
 

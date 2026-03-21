@@ -1,7 +1,7 @@
 package com.ssafy.be.domain.escrow.service;
 
 import com.ssafy.be.domain.auction.entity.Auction;
-import com.ssafy.be.domain.auction.model.Bid;
+import com.ssafy.be.domain.bottomupauction.model.Bid;
 import com.ssafy.be.domain.escrow.dto.request.EscrowCancelRequest;
 import com.ssafy.be.domain.escrow.dto.request.ShipmentRegisterRequest;
 import com.ssafy.be.domain.escrow.dto.response.EscrowDetailResponse;
