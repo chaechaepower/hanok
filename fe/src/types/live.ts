@@ -46,6 +46,26 @@ export type LiveCardData = {
   seller: LiveSeller;
 };
 
+export type NewSellerRecommendedStream = {
+  streamId: number;
+  title: string;
+  category: string;
+  thumbnailUri: string | null;
+  isLive: boolean;
+  viewerCount: number;
+  scheduledAt: string | null;
+  startedAt: string | null;
+  seller: LiveSeller;
+};
+
+export type NewSellerRecommendedStreamsResponse = {
+  content: NewSellerRecommendedStream[];
+  page: number;
+  size: number;
+  totalElements: number;
+  hasNext: boolean;
+};
+
 export type SearchMatchType = 'STREAM_TITLE' | 'ITEM_NAME' | 'TAG';
 
 export type SearchMatchReason = {

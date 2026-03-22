@@ -40,6 +40,46 @@ let mockNoticeItems: MockNoticeItem[] = [
 const mockSellerProfiles: Record<number, Record<string, unknown>> = {};
 
 export const profileHandlers = [
+  http.get(`${BASE_URL}/v1/sellers/ranking`, () => {
+    return HttpResponse.json([
+      {
+        rank: 1,
+        sellerId: 7,
+        nickname: '스니커즈마켓',
+        profileImage: 'https://picsum.photos/seed/rank-7/120/120',
+        followerCount: 1024,
+      },
+      {
+        rank: 2,
+        sellerId: 12,
+        nickname: '판매왕',
+        profileImage: 'https://picsum.photos/seed/rank-12/120/120',
+        followerCount: 876,
+      },
+      {
+        rank: 3,
+        sellerId: 3,
+        nickname: '명품창고',
+        profileImage: 'https://picsum.photos/seed/rank-3/120/120',
+        followerCount: 754,
+      },
+      {
+        rank: 4,
+        sellerId: 19,
+        nickname: '빈티지샵',
+        profileImage: 'https://picsum.photos/seed/rank-19/120/120',
+        followerCount: 612,
+      },
+      {
+        rank: 5,
+        sellerId: 25,
+        nickname: '한정판마켓',
+        profileImage: 'https://picsum.photos/seed/rank-25/120/120',
+        followerCount: 489,
+      },
+    ]);
+  }),
+
   http.patch(`${BASE_URL}/v1/sellers/:sellerId/profile`, async ({ request, params }) => {
     const sellerId = Number(params.sellerId);
     const body = (await request.json()) as Record<string, string>;
