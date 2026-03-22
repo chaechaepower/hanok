@@ -1,4 +1,3 @@
-// be/src/main/java.../dto/response/UniqueBidItemSyncResponse.java
 package com.ssafy.be.domain.uniqueaction.dto.response;
 
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
@@ -9,19 +8,20 @@ import lombok.Builder;
 
 @Builder
 public record UniqueBidItemSyncResponse(
-        List<ItemInfo> items) {
+        List<ItemInfo> items
+) {
     @Builder
     public record ItemInfo(
-            Long auctionId, // 옥션 구분 식별자
+            Long auctionId,
             String itemName,
             String description,
             List<String> images,
-            Long minPrice, // <--- [핵심 추가] 최소가
-            Long maxPrice, // <--- [핵심 추가] 최고가
+            Long minPrice,
+            Long maxPrice,
             AuctionType auctionType,
             Integer auctionTime,
             AuctionStatus auctionStatus,
             Long finalPrice,
-            ItemCondition itemCondition) {
-    }
+            ItemCondition itemCondition
+    ) {}
 }
