@@ -143,7 +143,7 @@ export default function StreamOverlay({ viewerCount = 0, isSeller = false }: Pro
 
   return (
     <>
-      <div className="absolute top-4 left-4 z-10 flex items-center gap-3">
+      <div className="absolute top-3 left-3 z-10 flex items-center gap-3">
         <div className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1">
           <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
           <span className="text-xs font-black text-white">LIVE {viewerCount.toLocaleString('ko-KR')}</span>
@@ -151,7 +151,7 @@ export default function StreamOverlay({ viewerCount = 0, isSeller = false }: Pro
       </div>
 
       {!isSeller && (
-        <div className="absolute right-4 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-4">
+        <div className="absolute right-3 top-1/2 z-10 flex -translate-y-1/2 flex-col gap-4">
           <button
             type="button"
             onClick={() => void handleShare()}

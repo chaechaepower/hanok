@@ -41,7 +41,7 @@ export default function SellerGuideOverlay({ defaultOpen = true }: SellerGuideOv
   };
 
   return (
-    <div className="pointer-events-none absolute left-4 top-[43%] z-20 -translate-y-1/2">
+    <div className="pointer-events-none absolute left-3 top-[43%] z-20 -translate-y-1/2">
       <div className="pointer-events-auto flex items-center gap-1.5">
         <div className="group relative z-30">
           <div className="pointer-events-none absolute left-full top-1/2 z-40 ml-2 -translate-y-1/2 whitespace-nowrap rounded-full border border-neutral-700 bg-surface/92 px-3 py-1 text-[11px] font-medium text-neutral-300 opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.24)] transition duration-200 group-hover:opacity-100">

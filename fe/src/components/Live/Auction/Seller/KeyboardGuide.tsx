@@ -3,7 +3,7 @@ import { IoChevronBack, IoChevronDown, IoChevronForward, IoChevronUp } from 'rea
 import { LuKeyboard } from 'react-icons/lu';
 
 const CLOSED_WIDTH = 60;
-const OPEN_WIDTH = 360;
+const OPEN_WIDTH = 380;
 
 const KEY_BASE = 'flex items-center justify-center rounded-lg transition-colors duration-100';
 const KEY_INACTIVE = 'bg-neutral-800 text-neutral-300';
@@ -27,7 +27,7 @@ export default function KeyboardGuide({ open, onToggle, activeKeys = new Set() }
       initial={false}
       animate={{ width: open ? OPEN_WIDTH : CLOSED_WIDTH }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="flex h-[130px] items-stretch overflow-hidden rounded-2xl bg-surface/80"
+      className="flex h-32.5 items-stretch overflow-hidden rounded-2xl bg-surface/80"
     >
       {/* 키보드 토글 버튼 */}
       <div className="flex shrink-0 flex-col justify-center px-2.5">
