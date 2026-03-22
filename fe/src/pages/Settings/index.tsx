@@ -10,13 +10,14 @@ import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
 import { useGetWallet } from '@/api/hooks/useGetWallet';
 import SideBar from '@/components/common/layouts/SideBar';
 import { settingsSidebarItems } from '@/components/common/layouts/settingsSidebarItems';
-import { useToast } from '@/components/common/Toast';
 import AccountSection from '@/components/Settings/AccountSection';
 import FollowedStoresSection from '@/components/Settings/FollowedStoresSection';
 import OrderHistorySection from '@/components/Settings/OrderHistorySection';
 import PaymentSection from '@/components/Settings/PaymentSection';
 import ShippingSection from '@/components/Settings/ShippingSection';
+import { formatPrice } from '@/utils/formatPrice';
 import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
+import { useToast } from '@/hooks/useToast';
 
 type SettingsTab = 'account' | 'stores' | 'shipping' | 'payment' | 'order';
 const SETTINGS_TABS: SettingsTab[] = ['account', 'stores', 'shipping', 'payment', 'order'];
@@ -65,8 +66,6 @@ export default function SettingsPage() {
     });
   };
 
-  const formatPrice = (price?: number) => (price || 0).toLocaleString('ko-KR');
-
   if (isMeLoading || isNotiLoading || isWalletLoading) {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center">
@@ -107,13 +106,13 @@ export default function SettingsPage() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <h1 className="m-0 text-3xl font-bold tracking-tight text-white">{user?.nickname}</h1>
             <div className="flex items-center gap-3">
-              <span className="text-lg text-neutral-400">({user?.email?.split('@')[0]})</span>
+              <h1 className="m-0 text-3xl font-bold tracking-tight text-white">{user?.nickname}</h1>
               <button onClick={handleLogout} disabled={isLogoutPending} className="btn btn-primary-outline">
                 {isLogoutPending ? '로그아웃 중...' : '로그아웃'}
               </button>
             </div>
+            <span className="text-lg text-neutral-400">{user?.email?.split('@')[0]}</span>
           </div>
         </div>
 
@@ -135,7 +134,7 @@ export default function SettingsPage() {
             <span className="text-[17px] font-medium text-neutral-400">보유머니</span>
             <div className="flex items-center gap-3">
               <span className="text-2xl font-bold text-gold-light">
-                {formatPrice(walletData?.balance)} <span className="text-xl">원</span>
+                {formatPrice(walletData?.balance, { suffix: false })} <span className="text-xl">원</span>
               </span>
               <span className="text-xl font-bold text-gold-light">&gt;</span>
             </div>

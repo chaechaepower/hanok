@@ -1,13 +1,10 @@
 import { FaCrown } from 'react-icons/fa6';
 import type { AuctionStatisticsPayload } from '@/types';
+import { formatPrice } from '@/utils/formatPrice';
 
 interface Props {
   auctionStatistics: AuctionStatisticsPayload | null;
   currentUserId: number | null;
-}
-
-function formatPrice(value: number) {
-  return `${value.toLocaleString('ko-KR')}원`;
 }
 
 function formatPlacedAt(placedAt: string) {
@@ -53,9 +50,9 @@ export default function BidFeed({ auctionStatistics, currentUserId }: Props) {
                   isTop ? 'border border-gold/18 bg-gold/6' : 'border border-white/4 bg-white/2'
                 }`}
               >
-                <span className="flex w-8 shrink-0 items-center tabular-nums">
+                <span className="flex w-10 shrink-0 items-center tabular-nums whitespace-nowrap">
                   <span className="text-[9px] font-semibold text-neutral-500">
-                    {formattedTime.main} : {formattedTime.sec}
+                    {formattedTime.main}:{formattedTime.sec}
                   </span>
                 </span>
                 <span

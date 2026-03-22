@@ -1,6 +1,6 @@
+import { formatStreamScheduledAt } from '@/utils/streamDateTime';
 import { useState } from 'react';
 import { FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import { formatStreamScheduledAt } from './streamDateTime';
 
 type Props = {
   onConfirm: (scheduledAt: string) => void;
@@ -53,14 +53,18 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
 
   const goPrev = () => {
     if (!canPrev) return;
-    if (viewMonth === 0) { setViewYear(viewYear - 1); setViewMonth(11); }
-    else setViewMonth(viewMonth - 1);
+    if (viewMonth === 0) {
+      setViewYear(viewYear - 1);
+      setViewMonth(11);
+    } else setViewMonth(viewMonth - 1);
   };
 
   const goNext = () => {
     if (!canNext) return;
-    if (viewMonth === 11) { setViewYear(viewYear + 1); setViewMonth(0); }
-    else setViewMonth(viewMonth + 1);
+    if (viewMonth === 11) {
+      setViewYear(viewYear + 1);
+      setViewMonth(0);
+    } else setViewMonth(viewMonth + 1);
   };
 
   const isSelectable = (d: Date) => d >= today && d <= maxDate;
@@ -89,9 +93,7 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
           <p className="text-neutral-500 text-xs mb-5">오늘로부터 최대 30일 이내로 예약할 수 있습니다.</p>
 
           <div className="bg-surface rounded-xl px-4 py-3 mb-5 text-center">
-            <span className="text-gold-light font-semibold text-base">
-              {formatDisplay(selectedDate, hour, minute)}
-            </span>
+            <span className="text-gold-light font-semibold text-base">{formatDisplay(selectedDate, hour, minute)}</span>
           </div>
 
           <div className="mb-5">
@@ -175,9 +177,10 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
                         if (!isAm && hour < 12) setHour(hour + 12);
                       }}
                       className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all
-                        ${isActive
-                          ? 'bg-gold text-background'
-                          : 'bg-surface text-neutral-500 hover:text-neutral-100 hover:bg-warm/10'
+                        ${
+                          isActive
+                            ? 'bg-gold text-background'
+                            : 'bg-surface text-neutral-500 hover:text-neutral-100 hover:bg-warm/10'
                         }`}
                     >
                       {label}
@@ -191,7 +194,7 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
                 <div className="grid grid-cols-4 gap-1">
                   {Array.from({ length: 12 }, (_, i) => {
                     const displayH = i + 1;
-                    const h24 = displayH === 12 ? (hour < 12 ? 0 : 12) : (hour < 12 ? displayH : displayH + 12);
+                    const h24 = displayH === 12 ? (hour < 12 ? 0 : 12) : hour < 12 ? displayH : displayH + 12;
                     const actualH = h24;
                     return (
                       <button
@@ -199,9 +202,10 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
                         type="button"
                         onClick={() => setHour(actualH)}
                         className={`py-1.5 rounded-lg text-xs font-medium transition-all
-                          ${hour === actualH
-                            ? 'bg-gold text-background font-bold'
-                            : 'text-neutral-400 hover:bg-warm/10 hover:text-neutral-100'
+                          ${
+                            hour === actualH
+                              ? 'bg-gold text-background font-bold'
+                              : 'text-neutral-400 hover:bg-warm/10 hover:text-neutral-100'
                           }`}
                       >
                         {displayH}
@@ -220,9 +224,10 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
                       type="button"
                       onClick={() => setMinute(m)}
                       className={`py-1.5 rounded-lg text-xs font-medium transition-all
-                        ${minute === m
-                          ? 'bg-gold text-background font-bold'
-                          : 'text-neutral-400 hover:bg-warm/10 hover:text-neutral-100'
+                        ${
+                          minute === m
+                            ? 'bg-gold text-background font-bold'
+                            : 'text-neutral-400 hover:bg-warm/10 hover:text-neutral-100'
                         }`}
                     >
                       {m.toString().padStart(2, '0')}

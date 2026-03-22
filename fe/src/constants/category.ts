@@ -32,3 +32,8 @@ export type MainCategoryId = (typeof MAIN_CATEGORY_IDS)[number];
 
 export const getCategoryLabel = (categoryId: string) =>
   CATEGORY_ID_TO_LABEL[categoryId as keyof typeof CATEGORY_ID_TO_LABEL] ?? categoryId;
+
+export const CATEGORIES = MAIN_CATEGORY_IDS.map((id) => ({
+  id,
+  label: getCategoryLabel(id),
+}));

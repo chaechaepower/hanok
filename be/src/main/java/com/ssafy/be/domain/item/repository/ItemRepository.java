@@ -37,14 +37,13 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     List<Object[]> findTop10SoldItemsWithFinalPrice(@Param("sellerId") Long sellerId);
 
-    @Query(value = "SELECT i.id, i.name, i.image1, COUNT(b.id) as bidCount, e.winning_price " +
+    @Query(value = "SELECT i.id, i.name, i.image1, 0 as bidCount, MAX(e.winning_price) as winning_price " +
             "FROM item i " +
             "JOIN auction a ON i.id = a.item_id " +
-            "LEFT JOIN bid b ON a.id = b.auction_id " +
             "LEFT JOIN escrow e ON a.id = e.auction_id " +
             "WHERE i.seller_id = :sellerId " +
-            "GROUP BY i.id " +
-            "ORDER BY bidCount DESC " +
+            "GROUP BY i.id, i.name, i.image1 " +
+            "ORDER BY i.id DESC " +
             "LIMIT 3", nativeQuery = true)
     List<Object[]> findTopHotItemsBySellerId(@Param("sellerId") Long sellerId);
 }

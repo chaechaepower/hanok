@@ -1,4 +1,5 @@
 import type { UniqueAuctionEndPayload } from '@/types';
+import { formatPrice } from '@/utils/formatPrice';
 
 type Props = {
   isOpen: boolean;
@@ -6,10 +7,6 @@ type Props = {
   payload: UniqueAuctionEndPayload;
   onClose: () => void;
 };
-
-function formatPrice(value: number) {
-  return `${value.toLocaleString('ko-KR')}원`;
-}
 
 export default function UniqueAuctionResultModal({ isOpen, itemName, payload, onClose }: Props) {
   if (!isOpen) {

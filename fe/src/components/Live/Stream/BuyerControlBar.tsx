@@ -9,9 +9,10 @@ import { useGetAddresses } from '@/api/hooks/useGetAddresses';
 import { useGetWallet } from '@/api/hooks/useGetWallet';
 import BidAccessModal from '@/components/Live/Auction/Buyer/BidAccessModal';
 import KeyboardGuide from '@/components/Live/Auction/Buyer/KeyboardGuide';
-import { useToast } from '@/components/common/Toast';
+import AddressFormModal from '@/components/Settings/AddressFormModal';
 import type { BidSyncPayload, LiveAuctionType, UniqueBidSyncPayload } from '@/types';
 import { sendStreamMessage } from '@/websocket/stompClient';
+import { useToast } from '@/hooks/useToast';
 
 const CUSTOM_UNIT_OPTIONS = [
   { label: '1천원', value: 1000 },
@@ -21,7 +22,6 @@ const CUSTOM_UNIT_OPTIONS = [
 ];
 
 type BidTab = 'quick' | 'custom';
-type BidAccessModalType = 'login' | 'shipping' | null;
 type AuctionEndPhase = 'ended' | 'waiting' | null;
 
 interface Props {
@@ -34,7 +34,15 @@ interface Props {
   onToggleChat?: () => void;
 }
 
-export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, activeAuctionId, isRemoteAudioMuted, onToggleMute, onToggleChat }: Props) {
+export default function BuyerControlBar({
+  auctionType,
+  bidSync,
+  uniqueBidSync,
+  activeAuctionId,
+  isRemoteAudioMuted,
+  onToggleMute,
+  onToggleChat,
+}: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { showToast } = useToast();
@@ -48,10 +56,13 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
   const [customUnit, setCustomUnit] = useState(1000);
   const [bidAmount, setBidAmount] = useState(1000);
   const [freeInput, setFreeInput] = useState('');
+  const [uniqueInputError, setUniqueInputError] = useState('');
   const [panelOpacity, setPanelOpacity] = useState(90);
-  const [bidAccessModal, setBidAccessModal] = useState<BidAccessModalType>(null);
+  const [isBidAccessModalOpen, setIsBidAccessModalOpen] = useState(false);
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [auctionEndPhase, setAuctionEndPhase] = useState<AuctionEndPhase>(null);
   const hadActiveAuctionRef = useRef(false);
+  const suppressNextUniqueBidAttemptRef = useRef(false);
 
   const balance = wallet?.balance ?? 0;
   const isUniqueAuction = auctionType === 'UNIQUE_TOP';
@@ -66,6 +77,19 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
   const hasActiveAuction = isUniqueAuction ? Boolean(uniqueBidSync) : Boolean(bidSync);
   const visibleAuctionEndPhase = hasActiveAuction ? null : auctionEndPhase;
   const uniqueInputAmount = freeInput ? Number(freeInput) : 0;
+  const normalizeUniqueBidAmount = useCallback(
+    (amount: number) => {
+      if (!Number.isFinite(amount) || amount <= 0) return 0;
+
+      const safeBidUnit = Math.max(uniqueBidUnit, 1);
+      const maxStep = Math.max(Math.floor((uniqueMaxPrice - uniqueMinPrice) / safeBidUnit), 0);
+      const roundedStep = Math.round((amount - uniqueMinPrice) / safeBidUnit);
+      const normalizedStep = Math.min(Math.max(roundedStep, 0), maxStep);
+
+      return uniqueMinPrice + normalizedStep * safeBidUnit;
+    },
+    [uniqueBidUnit, uniqueMaxPrice, uniqueMinPrice],
+  );
   const isFreeMode = activeTab === 'custom' && activeCustomUnit === 0;
   const panelOpacityProgress = ((panelOpacity - 10) / 80) * 100;
   const quickUnit = activeTab === 'quick' ? baseBidUnit : activeCustomUnit;
@@ -85,6 +109,27 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
     isHighestBidder ||
     (isUniqueAuction && (hasPlacedUniqueBid || freeInput.trim().length === 0));
   const hasRegisteredShippingAddress = Boolean(addresses?.length) && addresses?.some((address) => address.isDefault);
+  const applyUniqueBidCorrection = useCallback(
+    (amount: number, options?: { suppressNextBidAttempt?: boolean }) => {
+      const correctedUniqueBidAmount = normalizeUniqueBidAmount(amount);
+
+      if (correctedUniqueBidAmount === amount) {
+        return true;
+      }
+
+      if (options?.suppressNextBidAttempt) {
+        suppressNextUniqueBidAttemptRef.current = true;
+      }
+
+      setFreeInput(String(correctedUniqueBidAmount));
+      setBidAmount(correctedUniqueBidAmount);
+      setUniqueInputError(
+        `입찰가를 ${correctedUniqueBidAmount.toLocaleString()}원으로 보정했습니다. 확인 후 다시 입찰해주세요.`,
+      );
+      return false;
+    },
+    [normalizeUniqueBidAmount],
+  );
 
   const handleBidPlace = useCallback(() => {
     if (!hasActiveAuction) {
@@ -93,7 +138,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
     }
 
     if (!isLoggedIn) {
-      setBidAccessModal('login');
+      setIsBidAccessModalOpen(true);
       return;
     }
 
@@ -103,7 +148,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
     }
 
     if (!hasRegisteredShippingAddress) {
-      setBidAccessModal('shipping');
+      setIsAddressModalOpen(true);
       return;
     }
 
@@ -132,15 +177,12 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
         return;
       }
 
-      if (effectiveBidAmount < uniqueMinPrice || effectiveBidAmount > uniqueMaxPrice) {
-        showToast({
-          message: `입찰가는 ${uniqueMinPrice.toLocaleString()}원 ~ ${uniqueMaxPrice.toLocaleString()}원 범위여야 합니다.`,
-        });
+      if (suppressNextUniqueBidAttemptRef.current) {
+        suppressNextUniqueBidAttemptRef.current = false;
         return;
       }
 
-      if ((effectiveBidAmount - uniqueMinPrice) % uniqueBidUnit !== 0) {
-        showToast({ message: `${uniqueBidUnit.toLocaleString()}원 단위로 입찰해야 합니다.` });
+      if (!applyUniqueBidCorrection(uniqueInputAmount)) {
         return;
       }
     }
@@ -168,21 +210,15 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
     isInsufficientBalance,
     isLoggedIn,
     isUniqueAuction,
+    applyUniqueBidCorrection,
     showToast,
     streamId,
-    uniqueBidUnit,
-    uniqueMaxPrice,
-    uniqueMinPrice,
+    uniqueInputAmount,
   ]);
 
   const handleBidAccessAction = () => {
-    if (bidAccessModal === 'login') {
-      navigate('/login');
-    } else if (bidAccessModal === 'shipping') {
-      navigate('/settings?tab=shipping');
-    }
-
-    setBidAccessModal(null);
+    navigate('/login');
+    setIsBidAccessModalOpen(false);
   };
 
   const handleDecrease = useCallback(() => {
@@ -220,7 +256,9 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
           break;
         case 'Enter':
           event.preventDefault();
-          handleBidPlace();
+          if (!isBidDisabled) {
+            handleBidPlace();
+          }
           break;
         case 'ArrowUp':
           event.preventDefault();
@@ -252,7 +290,7 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
         }
       }
     },
-    [activeCustomUnit, handleBidPlace, handleDecrease, handleIncrease, isUniqueAuction],
+    [activeCustomUnit, handleBidPlace, handleDecrease, handleIncrease, isBidDisabled, isUniqueAuction],
   );
 
   const handleKeyUp = useCallback((event: KeyboardEvent) => {
@@ -293,6 +331,8 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
   const handleFreeInput = (value: string) => {
     const nextValue = value.replace(/[^0-9]/g, '');
     setFreeInput(nextValue);
+    setUniqueInputError('');
+    suppressNextUniqueBidAttemptRef.current = false;
 
     if (!nextValue) {
       setBidAmount(0);
@@ -301,6 +341,15 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
 
     setBidAmount(Number(nextValue));
   };
+
+  const handleUniqueInputBlur = useCallback(() => {
+    if (!freeInput.trim()) {
+      setUniqueInputError('');
+      return;
+    }
+
+    applyUniqueBidCorrection(Number(freeInput), { suppressNextBidAttempt: true });
+  }, [applyUniqueBidCorrection, freeInput]);
 
   return (
     <>
@@ -330,140 +379,103 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
                     </>
                   )}
                 </div>
-              ) : (<>
-              <div className="flex gap-1 rounded-lg bg-neutral-900 p-0.5">
-                {isUniqueAuction ? (
-                  <div className="flex-1 rounded-md bg-neutral-800 py-1.5 text-center text-xs font-bold text-neutral-100">
-                    유일 최고가 경매
-                  </div>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      className={`flex-1 rounded-md py-1.5 text-xs font-bold transition ${
-                        activeTab === 'quick' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'
-                      }`}
-                      onClick={() => setTab('quick')}
-                    >
-                      빠른 입찰
-                    </button>
-                    <button
-                      type="button"
-                      className={`flex-1 rounded-md py-1.5 text-xs font-bold transition ${
-                        activeTab === 'custom' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'
-                      }`}
-                      onClick={() => setTab('custom')}
-                    >
-                      직접 입찰
-                    </button>
-                  </>
-                )}
-              </div>
-
-              {isUniqueAuction ? (
-                <div className="flex flex-1 gap-1">
-                  <div className="flex w-1/2 flex-col gap-2">
-                    <div className="flex-1 rounded-md bg-neutral-800 px-3 py-1.5 text-center text-[10px] font-bold text-neutral-100">
-                      {uniqueMinPrice.toLocaleString()} ~ {uniqueMaxPrice.toLocaleString()}원 /{' '}
-                      {uniqueBidUnit.toLocaleString()}원 단위
-                    </div>
-                    <div className="flex flex-1 items-center gap-2 rounded-lg bg-neutral-900 px-2.5 py-1">
-                      <div className="flex min-h-8 shrink-0 flex-col justify-center rounded-lg bg-neutral-900 px-2.5 py-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-neutral-500">잔고</span>
-                          <span className="text-xs font-bold tabular-nums text-neutral-100">
-                            {balance.toLocaleString()}원
-                          </span>
-                        </div>
-                        {isInsufficientBalance && (
-                          <span className="mt-1 text-[10px] font-bold text-accent-light">잔고 부족</span>
-                        )}
+              ) : (
+                <>
+                  <div className="flex gap-1 rounded-lg bg-neutral-900 p-0.5">
+                    {isUniqueAuction ? (
+                      <div className="flex-1 rounded-md bg-neutral-800 py-1.5 text-center text-xs font-bold text-neutral-100">
+                        유일 최고가 경매
                       </div>
-                      <div className="h-5 w-px bg-neutral-700" />
-
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={freeInput}
-                        onChange={(event) => handleFreeInput(event.target.value)}
-                        placeholder="입찰가 입력"
-                        className="min-w-0 flex-1 bg-transparent text-center text-sm font-black tabular-nums text-neutral-100 outline-none placeholder:text-neutral-600"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="flex flex-1 items-center rounded-xl bg-gold px-3 text-neutral-100 transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-45"
-                    onClick={handleBidPlace}
-                    disabled={isBidDisabled}
-                  >
-                    <div className="flex flex-1 flex-col items-center gap-0.5">
-                      <span className="text-lg font-black">{hasPlacedUniqueBid ? '완료' : '입찰'}</span>
-                      {freeInput ? (
-                        <span className="text-[10px] font-bold tabular-nums text-gold-light">
-                          {effectiveBidAmount.toLocaleString()}원
-                        </span>
-                      ) : null}
-                      <span className="text-[10px] font-bold text-gold">
-                        {hasPlacedUniqueBid ? '1회 입찰 완료' : `${uniqueBidUnit.toLocaleString()}원 단위`}
-                      </span>
-                    </div>
-                    <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">ENTER</span>
-                  </button>
-                </div>
-              ) : activeTab === 'quick' ? (
-                <div className="flex flex-1 gap-2">
-                  <div className="flex flex-1 flex-col items-center justify-center rounded-lg bg-neutral-900 px-3 py-1">
-                    <div className="flex items-center gap-4">
-                      <span className="text-[10px] text-neutral-500">잔고</span>
-                      <span className="text-xs font-bold tabular-nums text-neutral-100">
-                        {balance.toLocaleString()}원
-                      </span>
-                    </div>
-                    {isInsufficientBalance && (
-                      <span className="mt-1 text-[10px] font-bold text-accent-light">잔고 부족</span>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className={`flex-1 rounded-md py-1.5 text-xs font-bold transition ${
+                            activeTab === 'quick' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'
+                          }`}
+                          onClick={() => setTab('quick')}
+                        >
+                          빠른 입찰
+                        </button>
+                        <button
+                          type="button"
+                          className={`flex-1 rounded-md py-1.5 text-xs font-bold transition ${
+                            activeTab === 'custom' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'
+                          }`}
+                          onClick={() => setTab('custom')}
+                        >
+                          직접 입찰
+                        </button>
+                      </>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    className="flex flex-3 items-center rounded-xl bg-gold px-3 text-neutral-100 transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-45"
-                    onClick={handleBidPlace}
-                    disabled={isBidDisabled}
-                  >
-                    <div className="flex flex-1 flex-col items-center gap-1">
-                      <div className="flex items-center gap-2 text-sm font-black">
-                        <IoCheckmark size={16} strokeWidth={4} />
-                        {hasActiveAuction ? `${effectiveBidAmount.toLocaleString()}원으로 입찰` : '입찰'}
-                      </div>
-                      {hasActiveAuction && (
-                        <span className="text-xs font-bold text-gold-light">(+{increment.toLocaleString()})</span>
-                      )}
-                    </div>
-                    <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">ENTER</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-1 gap-1">
-                  <div className="flex w-1/2 flex-col gap-2">
-                    <div className="flex rounded-lg bg-neutral-900 p-0.5">
-                      {CUSTOM_UNIT_OPTIONS.map((option) => (
-                        <button
-                          key={option.label}
-                          type="button"
-                          className={`flex-1 rounded-md py-1.5 text-[10px] font-bold transition ${
-                            activeCustomUnit === option.value ? 'bg-gold text-neutral-100' : 'text-neutral-500'
-                          }`}
-                          onClick={() => setCustomUnit(option.value)}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
-                    </div>
 
-                    <div className="flex flex-1 items-center gap-2">
-                      <div className="flex min-h-8 shrink-0 flex-col justify-center rounded-lg bg-neutral-900 px-2.5 py-1">
-                        <div className="flex items-center gap-1.5">
+                  {isUniqueAuction ? (
+                    <div className="flex flex-1 gap-1">
+                      <div className="flex w-1/2 flex-col gap-2">
+                        <div className="flex-1 rounded-md bg-neutral-800 px-3 py-1.5 text-center text-[10px] font-bold text-neutral-100">
+                          [{uniqueMinPrice.toLocaleString()} ~ {uniqueMaxPrice.toLocaleString()}원] |{' '}
+                          {uniqueBidUnit.toLocaleString()}원 단위로 보정됩니다
+                        </div>
+                        <div
+                          className={`flex flex-1 items-center gap-2 rounded-lg px-2.5 py-1 ${
+                            uniqueInputError ? 'border border-accent-light bg-neutral-900' : 'bg-neutral-900'
+                          }`}
+                        >
+                          <div className="flex min-h-8 shrink-0 flex-col justify-center rounded-lg bg-neutral-900 px-2.5 py-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-neutral-500">잔고</span>
+                              <span className="text-xs font-bold tabular-nums text-neutral-100">
+                                {balance.toLocaleString()}원
+                              </span>
+                            </div>
+                            {isInsufficientBalance && (
+                              <span className="mt-1 text-[10px] font-bold text-accent-light">잔고 부족</span>
+                            )}
+                          </div>
+                          <div className="h-5 w-px bg-neutral-700" />
+
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={freeInput}
+                            onChange={(event) => handleFreeInput(event.target.value)}
+                            onBlur={handleUniqueInputBlur}
+                            placeholder="입찰가 입력"
+                            className="min-w-0 flex-1 bg-transparent text-center text-sm font-black tabular-nums text-neutral-100 outline-none placeholder:text-neutral-600"
+                          />
+                        </div>
+                        {uniqueInputError ? (
+                          <p className="text-[11px] font-bold text-accent-light">{uniqueInputError}</p>
+                        ) : null}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="flex flex-1 items-center rounded-xl bg-gold px-3 text-neutral-100 transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-45"
+                        onClick={handleBidPlace}
+                        disabled={isBidDisabled}
+                      >
+                        <div className="flex flex-1 flex-col items-center gap-0.5">
+                          <span className="text-lg font-black">{hasPlacedUniqueBid ? '완료' : '입찰'}</span>
+                          {freeInput ? (
+                            <span className="text-[10px] font-bold tabular-nums text-gold-light">
+                              {effectiveBidAmount.toLocaleString()}원
+                            </span>
+                          ) : null}
+                          <span className="text-[10px] font-bold text-gold">
+                            {hasPlacedUniqueBid ? '1회 입찰 완료' : `${uniqueBidUnit.toLocaleString()}원 단위`}
+                          </span>
+                        </div>
+                        <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">
+                          ENTER
+                        </span>
+                      </button>
+                    </div>
+                  ) : activeTab === 'quick' ? (
+                    <div className="flex flex-1 gap-2">
+                      <div className="flex flex-1 flex-col items-center justify-center rounded-lg bg-neutral-900 px-3 py-1">
+                        <div className="flex items-center gap-4">
                           <span className="text-[10px] text-neutral-500">잔고</span>
                           <span className="text-xs font-bold tabular-nums text-neutral-100">
                             {balance.toLocaleString()}원
@@ -473,71 +485,124 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
                           <span className="mt-1 text-[10px] font-bold text-accent-light">잔고 부족</span>
                         )}
                       </div>
-                      <div className="h-5 w-px bg-neutral-700" />
                       <button
                         type="button"
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${
-                          isFreeMode
-                            ? 'bg-neutral-900 text-neutral-600'
-                            : 'bg-neutral-800 text-neutral-100 hover:bg-neutral-700'
-                        }`}
-                        onClick={handleDecrease}
-                        disabled={isFreeMode}
+                        className="flex flex-3 items-center rounded-xl bg-gold px-3 text-neutral-100 transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-45"
+                        onClick={handleBidPlace}
+                        disabled={isBidDisabled}
                       >
-                        <FiMinus size={12} />
-                      </button>
-                      {isFreeMode ? (
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          value={freeInput}
-                          onChange={(event) => handleFreeInput(event.target.value)}
-                          placeholder="입찰가 입력"
-                          className="min-w-0 flex-1 bg-transparent text-center text-sm font-black tabular-nums text-neutral-100 outline-none placeholder:text-neutral-600"
-                        />
-                      ) : (
-                        <div className="min-w-0 flex-1 text-center text-sm font-black tabular-nums text-neutral-100">
-                          {hasActiveAuction ? (
-                            <>
-                              {effectiveBidAmount.toLocaleString()}{' '}
-                              <span className="text-xs font-normal text-neutral-400">원</span>
-                            </>
-                          ) : null}
+                        <div className="flex flex-1 flex-col items-center gap-1">
+                          <div className="flex items-center gap-2 text-sm font-black">
+                            <IoCheckmark size={16} strokeWidth={4} />
+                            {hasActiveAuction ? `${effectiveBidAmount.toLocaleString()}원으로 입찰` : '입찰'}
+                          </div>
+                          {hasActiveAuction && (
+                            <span className="text-xs font-bold text-gold-light">(+{increment.toLocaleString()})</span>
+                          )}
                         </div>
-                      )}
-                      <button
-                        type="button"
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${
-                          isFreeMode
-                            ? 'bg-neutral-900 text-neutral-600'
-                            : 'bg-neutral-800 text-neutral-100 hover:bg-neutral-700'
-                        }`}
-                        onClick={handleIncrease}
-                        disabled={isFreeMode}
-                      >
-                        <FiPlus size={12} />
+                        <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">
+                          ENTER
+                        </span>
                       </button>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex flex-1 gap-1">
+                      <div className="flex w-1/2 flex-col gap-2">
+                        <div className="flex rounded-lg bg-neutral-900 p-0.5">
+                          {CUSTOM_UNIT_OPTIONS.map((option) => (
+                            <button
+                              key={option.label}
+                              type="button"
+                              className={`flex-1 rounded-md py-1.5 text-[10px] font-bold transition ${
+                                activeCustomUnit === option.value ? 'bg-gold text-neutral-100' : 'text-neutral-500'
+                              }`}
+                              onClick={() => setCustomUnit(option.value)}
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
 
-                  <button
-                    type="button"
-                    className="flex flex-1 items-center rounded-xl bg-gold px-3 text-neutral-100 transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-45"
-                    onClick={handleBidPlace}
-                    disabled={isBidDisabled}
-                  >
-                    <div className="flex flex-1 flex-col items-center gap-0.5">
-                      <span className="text-lg font-black">입찰</span>
-                      <span className="text-[10px] font-bold tabular-nums text-gold-light">
-                        {effectiveBidAmount.toLocaleString()}원
-                      </span>
-                      <span className="text-[10px] font-bold text-gold">+{increment.toLocaleString()}</span>
+                        <div className="flex flex-1 items-center gap-2">
+                          <div className="flex min-h-8 shrink-0 flex-col justify-center rounded-lg bg-neutral-900 px-2.5 py-1">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] text-neutral-500">잔고</span>
+                              <span className="text-xs font-bold tabular-nums text-neutral-100">
+                                {balance.toLocaleString()}원
+                              </span>
+                            </div>
+                            {isInsufficientBalance && (
+                              <span className="mt-1 text-[10px] font-bold text-accent-light">잔고 부족</span>
+                            )}
+                          </div>
+                          <div className="h-5 w-px bg-neutral-700" />
+                          <button
+                            type="button"
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${
+                              isFreeMode
+                                ? 'bg-neutral-900 text-neutral-600'
+                                : 'bg-neutral-800 text-neutral-100 hover:bg-neutral-700'
+                            }`}
+                            onClick={handleDecrease}
+                            disabled={isFreeMode}
+                          >
+                            <FiMinus size={12} />
+                          </button>
+                          {isFreeMode ? (
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              value={freeInput}
+                              onChange={(event) => handleFreeInput(event.target.value)}
+                              placeholder="입찰가 입력"
+                              className="min-w-0 flex-1 bg-transparent text-center text-sm font-black tabular-nums text-neutral-100 outline-none placeholder:text-neutral-600"
+                            />
+                          ) : (
+                            <div className="min-w-0 flex-1 text-center text-sm font-black tabular-nums text-neutral-100">
+                              {hasActiveAuction ? (
+                                <>
+                                  {effectiveBidAmount.toLocaleString()}{' '}
+                                  <span className="text-xs font-normal text-neutral-400">원</span>
+                                </>
+                              ) : null}
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${
+                              isFreeMode
+                                ? 'bg-neutral-900 text-neutral-600'
+                                : 'bg-neutral-800 text-neutral-100 hover:bg-neutral-700'
+                            }`}
+                            onClick={handleIncrease}
+                            disabled={isFreeMode}
+                          >
+                            <FiPlus size={12} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        className="flex flex-1 items-center rounded-xl bg-gold px-3 text-neutral-100 transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-45"
+                        onClick={handleBidPlace}
+                        disabled={isBidDisabled}
+                      >
+                        <div className="flex flex-1 flex-col items-center gap-0.5">
+                          <span className="text-lg font-black">입찰</span>
+                          <span className="text-[10px] font-bold tabular-nums text-gold-light">
+                            {effectiveBidAmount.toLocaleString()}원
+                          </span>
+                          <span className="text-[10px] font-bold text-gold">+{increment.toLocaleString()}</span>
+                        </div>
+                        <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">
+                          ENTER
+                        </span>
+                      </button>
                     </div>
-                    <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">ENTER</span>
-                  </button>
-                </div>
+                  )}
+                </>
               )}
-            </>)}
             </div>
           </div>
 
@@ -584,10 +649,16 @@ export default function BuyerControlBar({ auctionType, bidSync, uniqueBidSync, a
       </div>
 
       <BidAccessModal
-        isOpen={bidAccessModal !== null}
-        variant={bidAccessModal}
-        onClose={() => setBidAccessModal(null)}
+        isOpen={isBidAccessModalOpen}
+        onClose={() => setIsBidAccessModalOpen(false)}
         onAction={handleBidAccessAction}
+      />
+      <AddressFormModal
+        isOpen={isAddressModalOpen}
+        mode="add"
+        defaultOnCreate
+        description="배송지가 등록되어 있어야 경매에 참여할 수 있습니다."
+        onClose={() => setIsAddressModalOpen(false)}
       />
     </>
   );

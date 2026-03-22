@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useToast } from '@/components/common/Toast';
 import type {
   AuctionStatisticsPayload,
   BidSyncPayload,
@@ -18,6 +17,7 @@ import type {
   UniqueBidSyncPayload,
 } from '@/types';
 import { sendStreamMessage, subscribeStream } from '@/websocket/stompClient';
+import { useToast } from './useToast';
 
 // ---------------------------------------------------------------------------
 // Private type guards
@@ -172,10 +172,7 @@ export type UseLiveStreamReturn = {
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useLiveStream(
-  streamId: string | undefined,
-  isLiveFromServer: boolean,
-): UseLiveStreamReturn {
+export function useLiveStream(streamId: string | undefined, isLiveFromServer: boolean): UseLiveStreamReturn {
   const { showToast } = useToast();
 
   const [liveStateOverride, setLiveStateOverride] = useState<boolean | null>(null);
@@ -197,6 +194,7 @@ export function useLiveStream(
   } | null>(null);
 
   const lastActiveItemRef = useRef<ItemSyncItem | null>(null);
+  const snipingTimerSetAtRef = useRef<number>(0);
   // Ref that is set once the STOMP subscription is established.
   // Used to gate ITEM_SYNC calls on subscription readiness (race condition fix).
   const requestItemSyncRef = useRef<(() => Promise<void>) | null>(null);
@@ -294,7 +292,8 @@ export function useLiveStream(
 
     const applyBidSync = (payload?: BidSyncPayload | null) => {
       setBidSync(payload ?? null);
-      if (payload?.timer) {
+      const snipingAge = Date.now() - snipingTimerSetAtRef.current;
+      if (payload?.timer && snipingAge > 2000) {
         setTimer(createSyncedTimer(payload.timer));
       }
     };
@@ -345,6 +344,7 @@ export function useLiveStream(
 
       if (isBidPlacedEvent(event)) {
         if (event.payload?.snipingTimer) {
+          snipingTimerSetAtRef.current = Date.now();
           setTimer(createSyncedTimer(event.payload.snipingTimer));
         }
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { LuMic, LuMicOff, LuVideo, LuVideoOff } from 'react-icons/lu';
 import KeyboardGuide from '@/components/Live/Auction/Seller/KeyboardGuide';
+import SellerActionButtons from '@/components/Live/Stream/SellerActionButtons';
 import type { LiveAuctionType } from '@/types';
 import { useParams } from 'react-router-dom';
 import { sendStreamMessage } from '@/websocket/stompClient';
@@ -159,28 +160,12 @@ export default function SellerControlBar({
 
       {/* 하단 중앙: 액션 버튼 */}
       <div className="flex flex-1 items-center flex-col gap-2 px-4">
-        <button
-          type="button"
-          onClick={handleAuctionItemIntroduce}
-          disabled={!canIntroduce}
-          className="flex flex-1 w-full items-center justify-center gap-2 rounded-xl bg-surface-elevated text-sm font-bold text-neutral-300 transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-elevated"
-        >
-          <GoClock size={15} />
-          설명 시작
-          <span className="rounded bg-neutral-800 px-1.5 py-0.5 text-[10px] text-neutral-500">SPACE</span>
-        </button>
-        <button
-          type="button"
-          onClick={handleAuctionStart}
-          disabled={!canStart}
-          className="flex flex-1 w-full items-center justify-center gap-2 rounded-xl bg-gold text-sm font-black text-background transition hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-gold"
-        >
-          <PlayIcon />
-          경매 시작
-          <span className="rounded bg-background/15 px-1.5 py-0.5 text-[10px] font-bold text-background/50">
-            ENTER
-          </span>
-        </button>
+        <SellerActionButtons
+          onIntroduce={handleAuctionItemIntroduce}
+          onStart={handleAuctionStart}
+          canIntroduce={canIntroduce}
+          canStart={canStart}
+        />
       </div>
 
       {/* 우하단: 미디어 컨트롤 */}
@@ -199,23 +184,5 @@ export default function SellerControlBar({
         </button>
       </div>
     </div>
-  );
-}
-
-function PlayIcon() {
-  return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-      <polygon points="5 3 19 12 5 21 5 3" />
-    </svg>
-  );
-}
-
-function GoClock({ size = 15 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <circle cx="12" cy="12" r="10" />
-      <line x1="12" y1="8" x2="12" y2="12" />
-      <line x1="12" y1="16" x2="12.01" y2="16" />
-    </svg>
   );
 }

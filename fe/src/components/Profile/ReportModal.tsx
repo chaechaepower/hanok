@@ -1,6 +1,6 @@
-﻿import { useState } from 'react';
-import { FiTrash2, FiUpload, FiX } from 'react-icons/fi';
-import { useToast } from '@/components/common/Toast';
+﻿import { useToast } from '@/hooks/useToast';
+import { useState } from 'react';
+import { FiTrash2, FiUpload } from 'react-icons/fi';
 const REPORT_REASONS = ['허위 매물 / 사기 의심', '욕설 / 비방', '부적절한 콘텐츠', '스팸 / 광고', '기타'] as const;
 type ReportModalProps = {
   sellerNickname: string;
@@ -33,7 +33,7 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
   };
   return (
     <div
-      className="fixed top-0 left-0 w-full h-full bg-black/70 z-[999] flex items-center justify-center"
+      className="fixed top-0 left-0 w-full h-full bg-black/70 z-[9999] flex items-center justify-center"
       onClick={onClose}
     >
       <div
@@ -42,12 +42,6 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
       >
         <div className="flex items-center justify-between">
           <h2 className="m-0 text-white text-xl font-bold">신고하기</h2>
-          <button
-            className="bg-transparent border-none text-neutral-600 cursor-pointer hover:text-white transition-colors p-0"
-            onClick={onClose}
-          >
-            <FiX size={22} />
-          </button>
         </div>
         <p className="m-0 text-[14px] text-neutral-400">
           <span className="text-gold-light font-bold">{sellerNickname}</span> 스토어를 신고합니다.
@@ -88,7 +82,7 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
         </div>
         <div className="flex flex-col gap-2">
           <label className="text-[14px] text-neutral-300 font-semibold">
-            스크린샷 첨부(10MB 이하) <span className="text-neutral-600 font-normal">({images.length}/3)</span>
+            스크린샷 첨부 <span className="text-neutral-600 font-normal">({images.length}/3)</span>
           </label>
           {images.length > 0 && (
             <div className="flex gap-3">
@@ -116,13 +110,13 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
 
         <div className="flex justify-end gap-3 mt-[10px]">
           <button
-            className="py-[10px] px-6 bg-neutral-700 text-neutral-200 border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-neutral-600 transition-colors"
+            className="w-full py-[10px] px-6 bg-neutral-700 text-neutral-200 border-none rounded-lg cursor-pointer text-sm font-semibold hover:bg-neutral-600 transition-colors"
             onClick={onClose}
           >
             취소
           </button>
           <button
-            className="py-[10px] px-6 bg-gold-light text-background font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-gold-dark transition-colors"
+            className="w-full py-[10px] px-6 bg-gold-light text-background font-bold border-none rounded-lg cursor-pointer text-sm hover:bg-gold-dark transition-colors"
             onClick={handleSubmit}
           >
             신고하기

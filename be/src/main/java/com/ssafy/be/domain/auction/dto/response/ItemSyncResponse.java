@@ -3,9 +3,7 @@ package com.ssafy.be.domain.auction.dto.response;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
 import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.ItemCondition;
-
 import java.util.List;
-
 import lombok.Builder;
 
 @Builder
@@ -14,16 +12,19 @@ public record ItemSyncResponse(
 ) {
     @Builder
     public record ItemInfo(
-            Long auctionId,
-            String itemName,
-            String description,
-            List<String> images,
-            Long startPrice,
-            AuctionType auctionType,
-            Integer auctionTime, // 엔티티에서 네이밍은 auctionDuration임. 프론트 협의
-            Long bidUnit,
-            AuctionStatus auctionStatus,
-            Long finalPrice,
-            ItemCondition itemCondition
+            Long auctionId,             // 공통
+            String itemName,            // 공통
+            String description,         // 공통
+            List<String> images,        // 공통
+            AuctionType auctionType,    // 타입 구분자 (BOTTOM_UP, UNIQUE_TOP)
+            Integer auctionTime,        // 공통
+            AuctionStatus auctionStatus,// 공통
+            Long finalPrice,            // 공통
+            ItemCondition itemCondition,// 공통
+
+            Long bidUnit,    // 상향식(존재), 유일최고가(null)
+            Long startPrice, // 상향식(존재), 유일최고가(null)
+            Long minPrice,   // 상향식(null), 유일최고가(존재)
+            Long maxPrice    // 상향식(null), 유일최고가(존재)
     ) {}
 }

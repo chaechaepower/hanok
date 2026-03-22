@@ -7,8 +7,9 @@ import { usePostCompleteEscrow } from '@/api/hooks/usePostCompleteEscrow';
 import { useGetEscrowDetail } from '@/api/hooks/useGetEscrowDetail';
 import { useGetEscrowsBuyer } from '@/api/hooks/useGetEscrowsBuyer';
 import EscrowDetailCard from '@/components/common/EscrowDetailCard';
-import { useToast } from '@/components/common/Toast';
 import { ESCROW_STATUS_OPTIONS, getEscrowStateUI, type EscrowStatusFilter } from '@/utils/getEscrowStateUI';
+import { formatPrice } from '@/utils/formatPrice';
+import { useToast } from '@/hooks/useToast';
 
 const formatDate = (iso: string) => {
   const d = new Date(iso);
@@ -19,8 +20,6 @@ const formatDate = (iso: string) => {
   const min = String(d.getMinutes()).padStart(2, '0');
   return `${year}-${month}-${day} ${hour}:${min}`;
 };
-
-const formatPrice = (price: number) => `${price.toLocaleString('ko-KR')}원`;
 
 type SortOption = 'LATEST' | 'AMOUNT';
 
@@ -135,7 +134,7 @@ export default function OrderHistorySection() {
             <button
               type="button"
               onClick={() => setIsSortOpen((prev) => !prev)}
-              className="inline-flex items-center justify-center gap-2 rounded-[10px] bg-primary/15 px-4 py-2 transition hover:bg-primary/25"
+              className="inline-flex items-center justify-center gap-2 rounded-[10px] w-[110px] bg-primary/15 px-2 py-2 transition hover:bg-primary/25"
             >
               <span className="text-body-md font-semibold text-primary-light">{selectedSortLabel}</span>
               <span className={`text-caption text-point/70 transition-transform ${isSortOpen ? 'rotate-180' : ''}`}>
@@ -144,7 +143,7 @@ export default function OrderHistorySection() {
             </button>
 
             {isSortOpen && (
-              <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-full overflow-hidden rounded-[10px] bg-primary/15 p-1 shadow-primary-glow backdrop-blur-md">
+              <div className="absolute right-0 top-[calc(100%+8px)] z-30 w-[110px] overflow-hidden rounded-[10px] bg-primary/15 p-1 shadow-primary-glow backdrop-blur-md">
                 {SORT_OPTIONS.map((option) => {
                   const isSelected = sortBy === option.value;
                   return (
@@ -155,7 +154,7 @@ export default function OrderHistorySection() {
                         setSortBy(option.value);
                         setIsSortOpen(false);
                       }}
-                      className={`flex w-full items-center justify-center rounded-lg px-3 py-2 text-center text-body-md transition ${
+                      className={`flex w-full items-center justify-center whitespace-nowrap rounded-lg px-2 py-2 text-center text-body-md transition ${
                         isSelected ? 'bg-primary font-semibold text-neutral-100' : 'text-neutral-300 hover:bg-warm/10'
                       }`}
                     >

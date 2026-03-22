@@ -51,7 +51,7 @@ public record SellerReportResponse(
     ) {}
 
     public record CategoryStatsDto(
-            String categoryName,
+            String category,
             long salesCount,
             long salesAmount
     ) {}

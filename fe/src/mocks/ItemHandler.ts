@@ -12,6 +12,8 @@ type MockItem = {
   tags: string[];
   images: string[];
   startPrice: number;
+  minPrice: number | null;
+  maxPrice: number | null;
   bidUnit: number;
   auctionDuration: number;
   itemCondition: ItemSyncItemCondition;
@@ -29,6 +31,8 @@ let mockItems: MockItem[] = [
     tags: ['nike', 'sneakers'],
     images: [Logo, Logo, Logo],
     startPrice: 100000,
+    minPrice: 1000,
+    maxPrice: 100000,
     bidUnit: 5000,
     auctionDuration: 30,
     itemCondition: 'BRAND_NEW',
@@ -44,6 +48,8 @@ let mockItems: MockItem[] = [
     tags: ['jordan', 'chicago'],
     images: [Logo, Logo, Logo],
     startPrice: 500000,
+    minPrice: null,
+    maxPrice: null,
     bidUnit: 10000,
     auctionDuration: 60,
     itemCondition: 'OPEN_BOX',
@@ -59,6 +65,8 @@ let mockItems: MockItem[] = [
     tags: ['adidas', 'yeezy'],
     images: [Logo, Logo, Logo],
     startPrice: 200000,
+    minPrice: null,
+    maxPrice: null,
     bidUnit: 5000,
     auctionDuration: 30,
     itemCondition: 'USED',
@@ -74,6 +82,8 @@ let mockItems: MockItem[] = [
     tags: ['rolex', 'submariner'],
     images: [Logo, Logo, Logo],
     startPrice: 15000000,
+    minPrice: null,
+    maxPrice: null,
     bidUnit: 100000,
     auctionDuration: 60,
     itemCondition: 'BRAND_NEW',
@@ -89,6 +99,8 @@ let mockItems: MockItem[] = [
     tags: ['hermes', 'birkin'],
     images: [Logo, Logo, Logo],
     startPrice: 20000000,
+    minPrice: null,
+    maxPrice: null,
     bidUnit: 200000,
     auctionDuration: 60,
     itemCondition: 'BRAND_NEW',
@@ -120,8 +132,10 @@ export const itemHandlers = [
       description: (body.description as string) || 'Mock Description',
       tags: (body.tags as string[]) || [],
       images: [Logo, Logo, Logo],
-      startPrice: Number(body.startPrice) || 0,
-      bidUnit: Number(body.bidUnit) || 1000,
+      startPrice: body.startPrice == null ? 0 : Number(body.startPrice),
+      minPrice: body.minPrice == null ? null : Number(body.minPrice),
+      maxPrice: body.maxPrice == null ? null : Number(body.maxPrice),
+      bidUnit: body.bidUnit == null ? 0 : Number(body.bidUnit),
       auctionDuration: Number(body.auctionDuration) || 60,
       itemCondition: ((body.itemCondition as ItemSyncItemCondition | undefined) ?? 'USED'),
       category: (body.category as string) || 'ETC',

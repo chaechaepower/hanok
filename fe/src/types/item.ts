@@ -4,8 +4,10 @@ export type CreateItemPayload = {
   name: string;
   description: string;
   category: string;
-  startPrice: number;
-  bidUnit: number;
+  startPrice: number | null;
+  minPrice: number | null;
+  maxPrice: number | null;
+  bidUnit: number | null;
   auctionDuration: number;
   itemCondition: string;
   auctionType: ItemAuctionType;
@@ -51,6 +53,8 @@ export interface Product {
   tags: string[];
   images: string[];
   startPrice: number;
+  minPrice?: number | null;
+  maxPrice?: number | null;
   bidUnit: number;
   auctionDuration: number;
   itemCondition: string;

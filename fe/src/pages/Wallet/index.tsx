@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { IconType } from 'react-icons';
 import { FiArrowDown, FiArrowUp, FiChevronLeft, FiCreditCard, FiInfo, FiZap } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/common/Toast';
 
 import { useGetTradeReports } from '@/api/hooks/useGetTradeReports';
 import { useGetAccount } from '@/api/hooks/useGetAccount';
@@ -18,6 +17,7 @@ import { MIN_WALLET_CHARGE_AMOUNT } from '@/constants/wallet';
 import type { TradeReportItem } from '@/types';
 import { requestPointChargePayment } from '@/utils/requestPointChargePayment';
 import coins from '@/assets/coins.png';
+import { useToast } from '@/hooks/useToast';
 
 type WalletType = 'charge' | 'withdraw' | 'settlement';
 
@@ -322,7 +322,13 @@ export default function WalletPage() {
               {isHistoryLoading ? (
                 Array.from({ length: 3 }, (_, index) => <HistoryRowSkeleton key={index} />)
               ) : currentHistory.length > 0 ? (
-                currentHistory.map((item) => <HistoryRow key={item.id} item={item} />)
+                currentHistory.map((item) => (
+                  <HistoryRow
+                    key={item.id}
+                    item={item}
+                    onClick={item.kind === 'settlement' ? () => navigate('/tracking') : undefined}
+                  />
+                ))
               ) : (
                 <div className="px-2 py-10 text-center text-sm text-neutral-500">내역이 없습니다.</div>
               )}
@@ -350,7 +356,7 @@ export default function WalletPage() {
   );
 }
 
-function HistoryRow({ item }: { item: WalletHistoryItem }) {
+function HistoryRow({ item, onClick }: { item: WalletHistoryItem; onClick?: () => void }) {
   const iconMap: Record<WalletType, { icon: IconType; wrapperClassName: string; iconClassName: string }> = {
     charge: {
       icon: FiArrowDown,
@@ -377,7 +383,10 @@ function HistoryRow({ item }: { item: WalletHistoryItem }) {
   } = item.kind === 'settlement' ? { ...iconMap.settlement, icon: settlementIcon } : iconMap[item.kind];
 
   return (
-    <div className="flex flex-col items-start gap-4 rounded-[22px] px-2 py-4 transition hover:bg-white/2 sm:flex-row sm:items-center sm:justify-between sm:px-3">
+    <div
+      className={`flex flex-col items-start gap-4 rounded-[22px] px-2 py-4 transition hover:bg-white/2 sm:flex-row sm:items-center sm:justify-between sm:px-3 ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={onClick}
+    >
       <div className="flex min-w-0 items-center gap-4">
         <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${wrapperClassName}`}>
           <Icon className={`h-5 w-5 ${iconClassName}`} />

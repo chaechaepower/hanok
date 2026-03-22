@@ -6,11 +6,11 @@ import { useGetAccount } from '@/api/hooks/useGetAccount';
 import { completeWalletCharge } from '@/api/hooks/usePostCompleteWalletCharge';
 import { createWalletCharge } from '@/api/hooks/usePostWalletCharge';
 import { useGetWallet } from '@/api/hooks/useGetWallet';
-import { useToast } from '@/components/common/Toast';
 import PointManagementModal, { type PointModalType } from '@/components/Wallet/PointManagementModal';
 import { MIN_WALLET_CHARGE_AMOUNT } from '@/constants/wallet';
 import { requestPointChargePayment } from '@/utils/requestPointChargePayment';
 import { IoMdShare } from 'react-icons/io';
+import { useToast } from '@/hooks/useToast';
 
 interface Props {
   viewerCount?: number;

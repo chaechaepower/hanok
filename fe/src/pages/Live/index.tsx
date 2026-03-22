@@ -26,6 +26,53 @@ import RightPanel from './RightPanel';
 import SellerStartModal from './SellerStartModal';
 import StreamEndModal from './StreamEndModal';
 
+const STARTED_STREAM_IDS_STORAGE_KEY = 'startedLiveStreamIds';
+
+const getStartedLiveStreamIds = () => {
+  if (typeof window === 'undefined') {
+    return new Set<number>();
+  }
+
+  const raw = window.sessionStorage.getItem(STARTED_STREAM_IDS_STORAGE_KEY);
+
+  if (!raw) {
+    return new Set<number>();
+  }
+
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) {
+      return new Set<number>();
+    }
+
+    return new Set(
+      parsed.filter((value): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0),
+    );
+  } catch {
+    return new Set<number>();
+  }
+};
+
+const persistStartedLiveStreamIds = (streamIds: Set<number>) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.sessionStorage.setItem(STARTED_STREAM_IDS_STORAGE_KEY, JSON.stringify([...streamIds]));
+};
+
+const markStartedLiveStream = (streamId: number) => {
+  const next = getStartedLiveStreamIds();
+  next.add(streamId);
+  persistStartedLiveStreamIds(next);
+};
+
+const unmarkStartedLiveStream = (streamId: number) => {
+  const next = getStartedLiveStreamIds();
+  next.delete(streamId);
+  persistStartedLiveStreamIds(next);
+};
+
 export default function LivePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -46,6 +93,7 @@ export default function LivePage() {
 
   const activeStreamEnter: StreamEnterResponse | null = streamEnter ?? null;
   const isSeller = activeStreamEnter?.isHost ?? false;
+  const hasStartedThisStream = Number.isFinite(numericStreamId) && getStartedLiveStreamIds().has(numericStreamId);
 
   const {
     isStreamLive,
@@ -140,6 +188,7 @@ export default function LivePage() {
         streamId: numericStreamId,
         request: startRequest,
       });
+      markStartedLiveStream(numericStreamId);
       confirmStreamStart();
       setShowSellerStartModal(false);
     } catch (error) {
@@ -162,6 +211,7 @@ export default function LivePage() {
 
     try {
       await postEndStream.mutateAsync(numericStreamId);
+      unmarkStartedLiveStream(numericStreamId);
       disconnect();
       setShowStreamEndModal(false);
       markStreamEnded();
@@ -181,7 +231,8 @@ export default function LivePage() {
       !startRequest ||
       !Number.isFinite(numericStreamId) ||
       numericStreamId <= 0 ||
-      isStreamLive
+      isStreamLive ||
+      hasStartedThisStream
     ) {
       return;
     }
@@ -198,7 +249,23 @@ export default function LivePage() {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [isSeller, isStreamLive, numericStreamId, shouldAutoOpenStartModal, startRequest, streamEnter]);
+  }, [
+    hasStartedThisStream,
+    isSeller,
+    isStreamLive,
+    numericStreamId,
+    shouldAutoOpenStartModal,
+    startRequest,
+    streamEnter,
+  ]);
+
+  useEffect(() => {
+    if (!Number.isFinite(numericStreamId) || numericStreamId <= 0 || streamState !== 'ended') {
+      return;
+    }
+
+    unmarkStartedLiveStream(numericStreamId);
+  }, [numericStreamId, streamState]);
 
   const handleWinConfirm = async () => {
     await Promise.resolve();
@@ -280,7 +347,7 @@ export default function LivePage() {
           </div>
 
           <SellerStartModal
-            open={showSellerStartModal && isSeller && !isStreamLive}
+            open={showSellerStartModal && isSeller && !isStreamLive && !hasStartedThisStream}
             streamTitle={streamTitle}
             isPending={postStartStream.isPending}
             onConfirm={() => {
@@ -315,11 +382,19 @@ export default function LivePage() {
               onClose={handleUniqueAuctionResultClose}
             />
           )}
-          {streamState === 'disconnected' && <StreamDisconnected initialSeconds={60} onTimeout={markStreamEnded} />}
+          {streamState === 'disconnected' && (
+            <StreamDisconnected
+              initialSeconds={300}
+              onTimeout={markStreamEnded}
+              onExit={() => {
+                navigate('/');
+              }}
+            />
+          )}
           {streamState === 'ended' && (
             <StreamEnded
               onClose={() => {
-                navigate(-1);
+                navigate('/');
               }}
             />
           )}

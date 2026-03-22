@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 
-import type { AuctionItem, ItemStatus } from './LeftPanel';
+import { AUCTION_STATUS_BADGES } from '@/constants/auction';
+import type { AuctionItem } from '@/types';
+import { formatPrice } from '@/utils/formatPrice';
 
 interface Props {
   open: boolean;
@@ -8,19 +10,7 @@ interface Props {
   items: AuctionItem[];
 }
 
-const STATUS_BADGE: Record<ItemStatus, { label: string; className: string }> = {
-  READY: { label: '대기', className: 'badge-neutral' },
-  INTRODUCING: { label: '설명중', className: 'badge-primary-outline' },
-  LIVE: { label: '경매중', className: 'badge-gold-outline' },
-  SOLD: { label: '낙찰', className: 'badge-ember-outline' },
-  UNSOLD: { label: '유찰', className: 'badge-accent-outline' },
-};
-
 const STAT_COLORS = ['text-neutral-400', 'text-gold', 'text-ember'] as const;
-
-function formatPrice(n: number) {
-  return n.toLocaleString('ko-KR');
-}
 
 export default function AuctionReportModal({ open, onClose, items }: Props) {
   const doneItems = items.filter((item) => item.status === 'SOLD' || item.status === 'UNSOLD');
@@ -72,7 +62,15 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
             className="flex h-8 w-8 items-center justify-center rounded-full transition hover:bg-white/10"
             onClick={onClose}
           >
-            <svg width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" className="text-neutral-500" strokeWidth="2" strokeLinecap="round">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              stroke="currentColor"
+              className="text-neutral-500"
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
               <line x1="2" y1="2" x2="12" y2="12" />
               <line x1="12" y1="2" x2="2" y2="12" />
             </svg>
@@ -91,9 +89,7 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
                 className="flex flex-col gap-1 rounded-[20px] border border-white/6 bg-white/[0.02] p-4"
               >
                 <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-600">{stat.label}</span>
-                <span className={`text-[26px] font-black leading-none ${STAT_COLORS[idx]}`}>
-                  {stat.value}
-                </span>
+                <span className={`text-[26px] font-black leading-none ${STAT_COLORS[idx]}`}>{stat.value}</span>
                 <span className="text-[10px] font-medium text-neutral-600">{stat.sub}</span>
               </div>
             ))}
@@ -107,21 +103,18 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
               </span>
             </div>
             <div className="progress-track">
-              <div
-                className="progress-bar progress-bar-gold"
-                style={{ width: `${progressPct}%` }}
-              />
+              <div className="progress-bar progress-bar-gold" style={{ width: `${progressPct}%` }} />
             </div>
           </div>
 
           <div className="flex items-center justify-between rounded-[20px] border border-gold/12 bg-gold/5 px-5 py-4">
             <div className="flex flex-col gap-0.5">
               <span className="text-[10px] font-bold uppercase text-neutral-600">총 낙찰 금액</span>
-              <span className="text-2xl font-black text-gold">{formatPrice(totalSales)}원</span>
+              <span className="text-2xl font-black text-gold">{formatPrice(totalSales)}</span>
             </div>
             <div className="flex flex-col items-end gap-0.5">
               <span className="text-[10px] font-bold text-neutral-600">평균 낙찰가</span>
-              <span className="text-base font-black text-gold/70">{formatPrice(avgSales)}원</span>
+              <span className="text-base font-black text-gold/70">{formatPrice(avgSales)}</span>
             </div>
           </div>
 
@@ -133,7 +126,7 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
             </div>
 
             {items.map((item, index) => {
-              const statusBadge = STATUS_BADGE[item.status];
+              const statusBadge = AUCTION_STATUS_BADGES[item.status];
               const isDone = item.status === 'SOLD' || item.status === 'UNSOLD';
 
               return (
@@ -152,10 +145,10 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
                   </span>
                   <div className="flex flex-col items-end gap-0.5">
                     <span className="text-[10px] font-medium text-neutral-600">
-                      시작가 {formatPrice(item.startPrice)}원
+                      시작가 {formatPrice(item.startPrice)}
                     </span>
                     {isDone && item.finalPrice ? (
-                      <span className="text-xs font-black text-gold">{formatPrice(item.finalPrice)}원</span>
+                      <span className="text-xs font-black text-gold">{formatPrice(item.finalPrice)}</span>
                     ) : (
                       <span className="text-[11px] font-semibold text-neutral-700">
                         {item.status === 'LIVE' || item.status === 'INTRODUCING' ? '진행중' : '대기'}
