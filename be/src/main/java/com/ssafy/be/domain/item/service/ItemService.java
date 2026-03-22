@@ -86,13 +86,12 @@ public class ItemService {
 
     @Transactional(readOnly = true)
     public List<ItemSummaryResponse> getItems(Long userId, ItemStatus status) {
-        //
         Seller seller = sellerRepository.findByUserId(userId)
                 .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
 
         List<Item> items = status != null
-                ? itemRepository.findBySellerIdAndStatus(seller.getId(), status)
-                : itemRepository.findBySellerId(seller.getId());
+                ? itemRepository.findBySellerIdAndStatusOrderByCreatedAtDesc(seller.getId(), status)
+                : itemRepository.findBySellerIdOrderByCreatedAtDesc(seller.getId());
 
         return items.stream()
                 .map(i -> new ItemSummaryResponse(
@@ -100,7 +99,7 @@ public class ItemService {
                         i.getName(),
                         i.getDescription(),
                         i.getTags().stream().map(Tag::getName).toList(),
-                        Stream.of(i.getImage1(), i.getImage2(), i.getImage3())  // 변경
+                        Stream.of(i.getImage1(), i.getImage2(), i.getImage3())
                                 .filter(Objects::nonNull)
                                 .toList(),
                         i.getItemCondition(),
