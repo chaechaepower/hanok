@@ -63,5 +63,16 @@ public interface EscrowRepository extends JpaRepository<Escrow, Long> {
             "WHERE e.seller.id = :sellerId AND e.escrowStatus = 'COMPLETED' " +
             "GROUP BY e.auction.item.category")
     List<Object[]> findCategoryStatsBySellerId(@Param("sellerId") Long sellerId);
+
+
+    @Query("SELECT SUM(e.winningPrice) FROM Escrow e " +
+            "WHERE e.auction.item.seller.id = :sellerId " +
+            "AND e.escrowStatus = 'COMPLETED' " +
+            "AND e.createdAt >= :startDate AND e.createdAt < :endDate")
+    Long findTotalSalesBySellerIdAndPeriod(
+            @Param("sellerId") Long sellerId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 }
 
