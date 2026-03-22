@@ -59,4 +59,13 @@ public interface StreamRepository extends JpaRepository<Stream, Long> {
             @Param("statuses") List<StreamStatus> statuses,
             @Param("userId") Long userId,
             Pageable pageable);
+
+    @Query("SELECT s FROM Stream s "
+            + "JOIN FETCH s.seller sel "
+            + "JOIN FETCH sel.user u "
+            + "WHERE s.status = 'LIVE' "
+            + "AND sel.createdAt >= :since "  // 신규 셀러 기준일
+            + "ORDER BY s.startedAt DESC")
+    List<Stream> findLiveStreamsByNewSellers(@Param("since") LocalDateTime since);
+
 }

@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -140,6 +141,44 @@ class FollowIntegrationTest {
         }
     }
 
+    @Test
+    @Order(3)
+    @DisplayName("S-3. 팔로우 후 목록 조회 시 해당 셀러 포함 반환")
+    void getFollowList_AfterFollow_ContainsSeller() throws Exception {
+        followRepository.save(Follow.builder().user(buyer).seller(seller).build());
+        IT_LOG.info("    [준비] buyer가 seller 팔로우 상태 세팅 완료");
+        IT_LOG.info("    [요청] GET /api/v1/sellers/follows 팔로우 목록 조회");
+
+        mockMvc.perform(get("/api/v1/following")
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].seller.sellerId").value(seller.getId()))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.hasNext").value(false));
+
+        IT_LOG.info("    [검증] ✔ 200 OK 응답 수신");
+        IT_LOG.info("    [검증] ✔ 팔로우 목록에 해당 셀러 포함 확인");
+    }
+
+    @Test
+    @Order(4)
+    @DisplayName("S-4. 팔로우 없는 상태에서 목록 조회 시 빈 배열 반환")
+    void getFollowList_Empty_ReturnsEmptyContent() throws Exception {
+        IT_LOG.info("    [요청] 팔로우 없는 유저 GET /api/v1/sellers/follows 조회");
+
+        mockMvc.perform(get("/api/v1/following")
+                        .param("page", "0")
+                        .param("size", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.hasNext").value(false));
+
+        IT_LOG.info("    [검증] ✔ 빈 content 배열 반환 확인");
+    }
+
+
     // ═══ Group 2 : Step-up (엣지 및 예외) ═══════════════════════════
     @Nested
     @Order(2)
@@ -185,5 +224,27 @@ class FollowIntegrationTest {
 
             IT_LOG.info("    [검증] ✔ 404 Not Found 확인 및 정상 예외 매핑 확인");
         }
+    }
+
+    @Test
+    @Order(3)
+    @DisplayName("I-3. 인기 셀러 랭킹 조회 시 팔로워 수 내림차순 반환")
+    void getSellerRanking_ReturnsSortedByFollowerCount() throws Exception {
+        followRepository.save(Follow.builder().user(buyer).seller(seller).build());
+
+        mockMvc.perform(get("/api/v1/sellers/ranking"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data[0].rank").value(1))
+                .andExpect(jsonPath("$.data[0].sellerId").value(seller.getId()))
+                .andExpect(jsonPath("$.data[0].followerCount").value(1));
+    }
+
+    @Test
+    @Order(4)
+    @DisplayName("I-4. 팔로우 데이터 없을 시 랭킹 빈 배열 반환")
+    void getSellerRanking_NoFollow_ReturnsEmpty() throws Exception {
+        mockMvc.perform(get("/api/v1/sellers/ranking"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data").isEmpty());
     }
 }

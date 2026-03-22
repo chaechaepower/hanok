@@ -20,6 +20,9 @@ public class StreamSearchRepositoryCustom {
             JOIN user u     ON sel.user_id  = u.id
             """;
 
+    private static final String ACTIVE_STATUS_FILTER =
+            "AND s.status IN ('LIVE', 'SCHEDULED') ";
+
     private static final String SELECT_COLUMNS = """
             SELECT
                 s.id            AS stream_id,
@@ -35,7 +38,8 @@ public class StreamSearchRepositoryCustom {
 
     public List<StreamSearchRow> searchByStreamTitle(String keyword) {
         String sql = SELECT_COLUMNS + BASE_FROM +
-                "WHERE MATCH(s.title) AGAINST(:keyword IN BOOLEAN MODE)";
+                "WHERE MATCH(s.title) AGAINST(:keyword IN BOOLEAN MODE) "
+                + ACTIVE_STATUS_FILTER;
         return executeSearch(sql, keyword);
     }
 
@@ -47,7 +51,7 @@ public class StreamSearchRepositoryCustom {
                 JOIN auction a  ON a.stream_id  = s.id
                 JOIN item i     ON a.item_id    = i.id
                 WHERE MATCH(i.name) AGAINST(:keyword IN BOOLEAN MODE)
-                """;
+                """ + ACTIVE_STATUS_FILTER;
         return executeSearch(sql, keyword);
     }
 
@@ -60,7 +64,7 @@ public class StreamSearchRepositoryCustom {
                 JOIN item i     ON a.item_id    = i.id
                 JOIN tag t      ON t.item_id    = i.id
                 WHERE MATCH(t.name) AGAINST(:keyword IN BOOLEAN MODE)
-                """;
+                """ + ACTIVE_STATUS_FILTER;  // ✅ 추가
         return executeSearch(sql, keyword);
     }
 
