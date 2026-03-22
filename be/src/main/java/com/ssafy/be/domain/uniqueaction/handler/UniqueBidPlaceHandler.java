@@ -35,7 +35,6 @@ public class UniqueBidPlaceHandler implements StreamEventHandler {
 
         long participantCount = uniqueBidAuctionService.placeBid(payload, userId);
 
-        // 본인에게 입찰 접수 확인 필요한가 ?
         streamPublisher.sendToUser(userId, streamId, StreamEventType.UNIQUE_BID_ACK,
                 new UniqueBidAckResponse(payload.amount()));
 
