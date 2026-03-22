@@ -44,6 +44,7 @@ import io.livekit.server.RoomJoin;
 import io.livekit.server.RoomName;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -499,6 +500,35 @@ public class StreamService {
 
         return new ScheduledStreamListResponse(streams, slice.hasNext());
     }
+
+
+    @Transactional(readOnly = true)
+    public List<StreamRecommendResponse> getNewSellerLiveStreams(int withinDays, int limit) {
+        LocalDateTime since = LocalDateTime.now().minusDays(withinDays);
+
+        return streamRepository.findLiveStreamsByNewSellers(since)
+                .stream()
+                .map(stream -> {
+                    Seller sel = stream.getSeller();
+                    return new StreamRecommendResponse(
+                            stream.getId(),
+                            stream.getTitle(),
+                            stream.getCategory(),
+                            stream.getThumbnail(),
+                            stream.getStatus(),
+                            streamViewerService.getViewerCount(stream.getId()),
+                            stream.getStartedAt(),
+                            new StreamSellerResponse(
+                                    sel.getId(),
+                                    sel.getUser().getNickname(),
+                                    sel.getUser().getProfileImage())
+                    );
+                })
+                .limit(limit)
+                .toList();
+    }
+
+
 
     @Transactional
     public StreamEnterResponse enterStream(Long userId, Long streamId) {

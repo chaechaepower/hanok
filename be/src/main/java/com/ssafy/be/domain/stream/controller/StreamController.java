@@ -14,6 +14,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/streams")
 @RequiredArgsConstructor
@@ -79,6 +81,14 @@ public class StreamController implements StreamApi {
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(streamService.getScheduledStreamList(Long.parseLong(userId), page, size));
     }
+
+    @GetMapping("/recommend/new-seller")
+    public ResponseEntity<List<StreamRecommendResponse>> getNewSellerLiveStreams(
+            @RequestParam(defaultValue = "30") int withinDays,  // 가입 30일 이내
+            @RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(streamService.getNewSellerLiveStreams(withinDays, limit));
+    }
+
 
     @GetMapping("/{streamId}/enter")
     public ResponseEntity<StreamEnterResponse> enterStream(
