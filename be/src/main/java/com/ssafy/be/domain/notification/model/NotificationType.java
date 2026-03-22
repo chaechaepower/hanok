@@ -38,6 +38,11 @@ public enum NotificationType {
             "%s 거래가 안전하게 완료되었습니다."
     ),
 
+    ESCROW_AUTO_COMPLETED(
+            "거래 자동 확정",
+            "%s 구매 확정이 이루어지지 않아 자동으로 거래가 완료되었습니다."
+    ),
+
     // ===== 거래 취소 =====
 
     ESCROW_CANCELLED(

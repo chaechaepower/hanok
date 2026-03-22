@@ -9,6 +9,7 @@ import com.ssafy.be.domain.escrow.dto.response.EscrowListResponse;
 import com.ssafy.be.domain.escrow.entity.Escrow;
 import com.ssafy.be.domain.escrow.exception.EscorwErrorCode;
 import com.ssafy.be.domain.escrow.repository.EscrowRepository;
+import com.ssafy.be.domain.escrow.scheduler.EscrowCompleteScheduler;
 import com.ssafy.be.domain.escrow.scheduler.EscrowShipmentScheduler;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.notification.service.NotificationService;
@@ -43,6 +44,7 @@ public class EscrowService {
     private final SellerRepository sellerRepository;
     private final NotificationService notificationService;
     private final EscrowShipmentScheduler escrowShipmentScheduler;
+    private final EscrowCompleteScheduler escrowCompleteScheduler;
 
     @Transactional
     public void startEscrow(Bid topBid, Auction auction, ShippingAddress shippingAddress) {
@@ -102,6 +104,9 @@ public class EscrowService {
 
         // 운송장번호 등록 72시간 타임아웃 스케줄러 예약 취소
         escrowShipmentScheduler.cancelScheduledEscrow(escrowId);
+
+        // 거래확정 24시간 타임아웃 스케줄러 등록
+        escrowCompleteScheduler.scheduleEscrow(escrowId);
 
         // 알림 발송
         // 구매자
@@ -176,6 +181,9 @@ public class EscrowService {
         // 3. 에스크로 구매 확정
         escrow.completeEscrow(); // 에스크로 상태 -> 거래 완료
         escrow.getAuction().getItem().sold(LocalDateTime.now()); // 물건 상태 -> 판매 완료
+
+        // 거래 확정 24시간 타임아웃 스케줄러 예약 취소
+        escrowCompleteScheduler.cancelScheduledEscrow(escrowId);
 
         // 4. 구매자 에스크로 예치 금액 감소
         User buyer = escrow.getBuyer();
