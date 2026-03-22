@@ -275,23 +275,6 @@ public class BottomUpAuctionService {
                                 buildBidSyncTimerInfo((int) remainingSeconds, serverNow, auction.getStartedAt()));
         }
 
-        @Transactional(readOnly = true)
-        public ItemSyncResponse syncItem(Long streamId) {
-                // 1. 해당 스트림의 모든 경매 아이템 조회
-                List<Auction> auctions = auctionRepository.findByStreamId(streamId);
-
-                // 2. 상향식 경매만 응답 생성
-                List<ItemSyncResponse.ItemInfo> items = auctions.stream()
-                                .filter(auction -> auction.getAuctionType() == AuctionType.BOTTOM_UP)
-                                .filter(auction -> auction.getBottomUpAuctionDetail() != null)
-                                .map(this::buildItemSyncInfo)
-                                .toList();
-
-                return ItemSyncResponse.builder()
-                                .items(items)
-                                .build();
-        }
-
         private boolean preventSniping(Long auctionId) {
                 long remaining = auctionTimerRepository.findRemainingSecondsByAuctionId(auctionId);
 
