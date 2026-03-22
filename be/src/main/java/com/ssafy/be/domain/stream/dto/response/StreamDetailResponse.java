@@ -1,6 +1,5 @@
 package com.ssafy.be.domain.stream.dto.response;
 
-import com.ssafy.be.domain.item.dto.response.ItemSummaryResponse;
 import com.ssafy.be.domain.item.entity.Category;
 import com.ssafy.be.domain.stream.entity.StartType;
 import java.time.LocalDateTime;
@@ -16,5 +15,5 @@ public record StreamDetailResponse(
         String notice,
         boolean isLive,
         LocalDateTime createdAt,
-        List<ItemSummaryResponse> items) {
+        List<StreamAuctionItemSummaryResponse> items) {
 }

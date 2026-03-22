@@ -1,10 +1,10 @@
-package com.ssafy.be.domain.auction.service;
+package com.ssafy.be.domain.bottomupauction.service;
 
-import com.ssafy.be.domain.auction.dto.request.BidPlaceRequest;
-import com.ssafy.be.domain.auction.dto.response.BidPlaceResponse;
 import com.ssafy.be.domain.auction.entity.Auction;
-import com.ssafy.be.domain.auction.exception.AuctionErrorCode;
 import com.ssafy.be.domain.auction.util.AuctionRedisKeys;
+import com.ssafy.be.domain.bottomupauction.dto.request.BidPlaceRequest;
+import com.ssafy.be.domain.bottomupauction.dto.response.BidPlaceResponse;
+import com.ssafy.be.domain.bottomupauction.exception.AuctionErrorCode;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.global.exception.GlobalErrorCode;
 import com.ssafy.be.global.websocket.exception.StompException;

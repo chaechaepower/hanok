@@ -32,20 +32,11 @@ public class Item {
     @Enumerated(EnumType.STRING)
     private Category category;
 
-    private Long startPrice;
-
-    private Long bidUnit;
-
-    private Integer auctionDuration;
-
     @Enumerated(EnumType.STRING)
     private ItemStatus status;
 
     @Enumerated(EnumType.STRING)
     private ItemCondition itemCondition;
-
-    @Enumerated(EnumType.STRING)
-    private AuctionType auctionType;
 
     private String image1;
 
@@ -70,12 +61,8 @@ public class Item {
     private Item(String name,
                  String description,
                  Category category,
-                 Long startPrice,
-                 Long bidUnit,
-                 Integer auctionDuration,
                  ItemStatus status,
                  ItemCondition itemCondition,
-                 AuctionType auctionType,
                  String image1,
                  String image2,
                  String image3,
@@ -85,12 +72,8 @@ public class Item {
         this.name = name;
         this.description = description;
         this.category = category;
-        this.startPrice = startPrice;
-        this.bidUnit = bidUnit;
-        this.auctionDuration = auctionDuration;
         this.status = status;
         this.itemCondition = itemCondition;
-        this.auctionType = auctionType;
         this.image1 = image1;
         this.image2 = image2;
         this.image3 = image3;
@@ -105,15 +88,10 @@ public class Item {
         if (image3 != null) this.image3 = image3;
     }
 
-    public void update(String name, String description, Category category,
-                       Long startPrice, Long bidUnit, Integer auctionDuration,
-                       ItemCondition itemCondition) {
+    public void update(String name, String description, Category category, ItemCondition itemCondition) {
         Optional.ofNullable(name).ifPresent(v -> this.name = v);
         Optional.ofNullable(description).ifPresent(v -> this.description = v);
         Optional.ofNullable(category).ifPresent(v -> this.category = v);
-        Optional.ofNullable(startPrice).ifPresent(v -> this.startPrice = v);
-        Optional.ofNullable(bidUnit).ifPresent(v -> this.bidUnit = v);
-        Optional.ofNullable(auctionDuration).ifPresent(v -> this.auctionDuration = v);
         Optional.ofNullable(itemCondition).ifPresent(v -> this.itemCondition = v);
     }
 
@@ -123,10 +101,14 @@ public class Item {
     }
 
     public void schedule() {
-        this.status= SCHEDULED;
+        this.status = SCHEDULED;
     }
 
     public void ready() {
-        this.status= READY;
+        this.status = READY;
+    }
+
+    public void pending() {
+        this.status = PENDING;
     }
 }

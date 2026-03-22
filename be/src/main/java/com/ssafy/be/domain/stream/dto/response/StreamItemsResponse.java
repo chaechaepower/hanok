@@ -2,6 +2,7 @@ package com.ssafy.be.domain.stream.dto.response;
 
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
+import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.entity.ItemCondition;
 import java.util.List;
@@ -14,10 +15,12 @@ public record StreamItemsResponse(List<StreamItemResponse> items) {
             Long auctionId,
             String itemName,
             List<String> images,
-            Long startPrice,
+            AuctionType auctionType,
             AuctionStatus auctionStatus,
             Long finalPrice,
-            ItemCondition itemCondition
+            ItemCondition itemCondition,
+            BottomUpAuctionInfo bottomUp,
+            UniqueTopAuctionInfo uniqueTop
     ) {
         public static StreamItemResponse from(Auction auction) {
             Item item = auction.getItem();
@@ -30,11 +33,33 @@ public record StreamItemsResponse(List<StreamItemResponse> items) {
                     auction.getId(),
                     item.getName(),
                     images,
-                    item.getStartPrice(),
+                    auction.getAuctionType(),
                     auction.getAuctionStatus(),
                     auction.getFinalPrice(),
-                    item.getItemCondition()
+                    item.getItemCondition(),
+                    auction.getBottomUpAuctionDetail() == null
+                            ? null
+                            : new BottomUpAuctionInfo(
+                                    auction.getBottomUpAuctionDetail().getStartPrice(),
+                                    auction.getBottomUpAuctionDetail().getBidUnit()
+                            ),
+                    auction.getUniqueBidAuctionDetail() == null
+                            ? null
+                            : new UniqueTopAuctionInfo(
+                                    auction.getUniqueBidAuctionDetail().getMinPrice(),
+                                    auction.getUniqueBidAuctionDetail().getMaxPrice()
+                            )
             );
         }
+
+        public record BottomUpAuctionInfo(
+                Long startPrice,
+                Long bidUnit
+        ) {}
+
+        public record UniqueTopAuctionInfo(
+                Long minPrice,
+                Long maxPrice
+        ) {}
     }
 }

@@ -1,4 +1,4 @@
-package com.ssafy.be.domain.auction.exception;
+package com.ssafy.be.domain.bottomupauction.exception;
 
 import com.ssafy.be.global.exception.ErrorCode;
 import lombok.AllArgsConstructor;
@@ -19,12 +19,9 @@ public enum AuctionErrorCode implements ErrorCode {
     AUCTION_BID_CONFLICT(HttpStatus.CONFLICT, "AUCTION_08", "다른 사용자가 먼저 입찰했습니다. 다시 시도해주세요."),
     LIVE_AUCTION_NOT_FOUND(HttpStatus.NOT_FOUND, "AUCTION_09", "현재 경매중인 물품이 없습니다."),
     AUCTION_NOT_READY(HttpStatus.BAD_REQUEST, "AUCTION_010", "준비중인 경매가 아닙니다."),
-    AUCTION_NOT_INTRODUCING(HttpStatus.BAD_REQUEST, "AUCTION_011", "설명중인 경매가 아닙니다."),
-
-    ;
+    AUCTION_NOT_INTRODUCING(HttpStatus.BAD_REQUEST, "AUCTION_011", "설명중인 경매가 아닙니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
     private final String message;
 }
-

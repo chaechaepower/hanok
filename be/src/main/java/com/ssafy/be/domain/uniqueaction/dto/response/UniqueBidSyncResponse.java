@@ -12,8 +12,7 @@ public record UniqueBidSyncResponse(
     @Builder
     public record BidRangeDto(
             Long minPrice,
-            Long maxPrice,
-            Long bidUnit
+            Long maxPrice
     ) {}
 
     @Builder

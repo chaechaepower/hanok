@@ -1,7 +1,7 @@
-package com.ssafy.be.domain.auction.handler;
+package com.ssafy.be.domain.bottomupauction.handler;
 
-import com.ssafy.be.domain.auction.dto.response.BidSyncResponse;
-import com.ssafy.be.domain.auction.service.AuctionService;
+import com.ssafy.be.domain.bottomupauction.dto.response.BidSyncResponse;
+import com.ssafy.be.domain.bottomupauction.service.BottomUpAuctionService;
 import com.ssafy.be.global.websocket.dto.request.StompRequest;
 import com.ssafy.be.global.websocket.enums.StreamEventType;
 import com.ssafy.be.global.websocket.handler.StreamEventHandler;
@@ -15,8 +15,8 @@ import static com.ssafy.be.global.websocket.enums.StreamEventType.BID_SYNC;
 
 @RequiredArgsConstructor
 @Component
-public class BidSyncHandler implements StreamEventHandler {
-    private final AuctionService auctionService;
+public class BottomUpBidSyncHandler implements StreamEventHandler {
+    private final BottomUpAuctionService bottomUpAuctionService;
     private final StreamPublisher streamPublisher;
 
 
@@ -29,7 +29,7 @@ public class BidSyncHandler implements StreamEventHandler {
     public void handle(StompRequest<?> request, Long streamId, Principal principal) {
         Long userId = Long.parseLong(principal.getName());
 
-        BidSyncResponse response = auctionService.syncBid(streamId, userId);
+        BidSyncResponse response = bottomUpAuctionService.syncBid(streamId, userId);
 
         streamPublisher.sendToUser(userId, streamId, BID_SYNC, response);
     }

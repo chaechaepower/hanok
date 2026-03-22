@@ -17,7 +17,13 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     List<Item> findBySellerId(Long sellerId);
 
     @EntityGraph(attributePaths = {"tags"})
+    List<Item> findBySellerIdOrderByCreatedAtDesc(Long sellerId);
+
+    @EntityGraph(attributePaths = {"tags"})
     List<Item> findBySellerIdAndStatus(Long sellerId, ItemStatus status);
+
+    @EntityGraph(attributePaths = {"tags"})
+    List<Item> findBySellerIdAndStatusOrderByCreatedAtDesc(Long sellerId, ItemStatus status);
     Optional<Item> findByIdAndSellerId(Long id, Long sellerId);
     List<Item> findTop10BySellerIdAndStatusOrderBySoldAtDesc(Long sellerId, ItemStatus status);
 

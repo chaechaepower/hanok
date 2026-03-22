@@ -1,7 +1,7 @@
 package com.ssafy.be.domain.escrow.service;
 
 import com.ssafy.be.domain.auction.entity.Auction;
-import com.ssafy.be.domain.auction.model.Bid;
+import com.ssafy.be.domain.bottomupauction.model.Bid;
 import com.ssafy.be.domain.escrow.dto.request.EscrowCancelRequest;
 import com.ssafy.be.domain.escrow.dto.request.ShipmentRegisterRequest;
 import com.ssafy.be.domain.escrow.dto.response.EscrowDetailResponse;
@@ -174,7 +174,8 @@ public class EscrowService {
         validateAvailableCompleteEscrow(escrow);
 
         // 3. 에스크로 구매 확정
-        escrow.completeEscrow();
+        escrow.completeEscrow(); // 에스크로 상태 -> 거래 완료
+        escrow.getAuction().getItem().sold(LocalDateTime.now()); // 물건 상태 -> 판매 완료
 
         // 4. 구매자 에스크로 예치 금액 감소
         User buyer = escrow.getBuyer();

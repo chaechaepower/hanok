@@ -2,12 +2,12 @@ package com.ssafy.be.domain.stream.service;
 
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
-import com.ssafy.be.domain.auction.model.Bid;
-import com.ssafy.be.domain.auction.repository.AuctionBidRepository;
+import com.ssafy.be.domain.bottomupauction.model.Bid;
+import com.ssafy.be.domain.bottomupauction.repository.AuctionBidRepository;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
+import com.ssafy.be.domain.bottomupauction.entity.BottomUpAuctionDetail;
+import com.ssafy.be.domain.bottomupauction.repository.BottomUpAuctionDetailRepository;
 import com.ssafy.be.domain.follow.repository.FollowRepository;
-import com.ssafy.be.domain.item.dto.response.ItemSummaryResponse;
-import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Category;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.entity.Tag;
@@ -28,6 +28,8 @@ import com.ssafy.be.domain.stream.entity.StreamViewType;
 import com.ssafy.be.domain.stream.exception.StreamErrorCode;
 import com.ssafy.be.domain.stream.repository.MacroRedisRepository;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
+import com.ssafy.be.domain.uniqueaction.entity.UniqueBidAuctionDetail;
+import com.ssafy.be.domain.uniqueaction.repository.UniqueBidAuctionDetailRepository;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
@@ -40,6 +42,7 @@ import io.livekit.server.CanPublish;
 import io.livekit.server.CanSubscribe;
 import io.livekit.server.RoomJoin;
 import io.livekit.server.RoomName;
+
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
@@ -47,6 +50,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -66,80 +70,50 @@ public class StreamService {
     private final StreamViewerService streamViewerService;
     private final AuctionBidRepository auctionBidRepository;
     private final AuctionRepository auctionRepository;
+    private final BottomUpAuctionDetailRepository bottomUpAuctionDetailRepository;
+    private final UniqueBidAuctionDetailRepository uniqueBidAuctionDetailRepository;
     private final ItemRepository itemRepository;
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
     private final MacroRedisRepository macroRedisRepository;
     private final StreamPublisher streamPublisher; // 추가
 
+    // TODO: Item 엔티티에서 경매 데이터 분리 시 다른 서비스 메서드도 리팩토링 필요
     @Transactional
-    public StreamRegisterResponse register(
-            Long userId, StreamRegisterRequest request, MultipartFile thumbnail) {
-        Seller seller =
-                sellerRepository
-                        .findByUserId(userId)
-                        .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
+    public StreamRegisterResponse register(Long userId, StreamRegisterRequest request, MultipartFile thumbnail) {
+        // 판매자 조회
+        Seller seller = sellerRepository.findByUserId(userId)
+                .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
 
-        Stream saved = streamRepository.save(buildStream(request, seller));
+        // 방송 저장
+        Stream savedStream = streamRepository.save(buildStream(request, seller));
 
+        // 썸네일 등록
         if (thumbnail != null && !thumbnail.isEmpty()) {
             try {
-                String url = gcsClient.uploadStreamThumbnail(thumbnail, seller.getId(), saved.getId());
-                saved.updateThumbnail(url);
+                String url = gcsClient.uploadStreamThumbnail(thumbnail, seller.getId(), savedStream.getId());
+                savedStream.updateThumbnail(url);
             } catch (IOException e) {
                 throw new GlobalException(StreamErrorCode.THUMBNAIL_UPLOAD_FAILED);
             }
         }
 
-        // 경매 등록
-        List<ItemSummaryResponse> items = List.of();
-        if (request.itemIds() != null && !request.itemIds().isEmpty()) {
-            items = request.itemIds().stream()
-                    .map(auctionItemReq -> {
-                        Item item = itemRepository
-                                .findByIdAndSellerId(auctionItemReq, seller.getId())
-                                .orElseThrow(() -> new GlobalException(ItemErrorCode.ITEM_NOT_FOUND));
+        // 물품 상태 변경 및 경매 생성
+        if (request.auctionItems() != null && !request.auctionItems().isEmpty()) {
+            request.auctionItems().forEach(auctionItemReq -> {
 
-                        item.schedule();
+                // 물품 상태를 라이브 예약 상태로 변경
+                Item item = itemRepository.findByIdAndSellerId(auctionItemReq.itemId(), seller.getId())
+                        .orElseThrow(() -> new GlobalException(ItemErrorCode.ITEM_NOT_FOUND));
 
-                        Auction auction = auctionRepository.save(
-                                Auction.builder()
-                                        .auctionStatus(AuctionStatus.READY)
-                                        .stream(saved)
-                                        .item(item)
-                                        .build());
-//                        if (item.getAuctionType() == AuctionType.UNIQUE_TOP) {
-//                            uniqueBidAuctionDetailRepository.save(
-//                                    UniqueBidAuctionDetail.builder()
-//                                            .auction(auction)
-//                                            .minPrice(auctionItemReq.minPrice())
-//                                            .maxPrice(auctionItemReq.maxPrice())
-//                                            .build()
-//                            );
-//                        }
+                item.schedule();
 
-
-                        return new ItemSummaryResponse(
-                                item.getId(),
-                                item.getName(),
-                                item.getDescription(),
-                                item.getTags().stream().map(Tag::getName).toList(),
-                                java.util.stream.Stream.of(item.getImage1(), item.getImage2(), item.getImage3())
-                                        .filter(Objects::nonNull)
-                                        .toList(),
-                                item.getStartPrice(),
-                                item.getBidUnit(),
-                                item.getAuctionDuration(),
-                                item.getItemCondition(),
-                                item.getCategory(),
-                                auction.getItem().getAuctionType(),
-                                item.getStatus(),
-                                item.getCreatedAt());
-                    })
-                    .toList();
+                // 경매 엔티티 저장
+                createAuctionWithDetail(savedStream, item, auctionItemReq);
+            });
         }
 
-        return new StreamRegisterResponse(saved.getId(), saved.getTitle(), saved.getStartType(), saved.getThumbnail(), items);
+        return new StreamRegisterResponse(savedStream.getId());
     }
 
     private Stream buildStream(StreamRegisterRequest request, Seller seller) {
@@ -152,6 +126,100 @@ public class StreamService {
                 .status(StreamStatus.SCHEDULED)
                 .seller(seller)
                 .build();
+    }
+
+    private void createAuctionWithDetail(Stream stream, Item item, StreamRegisterRequest.AuctionItemRequest request) {
+        Auction auction = auctionRepository.save(
+                Auction.builder()
+                        .auctionType(request.auctionType())
+                        .auctionDuration(request.auctionDuration())
+                        .auctionStatus(AuctionStatus.READY)
+                        .stream(stream)
+                        .item(item)
+                        .build()
+        );
+
+        // 경매 방식에 따라 detail 생성 분기
+
+        switch (request.auctionType()) {
+            // 상향식
+            case BOTTOM_UP -> {
+                validateBottomUpRequest(request);
+
+                BottomUpAuctionDetail detail = BottomUpAuctionDetail.builder()
+                        .auction(auction)
+                        .startPrice(request.bottomUp().startPrice())
+                        .bidUnit(request.bottomUp().bidUnit())
+                        .build();
+
+                bottomUpAuctionDetailRepository.save(detail);
+            }
+
+            // 유일 최고가
+            case UNIQUE_TOP -> {
+                validateUniqueTopRequest(request);
+
+                UniqueBidAuctionDetail detail = UniqueBidAuctionDetail.builder()
+                        .auction(auction)
+                        .minPrice(request.uniqueTop().minPrice())
+                        .maxPrice(request.uniqueTop().maxPrice())
+                        .build();
+
+                detail.validateSetting();
+
+                uniqueBidAuctionDetailRepository.save(detail);
+            }
+
+            default -> throw new IllegalArgumentException("지원하지 않는 경매 방식입니다.");
+        }
+
+    }
+
+    private void validateBottomUpRequest(StreamRegisterRequest.AuctionItemRequest request) {
+        if (request.bottomUp() == null) {
+            throw new IllegalArgumentException("상향식 경매 상세 정보가 필요합니다.");
+        }
+        if (request.uniqueTop() != null) {
+            throw new IllegalArgumentException("상향식 경매에는 uniqueTop 상세 정보를 보낼 수 없습니다.");
+        }
+    }
+
+    private void validateUniqueTopRequest(StreamRegisterRequest.AuctionItemRequest request) {
+        if (request.uniqueTop() == null) {
+            throw new IllegalArgumentException("유일 최고가 경매 상세 정보가 필요합니다.");
+        }
+        if (request.bottomUp() != null) {
+            throw new IllegalArgumentException("유일 최고가 경매에는 bottomUp 상세 정보를 보낼 수 없습니다.");
+        }
+    }
+
+    private StreamAuctionItemSummaryResponse buildItemSummaryResponse(Item item, Auction auction) {
+        return new StreamAuctionItemSummaryResponse(
+                item.getId(),
+                item.getName(),
+                item.getDescription(),
+                item.getTags().stream().map(Tag::getName).toList(),
+                java.util.stream.Stream.of(item.getImage1(), item.getImage2(), item.getImage3())
+                        .filter(Objects::nonNull)
+                        .toList(),
+                auction.getAuctionType(),
+                auction.getAuctionDuration(),
+                auction.getBottomUpAuctionDetail() == null
+                        ? null
+                        : new StreamAuctionItemSummaryResponse.BottomUpAuctionInfo(
+                                auction.getBottomUpAuctionDetail().getStartPrice(),
+                                auction.getBottomUpAuctionDetail().getBidUnit()
+                        ),
+                auction.getUniqueBidAuctionDetail() == null
+                        ? null
+                        : new StreamAuctionItemSummaryResponse.UniqueTopAuctionInfo(
+                                auction.getUniqueBidAuctionDetail().getMinPrice(),
+                                auction.getUniqueBidAuctionDetail().getMaxPrice()
+                        ),
+                item.getItemCondition(),
+                item.getCategory(),
+                item.getStatus(),
+                item.getCreatedAt());
     }
 
     @Transactional
@@ -186,30 +254,7 @@ public class StreamService {
             }
         }
 
-        // auction에서 item + auctionType 함께 매핑
-        List<ItemSummaryResponse> items = auctionRepository.findByStreamId(streamId).stream()
-                .map(auction -> {
-                    Item item = auction.getItem();
-                    return new ItemSummaryResponse(
-                            item.getId(),
-                            item.getName(),
-                            item.getDescription(),
-                            item.getTags().stream().map(Tag::getName).toList(),
-                            java.util.stream.Stream.of(item.getImage1(), item.getImage2(), item.getImage3())
-                                    .filter(Objects::nonNull)
-                                    .toList(),
-                            item.getStartPrice(),
-                            item.getBidUnit(),
-                            item.getAuctionDuration(),
-                            item.getItemCondition(),
-                            item.getCategory(),
-                            auction.getItem().getAuctionType(),
-                            item.getStatus(),
-                            item.getCreatedAt());
-                })
-                .toList();
-
-        return new StreamRegisterResponse(stream.getId(), stream.getTitle(), stream.getStartType(), stream.getThumbnail(), items);
+        return new StreamRegisterResponse(stream.getId());
     }
 
     @Transactional
@@ -241,25 +286,10 @@ public class StreamService {
                 .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
         // auction에서 item + auctionType 함께 매핑
-        List<ItemSummaryResponse> items = auctionRepository.findByStreamId(streamId).stream()
+        List<StreamAuctionItemSummaryResponse> items = auctionRepository.findByStreamId(streamId).stream()
                 .map(auction -> {
                     Item item = auction.getItem();
-                    return new ItemSummaryResponse(
-                            item.getId(),
-                            item.getName(),
-                            item.getDescription(),
-                            item.getTags().stream().map(Tag::getName).toList(),
-                            java.util.stream.Stream.of(item.getImage1(), item.getImage2(), item.getImage3())
-                                    .filter(Objects::nonNull)
-                                    .toList(),
-                            item.getStartPrice(),
-                            item.getBidUnit(),
-                            item.getAuctionDuration(),
-                            item.getItemCondition(),
-                            item.getCategory(),
-                            auction.getItem().getAuctionType(),
-                            item.getStatus(),
-                            item.getCreatedAt());
+                    return buildItemSummaryResponse(item, auction);
                 })
                 .toList();
 

@@ -1,4 +1,4 @@
-package com.ssafy.be.domain.auction.model;
+package com.ssafy.be.domain.bottomupauction.model;
 
 import lombok.Builder;
 

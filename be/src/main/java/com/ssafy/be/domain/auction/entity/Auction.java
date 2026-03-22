@@ -1,7 +1,10 @@
 package com.ssafy.be.domain.auction.entity;
 
+import com.ssafy.be.domain.bottomupauction.entity.BottomUpAuctionDetail;
+import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.stream.entity.Stream;
+import com.ssafy.be.domain.uniqueaction.entity.UniqueBidAuctionDetail;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -20,10 +23,15 @@ public class Auction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long finalPrice;
+    @Enumerated(EnumType.STRING)
+    private AuctionType auctionType;
 
     @Enumerated(EnumType.STRING)
     private AuctionStatus auctionStatus;
+
+    private Integer auctionDuration;
+
+    private Long finalPrice;
 
     private String startedAt;
 
@@ -35,27 +43,33 @@ public class Auction {
     @JoinColumn(name = "item_id")
     private Item item;
 
-//    // --- 양방향 매핑 추가 (삭제 시 자식 Detail도 함께 삭제되도록 설정) ---
-//    @OneToOne(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-//    private UniqueBidAuctionDetail uniqueBidAuctionDetail;
+    // --- 양방향 매핑 추가 (삭제 시 자식 Detail도 함께 삭제되도록 설정) ---
+    @OneToOne(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private UniqueBidAuctionDetail uniqueBidAuctionDetail;
+
+    @OneToOne(mappedBy = "auction", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private BottomUpAuctionDetail bottomUpAuctionDetail;
 
     @Builder
-    private Auction(AuctionStatus auctionStatus,
+    private Auction(AuctionType auctionType,
+                    AuctionStatus auctionStatus,
+                    Integer auctionDuration,
                     Long finalPrice,
                     String startedAt,
                     Stream stream,
-                    Item item) {
+                    Item item,
+                    UniqueBidAuctionDetail uniqueBidAuctionDetail,
+                    BottomUpAuctionDetail bottomUpAuctionDetail) {
+        this.auctionType = auctionType;
         this.auctionStatus = auctionStatus;
+        this.auctionDuration = auctionDuration;
         this.finalPrice = finalPrice;
         this.startedAt = startedAt;
         this.stream = stream;
         this.item = item;
+        this.uniqueBidAuctionDetail = uniqueBidAuctionDetail;
+        this.bottomUpAuctionDetail = bottomUpAuctionDetail;
     }
-
-//    // --- 연관관계 편의 메서드 추가 ---
-//    public void assignUniqueBidDetail(UniqueBidAuctionDetail detail) {
-//        this.uniqueBidAuctionDetail = detail;
-//    }
 
     public void startAuction(String startedAt) {
         if (auctionStatus != INTRODUCING) {
@@ -109,9 +123,5 @@ public class Auction {
     public boolean isSeller(Long userId) {
         Long sellerId = stream.getSeller().getUser().getId();
         return Objects.equals(sellerId, userId);
-    }
-
-    public boolean isBelowStartPrice(Long amount) {
-        return this.item.getStartPrice() > amount;
     }
 }
