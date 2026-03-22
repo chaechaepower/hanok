@@ -28,7 +28,6 @@ type MockUniqueBidSyncState = {
   bidRange: {
     minPrice: number;
     maxPrice: number;
-    bidUnit: number;
   };
   participantCount: number;
 };
@@ -36,6 +35,9 @@ type MockPausedTimerState = {
   remainingSeconds: number;
   finalPrice: number;
 };
+
+type BottomUpItem = Extract<ItemSyncPayload['items'][number], { auctionType: 'BOTTOM_UP' }>;
+type UniqueTopItem = Extract<ItemSyncPayload['items'][number], { auctionType: 'UNIQUE_TOP' }>;
 
 const AUCTION_DURATION_SECONDS = 10;
 const SNIPING_THRESHOLD_SECONDS = 5;
@@ -69,6 +71,10 @@ const winnerAnnouncementTimers = new Map<string, number>();
 const streamPausedTimerStates = new Map<string, MockPausedTimerState>();
 
 const createTimestamp = (ms: number) => new Date(ms).toISOString();
+
+const isBottomUpItem = (item: ItemSyncPayload['items'][number]): item is BottomUpItem => item.auctionType === 'BOTTOM_UP';
+
+const isUniqueTopItem = (item: ItemSyncPayload['items'][number]): item is UniqueTopItem => item.auctionType === 'UNIQUE_TOP';
 
 const splitFrames = (data: string) =>
   data
@@ -193,133 +199,144 @@ const createTimerPayload = (state: MockTimerState, nowMs: number) => ({
   serverStartedAt: createTimestamp(state.startedAtMs),
 });
 
+const getItemBidUnit = (item: ItemSyncPayload['items'][number]) => {
+  return item.auctionType === 'BOTTOM_UP' ? item.bidUnit : 1000;
+};
+
 const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
   items: [
     {
       auctionId: 101,
       itemName: '고려청자 상감운학문 매병',
-      image: 'https://picsum.photos/400/300?random=1',
-      startPrice: 250000,
-      auctionStatus: 'READY',
-      auctionType: 'UNIQUE_TOP',
-      finalPrice: null,
-      itemCondition: 'BRAND_NEW',
       description: '고려시대 12세기 상감청자 매병으로, 운학문(구름과 학) 무늬가 정교하게 시문되어 있습니다.',
-      bidUnit: 10000,
-      auctionTime: 30,
       images: [
         'https://picsum.photos/seed/101a/400/400',
         'https://picsum.photos/seed/101b/400/400',
         'https://picsum.photos/seed/101c/400/400',
       ],
+      auctionStatus: 'READY',
+      auctionType: 'UNIQUE_TOP',
+      auctionTime: 30,
+      finalPrice: null,
+      itemCondition: 'BRAND_NEW',
+      bidUnit: null,
+      startPrice: null,
+      minPrice: 250000,
+      maxPrice: 1240000,
     },
     {
       auctionId: 102,
       itemName: '청자 투각 칠보문 향로',
-      image: 'https://picsum.photos/400/300?random=2',
-      startPrice: 130000,
-      auctionStatus: 'SOLD',
-      auctionType: 'BOTTOM_UP',
-      finalPrice: 195000,
-      itemCondition: 'OPEN_BOX',
       description: '칠보문 투각 기법이 적용된 고려청자 향로입니다.',
-      bidUnit: 5000,
-      auctionTime: 30,
       images: [
         'https://picsum.photos/seed/102a/400/400',
         'https://picsum.photos/seed/102b/400/400',
         'https://picsum.photos/seed/102c/400/400',
       ],
+      auctionStatus: 'SOLD',
+      auctionType: 'BOTTOM_UP',
+      auctionTime: 30,
+      finalPrice: 195000,
+      itemCondition: 'OPEN_BOX',
+      bidUnit: 10000,
+      startPrice: 130000,
+      minPrice: null,
+      maxPrice: null,
     },
     {
       auctionId: 103,
       itemName: '백자 달항아리',
-      image: 'https://picsum.photos/400/300?random=3',
-      startPrice: 180000,
-      auctionStatus: 'SOLD',
-      auctionType: 'BOTTOM_UP',
-      finalPrice: 270000,
-      itemCondition: 'REFURBISHED',
       description: '조선 후기 백자 달항아리로 둥근 형태가 특징입니다.',
-      bidUnit: 5000,
-      auctionTime: 60,
       images: [
         'https://picsum.photos/seed/103a/400/400',
         'https://picsum.photos/seed/103b/400/400',
         'https://picsum.photos/seed/103c/400/400',
       ],
+      auctionStatus: 'SOLD',
+      auctionType: 'BOTTOM_UP',
+      auctionTime: 60,
+      finalPrice: 270000,
+      itemCondition: 'REFURBISHED',
+      bidUnit: 15000,
+      startPrice: 180000,
+      minPrice: null,
+      maxPrice: null,
     },
     {
       auctionId: 104,
       itemName: '분청사기 철화 어문 장군',
-      image: 'https://picsum.photos/400/300?random=4',
-      startPrice: 95000,
-      auctionStatus: 'SOLD',
-      auctionType: 'BOTTOM_UP',
-      finalPrice: 142500,
-      itemCondition: 'USED',
       description: '분청사기에 철화 기법으로 물고기 문양을 그린 장군입니다.',
-      bidUnit: 3000,
-      auctionTime: 30,
       images: [
         'https://picsum.photos/seed/104a/400/400',
         'https://picsum.photos/seed/104b/400/400',
         'https://picsum.photos/seed/104c/400/400',
       ],
+      auctionStatus: 'SOLD',
+      auctionType: 'BOTTOM_UP',
+      auctionTime: 30,
+      finalPrice: 142500,
+      itemCondition: 'USED',
+      bidUnit: 5000,
+      startPrice: 95000,
+      minPrice: null,
+      maxPrice: null,
     },
     {
       auctionId: 105,
       itemName: '나전칠기 보석함',
-      image: 'https://picsum.photos/400/300?random=5',
-      startPrice: 320000,
-      auctionStatus: 'SOLD',
-      auctionType: 'BOTTOM_UP',
-      finalPrice: 480000,
-      itemCondition: 'BRAND_NEW',
       description: '전통 나전칠기 기법으로 제작된 보석함입니다.',
-      bidUnit: 10000,
-      auctionTime: 60,
       images: [
         'https://picsum.photos/seed/105a/400/400',
         'https://picsum.photos/seed/105b/400/400',
         'https://picsum.photos/seed/105c/400/400',
       ],
+      auctionStatus: 'SOLD',
+      auctionType: 'BOTTOM_UP',
+      auctionTime: 60,
+      finalPrice: 480000,
+      itemCondition: 'BRAND_NEW',
+      bidUnit: 20000,
+      startPrice: 320000,
+      minPrice: null,
+      maxPrice: null,
     },
     {
       auctionId: 106,
       itemName: '조선백자 청화 용문 항아리',
-      image: 'https://picsum.photos/400/300?random=6',
-      startPrice: 200000,
-      auctionStatus: 'SOLD',
-      auctionType: 'BOTTOM_UP',
-      finalPrice: 300000,
-      itemCondition: 'OPEN_BOX',
       description: '조선시대 청화백자로 용 문양이 힘차게 그려져 있습니다.',
-      bidUnit: 5000,
-      auctionTime: 30,
       images: [
         'https://picsum.photos/seed/106a/400/400',
         'https://picsum.photos/seed/106b/400/400',
         'https://picsum.photos/seed/106c/400/400',
       ],
+      auctionStatus: 'SOLD',
+      auctionType: 'BOTTOM_UP',
+      auctionTime: 30,
+      finalPrice: 300000,
+      itemCondition: 'OPEN_BOX',
+      bidUnit: 10000,
+      startPrice: 200000,
+      minPrice: null,
+      maxPrice: null,
     },
     {
       auctionId: 107,
       itemName: '금동 미륵보살 반가사유상',
-      image: 'https://picsum.photos/400/300?random=7',
-      startPrice: 500000,
-      auctionStatus: 'UNSOLD',
-      auctionType: 'BOTTOM_UP',
-      finalPrice: null,
-      itemCondition: 'USED',
       description: '삼국시대 금동 반가사유상 재현품입니다.',
-      bidUnit: 20000,
-      auctionTime: 60,
       images: [
         'https://picsum.photos/seed/107a/400/400',
         'https://picsum.photos/seed/107b/400/400',
         'https://picsum.photos/seed/107c/400/400',
       ],
+      auctionStatus: 'UNSOLD',
+      auctionType: 'BOTTOM_UP',
+      auctionTime: 60,
+      finalPrice: null,
+      itemCondition: 'USED',
+      bidUnit: 25000,
+      startPrice: 500000,
+      minPrice: null,
+      maxPrice: null,
     },
   ],
 });
@@ -602,7 +619,7 @@ const createUniqueBidSyncPayload = (streamId: string, nowMs: number) => {
 const ensureSeededBidAuctionState = (streamId: string) => {
   const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
   const activeBidItem = itemSyncPayload?.items.find(
-    (item) => item.auctionType !== 'UNIQUE_TOP' && item.auctionStatus === 'LIVE',
+    (item): item is BottomUpItem => isBottomUpItem(item) && item.auctionStatus === 'LIVE',
   );
 
   if (!activeBidItem) {
@@ -615,14 +632,14 @@ const ensureSeededBidAuctionState = (streamId: string) => {
     streamTimerStates.set(streamId, {
       durationSeconds: activeBidItem.auctionTime ?? AUCTION_DURATION_SECONDS,
       startedAtMs: Date.now(),
-      finalPrice: activeBidItem.startPrice + (activeBidItem.bidUnit ?? 1000),
+      finalPrice: activeBidItem.startPrice + getItemBidUnit(activeBidItem),
     });
     initializedTimer = true;
   }
 
   if (!streamBidSyncStates.has(streamId)) {
     streamBidSyncStates.set(streamId, {
-      bidUnit: activeBidItem.bidUnit ?? 1000,
+      bidUnit: getItemBidUnit(activeBidItem),
       highestBidderUserId: mockLoginUsers.find((user) => user.userId !== getCurrentMockUser()?.userId)?.userId ?? null,
     });
   }
@@ -663,7 +680,7 @@ const sendPrivateUniqueBidSync = (streamId: string) => {
 const ensureSeededUniqueAuctionState = (streamId: string) => {
   const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
   const activeUniqueItem = itemSyncPayload?.items.find(
-    (item) => item.auctionType === 'UNIQUE_TOP' && item.auctionStatus === 'LIVE',
+    (item): item is UniqueTopItem => isUniqueTopItem(item) && item.auctionStatus === 'LIVE',
   );
 
   if (!activeUniqueItem) {
@@ -676,18 +693,16 @@ const ensureSeededUniqueAuctionState = (streamId: string) => {
     streamTimerStates.set(streamId, {
       durationSeconds: activeUniqueItem.auctionTime ?? AUCTION_DURATION_SECONDS,
       startedAtMs: Date.now(),
-      finalPrice: activeUniqueItem.startPrice,
+      finalPrice: activeUniqueItem.minPrice,
     });
     initializedTimer = true;
   }
 
   if (!streamUniqueBidSyncStates.has(streamId)) {
-    const bidUnit = activeUniqueItem.bidUnit ?? 1000;
     streamUniqueBidSyncStates.set(streamId, {
       bidRange: {
-        minPrice: activeUniqueItem.startPrice,
-        maxPrice: activeUniqueItem.startPrice + bidUnit * 99,
-        bidUnit,
+        minPrice: activeUniqueItem.minPrice,
+        maxPrice: activeUniqueItem.maxPrice,
       },
       participantCount: 0,
     });
@@ -950,9 +965,8 @@ const handleUniqueAuctionStart = (destination: string, body: string) => {
     itemSyncPayload.items.find((item) => item.auctionId === auctionId) ??
     itemSyncPayload.items.find((item) => item.auctionStatus === 'INTRODUCING') ??
     itemSyncPayload.items.find((item) => item.auctionStatus === 'READY');
-  const minPrice = targetItem?.startPrice ?? 1000;
-  const bidUnit = targetItem?.bidUnit ?? 1000;
-  const maxPrice = minPrice + bidUnit * 99;
+  const minPrice = targetItem?.minPrice ?? 1000;
+  const maxPrice = targetItem?.maxPrice ?? minPrice;
   const state: MockTimerState = {
     durationSeconds: AUCTION_DURATION_SECONDS,
     startedAtMs: nowMs,
@@ -964,7 +978,6 @@ const handleUniqueAuctionStart = (destination: string, body: string) => {
     bidRange: {
       minPrice,
       maxPrice,
-      bidUnit,
     },
     participantCount: 0,
   });
@@ -978,7 +991,6 @@ const handleUniqueAuctionStart = (destination: string, body: string) => {
       bidRange: {
         minPrice,
         maxPrice,
-        bidUnit,
       },
       timer: createTimerPayload(state, nowMs),
     },

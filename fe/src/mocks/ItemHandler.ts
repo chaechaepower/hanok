@@ -2,7 +2,7 @@ import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
 import Logo from '@/assets/Logo.png';
-import type { ItemAuctionType, ItemSyncItemCondition } from '@/types';
+import type { ItemSyncItemCondition } from '@/types';
 
 type MockItem = {
   itemId: number;
@@ -11,14 +11,8 @@ type MockItem = {
   description: string;
   tags: string[];
   images: string[];
-  startPrice: number;
-  minPrice: number | null;
-  maxPrice: number | null;
-  bidUnit: number;
-  auctionDuration: number;
   itemCondition: ItemSyncItemCondition;
   category: string;
-  auctionType: ItemAuctionType;
   createdAt: string;
 };
 
@@ -30,14 +24,8 @@ let mockItems: MockItem[] = [
     description: '상태 좋은 265mm',
     tags: ['nike', 'sneakers'],
     images: [Logo, Logo, Logo],
-    startPrice: 100000,
-    minPrice: 1000,
-    maxPrice: 100000,
-    bidUnit: 5000,
-    auctionDuration: 30,
     itemCondition: 'BRAND_NEW',
     category: 'SNEAKERS_SHOES',
-    auctionType: 'UNIQUE_TOP',
     createdAt: '2026-03-13T05:25:50.043Z',
   },
   {
@@ -47,14 +35,8 @@ let mockItems: MockItem[] = [
     description: '박스 풀구성 깔끔해요',
     tags: ['jordan', 'chicago'],
     images: [Logo, Logo, Logo],
-    startPrice: 500000,
-    minPrice: null,
-    maxPrice: null,
-    bidUnit: 10000,
-    auctionDuration: 60,
     itemCondition: 'OPEN_BOX',
     category: 'SNEAKERS_SHOES',
-    auctionType: 'BOTTOM_UP',
     createdAt: '2026-03-13T05:25:50.043Z',
   },
   {
@@ -64,14 +46,8 @@ let mockItems: MockItem[] = [
     description: '실착 5회 미만',
     tags: ['adidas', 'yeezy'],
     images: [Logo, Logo, Logo],
-    startPrice: 200000,
-    minPrice: null,
-    maxPrice: null,
-    bidUnit: 5000,
-    auctionDuration: 30,
     itemCondition: 'USED',
     category: 'SNEAKERS_SHOES',
-    auctionType: 'BOTTOM_UP',
     createdAt: '2026-03-13T05:25:50.043Z',
   },
   {
@@ -81,14 +57,8 @@ let mockItems: MockItem[] = [
     description: '2021년식 풀세트 보증서 유',
     tags: ['rolex', 'submariner'],
     images: [Logo, Logo, Logo],
-    startPrice: 15000000,
-    minPrice: null,
-    maxPrice: null,
-    bidUnit: 100000,
-    auctionDuration: 60,
     itemCondition: 'BRAND_NEW',
     category: 'WATCHES',
-    auctionType: 'BOTTOM_UP',
     createdAt: '2026-03-13T05:25:50.043Z',
   },
   {
@@ -98,14 +68,8 @@ let mockItems: MockItem[] = [
     description: '금장 토고 레더',
     tags: ['hermes', 'birkin'],
     images: [Logo, Logo, Logo],
-    startPrice: 20000000,
-    minPrice: null,
-    maxPrice: null,
-    bidUnit: 200000,
-    auctionDuration: 60,
     itemCondition: 'BRAND_NEW',
     category: 'BAGS_FASHION_ACCESSORIES',
-    auctionType: 'BOTTOM_UP',
     createdAt: '2026-03-13T05:25:50.043Z',
   },
 ];
@@ -132,14 +96,8 @@ export const itemHandlers = [
       description: (body.description as string) || 'Mock Description',
       tags: (body.tags as string[]) || [],
       images: [Logo, Logo, Logo],
-      startPrice: body.startPrice == null ? 0 : Number(body.startPrice),
-      minPrice: body.minPrice == null ? null : Number(body.minPrice),
-      maxPrice: body.maxPrice == null ? null : Number(body.maxPrice),
-      bidUnit: body.bidUnit == null ? 0 : Number(body.bidUnit),
-      auctionDuration: Number(body.auctionDuration) || 60,
       itemCondition: ((body.itemCondition as ItemSyncItemCondition | undefined) ?? 'USED'),
       category: (body.category as string) || 'ETC',
-      auctionType: (body.auctionType as ItemAuctionType) || 'BOTTOM_UP',
       createdAt: new Date().toISOString(),
     };
 
@@ -170,9 +128,6 @@ export const itemHandlers = [
       name: (body.name as string) || currentItem.name,
       description: (body.description as string) || currentItem.description,
       tags: (body.tags as string[]) || currentItem.tags,
-      startPrice: body.startPrice ? Number(body.startPrice) : currentItem.startPrice,
-      bidUnit: body.bidUnit ? Number(body.bidUnit) : currentItem.bidUnit,
-      auctionDuration: body.auctionDuration ? Number(body.auctionDuration) : currentItem.auctionDuration,
       itemCondition: ((body.itemCondition as ItemSyncItemCondition | undefined) ?? currentItem.itemCondition),
       category: (body.category as string) || currentItem.category,
     };

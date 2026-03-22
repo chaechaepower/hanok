@@ -11,7 +11,7 @@ import { usePatchStream } from '@/api/hooks/usePatchStream';
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { usePostStream } from '@/api/hooks/usePostStream';
 import { usePostStreamMacros } from '@/api/hooks/usePostStreamMacros';
-import type { LiveStreamItem, Product, StreamRequest } from '@/types';
+import type { Product, StreamAuctionItem, StreamDetailItem, StreamRequest } from '@/types';
 import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
 import LiveRegisterTutorial from './LiveRegisterTutorial';
 import InventorySelectModal from './InventorySelectModal';
@@ -22,20 +22,46 @@ import { normalizeStreamScheduledAt } from '@/utils/streamDateTime';
 import SellerActionButtons from '@/components/Live/Stream/SellerActionButtons';
 import { LIVE_REGISTER_TUTORIAL_EXAMPLE_ITEM } from '@/constants/live';
 
-const toFallbackProduct = (item: LiveStreamItem): Product => ({
+const toFallbackProduct = (item: StreamDetailItem): Product => ({
   itemId: item.itemId,
-  status: 'READY',
+  status: item.status,
   name: item.name,
-  description: '',
-  tags: [],
-  images: item.image1 ? [item.image1] : [],
-  startPrice: item.startPrice,
-  bidUnit: 0,
-  auctionDuration: 0,
+  description: item.description,
+  tags: item.tags,
+  images: item.images,
+  startPrice: item.auctionType === 'BOTTOM_UP' ? item.bottomUp.startPrice : item.uniqueTop.minPrice,
+  minPrice: item.auctionType === 'UNIQUE_TOP' ? item.uniqueTop.minPrice : null,
+  maxPrice: item.auctionType === 'UNIQUE_TOP' ? item.uniqueTop.maxPrice : null,
+  bidUnit: item.auctionType === 'BOTTOM_UP' ? item.bottomUp.bidUnit : 0,
+  auctionDuration: item.auctionDuration,
   itemCondition: item.itemCondition,
   category: item.category,
-  auctionType: 'BOTTOM_UP',
+  auctionType: item.auctionType,
+  createdAt: item.createdAt,
 });
+
+const toStreamAuctionItem = (item: Product): StreamAuctionItem =>
+  item.auctionType === 'UNIQUE_TOP'
+    ? {
+        itemId: item.itemId,
+        auctionType: 'UNIQUE_TOP',
+        auctionDuration: item.auctionDuration ?? 0,
+        bottomUp: null,
+        uniqueTop: {
+          minPrice: item.minPrice ?? item.startPrice ?? 0,
+          maxPrice: item.maxPrice ?? item.startPrice ?? 0,
+        },
+      }
+    : {
+        itemId: item.itemId,
+        auctionType: 'BOTTOM_UP',
+        auctionDuration: item.auctionDuration ?? 0,
+        bottomUp: {
+          startPrice: item.startPrice ?? 0,
+          bidUnit: item.bidUnit ?? 0,
+        },
+        uniqueTop: null,
+      };
 
 export default function LiveRegisterPage() {
   const [searchParams] = useSearchParams();
@@ -163,7 +189,20 @@ export default function LiveRegisterPage() {
     }
 
     const inventoryById = new Map(filteredInventory.map((item) => [item.itemId, item]));
-    const items = (streamData.items ?? []).map((item) => inventoryById.get(item.itemId) ?? toFallbackProduct(item));
+    const items = (streamData.items ?? []).map((item) => {
+      const inventoryItem = inventoryById.get(item.itemId);
+      const streamItem = toFallbackProduct(item);
+
+      return inventoryItem
+        ? {
+            ...inventoryItem,
+            ...streamItem,
+            images: streamItem.images.length > 0 ? streamItem.images : inventoryItem.images,
+            tags: streamItem.tags.length > 0 ? streamItem.tags : inventoryItem.tags,
+            description: streamItem.description || inventoryItem.description,
+          }
+        : streamItem;
+    });
     setSelectedItems(items);
     initializedItemsStreamIdRef.current = streamId;
   }, [filteredInventory, inventoryLoading, isEditMode, streamData, streamId]);
@@ -286,7 +325,7 @@ export default function LiveRegisterPage() {
     return {
       title,
       category: categoryId,
-      itemIds: selectedItems.map((item) => item.itemId),
+      auctionItems: selectedItems.map(toStreamAuctionItem),
       startType,
       notice: notice || undefined,
       scheduledAt: startType === 'SCHEDULED' ? resolvedScheduledAt : undefined,
@@ -529,7 +568,7 @@ export default function LiveRegisterPage() {
                           <span className="truncate text-sm font-bold leading-snug text-neutral-100">{item.name}</span>
                           <div className="flex items-center gap-1.5">
                             <span className="text-[13px] font-black text-gold">
-                              {item.startPrice.toLocaleString()}원
+                              {(item.startPrice ?? 0).toLocaleString()}원
                             </span>
                             <span className="rounded-full bg-gold/10 px-2 py-0.5 text-[11px] font-extrabold text-gold-light">
                               {conditionLabel}

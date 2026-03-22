@@ -6,6 +6,13 @@ import ItemDetailAccordion from './ItemDetailAccordion';
 import type { AuctionItem } from '@/types';
 import { formatPrice } from '@/utils/formatPrice';
 
+const formatAuctionLabel = (item: AuctionItem) =>
+  item.auctionType === 'UNIQUE_TOP'
+    ? item.minPrice !== null && item.maxPrice !== null && item.maxPrice > item.minPrice
+      ? `${formatPrice(item.minPrice)} ~ ${formatPrice(item.maxPrice)}`
+      : formatPrice(item.minPrice ?? 0)
+    : formatPrice(item.startPrice ?? 0);
+
 export default function DoneItemCard({ item }: { item: AuctionItem }) {
   const [expanded, setExpanded] = useState(false);
   const statusBadge = AUCTION_STATUS_BADGES[item.status];
@@ -26,7 +33,7 @@ export default function DoneItemCard({ item }: { item: AuctionItem }) {
         )}
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
           <span className="truncate text-xs font-bold leading-snug text-neutral-500">{item.name}</span>
-          <span className="text-[13px] font-black text-neutral-600 line-through">{formatPrice(item.startPrice)}</span>
+          <span className="text-[13px] font-black text-neutral-600 line-through">{formatAuctionLabel(item)}</span>
           {item.finalPrice && (
             <span className="text-xs font-black text-gold/70">낙찰가 {formatPrice(item.finalPrice)}</span>
           )}

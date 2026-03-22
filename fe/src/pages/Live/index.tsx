@@ -166,7 +166,29 @@ export default function LivePage() {
             startType: activeStreamEnter.startType,
             scheduledAt: activeStreamEnter.scheduledAt ?? undefined,
             notice: activeStreamEnter.notice ?? undefined,
-            itemIds: (activeStreamEnter.items ?? []).map((item) => item.itemId),
+            auctionItems: (activeStreamEnter.items ?? []).map((item) =>
+              item.auctionType === 'UNIQUE_TOP'
+                ? {
+                    itemId: item.itemId,
+                    auctionType: 'UNIQUE_TOP',
+                    auctionDuration: item.auctionTime ?? 0,
+                    bottomUp: null,
+                    uniqueTop: {
+                      minPrice: item.minPrice ?? item.startPrice,
+                      maxPrice: item.maxPrice ?? item.startPrice,
+                    },
+                  }
+                : {
+                    itemId: item.itemId,
+                    auctionType: 'BOTTOM_UP',
+                    auctionDuration: item.auctionTime ?? 0,
+                    bottomUp: {
+                      startPrice: item.startPrice,
+                      bidUnit: item.bidUnit ?? 0,
+                    },
+                    uniqueTop: null,
+                  },
+            ),
           }
         : null,
     [activeStreamEnter],

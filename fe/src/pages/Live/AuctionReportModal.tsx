@@ -12,6 +12,13 @@ interface Props {
 
 const STAT_COLORS = ['text-neutral-400', 'text-gold', 'text-ember'] as const;
 
+const formatAuctionLabel = (item: AuctionItem) =>
+  item.auctionType === 'UNIQUE_TOP'
+    ? item.minPrice !== null && item.maxPrice !== null && item.maxPrice > item.minPrice
+      ? `${formatPrice(item.minPrice)} ~ ${formatPrice(item.maxPrice)}`
+      : formatPrice(item.minPrice ?? 0)
+    : formatPrice(item.startPrice ?? 0);
+
 export default function AuctionReportModal({ open, onClose, items }: Props) {
   const doneItems = items.filter((item) => item.status === 'SOLD' || item.status === 'UNSOLD');
   const remainItems = items.filter((item) => item.status !== 'SOLD' && item.status !== 'UNSOLD');
@@ -145,7 +152,7 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
                   </span>
                   <div className="flex flex-col items-end gap-0.5">
                     <span className="text-[10px] font-medium text-neutral-600">
-                      시작가 {formatPrice(item.startPrice)}
+                      {item.auctionType === 'UNIQUE_TOP' ? '응찰 범위' : '시작가'} {formatAuctionLabel(item)}
                     </span>
                     {isDone && item.finalPrice ? (
                       <span className="text-xs font-black text-gold">{formatPrice(item.finalPrice)}</span>

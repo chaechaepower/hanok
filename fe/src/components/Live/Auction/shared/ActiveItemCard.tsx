@@ -8,6 +8,13 @@ import type { AuctionItem } from '@/types';
 import { formatPrice } from '@/utils/formatPrice';
 import ItemDetailAccordion from './ItemDetailAccordion';
 
+const formatAuctionLabel = (item: AuctionItem) =>
+  item.auctionType === 'UNIQUE_TOP'
+    ? item.minPrice !== null && item.maxPrice !== null && item.maxPrice > item.minPrice
+      ? `${formatPrice(item.minPrice)} ~ ${formatPrice(item.maxPrice)}`
+      : formatPrice(item.minPrice ?? 0)
+    : formatPrice(item.startPrice ?? 0);
+
 interface ActiveCardProps {
   item: AuctionItem;
   isSelected: boolean;
@@ -51,7 +58,7 @@ export default function ActiveItemCard({ item, isSelected, isSeller, onSelect }:
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
           <span className="truncate text-xs font-bold leading-snug text-white">{item.name}</span>
           <div className="flex items-center gap-1.5 whitespace-nowrap">
-            <span className={`text-[13px] font-black ${PRICE_CLASS[item.status]}`}>{formatPrice(item.startPrice)}</span>
+            <span className={`text-[13px] font-black ${PRICE_CLASS[item.status]}`}>{formatAuctionLabel(item)}</span>
             <span
               className={`shrink-0 rounded-full bg-gold/[0.08] px-1.5 py-0.5 text-[9px] font-extrabold ${conditionBadge.className}`}
             >

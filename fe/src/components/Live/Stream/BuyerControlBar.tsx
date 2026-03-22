@@ -69,10 +69,9 @@ export default function BuyerControlBar({
   const activeTab: BidTab = isUniqueAuction ? 'custom' : tab;
   const activeCustomUnit = isUniqueAuction ? 0 : customUnit;
   const currentPrice = isUniqueAuction ? (uniqueBidSync?.bidRange.minPrice ?? 0) : (bidSync?.item.currentPrice ?? 0);
-  const baseBidUnit = isUniqueAuction ? (uniqueBidSync?.bidRange.bidUnit ?? 1000) : (bidSync?.item.bidUnit ?? 1000);
+  const baseBidUnit = bidSync?.item.bidUnit ?? 1000;
   const uniqueMinPrice = uniqueBidSync?.bidRange.minPrice ?? 0;
   const uniqueMaxPrice = uniqueBidSync?.bidRange.maxPrice ?? 0;
-  const uniqueBidUnit = uniqueBidSync?.bidRange.bidUnit ?? 1000;
   const hasPlacedUniqueBid = uniqueBidSync?.hasBid ?? false;
   const hasActiveAuction = isUniqueAuction ? Boolean(uniqueBidSync) : Boolean(bidSync);
   const visibleAuctionEndPhase = hasActiveAuction ? null : auctionEndPhase;
@@ -81,14 +80,9 @@ export default function BuyerControlBar({
     (amount: number) => {
       if (!Number.isFinite(amount) || amount <= 0) return 0;
 
-      const safeBidUnit = Math.max(uniqueBidUnit, 1);
-      const maxStep = Math.max(Math.floor((uniqueMaxPrice - uniqueMinPrice) / safeBidUnit), 0);
-      const roundedStep = Math.round((amount - uniqueMinPrice) / safeBidUnit);
-      const normalizedStep = Math.min(Math.max(roundedStep, 0), maxStep);
-
-      return uniqueMinPrice + normalizedStep * safeBidUnit;
+      return Math.min(Math.max(Math.round(amount), uniqueMinPrice), uniqueMaxPrice);
     },
-    [uniqueBidUnit, uniqueMaxPrice, uniqueMinPrice],
+    [uniqueMaxPrice, uniqueMinPrice],
   );
   const isFreeMode = activeTab === 'custom' && activeCustomUnit === 0;
   const panelOpacityProgress = ((panelOpacity - 10) / 80) * 100;
@@ -124,7 +118,7 @@ export default function BuyerControlBar({
       setFreeInput(String(correctedUniqueBidAmount));
       setBidAmount(correctedUniqueBidAmount);
       setUniqueInputError(
-        `입찰가를 ${correctedUniqueBidAmount.toLocaleString()}원으로 보정했습니다. 확인 후 다시 입찰해주세요.`,
+        `입찰가를 허용 범위인 ${correctedUniqueBidAmount.toLocaleString()}원으로 보정했습니다. 확인 후 다시 입찰해주세요.`,
       );
       return false;
     },
@@ -414,8 +408,7 @@ export default function BuyerControlBar({
                     <div className="flex flex-1 gap-1">
                       <div className="flex w-1/2 flex-col gap-2">
                         <div className="flex-1 rounded-md bg-neutral-800 px-3 py-1.5 text-center text-[10px] font-bold text-neutral-100">
-                          [{uniqueMinPrice.toLocaleString()} ~ {uniqueMaxPrice.toLocaleString()}원] |{' '}
-                          {uniqueBidUnit.toLocaleString()}원 단위로 보정됩니다
+                          입찰 범위: {uniqueMinPrice.toLocaleString()} ~ {uniqueMaxPrice.toLocaleString()}원
                         </div>
                         <div
                           className={`flex flex-1 items-center gap-2 rounded-lg px-2.5 py-1 ${
@@ -464,7 +457,7 @@ export default function BuyerControlBar({
                             </span>
                           ) : null}
                           <span className="text-[10px] font-bold text-gold">
-                            {hasPlacedUniqueBid ? '1회 입찰 완료' : `${uniqueBidUnit.toLocaleString()}원 단위`}
+                            {hasPlacedUniqueBid ? '1회 입찰 완료' : '1회 입찰 가능'}
                           </span>
                         </div>
                         <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">
