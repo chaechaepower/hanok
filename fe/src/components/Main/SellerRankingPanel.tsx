@@ -23,7 +23,7 @@ export default function SellerRankingPanel({ rankingItems = [] }: SellerRankingP
       </div>
 
       <div className="mt-4 flex flex-col gap-2">
-        {rankingItems.slice(0, 5).map((seller) => {
+        {rankingItems.map((seller) => {
           const sellerInitial = seller.nickname.trim().charAt(0) || '?';
 
           return (

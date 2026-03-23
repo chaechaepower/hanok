@@ -41,7 +41,10 @@ const mockSellerProfiles: Record<number, Record<string, unknown>> = {};
 
 export const profileHandlers = [
   http.get(`${BASE_URL}/v1/sellers/ranking`, () => {
-    return HttpResponse.json([
+    return HttpResponse.json({
+      status: 'SUCCESS',
+      message: 'Seller ranking fetched successfully.',
+      data: [
       {
         rank: 1,
         sellerId: 7,
@@ -77,7 +80,8 @@ export const profileHandlers = [
         profileImage: 'https://picsum.photos/seed/rank-25/120/120',
         followerCount: 489,
       },
-    ]);
+      ],
+    });
   }),
 
   http.patch(`${BASE_URL}/v1/sellers/:sellerId/profile`, async ({ request, params }) => {

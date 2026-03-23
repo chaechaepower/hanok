@@ -50,21 +50,14 @@ export type NewSellerRecommendedStream = {
   streamId: number;
   title: string;
   category: string;
-  thumbnailUri: string | null;
-  isLive: boolean;
+  thumbnail: string | null;
+  status: SearchStreamStatus;
   viewerCount: number;
-  scheduledAt: string | null;
   startedAt: string | null;
   seller: LiveSeller;
 };
 
-export type NewSellerRecommendedStreamsResponse = {
-  content: NewSellerRecommendedStream[];
-  page: number;
-  size: number;
-  totalElements: number;
-  hasNext: boolean;
-};
+export type NewSellerRecommendedStreamsResponse = NewSellerRecommendedStream[];
 
 export type SearchMatchType = 'STREAM_TITLE' | 'ITEM_NAME' | 'TAG';
 

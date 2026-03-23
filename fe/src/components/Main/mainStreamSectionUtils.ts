@@ -25,10 +25,10 @@ export const mapNewSellerStreamToLiveCard = (stream: NewSellerRecommendedStream)
   streamId: stream.streamId,
   title: stream.title,
   category: stream.category,
-  thumbnailUri: stream.thumbnailUri,
-  streamStatus: stream.isLive ? 'LIVE' : 'SCHEDULED',
+  thumbnailUri: stream.thumbnail,
+  streamStatus: stream.status,
   viewerCount: stream.viewerCount,
-  scheduledAt: stream.scheduledAt,
+  scheduledAt: null,
   startedAt: stream.startedAt,
   seller: stream.seller,
 });

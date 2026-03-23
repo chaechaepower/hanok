@@ -58,7 +58,7 @@ export default function MainPage() {
   const {
     data: newSellerLiveData,
   } = useGetNewSellerRecommendedStreams({
-    size: PAGE_SIZE,
+    limit: PAGE_SIZE,
   });
 
   const allLiveTriggerRef = useRef<HTMLDivElement | null>(null);
@@ -75,9 +75,7 @@ export default function MainPage() {
     'LATEST',
   );
 
-  const recommendedBroadcasts = (newSellerLiveData?.pages.flatMap((page) => page.content) ?? []).map(
-    mapNewSellerStreamToLiveCard,
-  );
+  const recommendedBroadcasts = (newSellerLiveData ?? []).map(mapNewSellerStreamToLiveCard);
 
   const scheduledBroadcasts = [...(scheduledLiveData?.pages.flatMap((page) => page.content) ?? [])]
     .filter((stream) => (selectedCategory ? stream.category === selectedCategory : true))

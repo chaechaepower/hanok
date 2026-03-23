@@ -215,10 +215,9 @@ const toNewSellerRecommendedStream = (stream: LiveCardData): NewSellerRecommende
   streamId: stream.streamId,
   title: stream.title,
   category: stream.category,
-  thumbnailUri: stream.thumbnailUri,
-  isLive: stream.streamStatus === 'LIVE',
+  thumbnail: stream.thumbnailUri,
+  status: stream.streamStatus,
   viewerCount: stream.viewerCount,
-  scheduledAt: stream.scheduledAt,
   startedAt: stream.startedAt,
   seller: stream.seller,
 });
@@ -357,8 +356,10 @@ export const mainHandlers = [
 
   http.get(`${BASE_URL}/v1/streams/recommend/new-seller`, ({ request }) => {
     const url = new URL(request.url);
-    const page = Math.max(0, toNumber(url.searchParams.get('page'), 0));
-    const size = Math.max(1, toNumber(url.searchParams.get('size'), 20));
+    const withinDays = Math.max(1, toNumber(url.searchParams.get('withinDays'), 30));
+    const limit = Math.max(1, toNumber(url.searchParams.get('limit'), 10));
+    const thresholdDate = new Date();
+    thresholdDate.setDate(thresholdDate.getDate() - withinDays);
 
     const registeredLiveCards = getRegisteredLiveCards();
     const registeredIds = new Set(registeredLiveCards.map((stream) => stream.streamId));
@@ -367,24 +368,18 @@ export const mainHandlers = [
       ...MAIN_LIVE_STREAMS.filter((stream) => !registeredIds.has(stream.streamId)),
     ]
       .filter((stream) => NEW_SELLER_IDS.has(stream.seller.sellerId))
-      .filter((stream) => stream.streamStatus === 'LIVE' || stream.streamStatus === 'SCHEDULED')
+      .filter((stream) => stream.streamStatus === 'LIVE')
+      .filter((stream) => {
+        const startedAt = Date.parse(stream.startedAt ?? '');
+        return startedAt ? startedAt >= thresholdDate.getTime() : true;
+      })
       .sort((a, b) => {
-        const aDate = Date.parse(a.startedAt ?? a.scheduledAt ?? '') || 0;
-        const bDate = Date.parse(b.startedAt ?? b.scheduledAt ?? '') || 0;
+        const aDate = Date.parse(a.startedAt ?? '') || 0;
+        const bDate = Date.parse(b.startedAt ?? '') || 0;
         return bDate - aDate;
       });
 
-    const totalElements = streams.length;
-    const start = page * size;
-    const end = start + size;
-
-    const response: NewSellerRecommendedStreamsResponse = {
-      content: streams.slice(start, end).map(toNewSellerRecommendedStream),
-      page,
-      size,
-      totalElements,
-      hasNext: end < totalElements,
-    };
+    const response: NewSellerRecommendedStreamsResponse = streams.slice(0, limit).map(toNewSellerRecommendedStream);
 
     return HttpResponse.json(response);
   }),
