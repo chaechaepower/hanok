@@ -9,7 +9,7 @@ import { usePostTrackingInfo } from '@/api/hooks/usePostTrackingInfo';
 import EscrowDetailCard from '@/components/common/EscrowDetailCard';
 import SideBar from '@/components/common/layouts/SideBar';
 import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
-import { CARRIERS } from '@/pages/SellerOnboarding/constants';
+import { CARRIERS } from '@/constants/sellerRegister';
 import type { EscrowItem } from '@/types';
 import {
   getEscrowStateUI,

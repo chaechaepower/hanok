@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FiPackage, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { useGetTracking } from '@/api/hooks/useGetTracking';
-import { CARRIERS } from '@/pages/SellerOnboarding/constants';
+import { CARRIERS } from '@/constants/sellerRegister';
 import type { PostTrackingInfoPayload } from '@/types';
 
 const CARRIER_CODE_MAP = Object.fromEntries(CARRIERS.map((c) => [c.name, c.code]));

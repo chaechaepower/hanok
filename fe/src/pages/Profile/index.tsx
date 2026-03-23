@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+﻿import { useState, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGetSellerProfile } from '@/api/hooks/useGetSellerProfile';
 import { useGetSellerReputation } from '@/api/hooks/useGetSellerReputation';
@@ -15,6 +15,7 @@ import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
 import NoticeList from '@/components/Profile/NoticeList';
 import ProfileEditModal, { type ProfileFormState } from '@/components/Profile/ProfileEditModal';
 import ReportModal from '@/components/Profile/ReportModal';
+import ConfirmModal from '@/components/common/ConfirmModal';
 import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
 import { usePatchSellerProfile } from '@/api/hooks/usePatchSellerProfile';
 import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
@@ -26,6 +27,7 @@ import { FiBell, FiCalendar, FiClock, FiGift, FiEdit2, FiX, FiCamera, FiTv, FiCh
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
 import React from 'react';
 import { useToast } from '@/hooks/useToast';
+import { getCategoryLabel } from '@/constants/category';
 
 const SOCIAL_PREFIX = {
   instagram: 'https://www.instagram.com/',
@@ -87,6 +89,7 @@ export default function ProfilePage() {
 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isProfileEditOpen, setIsProfileEditOpen] = useState(false);
+  const [deleteNoticeTarget, setDeleteNoticeTarget] = useState<number | null>(null);
   const [profileForm, setProfileForm] = useState<ProfileFormState>({
     nickname: '',
     intro: '',
@@ -152,6 +155,7 @@ export default function ProfilePage() {
     };
   }, [streamDropdownOpen]);
   const { data: scheduledStreamsData } = useGetScheduledStreams(0, 50);
+  const scheduledStreamOptions = scheduledStreamsData?.streams ?? [];
 
   const { mutate: postFollow, isPending: isFollowPending } = usePostFollow();
   const { data: followedData } = useGetFollowedStores();
@@ -203,7 +207,7 @@ export default function ProfilePage() {
     if (streamMatch) {
       setNoticeContent(content.slice(0, content.indexOf('[방송 안내]')).trim());
       const infoText = streamMatch[1].trim();
-      const matched = scheduledStreamsData?.streams.find((s) => infoText.includes(s.title)) ?? null;
+      const matched = scheduledStreamOptions.find((s) => infoText.includes(s.title)) ?? null;
       setSelectedStream(matched);
     } else {
       setNoticeContent(content);
@@ -250,9 +254,15 @@ export default function ProfilePage() {
   };
 
   const handleDeleteNotice = (postId: number) => {
-    if (confirm('공지사항을 정말 삭제하시겠습니까?')) {
-      deleteNotice(postId);
-    }
+    setDeleteNoticeTarget(postId);
+  };
+
+  const handleConfirmDeleteNotice = () => {
+    if (deleteNoticeTarget == null) return;
+    deleteNotice(deleteNoticeTarget, {
+      onSuccess: () => setDeleteNoticeTarget(null),
+      onError: () => setDeleteNoticeTarget(null),
+    });
   };
 
   const buildNoticeContent = () => {
@@ -420,7 +430,9 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-3 gap-[1px] bg-neutral-800 border border-white/5 rounded-xl">
                   <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated">
                     <span className="text-subtitle-sm text-neutral-500">팔로워</span>
-                    <span className="text-price-lg text-white">{reputation?.followerCount ?? data.stats.followerCount ?? '-'}</span>
+                    <span className="text-price-lg text-white">
+                      {reputation?.followerCount ?? data.stats.followerCount ?? '-'}
+                    </span>
                   </div>
                   <div className="relative flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated group">
                     <span className="text-subtitle-sm text-neutral-500 flex items-center gap-1">
@@ -442,7 +454,7 @@ export default function ProfilePage() {
                     <span className="text-price-lg text-white">
                       {reputation?.completionRate != null
                         ? ((reputation.completionRate / 100) * 5).toFixed(1)
-                        : data.stats.rating ?? '-'}
+                        : (data.stats.rating ?? '-')}
                     </span>
                     <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-72 p-3 bg-neutral-900 border border-white/10 rounded-lg shadow-xl text-xs text-neutral-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                       <p className="font-semibold text-white mb-1.5">평점 산정 기준</p>
@@ -453,9 +465,18 @@ export default function ProfilePage() {
                       </ul>
                       {reputation?.totalTrades != null && (
                         <div className="mt-2 pt-2 border-t border-white/10 space-y-0.5">
-                          <p>총 거래: <span className="text-white">{reputation.totalTrades}건</span></p>
-                          <p>거래 취소: <span className="text-white">{reputation.cancelCount ?? 0}건</span></p>
-                          <p>거래 성공률: <span className="text-white">{reputation.completionRate != null ? `${reputation.completionRate}%` : '-'}</span></p>
+                          <p>
+                            총 거래: <span className="text-white">{reputation.totalTrades}건</span>
+                          </p>
+                          <p>
+                            거래 취소: <span className="text-white">{reputation.cancelCount ?? 0}건</span>
+                          </p>
+                          <p>
+                            거래 성공률:{' '}
+                            <span className="text-white">
+                              {reputation.completionRate != null ? `${reputation.completionRate}%` : '-'}
+                            </span>
+                          </p>
                         </div>
                       )}
                     </div>
@@ -465,7 +486,9 @@ export default function ProfilePage() {
                     <span className="text-price-lg text-white">
                       {reputation?.avgShipDays != null
                         ? `${reputation.avgShipDays}일`
-                        : data.stats.avgShipDays != null ? `${data.stats.avgShipDays}일` : '-'}
+                        : data.stats.avgShipDays != null
+                          ? `${data.stats.avgShipDays}일`
+                          : '-'}
                     </span>
                   </div>
                 </div>
@@ -584,40 +607,40 @@ export default function ProfilePage() {
               onChange={(e) => setNoticeContent(e.target.value)}
             />
 
-            {scheduledStreamsData?.streams && scheduledStreamsData.streams.length > 0 && (
-              <div className="flex flex-col gap-2">
-                <label className="text-subtitle-md text-neutral-400 font-medium flex items-center gap-2">
+            <div className="flex flex-col gap-2">
+              <label className="text-subtitle-md text-neutral-400 font-medium flex items-center gap-2">
+                <FiTv size={14} className="text-gold-light" />
+                예약된 방송 연결 (선택)
+              </label>
+              {selectedStream ? (
+                <div className="flex items-center gap-2 bg-background border border-gold-light/30 rounded-lg px-4 py-3">
                   <FiTv size={14} className="text-gold-light" />
-                  예약된 방송 연결 (선택)
-                </label>
-                {selectedStream ? (
-                  <div className="flex items-center gap-2 bg-background border border-gold-light/30 rounded-lg px-4 py-3">
-                    <FiTv size={14} className="text-gold-light" />
-                    <span className="text-subtitle-md text-gold-light font-medium">{selectedStream.title}</span>
-                    <button
-                      type="button"
-                      className="ml-auto bg-transparent border-none text-neutral-600 cursor-pointer hover:text-white"
-                      onClick={() => setSelectedStream(null)}
-                    >
-                      <FiX size={14} />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="relative" ref={dropdownRef}>
-                    <button
-                      type="button"
-                      onClick={() => setStreamDropdownOpen(!streamDropdownOpen)}
-                      className="w-full box-border bg-background text-neutral-500 border border-neutral-800 rounded-lg p-4 text-subtitle-lg outline-none cursor-pointer flex items-center justify-between hover:border-neutral-700 transition-colors"
-                    >
-                      <span>방송을 선택하세요</span>
-                      <FiChevronDown
-                        size={16}
-                        className={`text-neutral-500 transition-transform ${streamDropdownOpen ? 'rotate-180' : ''}`}
-                      />
-                    </button>
-                    {streamDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-surface-elevated border border-neutral-800 rounded-lg overflow-hidden z-10 shadow-[0_4px_20px_rgba(0,0,0,0.4)] max-h-[200px] overflow-y-auto custom-scrollbar">
-                        {scheduledStreamsData.streams.map((stream) => (
+                  <span className="text-subtitle-md text-gold-light font-medium">{selectedStream.title}</span>
+                  <button
+                    type="button"
+                    className="ml-auto bg-transparent border-none text-neutral-600 cursor-pointer hover:text-white"
+                    onClick={() => setSelectedStream(null)}
+                  >
+                    <FiX size={14} />
+                  </button>
+                </div>
+              ) : (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setStreamDropdownOpen(!streamDropdownOpen)}
+                    className="w-full box-border bg-background text-neutral-500 border border-neutral-800 rounded-lg p-4 text-subtitle-lg outline-none cursor-pointer flex items-center justify-between hover:border-neutral-700 transition-colors"
+                  >
+                    <span>{scheduledStreamOptions.length > 0 ? '방송을 선택하세요' : '예약된 방송이 없습니다'}</span>
+                    <FiChevronDown
+                      size={16}
+                      className={`text-neutral-500 transition-transform ${streamDropdownOpen ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  {streamDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-surface-elevated border border-neutral-800 rounded-lg overflow-hidden z-10 shadow-[0_4px_20px_rgba(0,0,0,0.4)] max-h-[200px] overflow-y-auto custom-scrollbar">
+                      {scheduledStreamOptions.length > 0 &&
+                        scheduledStreamOptions.map((stream) => (
                           <button
                             key={stream.streamId}
                             type="button"
@@ -637,16 +660,15 @@ export default function ProfilePage() {
                                     minute: '2-digit',
                                   })
                                 : ''}
-                              {` · ${stream.category}`}
+                              {` · ${getCategoryLabel(stream.category)}`}
                             </span>
                           </button>
                         ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             <div className="flex justify-end gap-4 mt-4">
               <button
@@ -711,6 +733,17 @@ export default function ProfilePage() {
         </div>
       )}
 
+      <ConfirmModal
+        isOpen={deleteNoticeTarget !== null}
+        badgeLabel="공지사항 삭제"
+        title="공지사항을 삭제할까요?"
+        description={'이 작업은 되돌릴 수 없습니다'}
+        confirmLabel="삭제하기"
+        cancelLabel="취소"
+        onClose={() => setDeleteNoticeTarget(null)}
+        onConfirm={handleConfirmDeleteNotice}
+      />
+
       <ProfileEditModal
         isOpen={isProfileEditOpen}
         form={profileForm}
@@ -734,3 +767,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

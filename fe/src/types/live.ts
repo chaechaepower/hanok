@@ -19,7 +19,7 @@ export type StreamEnterResponse = {
   category: string;
   thumbnail: string | null;
   scheduledAt: string | null;
-  startType: 'SCHEDULED' | 'IMMEDIATE';
+  startType: 'SCHEDULED' | 'INSTANT';
   status: string;
   notice: string | null;
   isLive: boolean;
@@ -273,7 +273,7 @@ export type StreamDetailResponse = {
   category: string;
   thumbnail: string | null;
   scheduledAt: string | null;
-  startType: 'SCHEDULED' | 'IMMEDIATE';
+  startType: 'SCHEDULED' | 'INSTANT';
   notice: string | null;
   isLive: boolean;
   createdAt: string;
@@ -283,7 +283,7 @@ export type StreamDetailResponse = {
 export type StreamRequest = {
   title: string;
   category: string;
-  startType: 'SCHEDULED' | 'IMMEDIATE';
+  startType: 'SCHEDULED' | 'INSTANT';
   scheduledAt?: string;
   notice?: string;
   auctionItems: StreamAuctionItem[];

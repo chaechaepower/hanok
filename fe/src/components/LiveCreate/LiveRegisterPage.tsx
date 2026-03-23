@@ -613,7 +613,7 @@ export default function LiveRegisterPage() {
     return true;
   };
 
-  const buildStreamRequest = (startType: 'SCHEDULED' | 'IMMEDIATE', scheduledAtValue?: string): StreamRequest => {
+  const buildStreamRequest = (startType: 'SCHEDULED' | 'INSTANT', scheduledAtValue?: string): StreamRequest => {
     const resolvedScheduledAt = (scheduledAtValue ?? scheduledAt) || undefined;
 
     return {
@@ -674,7 +674,7 @@ export default function LiveRegisterPage() {
     }
   };
 
-  const submitStream = async (startType: 'SCHEDULED' | 'IMMEDIATE', scheduledAtValue?: string) => {
+  const submitStream = async (startType: 'SCHEDULED' | 'INSTANT', scheduledAtValue?: string) => {
     if (!categoryId || !validateStreamForm()) {
       return;
     }
@@ -696,7 +696,7 @@ export default function LiveRegisterPage() {
           }),
         ]);
 
-        if (startType === 'IMMEDIATE') {
+        if (startType === 'INSTANT') {
           navigate(`/live/${streamId}`);
         } else {
           showToast({ message: '방송을 수정했습니다.' });
@@ -711,7 +711,7 @@ export default function LiveRegisterPage() {
       });
       const newStreamId = res.streamId;
 
-      if (startType === 'IMMEDIATE') {
+      if (startType === 'INSTANT') {
         const startRes = await postStartStream.mutateAsync({
           streamId: newStreamId,
           ...payload,
@@ -727,7 +727,7 @@ export default function LiveRegisterPage() {
         body: { macros: buildMacrosPayload() },
       });
 
-      if (startType === 'IMMEDIATE') {
+      if (startType === 'INSTANT') {
         navigate(`/live/${newStreamId}`);
       } else {
         navigate('/lives');

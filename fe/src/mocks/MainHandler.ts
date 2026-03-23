@@ -266,7 +266,7 @@ export const mainHandlers = [
       category: stream?.category ?? 'ELECTRONICS',
       thumbnail: stream?.thumbnailUri ?? null,
       scheduledAt: stream?.scheduledAt ?? null,
-      startType: stream?.streamStatus === 'SCHEDULED' ? 'SCHEDULED' : 'IMMEDIATE',
+      startType: stream?.streamStatus === 'SCHEDULED' ? 'SCHEDULED' : 'INSTANT',
       status: stream?.streamStatus ?? 'LIVE',
       notice: 'Welcome to the live auction.',
       isLive: stream ? isActiveStreamStatus(stream.streamStatus) : true,

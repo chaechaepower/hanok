@@ -1,10 +1,11 @@
-import { useNavigate } from 'react-router-dom';
+﻿import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { FaBroadcastTower, FaPlus } from 'react-icons/fa';
 import { MdLiveTv } from 'react-icons/md';
 import { useDeleteStream } from '@/api/hooks/useDeleteStream';
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
+import ConfirmModal from '@/components/common/ConfirmModal';
 import { getCategoryLabel } from '@/constants/category';
 import SideBar from '@/components/common/layouts/SideBar';
 import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
@@ -12,7 +13,7 @@ import CategorySelectModal from '@/components/LiveCreate/CategorySelectModal';
 import { useToast } from '@/hooks/useToast';
 
 const formatScheduledAt = (isoString: string | null): string => {
-  if (!isoString) return '방송 중';
+  if (!isoString) return '방송 일정 미정';
   const d = new Date(isoString);
   if (Number.isNaN(d.getTime())) return isoString;
   return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -30,7 +31,10 @@ export default function LiveCreatePage() {
   const deleteMutation = useDeleteStream();
   const startStreamMutation = usePostStartStream();
   const [showModal, setShowModal] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
   const { showToast } = useToast();
+
+  const deleteTarget = streams.find((stream) => stream.streamId === deleteTargetId) ?? null;
 
   const handleQuickStart = async (stream: (typeof streams)[number]) => {
     try {
@@ -39,7 +43,7 @@ export default function LiveCreatePage() {
         request: {
           title: stream.title,
           category: stream.category,
-          startType: 'IMMEDIATE',
+          startType: 'INSTANT',
           auctionItems: [],
         },
       });
@@ -49,10 +53,16 @@ export default function LiveCreatePage() {
     }
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('정말 삭제하시겠습니까?')) return;
+  const handleDelete = (id: number) => {
+    setDeleteTargetId(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteTargetId == null) return;
+
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(deleteTargetId);
+      setDeleteTargetId(null);
     } catch (err) {
       console.error(err);
       showToast({ message: '삭제에 실패했습니다. 다시 시도해주세요.' });
@@ -66,45 +76,45 @@ export default function LiveCreatePage() {
 
   const content = isLoading ? (
     <div className="flex items-center justify-center py-20">
-      <div className="w-8 h-8 border-4 border-neutral-700 border-t-gold rounded-full animate-spin" />
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-neutral-700 border-t-gold" />
     </div>
   ) : streams.length === 0 ? (
-    <div className="flex items-center justify-center py-20 text-neutral-500 text-body-lg border border-neutral-800 rounded-2xl">
+    <div className="flex items-center justify-center rounded-2xl border border-neutral-800 py-20 text-body-lg text-neutral-500">
       등록된 라이브 방송이 없습니다.
     </div>
   ) : (
     streams.map((stream) => (
       <div
         key={stream.streamId}
-        className="flex items-center gap-5 border border-neutral-800 rounded-2xl p-4 bg-surface hover:bg-surface-elevated transition-colors"
+        className="flex items-center gap-5 rounded-2xl border border-neutral-800 bg-surface p-4 transition-colors hover:bg-surface-elevated"
       >
-        <div className="relative w-[130px] h-[100px] rounded-xl overflow-hidden shrink-0 bg-neutral-900">
+        <div className="relative h-[100px] w-[130px] shrink-0 overflow-hidden rounded-xl bg-neutral-900">
           {stream.thumbnail ? (
-            <img src={stream.thumbnail} alt={stream.title} className="w-full h-full object-cover" />
+            <img src={stream.thumbnail} alt={stream.title} className="h-full w-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-neutral-800">
+            <div className="flex h-full w-full items-center justify-center bg-neutral-800">
               <FaBroadcastTower size={32} className="text-neutral-600" />
             </div>
           )}
           {stream.state === 'LIVE' && (
-            <span className="absolute top-2 left-2 px-2 py-0.5 bg-accent text-white text-xs font-bold rounded-md">
-              방송중
+            <span className="absolute left-2 top-2 rounded-md bg-accent px-2 py-0.5 text-xs font-bold text-white">
+              LIVE
             </span>
           )}
           {stream.state === 'SCHEDULED' && (
-            <span className="absolute top-2 left-2 px-2 py-0.5 bg-gold/20 text-gold-light text-xs font-bold rounded-md">
+            <span className="absolute left-2 top-2 rounded-md bg-gold/20 px-2 py-0.5 text-xs font-bold text-gold-light">
               예약
             </span>
           )}
         </div>
 
-        <div className="flex-1 flex flex-col gap-1.5">
-          <p className="text-neutral-500 text-sm">{formatScheduledAt(stream.scheduledAt)}</p>
-          <p className="text-neutral-100 text-base font-semibold">{stream.title}</p>
-          <p className="text-neutral-500 text-sm">{getCategoryLabel(stream.category)}</p>
+        <div className="flex flex-1 flex-col gap-1.5">
+          <p className="text-sm text-neutral-500">{formatScheduledAt(stream.scheduledAt)}</p>
+          <p className="text-base font-semibold text-neutral-100">{stream.title}</p>
+          <p className="text-sm text-neutral-500">{getCategoryLabel(stream.category)}</p>
         </div>
 
-        <div className="flex items-center gap-4 shrink-0 pr-2">
+        <div className="flex shrink-0 items-center gap-4 pr-2">
           {stream.state === 'LIVE' ? (
             <button
               type="button"
@@ -123,19 +133,19 @@ export default function LiveCreatePage() {
                 className="flex items-center gap-1.5 rounded-lg border border-accent/35 bg-accent/12 px-3 py-1.5 text-xs font-bold text-accent-light transition-colors hover:bg-accent/25 disabled:opacity-50"
               >
                 <MdLiveTv size={14} />
-                {startStreamMutation.isPending ? '시작 중...' : '즉시 시작'}
+                {startStreamMutation.isPending ? '시작 중...' : '바로 시작'}
               </button>
               <button
                 type="button"
                 onClick={() => navigate(`/live/register?streamId=${stream.streamId}`)}
-                className="text-sm transition-colors text-neutral-300 hover:text-neutral-100"
+                className="text-sm text-neutral-300 transition-colors hover:text-neutral-100"
               >
                 수정
               </button>
               <button
                 type="button"
                 onClick={() => handleDelete(stream.streamId)}
-                className="text-neutral-300 text-sm hover:text-accent-light transition-colors"
+                className="text-sm text-neutral-300 transition-colors hover:text-accent-light"
               >
                 삭제
               </button>
@@ -147,24 +157,24 @@ export default function LiveCreatePage() {
   );
 
   return (
-    <div className="w-350 mx-auto flex gap-10 py-10 px-4 min-h-screen ">
+    <div className="w-350 mx-auto flex min-h-screen gap-10 px-4 py-10">
       <SideBar
         items={sellerSidebarItems}
         activeItemId={activeMenu}
         onItemClick={(item) => setActiveMenu(item.id)}
-        className="shrink-0 !pr-4 !pl-0 !py-0 !max-w-none"
+        className="shrink-0 !max-w-none !pr-4 !pl-0 !py-0"
       />
 
-      <main className="flex-1 flex flex-col gap-6">
+      <main className="flex flex-1 flex-col gap-6">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-[24px] font-semibold text-warm leading-tight m-0 mb-2">라이브 방송 관리</h2>
-            <p className="text-body-md text-neutral-500 m-0">내가 바로 경매의 왕이다!</p>
+            <h2 className="m-0 mb-2 text-[24px] font-semibold leading-tight text-warm">라이브 방송 관리</h2>
+            <p className="m-0 text-body-md text-neutral-500">예정된 방송을 확인하고 바로 시작해보세요.</p>
           </div>
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="btn-primary-outline flex items-center gap-1.5 rounded-[10px] px-5 py-2.5 text-sm font-semibold cursor-pointer"
+            className="btn-primary-outline flex cursor-pointer items-center gap-1.5 rounded-[10px] px-5 py-2.5 text-sm font-semibold"
           >
             <FaPlus size={12} />
             라이브 방송 등록
@@ -175,6 +185,20 @@ export default function LiveCreatePage() {
       </main>
 
       {showModal && <CategorySelectModal onConfirm={handleConfirmCategory} onClose={() => setShowModal(false)} />}
+
+      <ConfirmModal
+        isOpen={deleteTarget !== null}
+        badgeLabel="방송 삭제"
+        title="라이브 방송을 삭제할까요?"
+        description={'이 작업은 되돌릴 수 없습니다'}
+        confirmLabel="삭제하기"
+        cancelLabel="취소"
+        isPending={deleteMutation.isPending}
+        onClose={() => setDeleteTargetId(null)}
+        onConfirm={() => {
+          void handleConfirmDelete();
+        }}
+      />
     </div>
   );
 }

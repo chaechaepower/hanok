@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGetWithdraws } from '@/api/hooks/useGetWithdraws';
 import { usePostWithdrawComplete } from '@/api/hooks/usePostWithdrawComplete';
 import { clearAdminRouteAuthenticated } from '@/constants/adminAccess';
+import { BANKS } from '@/constants/sellerRegister';
 import { useToast } from '@/hooks/useToast';
 import Logo from '@/assets/Logo.png';
 import type { WithdrawStatus, WithdrawItem } from '@/types';
@@ -13,6 +14,8 @@ const formatDate = (iso: string) => {
   const d = new Date(iso);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
+
+const getBankName = (bankCode: string) => BANKS.find((bank) => bank.code === bankCode)?.name ?? bankCode;
 
 const STATUS_LABEL: Record<WithdrawStatus, string> = {
   PENDING: '대기',
@@ -136,7 +139,7 @@ export default function AdminPage() {
                   <div className="flex flex-col">
                     <span className="text-neutral-300 text-sm">{item.accountName}</span>
                     <span className="text-neutral-500 text-xs">
-                      {item.bankCode} {item.accountNum}
+                      {getBankName(item.bankCode)} {item.accountNum}
                     </span>
                   </div>
                   <span className="text-white font-semibold text-sm">{formatPrice(item.amount)}</span>
