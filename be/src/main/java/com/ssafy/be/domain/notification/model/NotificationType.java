@@ -46,8 +46,15 @@ public enum NotificationType {
     // ===== 거래 취소 =====
 
     ESCROW_CANCELLED(
-        "거래 취소",
-                "%s 거래가 취소되었습니다."
+            "거래 취소",
+            "%s 거래가 취소되었습니다."
+    ),
+
+    // ===== 공지사항 등록 =====
+
+    NOTICE_CREATE(
+            "공지사항 등록",
+            "%s님이 공지사항을 게시했습니다."
     );
 
     private final String title;
