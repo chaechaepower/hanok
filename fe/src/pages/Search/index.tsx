@@ -108,8 +108,8 @@ export default function SearchPage() {
             <h2 className="text-[24px] font-semibold text-point">검색 결과</h2>
             <p className="mt-1 text-[14px] text-white/55">
               {keywordParam
-                ? `검색어 "${keywordParam}" 기준으로 일치한 라이브를 보여줍니다.`
-                : '검색어를 입력하면 관련 라이브를 바로 확인할 수 있습니다.'}
+                ? `검색어 "${keywordParam}" 기준으로 일치한 라이브를 보여줍니다`
+                : '검색어를 입력하면 관련 라이브를 바로 확인할 수 있습니다'}
             </p>
           </div>
 
@@ -148,14 +148,14 @@ export default function SearchPage() {
 
         {isSearchEnabled && !isLoading && !error && results.length === 0 && (
           <div className="rounded-(--radius-panel) border border-white/8 bg-white/[0.03] px-6 py-14 text-center">
-            <p className="text-[18px] font-semibold text-point">일치하는 라이브가 없습니다.</p>
-            <p className="mt-2 text-[14px] text-white/50">다른 키워드나 상품명, 해시태그 조합으로 다시 검색해보세요.</p>
+            <p className="text-[18px] font-semibold text-point">일치하는 라이브가 없습니다</p>
+            <p className="mt-2 text-[14px] text-white/50">다른 키워드나 상품명, 해시태그 조합으로 다시 검색해보세요</p>
           </div>
         )}
 
         {isSearchEnabled && !isLoading && !error && results.length > 0 && (
           <>
-            {isFetching && <p className="text-[13px] text-white/45">최신 검색 결과를 확인하는 중입니다.</p>}
+            {isFetching && <p className="text-[13px] text-white/45">최신 검색 결과를 확인하는 중입니다</p>}
             <div className={RESULT_GRID_CLASS_NAME}>
               {results.map((result) => (
                 <div key={result.streamId} className="flex flex-col gap-4">

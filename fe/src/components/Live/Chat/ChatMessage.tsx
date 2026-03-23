@@ -26,13 +26,15 @@ export default function ChatMessage({ messages, connectionState }: Props) {
   }, [messages]);
 
   return (
-    <div ref={containerRef} onScroll={handleScroll} className="chat-scroll flex flex-1 flex-col gap-2.5 overflow-y-auto p-4">
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="chat-scroll flex flex-1 flex-col gap-2.5 overflow-y-auto p-4"
+    >
       {messages.length === 0 ? (
         <div className="flex h-full items-center justify-center">
           <p className="text-[11px] font-medium tracking-wide text-neutral-700">
-            {connectionState === 'connected'
-              ? '채팅을 기다리고 있습니다.'
-              : '채팅 연결 중입니다.'}
+            {connectionState === 'connected' ? '채팅을 기다리고 있습니다' : '채팅 연결 중입니다..'}
           </p>
         </div>
       ) : (

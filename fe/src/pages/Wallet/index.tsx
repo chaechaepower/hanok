@@ -220,7 +220,7 @@ export default function WalletPage() {
               <h1 className="text-2xl font-bold text-warm leading-tight">내 가상머니</h1>
             </div>
             <p className="text-neutral-500 text-sm mt-1 ml-12">
-              경매 입찰을 위한 가상머니 충전 및 정산 내역을 관리합니다.
+              경매 입찰을 위한 가상머니 충전 및 정산 내역을 관리합니다
             </p>
           </div>
 
@@ -283,7 +283,7 @@ export default function WalletPage() {
                       <p className="text-[32px] font-bold tracking-[-0.03em] text-gold">
                         {formatMoney(depositedBalance)} 원
                       </p>
-                      <p className="text-[14px] text-neutral-500">현재 거래 대기 중인 금액입니다.</p>
+                      <p className="text-[14px] text-neutral-500">현재 거래 대기 중인 금액입니다</p>
                     </>
                   )}
                 </div>
@@ -291,7 +291,7 @@ export default function WalletPage() {
 
               <div className="flex items-center gap-3 rounded-2xl border border-primary-muted bg-primary-muted/30 px-4 py-3 text-[14px] text-gold">
                 <FiInfo className="h-4 w-4 shrink-0" />
-                <p>거래 완료 또는 유찰 시 자동 반환/정산됩니다.</p>
+                <p>거래 완료 또는 유찰 시 자동 반환/정산됩니다</p>
               </div>
             </article>
           </div>
@@ -330,7 +330,7 @@ export default function WalletPage() {
                   />
                 ))
               ) : (
-                <div className="px-2 py-10 text-center text-sm text-neutral-500">내역이 없습니다.</div>
+                <div className="px-2 py-10 text-center text-sm text-neutral-500">내역이 없습니다</div>
               )}
             </div>
           </article>

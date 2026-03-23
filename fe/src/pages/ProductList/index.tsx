@@ -192,7 +192,7 @@ export default function ProductListPage() {
         isOpen={deleteTarget !== null}
         badgeLabel="물품 삭제"
         title="품목을 삭제할까요?"
-        description={'이 작업은 되돌릴 수 없습니다.'}
+        description={'이 작업은 되돌릴 수 없습니다'}
         confirmLabel="삭제하기"
         cancelLabel="취소"
         isPending={isDeletePending}

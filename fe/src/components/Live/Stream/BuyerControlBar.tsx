@@ -412,9 +412,7 @@ export default function BuyerControlBar({
                         <div className="flex-1 rounded-md bg-neutral-800 px-3 py-1.5 text-center text-[10px] font-bold text-neutral-100">
                           입찰 범위: {uniqueMinPrice.toLocaleString()} ~ {uniqueMaxPrice.toLocaleString()}원
                         </div>
-                        <div
-                          className="flex flex-1 items-center gap-2 rounded-lg bg-neutral-900 px-2.5 py-1"
-                        >
+                        <div className="flex flex-1 items-center gap-2 rounded-lg bg-neutral-900 px-2.5 py-1">
                           <div className="flex min-h-8 shrink-0 flex-col justify-center rounded-lg bg-neutral-900 px-2.5 py-1">
                             <div className="flex items-center gap-1.5">
                               <span className="text-[10px] text-neutral-500">잔고</span>

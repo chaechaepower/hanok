@@ -67,8 +67,8 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
   return (
     <>
       <div className="mb-8">
-        <h2 className="mb-3 text-2xl font-bold text-white">정산받을 은행 계좌 인증을 진행해주세요.</h2>
-        <p className="text-base text-neutral-300">판매 금액이 정산되는 계좌입니다.</p>
+        <h2 className="mb-3 text-2xl font-bold text-white">정산받을 은행 계좌 인증을 진행해주세요</h2>
+        <p className="text-base text-neutral-300">판매 금액이 정산되는 계좌입니다</p>
       </div>
 
       {hasExistingAccount ? (
@@ -93,7 +93,7 @@ export default function Step3({ onPrev, onNext, hasExistingAccount, existingAcco
               <span className="text-base text-white">{existingAccount?.accountNum}</span>
             </div>
           </div>
-          <p className="mb-0 mt-5 text-sm text-neutral-600">계좌 변경은 설정에서 가능합니다.</p>
+          <p className="mb-0 mt-5 text-sm text-neutral-600">계좌 변경은 설정에서 가능합니다</p>
         </div>
       ) : (
         <>

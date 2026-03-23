@@ -34,7 +34,7 @@ export default function NoticeList({
   onDeleteNotice,
 }: NoticeListProps) {
   if (notices.length === 0) {
-    return <p className="py-16 text-center text-subtitle-lg text-neutral-600">등록된 공지사항이 없습니다.</p>;
+    return <p className="py-16 text-center text-subtitle-lg text-neutral-600">등록된 공지사항이 없습니다</p>;
   }
 
   return (
@@ -54,8 +54,12 @@ export default function NoticeList({
                   <FiBell size={20} className="text-gold-light" />
                   <h3 className="m-0 text-neutral-100">{notice.title}</h3>
                 </div>
-                {mainContent && <p className="m-0 mt-1 ml-8 text-body-md leading-relaxed text-neutral-400">{mainContent}</p>}
-                {streamInfo && <p className="m-0 mt-1 ml-8 text-body-md leading-relaxed text-neutral-400">{streamInfo}</p>}
+                {mainContent && (
+                  <p className="m-0 mt-1 ml-8 text-body-md leading-relaxed text-neutral-400">{mainContent}</p>
+                )}
+                {streamInfo && (
+                  <p className="m-0 mt-1 ml-8 text-body-md leading-relaxed text-neutral-400">{streamInfo}</p>
+                )}
                 <div className="mt-2 ml-8 flex items-center gap-2">
                   <FiCalendar size={16} className="text-neutral-600" />
                   <span className="text-body-md text-neutral-600">{formatNoticeDate(notice.createdAt)}</span>

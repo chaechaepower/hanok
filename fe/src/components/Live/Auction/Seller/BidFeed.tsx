@@ -35,7 +35,7 @@ export default function BidFeed({ auctionStatistics, currentUserId }: Props) {
       <div className="bid-feed-scroll flex flex-col gap-1 overflow-y-auto">
         {bids.length === 0 ? (
           <div className="rounded-xl border border-white/4 bg-surface px-3 py-4 text-center text-label font-medium text-neutral-500">
-            아직 수신된 입찰 데이터가 없습니다.
+            아직 수신된 입찰 데이터가 없습니다
           </div>
         ) : (
           bids.map((bid, idx) => {

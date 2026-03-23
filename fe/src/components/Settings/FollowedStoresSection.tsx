@@ -52,7 +52,7 @@ export default function FollowedStoresSection() {
       ) : followedList.length === 0 ? (
         <div className="w-full box-border rounded-2xl p-12 bg-surface-elevated flex flex-col items-center gap-4">
           <FaStore size={40} className="text-neutral-700" />
-          <p className="m-0 text-neutral-500 text-[15px]">팔로우한 스토어가 없습니다.</p>
+          <p className="m-0 text-neutral-500 text-[15px]">팔로우한 스토어가 없습니다</p>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
@@ -84,7 +84,10 @@ export default function FollowedStoresSection() {
               </div>
 
               <button
-                onClick={(e) => { e.stopPropagation(); handleUnfollow(seller.sellerId); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleUnfollow(seller.sellerId);
+                }}
                 disabled={isPending}
                 className="btn btn-accent-outline flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               >

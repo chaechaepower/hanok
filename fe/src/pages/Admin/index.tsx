@@ -124,9 +124,7 @@ export default function AdminPage() {
               <div className="animate-spin w-8 h-8 border-2 border-gold-light border-t-transparent rounded-full" />
             </div>
           ) : withdraws.length === 0 ? (
-            <div className="flex items-center justify-center py-20 text-neutral-500 text-sm">
-              출금 요청이 없습니다.
-            </div>
+            <div className="flex items-center justify-center py-20 text-neutral-500 text-sm">출금 요청이 없습니다</div>
           ) : (
             <div className="flex flex-col">
               {withdraws.map((item) => (
@@ -173,7 +171,8 @@ export default function AdminPage() {
           <div className="bg-surface-elevated border border-neutral-800 rounded-2xl p-6 w-full max-w-[400px] mx-4">
             <h3 className="text-lg font-semibold text-warm m-0 mb-3">출금 완료 처리</h3>
             <p className="text-sm text-neutral-300 m-0 mb-1">
-              회원 ID <span className="text-white font-semibold">{confirmTarget.userId}</span>의 출금 요청을 완료 처리하시겠습니까?
+              회원 ID <span className="text-white font-semibold">{confirmTarget.userId}</span>의 출금 요청을 완료
+              처리하시겠습니까?
             </p>
             <p className="text-sm text-neutral-400 m-0 mb-6">
               예금주: <span className="text-white font-semibold">{confirmTarget.accountName}</span>

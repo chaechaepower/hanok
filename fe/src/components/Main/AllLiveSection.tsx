@@ -55,11 +55,11 @@ export default function AllLiveSection({
           {hasNextPage && <div ref={triggerRef} className="h-8 w-full" />}
 
           {isFetchingNextPage && (
-            <p className="pt-6 text-center text-sm text-neutral-500">전체 경매 라이브를 더 불러오는 중입니다.</p>
+            <p className="pt-6 text-center text-sm text-neutral-500">전체 경매 라이브를 더 불러오는 중입니다</p>
           )}
         </>
       ) : (
-        <p className="py-16 text-center text-base text-neutral-500">전체 경매 라이브가 없습니다.</p>
+        <p className="py-16 text-center text-base text-neutral-500">전체 경매 라이브가 없습니다</p>
       )}
     </section>
   );

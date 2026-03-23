@@ -108,7 +108,7 @@ export default function DeliveryTracker({ carrierName, trackingNumber }: PostTra
                   })}
                 </div>
               ) : (
-                <p className="text-neutral-500 text-sm text-center py-2">배송 상세 정보가 없습니다.</p>
+                <p className="text-neutral-500 text-sm text-center py-2">배송 상세 정보가 없습니다</p>
               )}
             </>
           )}

@@ -80,7 +80,7 @@ export default function LiveCreatePage() {
     </div>
   ) : streams.length === 0 ? (
     <div className="flex items-center justify-center rounded-2xl border border-neutral-800 py-20 text-body-lg text-neutral-500">
-      등록된 라이브 방송이 없습니다.
+      등록된 라이브 방송이 없습니다
     </div>
   ) : (
     streams.map((stream) => (

@@ -63,7 +63,7 @@ export default function NewSellerLiveSection({ streams }: NewSellerLiveSectionPr
           </div>
         </>
       ) : (
-        <p className="py-16 text-center text-base text-neutral-500">신규 상점 경매가 없습니다.</p>
+        <p className="py-16 text-center text-base text-neutral-500">신규 상점 경매가 없습니다</p>
       )}
     </section>
   );

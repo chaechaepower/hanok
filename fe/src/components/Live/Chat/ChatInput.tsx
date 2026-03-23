@@ -16,13 +16,7 @@ interface Props {
   onSendMacro: (command: string) => Promise<void>;
 }
 
-export default function ChatInput({
-  streamId,
-  category,
-  connectionState,
-  onSendMessage,
-  onSendMacro,
-}: Props) {
+export default function ChatInput({ streamId, category, connectionState, onSendMessage, onSendMacro }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const pickerRef = useRef<HTMLDivElement>(null);
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
@@ -37,9 +31,7 @@ export default function ChatInput({
     }
 
     const enabledQuestionTypes = new Set(
-      streamMacros.macros
-        .filter((macro) => macro.answer.trim().length > 0)
-        .map((macro) => macro.questionType),
+      streamMacros.macros.filter((macro) => macro.answer.trim().length > 0).map((macro) => macro.questionType),
     );
 
     return getCategoryMacroTemplates(streamMacros.category)
@@ -138,7 +130,7 @@ export default function ChatInput({
           type="text"
           value={message}
           disabled={!isConnected}
-          placeholder={isConnected ? '메시지를 입력하세요.' : '채팅 연결 중입니다..'}
+          placeholder={isConnected ? '메시지를 입력하세요' : '채팅 연결 중입니다..'}
           onChange={(event) => setMessage(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.nativeEvent.isComposing) {

@@ -366,7 +366,7 @@ export default function LiveRegisterPage() {
     (item: Product, field: AuctionNumberField) => {
       if (field === 'minPrice') {
         if (item.minPrice != null && item.maxPrice != null && item.maxPrice < item.minPrice) {
-          setAuctionFieldError(item.itemId, 'maxPrice', '최대 입찰가는 최소 입찰가보다 크거나 같아야 합니다.');
+          setAuctionFieldError(item.itemId, 'maxPrice', '최대 입찰가는 최소 입찰가보다 크거나 같아야 합니다');
           return;
         }
 
@@ -377,7 +377,7 @@ export default function LiveRegisterPage() {
 
       if (field === 'maxPrice') {
         if (item.minPrice != null && item.maxPrice != null && item.maxPrice < item.minPrice) {
-          setAuctionFieldError(item.itemId, 'maxPrice', '최대 입찰가는 최소 입찰가보다 크거나 같아야 합니다.');
+          setAuctionFieldError(item.itemId, 'maxPrice', '최대 입찰가는 최소 입찰가보다 크거나 같아야 합니다');
           return;
         }
 
@@ -398,7 +398,7 @@ export default function LiveRegisterPage() {
             ...current,
             startPrice: correctedStartPrice,
           }));
-          setAuctionFieldError(item.itemId, 'startPrice', '시작가는 1,000원 이상이어야 합니다.');
+          setAuctionFieldError(item.itemId, 'startPrice', '시작가는 1,000원 이상이어야 합니다');
           return;
         }
 
@@ -420,7 +420,7 @@ export default function LiveRegisterPage() {
             ...current,
             bidUnit: correctedBidUnit,
           }));
-          setAuctionFieldError(item.itemId, 'bidUnit', `입찰 단위는 최소 100원, 최대 시작가의 10%까지입니다.`);
+          setAuctionFieldError(item.itemId, 'bidUnit', `입찰 단위는 최소 100원, 최대 시작가의 10%까지입니다`);
           return;
         }
 
@@ -435,7 +435,7 @@ export default function LiveRegisterPage() {
             ...current,
             bidUnit: maximumBidUnit,
           }));
-          setAuctionFieldError(item.itemId, 'bidUnit', `입찰 단위는 최소 100원, 최대 시작가의 10%까지입니다.`);
+          setAuctionFieldError(item.itemId, 'bidUnit', `입찰 단위는 최소 100원, 최대 시작가의 10%까지입니다`);
           return;
         }
       }
@@ -759,7 +759,7 @@ export default function LiveRegisterPage() {
     return (
       <div className="w-full max-w-[1400px] mx-auto px-4 py-12">
         <div className="rounded-2xl border border-white/10 bg-[#111] px-6 py-10 text-center text-white/70">
-          라이브 정보를 불러오지 못했습니다.
+          라이브 정보를 불러오지 못했습니다
         </div>
       </div>
     );
@@ -1183,7 +1183,7 @@ export default function LiveRegisterPage() {
                         );
                       })}
                       {!macroFields.length && (
-                        <p className="text-sm font-bold text-neutral-600">해당 카테고리의 매크로가 없습니다.</p>
+                        <p className="text-sm font-bold text-neutral-600">해당 카테고리의 매크로가 없습니다</p>
                       )}
                     </div>
                   </div>

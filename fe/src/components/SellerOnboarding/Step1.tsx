@@ -92,7 +92,7 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
 
   return (
     <>
-      <p className="text-lg text-neutral-400 mb-6">개인/법인 사업자 인증을 해주세요.</p>
+      <p className="text-lg text-neutral-400 mb-6">개인/법인 사업자 인증을 해주세요</p>
 
       <div className="flex gap-5 mb-8">
         <BusinessTypeCard
@@ -134,21 +134,19 @@ export default function Step1({ onNext, businessType, setBusinessType, bizNumber
           variant={isVerified ? 'outline' : 'warm'}
           size="small"
           onClick={handleVerify}
-          disabled={isVerifying || isVerified || (bizNumber || '').replace(/\D/g, '').length !== (businessType === 'BUSINESS' ? 13 : 10)}
+          disabled={
+            isVerifying ||
+            isVerified ||
+            (bizNumber || '').replace(/\D/g, '').length !== (businessType === 'BUSINESS' ? 13 : 10)
+          }
           className="h-14! w-auto! px-6 rounded-xl! text-base!"
         >
           {isVerifying ? '인증 중...' : isVerified ? '인증 완료' : '인증 하기'}
         </Button>
       </div>
 
-      {verifyError && (
-        <p className="text-accent-light text-sm pl-1 mb-3">{verifyError}</p>
-      )}
-      {isVerified && (
-        <p className="text-ember text-sm pl-1 mb-3">
-          사업자 인증이 완료되었습니다.
-        </p>
-      )}
+      {verifyError && <p className="text-accent-light text-sm pl-1 mb-3">{verifyError}</p>}
+      {isVerified && <p className="text-ember text-sm pl-1 mb-3">사업자 인증이 완료되었습니다</p>}
 
       <div className="flex justify-end sticky bottom-0 pt-8 pb-6 bg-background">
         <Button variant="warm" onClick={handleNext} size="small" className="w-32! h-12! rounded-xl! text-base!">

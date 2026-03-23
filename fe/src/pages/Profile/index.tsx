@@ -309,7 +309,7 @@ export default function ProfilePage() {
   if (isError || !data) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <p className="text-accent-light text-base">판매자 정보를 불러오지 못했습니다.</p>
+        <p className="text-accent-light text-base">판매자 정보를 불러오지 못했습니다</p>
       </div>
     );
   }
@@ -409,18 +409,12 @@ export default function ProfilePage() {
           {/* 우측: 수정/신고 + 통계 + 팔로우 */}
           <div className="flex flex-col items-center gap-2 shrink-0 -mt-4">
             {isMyProfile && (
-              <button
-                onClick={handleOpenProfileEdit}
-                className="btn-ghost self-end px-3 py-1 text-body-sm"
-              >
+              <button onClick={handleOpenProfileEdit} className="btn-ghost self-end px-3 py-1 text-body-sm">
                 수정
               </button>
             )}
             {!isMyProfile && (
-              <button
-                onClick={() => setIsReportModalOpen(true)}
-                className="btn-ghost self-end px-3 py-1 text-body-sm"
-              >
+              <button onClick={() => setIsReportModalOpen(true)} className="btn-ghost self-end px-3 py-1 text-body-sm">
                 신고
               </button>
             )}
@@ -553,7 +547,7 @@ export default function ProfilePage() {
         {activeTab === 'sales' && (
           <div className="flex flex-col gap-5">
             {soldAuctions.length === 0 ? (
-              <p className="text-center text-neutral-600 py-16 text-subtitle-lg">판매 이력이 없습니다.</p>
+              <p className="text-center text-neutral-600 py-16 text-subtitle-lg">판매 이력이 없습니다</p>
             ) : (
               soldAuctions.map((sale, index) => {
                 const ui = getEscrowStateUI(sale.escrowStatus);
@@ -767,4 +761,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

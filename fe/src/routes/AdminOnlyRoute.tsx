@@ -49,7 +49,7 @@ export default function AdminOnlyRoute() {
           <div className="mb-8">
             <p className="text-xs font-semibold tracking-[0.24em] text-neutral-500 uppercase mb-3">Admin Access</p>
             <h1 className="text-3xl font-bold text-neutral-100 mb-2">관리자 페이지</h1>
-            <p className="text-sm text-neutral-400">지정된 관리자 아이디와 비밀번호를 입력하면 바로 진입합니다.</p>
+            <p className="text-sm text-neutral-400">지정된 관리자 아이디와 비밀번호를 입력하면 바로 진입합니다</p>
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">

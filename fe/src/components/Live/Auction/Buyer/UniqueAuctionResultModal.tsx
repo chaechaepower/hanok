@@ -13,7 +13,9 @@ type Props = {
 export default function UniqueAuctionResultModal({ isOpen, itemName, payload, onClose }: Props) {
   useEffect(() => {
     if (!isOpen) return;
-    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
@@ -25,9 +27,12 @@ export default function UniqueAuctionResultModal({ isOpen, itemName, payload, on
   return (
     <div
       className="fixed inset-0 z-100 flex items-center justify-center bg-(--modal-backdrop) px-4 backdrop-blur-(--modal-blur)"
-      onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
     >
-      <div className="relative z-100 w-full max-w-md overflow-hidden rounded-(--radius-panel) border border-white/6 bg-surface"
+      <div
+        className="relative z-100 w-full max-w-md overflow-hidden rounded-(--radius-panel) border border-white/6 bg-surface"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="border-b border-gold/10 bg-[linear-gradient(160deg,rgba(205,145,80,.08)_0%,transparent_60%)] px-7 py-8">
@@ -44,9 +49,7 @@ export default function UniqueAuctionResultModal({ isOpen, itemName, payload, on
               <div className="mt-2 text-2xl font-black text-point">
                 {payload.winnerPrice !== null ? formatPrice(payload.winnerPrice) : '-'}
               </div>
-              <p className="mt-3 text-[11px] leading-6 text-neutral-400">
-                유일한 최고 입찰가로 낙찰되었습니다.
-              </p>
+              <p className="mt-3 text-[11px] leading-6 text-neutral-400">유일한 최고 입찰가로 낙찰되었습니다</p>
             </div>
           ) : (
             <div className="rounded-(--radius-panel) border border-white/6 bg-white/3 px-4.5 py-5">
@@ -64,7 +67,7 @@ export default function UniqueAuctionResultModal({ isOpen, itemName, payload, on
                   ))}
                 </div>
               ) : (
-                <p className="mt-3 text-[11px] leading-6 text-neutral-400">중복 입찰 정보가 없습니다.</p>
+                <p className="mt-3 text-[11px] leading-6 text-neutral-400">중복 입찰 정보가 없습니다</p>
               )}
             </div>
           )}

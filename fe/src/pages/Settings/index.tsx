@@ -70,7 +70,7 @@ export default function SettingsPage() {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-neutral-700 border-t-gold-light" />
-        <p className="mt-3 text-neutral-400">정보를 불러오는 중입니다.</p>
+        <p className="mt-3 text-neutral-400">정보를 불러오는 중입니다</p>
       </div>
     );
   }

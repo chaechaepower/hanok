@@ -180,7 +180,7 @@ export default function SignUpPage() {
             </Button>
           </div>
           {emailError && <p className="text-accent-light text-xs px-1">{emailError}</p>}
-          {isEmailVerified && <p className="text-ember-light text-xs px-1">사용 가능한 이메일입니다.</p>}
+          {isEmailVerified && <p className="text-ember-light text-xs px-1">사용 가능한 이메일입니다</p>}
         </div>
 
         <div className="flex flex-col gap-2">
@@ -243,7 +243,7 @@ export default function SignUpPage() {
             />
           </div>
           {passwordConfirm && password !== passwordConfirm && (
-            <p className="text-accent-light text-xs px-1">비밀번호가 일치하지 않습니다.</p>
+            <p className="text-accent-light text-xs px-1">비밀번호가 일치하지 않습니다</p>
           )}
         </div>
 

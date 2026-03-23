@@ -51,7 +51,9 @@ export default function SellerRankingPanel({ rankingItems = [] }: SellerRankingP
 
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[14px] font-semibold leading-tight text-warm">{seller.nickname}</p>
-                <p className="mt-0.5 text-[12px] leading-tight text-neutral-500">팔로워 {seller.followerCount.toLocaleString()}명</p>
+                <p className="mt-0.5 text-[12px] leading-tight text-neutral-500">
+                  팔로워 {seller.followerCount.toLocaleString()}명
+                </p>
               </div>
             </button>
           );
@@ -59,7 +61,7 @@ export default function SellerRankingPanel({ rankingItems = [] }: SellerRankingP
 
         {rankingItems.length === 0 && (
           <div className="rounded-2xl border border-dashed border-primary-dark/30 px-4 py-6 text-center text-[13px] text-neutral-500">
-            랭킹 정보를 불러오는 중입니다.
+            랭킹 정보를 불러오는 중입니다
           </div>
         )}
       </div>

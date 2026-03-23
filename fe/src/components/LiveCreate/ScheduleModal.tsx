@@ -116,12 +116,10 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
           </button>
 
           <h2 className="text-neutral-100 text-xl font-bold mb-1">방송 예약 설정</h2>
-          <p className="text-neutral-500 text-xs mb-5">오늘로부터 최대 30일 이내로 예약할 수 있습니다.</p>
+          <p className="text-neutral-500 text-xs mb-5">오늘로부터 최대 30일 이내로 예약할 수 있습니다</p>
 
           <div className="bg-surface rounded-xl px-4 py-3 mb-5 text-center">
-            <span className="text-gold-light font-semibold text-base">
-              {formatDisplay(selectedDate, hour, minute)}
-            </span>
+            <span className="text-gold-light font-semibold text-base">{formatDisplay(selectedDate, hour, minute)}</span>
           </div>
 
           {/* ── Calendar ── */}
@@ -290,9 +288,7 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
             </div>
           </div>
 
-          {isPast && (
-            <p className="text-accent-light text-xs text-center mb-2">현재 시간 이후로 선택해 주세요.</p>
-          )}
+          {isPast && <p className="text-accent-light text-xs text-center mb-2">현재 시간 이후로 선택해 주세요.</p>}
 
           {/* ── Actions ── */}
           <div className="flex gap-3">

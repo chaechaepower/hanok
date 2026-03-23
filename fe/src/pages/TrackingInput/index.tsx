@@ -254,7 +254,7 @@ export default function TrackingInput() {
                   </div>
                 ))
               ) : (
-                <div className="py-5 text-center text-neutral-500 text-sm">대기 중인 배송이 없습니다.</div>
+                <div className="py-5 text-center text-neutral-500 text-sm">대기 중인 배송이 없습니다</div>
               )}
             </div>
           </section>
@@ -278,7 +278,7 @@ export default function TrackingInput() {
                   />
                 ))
               ) : (
-                <div className="py-5 text-center text-neutral-500 text-sm">완료된 배송이 없습니다.</div>
+                <div className="py-5 text-center text-neutral-500 text-sm">완료된 배송이 없습니다</div>
               )}
             </div>
           </section>
@@ -328,7 +328,7 @@ export default function TrackingInput() {
               footer={
                 isTrackingSubmitted ? (
                   <div className="bg-neutral-800 rounded-xl p-5 border border-neutral-700 text-center text-neutral-500 text-sm">
-                    운송장이 등록된 상품입니다.
+                    운송장이 등록된 상품입니다
                   </div>
                 ) : (
                   <>
