@@ -57,10 +57,10 @@ export default function LiveHeader({
   const elapsed = useElapsedTimer(isLive, startedAt);
 
   return (
-    <div className="mb-2 flex shrink-0 items-center">
+    <div className="mb-2 flex h-11 shrink-0 items-center">
       <button
         type="button"
-        className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-bold text-neutral-400 transition hover:bg-warm/5 hover:text-neutral-200"
+        className="flex h-full shrink-0 items-center gap-2 rounded-lg px-3 text-body-md font-bold text-neutral-400 transition hover:bg-warm/5 hover:text-neutral-200"
         onClick={() => navigate('/')}
       >
         <svg
@@ -79,23 +79,23 @@ export default function LiveHeader({
       </button>
 
       <div className="min-w-0 flex-1 text-center">
-        <p className="truncate text-sm font-bold text-neutral-100">{streamTitle}</p>
+        <p className="truncate text-lg font-bold text-neutral-100">{streamTitle}</p>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2 px-2">
+      <div className="flex h-full shrink-0 items-center gap-4 px-2">
         {isLive ? (
-          <span className="font-mono-num text-xs tabular-nums text-neutral-400">{formatElapsed(elapsed)}</span>
+          <span className="font-mono-num text-base tabular-nums text-neutral-400">{formatElapsed(elapsed)}</span>
         ) : (
-          <span className="text-xs text-neutral-600">방송 대기중</span>
+          <span className="text-base text-neutral-600">방송 대기중</span>
         )}
         {showEndButton && (
           <button
             type="button"
             onClick={onEndStream}
             disabled={isEndDisabled || isEnding}
-            className="flex items-center gap-1.5 rounded-lg border border-accent/35 bg-accent/12 px-2.5 py-1.5 text-[11px] font-bold text-accent-light transition hover:bg-accent/18 disabled:cursor-not-allowed disabled:border-neutral-800 disabled:bg-neutral-900 disabled:text-neutral-600"
+            className="flex h-full items-center gap-1.5 rounded-lg border border-accent/35 bg-accent/12 px-3 text-sm font-bold text-accent-light transition hover:bg-accent/18 disabled:cursor-not-allowed disabled:border-neutral-800 disabled:bg-neutral-900 disabled:text-neutral-600"
           >
-            <MdOutlinePowerSettingsNew size={14} />
+            <MdOutlinePowerSettingsNew size={16} />
             {isEnding ? '종료 중...' : '방송 종료'}
           </button>
         )}

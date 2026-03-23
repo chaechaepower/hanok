@@ -1,19 +1,13 @@
 import { useState } from 'react';
+import { IoChevronDown } from 'react-icons/io5';
 
 import { AUCTION_STATUS_BADGES } from '@/constants/auction';
 import { ITEM_CONDITION_BADGE } from '@/constants/itemCondition';
 import { CARD_BORDER_CLASS, PRICE_CLASS } from '@/constants/live';
 
 import type { AuctionItem } from '@/types';
-import { formatPrice } from '@/utils/formatPrice';
+import { formatAuctionLabel } from '@/utils/formatAuctionLabel';
 import ItemDetailAccordion from './ItemDetailAccordion';
-
-const formatAuctionLabel = (item: AuctionItem) =>
-  item.auctionType === 'UNIQUE_TOP'
-    ? item.minPrice !== null && item.maxPrice !== null && item.maxPrice > item.minPrice
-      ? `${formatPrice(item.minPrice)} ~ ${formatPrice(item.maxPrice)}`
-      : formatPrice(item.minPrice ?? 0)
-    : formatPrice(item.startPrice ?? 0);
 
 interface ActiveCardProps {
   item: AuctionItem;
@@ -84,19 +78,10 @@ export default function ActiveItemCard({ item, isSelected, isSeller, onSelect }:
               setExpanded((prev) => !prev);
             }}
           >
-            <svg
-              className={`h-3 w-3 text-neutral-600 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-              viewBox="0 0 12 12"
-              fill="none"
-            >
-              <path
-                d="M2.5 4.5L6 8L9.5 4.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <IoChevronDown
+              size={12}
+              className={`text-neutral-600 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+            />
           </button>
         </div>
       </div>

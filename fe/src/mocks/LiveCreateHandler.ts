@@ -456,7 +456,7 @@ const registeredLives: RegisteredLive[] = [
         createdAt: new Date(Date.now() - 900000).toISOString(),
         description: 'Buyer-side unique auction test item.',
         bidUnit: 5000,
-        auctionTime: 30,
+        auctionTime: 10,
         images: [
           'https://picsum.photos/seed/unique-test-1/400/400',
           'https://picsum.photos/seed/unique-test-2/400/400',
