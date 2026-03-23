@@ -2,6 +2,7 @@
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { FaArrowLeft, FaCalendarAlt, FaCamera, FaCircle, FaTimes, FaVideo, FaVideoSlash } from 'react-icons/fa';
 import { MdLiveTv } from 'react-icons/md';
+import { AUCTION_TYPE_SELECT_OPTIONS, DURATION_SELECT_OPTIONS } from '@/constants/auction';
 import { CATEGORY_MACROS } from '@/constants/macro';
 import { getItemConditionLabel } from '@/constants/itemCondition';
 import { useGetItemsByCategory } from '@/api/hooks/useGetItems';
@@ -11,7 +12,8 @@ import { usePatchStream } from '@/api/hooks/usePatchStream';
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { usePostStream } from '@/api/hooks/usePostStream';
 import { usePostStreamMacros } from '@/api/hooks/usePostStreamMacros';
-import type { LiveStreamItem, Product, StreamRequest } from '@/types';
+import CustomSelect from '@/components/common/CustomSelect';
+import type { AuctionItem, Product, StreamAuctionItem, StreamDetailItem, StreamRequest } from '@/types';
 import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
 import LiveRegisterTutorial from './LiveRegisterTutorial';
 import InventorySelectModal from './InventorySelectModal';
@@ -20,22 +22,99 @@ import { CATEGORIES } from '@/constants/category';
 import { useToast } from '@/hooks/useToast';
 import { normalizeStreamScheduledAt } from '@/utils/streamDateTime';
 import SellerActionButtons from '@/components/Live/Stream/SellerActionButtons';
+import ActiveItemCard from '@/components/Live/Auction/shared/ActiveItemCard';
 import { LIVE_REGISTER_TUTORIAL_EXAMPLE_ITEM } from '@/constants/live';
 
-const toFallbackProduct = (item: LiveStreamItem): Product => ({
-  itemId: item.itemId,
-  status: 'READY',
+type AuctionNumberField = 'startPrice' | 'bidUnit' | 'minPrice' | 'maxPrice';
+type AuctionFieldErrors = Record<number, Partial<Record<AuctionNumberField, string>>>;
+
+const auctionInputClassName =
+  'w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm font-bold tabular-nums text-neutral-100 outline-none placeholder:text-neutral-700 transition-colors focus:border-gold/40';
+
+const toPreviewAuctionItem = (item: Product): AuctionItem => ({
+  id: item.itemId,
   name: item.name,
-  description: '',
-  tags: [],
-  images: item.image1 ? [item.image1] : [],
-  startPrice: item.startPrice,
-  bidUnit: 0,
-  auctionDuration: 0,
+  startPrice: item.auctionType === 'BOTTOM_UP' ? (item.startPrice ?? 0) : null,
+  bidUnit: item.auctionType === 'BOTTOM_UP' ? (item.bidUnit ?? 0) : null,
+  minPrice: item.auctionType === 'UNIQUE_TOP' ? (item.minPrice ?? item.startPrice ?? 0) : null,
+  maxPrice: item.auctionType === 'UNIQUE_TOP' ? (item.maxPrice ?? item.startPrice ?? 0) : null,
+  finalPrice: undefined,
+  status: 'READY',
+  auctionType: item.auctionType ?? 'BOTTOM_UP',
+  condition: item.itemCondition as AuctionItem['condition'],
+  thumbnailUrl: item.images[0] ?? undefined,
+  description: item.description,
+  auctionTime: item.auctionDuration ?? 60,
+  images: item.images,
+});
+
+const initializeAuctionConfig = (item: Product): Product => {
+  const auctionType = item.auctionType ?? 'BOTTOM_UP';
+  const auctionDuration = item.auctionDuration ?? 60;
+
+  if (auctionType === 'UNIQUE_TOP') {
+    return {
+      ...item,
+      auctionType,
+      auctionDuration,
+      startPrice: undefined,
+      bidUnit: undefined,
+      minPrice: item.minPrice ?? null,
+      maxPrice: item.maxPrice ?? null,
+    };
+  }
+
+  return {
+    ...item,
+    auctionType,
+    auctionDuration,
+    startPrice: item.startPrice,
+    bidUnit: item.bidUnit,
+    minPrice: null,
+    maxPrice: null,
+  };
+};
+
+const toFallbackProduct = (item: StreamDetailItem): Product => ({
+  itemId: item.itemId,
+  status: item.status,
+  name: item.name,
+  description: item.description,
+  tags: item.tags,
+  images: item.images,
+  startPrice: item.auctionType === 'BOTTOM_UP' ? item.bottomUp.startPrice : item.uniqueTop.minPrice,
+  minPrice: item.auctionType === 'UNIQUE_TOP' ? item.uniqueTop.minPrice : null,
+  maxPrice: item.auctionType === 'UNIQUE_TOP' ? item.uniqueTop.maxPrice : null,
+  bidUnit: item.auctionType === 'BOTTOM_UP' ? item.bottomUp.bidUnit : 0,
+  auctionDuration: item.auctionDuration,
   itemCondition: item.itemCondition,
   category: item.category,
-  auctionType: 'BOTTOM_UP',
+  auctionType: item.auctionType,
+  createdAt: item.createdAt,
 });
+
+const toStreamAuctionItem = (item: Product): StreamAuctionItem =>
+  item.auctionType === 'UNIQUE_TOP'
+    ? {
+        itemId: item.itemId,
+        auctionType: 'UNIQUE_TOP',
+        auctionDuration: item.auctionDuration ?? 0,
+        bottomUp: null,
+        uniqueTop: {
+          minPrice: item.minPrice ?? item.startPrice ?? 0,
+          maxPrice: item.maxPrice ?? item.startPrice ?? 0,
+        },
+      }
+    : {
+        itemId: item.itemId,
+        auctionType: 'BOTTOM_UP',
+        auctionDuration: item.auctionDuration ?? 0,
+        bottomUp: {
+          startPrice: item.startPrice ?? 0,
+          bidUnit: item.bidUnit ?? 0,
+        },
+        uniqueTop: null,
+      };
 
 export default function LiveRegisterPage() {
   const [searchParams] = useSearchParams();
@@ -68,6 +147,7 @@ export default function LiveRegisterPage() {
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [selectedItems, setSelectedItems] = useState<Product[]>([]);
+  const [auctionFieldErrors, setAuctionFieldErrors] = useState<AuctionFieldErrors>({});
   const [showInventoryModal, setShowInventoryModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
@@ -163,10 +243,205 @@ export default function LiveRegisterPage() {
     }
 
     const inventoryById = new Map(filteredInventory.map((item) => [item.itemId, item]));
-    const items = (streamData.items ?? []).map((item) => inventoryById.get(item.itemId) ?? toFallbackProduct(item));
-    setSelectedItems(items);
+    const items = (streamData.items ?? []).map((item) => {
+      const inventoryItem = inventoryById.get(item.itemId);
+      const streamItem = toFallbackProduct(item);
+
+      return inventoryItem
+        ? {
+            ...inventoryItem,
+            ...streamItem,
+            images: streamItem.images.length > 0 ? streamItem.images : inventoryItem.images,
+            tags: streamItem.tags.length > 0 ? streamItem.tags : inventoryItem.tags,
+            description: streamItem.description || inventoryItem.description,
+          }
+        : streamItem;
+    });
+    setSelectedItems(items.map(initializeAuctionConfig));
     initializedItemsStreamIdRef.current = streamId;
   }, [filteredInventory, inventoryLoading, isEditMode, streamData, streamId]);
+
+  const updateSelectedItem = useCallback((itemId: number, updater: (item: Product) => Product) => {
+    setSelectedItems((prev) => prev.map((item) => (item.itemId === itemId ? updater(item) : item)));
+  }, []);
+
+  const setAuctionFieldError = useCallback((itemId: number, field: AuctionNumberField, message: string) => {
+    setAuctionFieldErrors((prev) => ({
+      ...prev,
+      [itemId]: {
+        ...prev[itemId],
+        [field]: message,
+      },
+    }));
+  }, []);
+
+  const clearAuctionFieldError = useCallback((itemId: number, field: AuctionNumberField) => {
+    setAuctionFieldErrors((prev) => {
+      const nextItemErrors = { ...(prev[itemId] ?? {}) };
+      delete nextItemErrors[field];
+
+      if (Object.keys(nextItemErrors).length === 0) {
+        const next = { ...prev };
+        delete next[itemId];
+        return next;
+      }
+
+      return {
+        ...prev,
+        [itemId]: nextItemErrors,
+      };
+    });
+  }, []);
+
+  const handleAuctionTypeChange = useCallback(
+    (itemId: number, nextAuctionType: Product['auctionType']) => {
+      if (!nextAuctionType) {
+        return;
+      }
+
+      clearAuctionFieldError(itemId, 'minPrice');
+      clearAuctionFieldError(itemId, 'bidUnit');
+
+      updateSelectedItem(itemId, (item) => {
+        if (nextAuctionType === 'UNIQUE_TOP') {
+          return {
+            ...item,
+            auctionType: nextAuctionType,
+            auctionDuration: item.auctionDuration ?? 60,
+            startPrice: undefined,
+            bidUnit: undefined,
+            minPrice: item.minPrice ?? item.startPrice ?? null,
+            maxPrice: item.maxPrice ?? null,
+          };
+        }
+
+        return {
+          ...item,
+          auctionType: nextAuctionType,
+          auctionDuration: item.auctionDuration ?? 60,
+          startPrice: item.startPrice ?? item.minPrice ?? undefined,
+          bidUnit: item.bidUnit,
+          minPrice: null,
+          maxPrice: null,
+        };
+      });
+    },
+    [clearAuctionFieldError, updateSelectedItem],
+  );
+
+  const handleAuctionDurationChange = useCallback(
+    (itemId: number, duration: number) => {
+      updateSelectedItem(itemId, (item) => ({
+        ...item,
+        auctionDuration: duration,
+      }));
+    },
+    [updateSelectedItem],
+  );
+
+  const handleAuctionFieldChange = useCallback(
+    (itemId: number, field: AuctionNumberField, rawValue: string) => {
+      const digitsOnly = rawValue.replace(/[^0-9]/g, '');
+      const parsedValue = digitsOnly ? Number(digitsOnly) : undefined;
+
+      if (field === 'minPrice' || field === 'maxPrice') {
+        clearAuctionFieldError(itemId, 'minPrice');
+        clearAuctionFieldError(itemId, 'maxPrice');
+      } else if (field === 'startPrice' || field === 'bidUnit') {
+        clearAuctionFieldError(itemId, 'startPrice');
+        clearAuctionFieldError(itemId, 'bidUnit');
+      }
+
+      clearAuctionFieldError(itemId, field);
+
+      updateSelectedItem(itemId, (item) => ({
+        ...item,
+        [field]: field === 'minPrice' || field === 'maxPrice' ? (parsedValue ?? null) : parsedValue,
+      }));
+    },
+    [clearAuctionFieldError, updateSelectedItem],
+  );
+
+  const handleAuctionFieldBlur = useCallback(
+    (item: Product, field: AuctionNumberField) => {
+      if (field === 'minPrice') {
+        if (item.minPrice != null && item.maxPrice != null && item.maxPrice < item.minPrice) {
+          setAuctionFieldError(item.itemId, 'maxPrice', '최대 입찰가는 최소 입찰가보다 크거나 같아야 합니다.');
+          return;
+        }
+
+        clearAuctionFieldError(item.itemId, 'minPrice');
+        clearAuctionFieldError(item.itemId, 'maxPrice');
+        return;
+      }
+
+      if (field === 'maxPrice') {
+        if (item.minPrice != null && item.maxPrice != null && item.maxPrice < item.minPrice) {
+          setAuctionFieldError(item.itemId, 'maxPrice', '최대 입찰가는 최소 입찰가보다 크거나 같아야 합니다.');
+          return;
+        }
+
+        clearAuctionFieldError(item.itemId, 'minPrice');
+        clearAuctionFieldError(item.itemId, 'maxPrice');
+        return;
+      }
+
+      if (field === 'startPrice') {
+        if (item.startPrice == null) {
+          clearAuctionFieldError(item.itemId, 'startPrice');
+          return;
+        }
+
+        const correctedStartPrice = Math.max(item.startPrice, 1000);
+        if (correctedStartPrice !== item.startPrice) {
+          updateSelectedItem(item.itemId, (current) => ({
+            ...current,
+            startPrice: correctedStartPrice,
+          }));
+          setAuctionFieldError(item.itemId, 'startPrice', '시작가는 1,000원 이상이어야 합니다.');
+          return;
+        }
+
+        clearAuctionFieldError(item.itemId, 'startPrice');
+        clearAuctionFieldError(item.itemId, 'bidUnit');
+      }
+
+      if (field === 'bidUnit') {
+        if (item.bidUnit == null) {
+          clearAuctionFieldError(item.itemId, 'bidUnit');
+          return;
+        }
+
+        const maximumBidUnit = Math.max(100, Math.floor((item.startPrice ?? 0) * 0.1));
+        const correctedBidUnit = Math.min(Math.max(item.bidUnit, 100), maximumBidUnit);
+
+        if (correctedBidUnit !== item.bidUnit) {
+          updateSelectedItem(item.itemId, (current) => ({
+            ...current,
+            bidUnit: correctedBidUnit,
+          }));
+          setAuctionFieldError(item.itemId, 'bidUnit', `입찰 단위는 최소 100원, 최대 시작가의 10%까지입니다.`);
+          return;
+        }
+
+        clearAuctionFieldError(item.itemId, 'bidUnit');
+        return;
+      }
+
+      if (field === 'startPrice' && item.bidUnit != null) {
+        const maximumBidUnit = Math.max(100, Math.floor((item.startPrice ?? 0) * 0.1));
+        if (item.bidUnit > maximumBidUnit) {
+          updateSelectedItem(item.itemId, (current) => ({
+            ...current,
+            bidUnit: maximumBidUnit,
+          }));
+          setAuctionFieldError(item.itemId, 'bidUnit', `입찰 단위는 최소 100원, 최대 시작가의 10%까지입니다.`);
+          return;
+        }
+      }
+    },
+    [clearAuctionFieldError, setAuctionFieldError, updateSelectedItem],
+  );
 
   useEffect(() => {
     if (!categoryId) {
@@ -225,7 +500,9 @@ export default function LiveRegisterPage() {
 
   const toggleItem = (item: Product) => {
     setSelectedItems((prev) =>
-      prev.some((i) => i.itemId === item.itemId) ? prev.filter((i) => i.itemId !== item.itemId) : [...prev, item],
+      prev.some((i) => i.itemId === item.itemId)
+        ? prev.filter((i) => i.itemId !== item.itemId)
+        : [...prev, initializeAuctionConfig(item)],
     );
   };
 
@@ -277,6 +554,62 @@ export default function LiveRegisterPage() {
       return false;
     }
 
+    for (const item of selectedItems) {
+      if (!item.auctionType) {
+        showToast({ message: `${item.name}의 경매 방식을 선택해주세요.` });
+        return false;
+      }
+
+      if (!item.auctionDuration || item.auctionDuration <= 0) {
+        showToast({ message: `${item.name}의 경매 시간을 입력해주세요.` });
+        return false;
+      }
+
+      if (item.auctionType === 'BOTTOM_UP') {
+        if (!item.startPrice || item.startPrice <= 0) {
+          showToast({ message: `${item.name}의 시작가를 입력해주세요.` });
+          return false;
+        }
+
+        if (item.startPrice < 1000) {
+          showToast({ message: `${item.name}의 시작가는 1,000원 이상이어야 합니다.` });
+          return false;
+        }
+
+        if (!item.bidUnit || item.bidUnit <= 0) {
+          showToast({ message: `${item.name}의 입찰 단위를 입력해주세요.` });
+          return false;
+        }
+
+        if (item.bidUnit < 100) {
+          showToast({ message: `${item.name}의 입찰 단위는 100원 이상이어야 합니다.` });
+          return false;
+        }
+
+        if (item.bidUnit > Math.max(100, Math.floor(item.startPrice * 0.1))) {
+          showToast({ message: `${item.name}의 입찰 단위는 시작가의 10% 이하여야 합니다.` });
+          return false;
+        }
+      }
+
+      if (item.auctionType === 'UNIQUE_TOP') {
+        if (item.minPrice == null) {
+          showToast({ message: `${item.name}의 최소 입찰가를 입력해주세요.` });
+          return false;
+        }
+
+        if (item.maxPrice == null) {
+          showToast({ message: `${item.name}의 최대 입찰가를 입력해주세요.` });
+          return false;
+        }
+
+        if (item.maxPrice < item.minPrice) {
+          showToast({ message: `${item.name}의 최대 입찰가는 최소 입찰가보다 크거나 같아야 합니다.` });
+          return false;
+        }
+      }
+    }
+
     return true;
   };
 
@@ -286,7 +619,7 @@ export default function LiveRegisterPage() {
     return {
       title,
       category: categoryId,
-      itemIds: selectedItems.map((item) => item.itemId),
+      auctionItems: selectedItems.map(toStreamAuctionItem),
       startType,
       notice: notice || undefined,
       scheduledAt: startType === 'SCHEDULED' ? resolvedScheduledAt : undefined,
@@ -509,52 +842,182 @@ export default function LiveRegisterPage() {
                       <div
                         key={`${item.itemId}-${index}`}
                         ref={isTutorialFocusItem ? tutorialItemRef : undefined}
-                        className={`flex gap-3 rounded-2xl border border-neutral-800 bg-white/[0.02] p-3 ${
-                          isTutorialFocusItem ? getTargetClassName('inventory') : ''
-                        }`}
+                        className={`${isTutorialFocusItem ? getTargetClassName('inventory') : ''}`}
                       >
-                        <div
-                          className="h-14 w-14 shrink-0 rounded-xl bg-neutral-800"
-                          style={
-                            item.images && item.images.length > 0
-                              ? {
-                                  backgroundImage: `url(${item.images[0]})`,
-                                  backgroundPosition: 'center',
-                                  backgroundSize: 'cover',
+                        {isExampleItem ? (
+                          <ActiveItemCard item={toPreviewAuctionItem(item)} isSelected={false} isSeller={false} />
+                        ) : (
+                          <div className="flex flex-col gap-3 rounded-2xl border border-neutral-800 bg-white/[0.02] p-3">
+                            <div className="flex gap-3">
+                              <div
+                                className="h-14 w-14 shrink-0 rounded-xl bg-neutral-800"
+                                style={
+                                  item.images && item.images.length > 0
+                                    ? {
+                                        backgroundImage: `url(${item.images[0]})`,
+                                        backgroundPosition: 'center',
+                                        backgroundSize: 'cover',
+                                      }
+                                    : undefined
                                 }
-                              : undefined
-                          }
-                        />
-                        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
-                          <span className="truncate text-sm font-bold leading-snug text-neutral-100">{item.name}</span>
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[13px] font-black text-gold">
-                              {item.startPrice.toLocaleString()}원
-                            </span>
-                            <span className="rounded-full bg-gold/10 px-2 py-0.5 text-[11px] font-extrabold text-gold-light">
-                              {conditionLabel}
-                            </span>
-                            {isExampleItem && (
-                              <span className="rounded-full border border-accent/30 bg-accent/10 px-2 py-0.5 text-[11px] font-extrabold text-accent-light">
-                                예시
-                              </span>
-                            )}
+                              />
+                              <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+                                <span className="truncate text-sm font-bold leading-snug text-neutral-100">
+                                  {item.name}
+                                </span>
+                                <div className="flex flex-wrap items-center gap-1.5">
+                                  <span className="rounded-full bg-gold/10 px-2 py-0.5 text-[11px] font-extrabold text-gold-light">
+                                    {conditionLabel}
+                                  </span>
+                                  <span className="rounded-full border border-neutral-700 bg-neutral-900 px-2 py-0.5 text-[11px] font-extrabold text-neutral-500">
+                                    {item.auctionType === 'UNIQUE_TOP' ? '유일 최고가' : '상향식'}
+                                  </span>
+                                  <span className="rounded-full border border-neutral-700 bg-neutral-900 px-2 py-0.5 text-[11px] font-extrabold text-neutral-500">
+                                    {item.auctionDuration ?? 60}초
+                                  </span>
+                                  {isExampleItem && (
+                                    <span className="rounded-full border border-accent/30 bg-accent/10 px-2 py-0.5 text-[11px] font-extrabold text-accent-light">
+                                      예시
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex shrink-0 flex-col items-end justify-center">
+                                <span className="rounded-full border border-neutral-700 bg-neutral-900 px-2 py-0.5 text-[11px] font-extrabold text-neutral-500">
+                                  설정중
+                                </span>
+                                {!isExampleItem && (
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleItem(item)}
+                                    className="mt-1.5 bg-transparent border-none cursor-pointer text-accent text-xs hover:text-accent-light"
+                                  >
+                                    <FaTimes size={10} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="rounded-xl border border-neutral-800 bg-neutral-950/70 p-3">
+                              <div className="grid gap-3 md:grid-cols-2">
+                                <div className="flex flex-col gap-1.5">
+                                  <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                                    경매 방식
+                                  </span>
+                                  <CustomSelect
+                                    value={item.auctionType ?? 'BOTTOM_UP'}
+                                    onChange={(value) =>
+                                      handleAuctionTypeChange(item.itemId, value as Product['auctionType'])
+                                    }
+                                    options={AUCTION_TYPE_SELECT_OPTIONS}
+                                    descriptionPlacement="right"
+                                  />
+                                </div>
+
+                                <div className="flex flex-col gap-1.5">
+                                  <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                                    경매 시간
+                                  </span>
+                                  <CustomSelect
+                                    value={String(item.auctionDuration ?? 60)}
+                                    onChange={(value) => handleAuctionDurationChange(item.itemId, Number(value))}
+                                    options={DURATION_SELECT_OPTIONS}
+                                  />
+                                </div>
+                              </div>
+
+                              {item.auctionType === 'UNIQUE_TOP' ? (
+                                <div className="mt-3">
+                                  <div className="grid gap-2 md:grid-cols-2">
+                                    <div className="flex flex-col gap-1.5">
+                                      <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                                        최소 입찰가
+                                      </label>
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={item.minPrice ?? ''}
+                                        onChange={(event) =>
+                                          handleAuctionFieldChange(item.itemId, 'minPrice', event.target.value)
+                                        }
+                                        onBlur={() => handleAuctionFieldBlur(item, 'minPrice')}
+                                        placeholder="최소 입찰가 입력"
+                                        className={auctionInputClassName}
+                                      />
+                                    </div>
+                                    <div className="flex flex-col gap-1.5">
+                                      <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                                        최대 입찰가
+                                      </label>
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={item.maxPrice ?? ''}
+                                        onChange={(event) =>
+                                          handleAuctionFieldChange(item.itemId, 'maxPrice', event.target.value)
+                                        }
+                                        onBlur={() => handleAuctionFieldBlur(item, 'maxPrice')}
+                                        placeholder="최대 입찰가 입력"
+                                        className={auctionInputClassName}
+                                      />
+                                    </div>
+                                  </div>
+                                  {auctionFieldErrors[item.itemId]?.minPrice ||
+                                  auctionFieldErrors[item.itemId]?.maxPrice ? (
+                                    <p className="mt-1.5 text-[11px] font-bold text-accent-light">
+                                      {auctionFieldErrors[item.itemId]?.minPrice ??
+                                        auctionFieldErrors[item.itemId]?.maxPrice}
+                                    </p>
+                                  ) : null}
+                                </div>
+                              ) : (
+                                <div className="mt-3">
+                                  <div className="grid gap-2 md:grid-cols-2">
+                                    <div className="flex flex-col gap-1.5">
+                                      <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                                        시작가
+                                      </label>
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={item.startPrice ?? ''}
+                                        onChange={(event) =>
+                                          handleAuctionFieldChange(item.itemId, 'startPrice', event.target.value)
+                                        }
+                                        onBlur={() => handleAuctionFieldBlur(item, 'startPrice')}
+                                        placeholder="시작가 입력"
+                                        className={auctionInputClassName}
+                                      />
+                                    </div>
+                                    <div className="flex flex-col gap-1.5">
+                                      <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
+                                        입찰 단위
+                                      </label>
+                                      <input
+                                        type="text"
+                                        inputMode="numeric"
+                                        value={item.bidUnit ?? ''}
+                                        onChange={(event) =>
+                                          handleAuctionFieldChange(item.itemId, 'bidUnit', event.target.value)
+                                        }
+                                        onBlur={() => handleAuctionFieldBlur(item, 'bidUnit')}
+                                        placeholder="입찰 단위 입력"
+                                        className={auctionInputClassName}
+                                      />
+                                    </div>
+                                  </div>
+                                  {auctionFieldErrors[item.itemId]?.startPrice ||
+                                  auctionFieldErrors[item.itemId]?.bidUnit ? (
+                                    <p className="mt-1.5 text-[11px] font-bold text-accent-light">
+                                      {auctionFieldErrors[item.itemId]?.startPrice ??
+                                        auctionFieldErrors[item.itemId]?.bidUnit}
+                                    </p>
+                                  ) : null}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex shrink-0 flex-col items-end justify-center">
-                          <span className="rounded-full border border-neutral-700 bg-neutral-900 px-2 py-0.5 text-[11px] font-extrabold text-neutral-500">
-                            대기
-                          </span>
-                          {!isExampleItem && (
-                            <button
-                              type="button"
-                              onClick={() => toggleItem(item)}
-                              className="mt-1.5 bg-transparent border-none cursor-pointer text-accent text-xs hover:text-accent-light"
-                            >
-                              <FaTimes size={10} />
-                            </button>
-                          )}
-                        </div>
+                        )}
                       </div>
                     );
                   })}

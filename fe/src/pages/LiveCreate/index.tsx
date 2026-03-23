@@ -40,7 +40,7 @@ export default function LiveCreatePage() {
           title: stream.title,
           category: stream.category,
           startType: 'IMMEDIATE',
-          itemIds: [],
+          auctionItems: [],
         },
       });
       navigate(`/live/${stream.streamId}`);

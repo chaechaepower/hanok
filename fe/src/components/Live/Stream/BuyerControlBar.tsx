@@ -56,23 +56,21 @@ export default function BuyerControlBar({
   const [customUnit, setCustomUnit] = useState(1000);
   const [bidAmount, setBidAmount] = useState(1000);
   const [freeInput, setFreeInput] = useState('');
-  const [uniqueInputError, setUniqueInputError] = useState('');
   const [panelOpacity, setPanelOpacity] = useState(90);
   const [isBidAccessModalOpen, setIsBidAccessModalOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [auctionEndPhase, setAuctionEndPhase] = useState<AuctionEndPhase>(null);
   const hadActiveAuctionRef = useRef(false);
-  const suppressNextUniqueBidAttemptRef = useRef(false);
+  const suppressNextUniqueBidAttemptRef = useRef<number | null>(null);
 
   const balance = wallet?.balance ?? 0;
   const isUniqueAuction = auctionType === 'UNIQUE_TOP';
   const activeTab: BidTab = isUniqueAuction ? 'custom' : tab;
   const activeCustomUnit = isUniqueAuction ? 0 : customUnit;
   const currentPrice = isUniqueAuction ? (uniqueBidSync?.bidRange.minPrice ?? 0) : (bidSync?.item.currentPrice ?? 0);
-  const baseBidUnit = isUniqueAuction ? (uniqueBidSync?.bidRange.bidUnit ?? 1000) : (bidSync?.item.bidUnit ?? 1000);
+  const baseBidUnit = bidSync?.item.bidUnit ?? 1000;
   const uniqueMinPrice = uniqueBidSync?.bidRange.minPrice ?? 0;
   const uniqueMaxPrice = uniqueBidSync?.bidRange.maxPrice ?? 0;
-  const uniqueBidUnit = uniqueBidSync?.bidRange.bidUnit ?? 1000;
   const hasPlacedUniqueBid = uniqueBidSync?.hasBid ?? false;
   const hasActiveAuction = isUniqueAuction ? Boolean(uniqueBidSync) : Boolean(bidSync);
   const visibleAuctionEndPhase = hasActiveAuction ? null : auctionEndPhase;
@@ -81,14 +79,9 @@ export default function BuyerControlBar({
     (amount: number) => {
       if (!Number.isFinite(amount) || amount <= 0) return 0;
 
-      const safeBidUnit = Math.max(uniqueBidUnit, 1);
-      const maxStep = Math.max(Math.floor((uniqueMaxPrice - uniqueMinPrice) / safeBidUnit), 0);
-      const roundedStep = Math.round((amount - uniqueMinPrice) / safeBidUnit);
-      const normalizedStep = Math.min(Math.max(roundedStep, 0), maxStep);
-
-      return uniqueMinPrice + normalizedStep * safeBidUnit;
+      return Math.min(Math.max(Math.round(amount), uniqueMinPrice), uniqueMaxPrice);
     },
-    [uniqueBidUnit, uniqueMaxPrice, uniqueMinPrice],
+    [uniqueMaxPrice, uniqueMinPrice],
   );
   const isFreeMode = activeTab === 'custom' && activeCustomUnit === 0;
   const panelOpacityProgress = ((panelOpacity - 10) / 80) * 100;
@@ -118,17 +111,15 @@ export default function BuyerControlBar({
       }
 
       if (options?.suppressNextBidAttempt) {
-        suppressNextUniqueBidAttemptRef.current = true;
+        suppressNextUniqueBidAttemptRef.current = activeAuctionId;
       }
 
       setFreeInput(String(correctedUniqueBidAmount));
       setBidAmount(correctedUniqueBidAmount);
-      setUniqueInputError(
-        `입찰가를 ${correctedUniqueBidAmount.toLocaleString()}원으로 보정했습니다. 확인 후 다시 입찰해주세요.`,
-      );
+      showToast({ message: '입찰가를 허용 범위로 보정했습니다. 다시 입찰해주세요.' });
       return false;
     },
-    [normalizeUniqueBidAmount],
+    [activeAuctionId, normalizeUniqueBidAmount, showToast],
   );
 
   const handleBidPlace = useCallback(() => {
@@ -168,7 +159,6 @@ export default function BuyerControlBar({
 
     if (isUniqueAuction) {
       if (hasPlacedUniqueBid) {
-        showToast({ message: '이미 입찰한 상품입니다.' });
         return;
       }
 
@@ -177,8 +167,8 @@ export default function BuyerControlBar({
         return;
       }
 
-      if (suppressNextUniqueBidAttemptRef.current) {
-        suppressNextUniqueBidAttemptRef.current = false;
+      if (suppressNextUniqueBidAttemptRef.current === activeAuctionId) {
+        suppressNextUniqueBidAttemptRef.current = null;
         return;
       }
 
@@ -329,10 +319,13 @@ export default function BuyerControlBar({
   }, [hasActiveAuction]);
 
   const handleFreeInput = (value: string) => {
+    if (hasPlacedUniqueBid) {
+      return;
+    }
+
     const nextValue = value.replace(/[^0-9]/g, '');
     setFreeInput(nextValue);
-    setUniqueInputError('');
-    suppressNextUniqueBidAttemptRef.current = false;
+    suppressNextUniqueBidAttemptRef.current = null;
 
     if (!nextValue) {
       setBidAmount(0);
@@ -343,23 +336,26 @@ export default function BuyerControlBar({
   };
 
   const handleUniqueInputBlur = useCallback(() => {
+    if (hasPlacedUniqueBid) {
+      return;
+    }
+
     if (!freeInput.trim()) {
-      setUniqueInputError('');
       return;
     }
 
     applyUniqueBidCorrection(Number(freeInput), { suppressNextBidAttempt: true });
-  }, [applyUniqueBidCorrection, freeInput]);
+  }, [applyUniqueBidCorrection, freeInput, hasPlacedUniqueBid]);
 
   return (
     <>
-      <div className="absolute bottom-4 left-4 right-4 flex flex-col gap-1.5">
+      <div className="absolute bottom-4 left-4 right-4 flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <KeyboardGuide open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} />
 
-          <div className="mx-4 flex h-32.5 flex-1">
+          <div className="mx-4 flex min-h-32.5 flex-1">
             <div
-              className="flex flex-1 flex-col gap-2 rounded-2xl bg-surface/80 px-4 py-3"
+              className="flex min-h-32.5 flex-1 flex-col gap-2 rounded-2xl bg-surface/80 px-4 py-3"
               style={{ opacity: panelOpacity / 100 }}
             >
               {visibleAuctionEndPhase !== null ? (
@@ -414,13 +410,10 @@ export default function BuyerControlBar({
                     <div className="flex flex-1 gap-1">
                       <div className="flex w-1/2 flex-col gap-2">
                         <div className="flex-1 rounded-md bg-neutral-800 px-3 py-1.5 text-center text-[10px] font-bold text-neutral-100">
-                          [{uniqueMinPrice.toLocaleString()} ~ {uniqueMaxPrice.toLocaleString()}원] |{' '}
-                          {uniqueBidUnit.toLocaleString()}원 단위로 보정됩니다
+                          입찰 범위: {uniqueMinPrice.toLocaleString()} ~ {uniqueMaxPrice.toLocaleString()}원
                         </div>
                         <div
-                          className={`flex flex-1 items-center gap-2 rounded-lg px-2.5 py-1 ${
-                            uniqueInputError ? 'border border-accent-light bg-neutral-900' : 'bg-neutral-900'
-                          }`}
+                          className="flex flex-1 items-center gap-2 rounded-lg bg-neutral-900 px-2.5 py-1"
                         >
                           <div className="flex min-h-8 shrink-0 flex-col justify-center rounded-lg bg-neutral-900 px-2.5 py-1">
                             <div className="flex items-center gap-1.5">
@@ -442,12 +435,10 @@ export default function BuyerControlBar({
                             onChange={(event) => handleFreeInput(event.target.value)}
                             onBlur={handleUniqueInputBlur}
                             placeholder="입찰가 입력"
-                            className="min-w-0 flex-1 bg-transparent text-center text-sm font-black tabular-nums text-neutral-100 outline-none placeholder:text-neutral-600"
+                            disabled={hasPlacedUniqueBid}
+                            className="min-w-0 flex-1 bg-transparent text-center text-sm font-black tabular-nums text-neutral-100 outline-none placeholder:text-neutral-600 disabled:cursor-not-allowed disabled:text-neutral-500"
                           />
                         </div>
-                        {uniqueInputError ? (
-                          <p className="text-[11px] font-bold text-accent-light">{uniqueInputError}</p>
-                        ) : null}
                       </div>
 
                       <button
@@ -464,7 +455,7 @@ export default function BuyerControlBar({
                             </span>
                           ) : null}
                           <span className="text-[10px] font-bold text-gold">
-                            {hasPlacedUniqueBid ? '1회 입찰 완료' : `${uniqueBidUnit.toLocaleString()}원 단위`}
+                            {hasPlacedUniqueBid ? '1회 입찰 완료' : '1회 입찰 가능'}
                           </span>
                         </div>
                         <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">
@@ -606,7 +597,7 @@ export default function BuyerControlBar({
             </div>
           </div>
 
-          <div className="flex h-32.5 flex-col justify-center gap-3 rounded-2xl bg-surface/80 px-2.5">
+          <div className="flex min-h-32.5 flex-col justify-center gap-3 rounded-2xl bg-surface/80 px-2.5">
             <button
               type="button"
               className="flex h-10 w-10 items-center justify-center rounded-xl text-neutral-400 transition hover:bg-warm/10 hover:text-neutral-200"

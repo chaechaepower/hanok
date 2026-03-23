@@ -45,13 +45,7 @@ const toLiveCardStream = (result: SearchStreamResult): LiveCardData => ({
   seller: result.seller,
 });
 
-function SearchResultReasonChip({
-  reason,
-  keyword,
-}: {
-  reason: SearchMatchReason;
-  keyword: string;
-}) {
+function SearchResultReasonChip({ reason, keyword }: { reason: SearchMatchReason; keyword: string }) {
   const trimmedKeyword = keyword.trim();
   const highlightedValue = !trimmedKeyword
     ? reason.matchedValue
@@ -155,17 +149,13 @@ export default function SearchPage() {
         {isSearchEnabled && !isLoading && !error && results.length === 0 && (
           <div className="rounded-[28px] border border-white/8 bg-white/[0.03] px-6 py-14 text-center">
             <p className="text-[18px] font-semibold text-point">일치하는 라이브가 없습니다.</p>
-            <p className="mt-2 text-[14px] text-white/50">
-              다른 키워드나 상품명, 해시태그 조합으로 다시 검색해보세요.
-            </p>
+            <p className="mt-2 text-[14px] text-white/50">다른 키워드나 상품명, 해시태그 조합으로 다시 검색해보세요.</p>
           </div>
         )}
 
         {isSearchEnabled && !isLoading && !error && results.length > 0 && (
           <>
-            {isFetching && (
-              <p className="text-[13px] text-white/45">최신 검색 결과를 확인하는 중입니다.</p>
-            )}
+            {isFetching && <p className="text-[13px] text-white/45">최신 검색 결과를 확인하는 중입니다.</p>}
             <div className={RESULT_GRID_CLASS_NAME}>
               {results.map((result) => (
                 <div key={result.streamId} className="flex flex-col gap-4">
@@ -173,7 +163,7 @@ export default function SearchPage() {
 
                   <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
-                      <p className="text-[14px] font-semibold text-point">검색된 이유</p>
+                      <p className="text-[14px] font-semibold text-point">탐색 결과</p>
                       <p className="text-[12px] text-white/45">{result.matchReasons.length}건 일치</p>
                     </div>
 

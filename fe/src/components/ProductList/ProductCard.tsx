@@ -1,33 +1,22 @@
 import { useState } from 'react';
-import { FaImage, FaChevronLeft, FaChevronRight, FaInfoCircle } from 'react-icons/fa';
+import { FaImage, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import type { Product } from '@/types';
-import { MAIN_CATEGORY_ITEMS } from '@/components/Main/SideBar';
-import { AUCTION_TYPE_DESCRIPTIONS, getAuctionTypeLabel } from '@/constants/auction';
+import { MAIN_CATEGORY_ITEMS } from '@/components/Main/mainCategoryItems';
 import { getItemConditionLabel } from '@/constants/itemCondition';
 
-const formatKoreanPrice = (num: number): string => {
-  if (!Number.isFinite(num) || num < 0) return '0 원';
-  if (num < 100_000_000) return `${num.toLocaleString('ko-KR')} 원`;
+const formatCreatedAt = (value?: string) => {
+  if (!value) return '-';
 
-  const units = [
-    { val: 1_000_000_000_000, label: '조' },
-    { val: 100_000_000, label: '억' },
-    { val: 10_000, label: '만' },
-  ];
-
-  const parts: string[] = [];
-  let remaining = Math.round(num);
-
-  for (const { val, label } of units) {
-    const count = Math.floor(remaining / val);
-    if (count > 0) {
-      parts.push(`${count.toLocaleString('ko-KR')}${label}`);
-      remaining = Math.round(remaining % val);
-    }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
   }
 
-  if (remaining > 0) parts.push(remaining.toLocaleString('ko-KR'));
-  return (parts.length > 0 ? parts.join(' ') : '0') + ' 원';
+  return date.toLocaleDateString('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
 };
 
 const statusClassMap: Record<string, { label: string; bg: string }> = {
@@ -129,23 +118,16 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
         </div>
         <div className="flex justify-between">
           <h3 className="text-neutral-100 text-lg font-bold m-0">{product.name}</h3>
-          <span className="text-gold-dark text-xs">
-            {MAIN_CATEGORY_ITEMS.find((c) => c.id === product.category)?.label || product.category}
-          </span>
         </div>
         <p className="text-neutral-500 text-sm m-0 mb-4 leading-relaxed">{product.description}</p>
 
-        <div className="grid grid-cols-5 border border-neutral-700 rounded-xl bg-neutral-800 mt-auto">
-          <MetricBox label="시작가격" value={formatKoreanPrice(product.startPrice)} />
-          <MetricBox label="최소 입찰단위" value={formatKoreanPrice(product.bidUnit)} />
-          <MetricBox label="경매 시간" value={`${product.auctionDuration} 초`} />
+        <div className="grid grid-cols-3 border border-neutral-700 rounded-xl bg-neutral-800 mt-auto">
           <MetricBox label="물품 상태" value={getItemConditionLabel(product.itemCondition)} />
           <MetricBox
-            label="경매 방식"
-            value={getAuctionTypeLabel(product.auctionType)}
-            description={AUCTION_TYPE_DESCRIPTIONS[product.auctionType]}
-            isLast
+            label="카테고리"
+            value={MAIN_CATEGORY_ITEMS.find((c) => c.id === product.category)?.label || product.category}
           />
+          <MetricBox label="등록일" value={formatCreatedAt(product.createdAt)} isLast />
         </div>
       </div>
     </div>
@@ -155,27 +137,16 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
 function MetricBox({
   label,
   value,
-  description,
   isLast = false,
 }: {
   label: string;
   value: string;
-  description?: string;
   isLast?: boolean;
 }) {
   return (
     <div className={`relative px-4 py-3 flex flex-col justify-center ${isLast ? '' : 'border-r border-neutral-700'}`}>
       <div className="mb-1 flex items-center gap-1.5 text-neutral-400 text-xs">
         <span>{label}</span>
-        {description ? (
-          <div className="relative group flex items-center">
-            <FaInfoCircle className="text-[11px] text-neutral-500 transition-colors group-hover:text-gold-light" />
-            <div className="pointer-events-none absolute bottom-[calc(100%+10px)] right-0 z-20 hidden w-[240px] rounded-2xl border border-gold/20 bg-[#111315] px-4 py-3 text-left shadow-[0_20px_50px_rgba(0,0,0,0.35)] group-hover:block">
-              <p className="mb-2 text-sm font-semibold text-gold-light">{value}</p>
-              <p className="whitespace-pre-line text-[12px] leading-5 text-neutral-300">{description}</p>
-            </div>
-          </div>
-        ) : null}
       </div>
       <div className="text-neutral-100 text-[15px] font-semibold break-all">{value}</div>
     </div>

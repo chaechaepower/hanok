@@ -1,4 +1,5 @@
 import type { ShippingAddressResponse } from './auction';
+import type { ProductStatus } from './item';
 
 export type LiveSeller = {
   sellerId: number;
@@ -23,7 +24,7 @@ export type StreamEnterResponse = {
   notice: string | null;
   isLive: boolean;
   createdAt: string;
-  items: LiveStreamItem[];
+  items: StreamEnterItem[];
   seller: StreamEnterSeller;
   token: string;
   identity: string;
@@ -43,6 +44,26 @@ export type LiveCardData = {
   scheduledAt: string | null;
   startedAt: string | null;
   seller: LiveSeller;
+};
+
+export type NewSellerRecommendedStream = {
+  streamId: number;
+  title: string;
+  category: string;
+  thumbnailUri: string | null;
+  isLive: boolean;
+  viewerCount: number;
+  scheduledAt: string | null;
+  startedAt: string | null;
+  seller: LiveSeller;
+};
+
+export type NewSellerRecommendedStreamsResponse = {
+  content: NewSellerRecommendedStream[];
+  page: number;
+  size: number;
+  totalElements: number;
+  hasNext: boolean;
 };
 
 export type SearchMatchType = 'STREAM_TITLE' | 'ITEM_NAME' | 'TAG';
@@ -104,7 +125,6 @@ export type AuctionStatisticsPayload = {
 export type UniqueBidRange = {
   minPrice: number;
   maxPrice: number;
-  bidUnit: number;
 };
 
 export type UniqueAuctionStatsPayload = {
@@ -157,20 +177,32 @@ export type ItemSyncItemCondition = 'BRAND_NEW' | 'OPEN_BOX' | 'REFURBISHED' | '
 
 export type LiveAuctionType = 'BOTTOM_UP' | 'UNIQUE_TOP';
 
-export type ItemSyncItem = {
+type ItemSyncItemBase = {
   auctionId: number;
   itemName: string;
-  startPrice: number;
+  description: string;
+  images: string[];
   auctionStatus: ItemSyncAuctionStatus;
-  auctionType: LiveAuctionType;
+  auctionTime: number;
   finalPrice: number | null;
   itemCondition: ItemSyncItemCondition;
-  image?: string;
-  description?: string;
-  bidUnit?: number;
-  auctionTime?: number;
-  images?: string[];
 };
+
+export type ItemSyncItem =
+  | (ItemSyncItemBase & {
+      auctionType: 'BOTTOM_UP';
+      bidUnit: number;
+      startPrice: number;
+      minPrice: null;
+      maxPrice: null;
+    })
+  | (ItemSyncItemBase & {
+      auctionType: 'UNIQUE_TOP';
+      bidUnit: null;
+      startPrice: null;
+      minPrice: number;
+      maxPrice: number;
+    });
 
 export type ItemSyncPayload = {
   items: ItemSyncItem[];
@@ -186,11 +218,13 @@ export type ChatMessageType =
 
 export type LiveStreamItemStatus = 'READY' | 'INTRODUCING' | 'LIVE' | 'SOLD' | 'UNSOLD';
 
-export type LiveStreamItem = {
+export type StreamEnterItem = {
   itemId: number;
   name: string;
   category: string;
   startPrice: number;
+  minPrice?: number | null;
+  maxPrice?: number | null;
   status: LiveStreamItemStatus;
   auctionType?: LiveAuctionType;
   itemCondition: ItemSyncItemCondition;
@@ -202,7 +236,45 @@ export type LiveStreamItem = {
   images?: string[];
 };
 
-export type Live = {
+export type StreamDetailItem =
+  | {
+      itemId: number;
+      name: string;
+      description: string;
+      tags: string[];
+      images: string[];
+      auctionType: 'BOTTOM_UP';
+      auctionDuration: number;
+      bottomUp: {
+        startPrice: number;
+        bidUnit: number;
+      };
+      uniqueTop: null;
+      itemCondition: ItemSyncItemCondition;
+      category: string;
+      status: ProductStatus;
+      createdAt: string;
+    }
+  | {
+      itemId: number;
+      name: string;
+      description: string;
+      tags: string[];
+      images: string[];
+      auctionType: 'UNIQUE_TOP';
+      auctionDuration: number;
+      bottomUp: null;
+      uniqueTop: {
+        minPrice: number;
+        maxPrice: number;
+      };
+      itemCondition: ItemSyncItemCondition;
+      category: string;
+      status: ProductStatus;
+      createdAt: string;
+    };
+
+export type StreamDetailResponse = {
   streamId: number;
   title: string;
   category: string;
@@ -212,7 +284,7 @@ export type Live = {
   notice: string | null;
   isLive: boolean;
   createdAt: string;
-  items: LiveStreamItem[];
+  items: StreamDetailItem[];
 };
 
 export type StreamRequest = {
@@ -221,8 +293,30 @@ export type StreamRequest = {
   startType: 'SCHEDULED' | 'IMMEDIATE';
   scheduledAt?: string;
   notice?: string;
-  itemIds: number[];
+  auctionItems: StreamAuctionItem[];
 };
+
+export type StreamAuctionItem =
+  | {
+      itemId: number;
+      auctionType: 'BOTTOM_UP';
+      auctionDuration: number;
+      bottomUp: {
+        startPrice: number;
+        bidUnit: number;
+      };
+      uniqueTop: null;
+    }
+  | {
+      itemId: number;
+      auctionType: 'UNIQUE_TOP';
+      auctionDuration: number;
+      bottomUp: null;
+      uniqueTop: {
+        minPrice: number;
+        maxPrice: number;
+      };
+    };
 
 export type StreamMultipartPayload = {
   request: StreamRequest;
@@ -231,8 +325,6 @@ export type StreamMultipartPayload = {
 
 export type PostStreamResponse = {
   streamId: number;
-  title: string;
-  status: string;
 };
 
 export type RtcConfig = {
@@ -254,8 +346,6 @@ export type StartStreamResponse = {
 
 export type UpdateStreamResponse = {
   streamId: number;
-  title: string;
-  status: string;
 };
 
 export type DeleteStreamResponse = {

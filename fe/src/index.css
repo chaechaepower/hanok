@@ -400,6 +400,15 @@ table {
 
 @layer utilities {
   /* 부제목: Pretendard 700, tracking -0.01em, leading 1.5 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   .text-subtitle-lg {
     font-family: var(--font-heading);
     font-size: var(--text-sub-lg);

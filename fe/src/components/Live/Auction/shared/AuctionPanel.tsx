@@ -26,19 +26,13 @@ export default function AuctionPanel({ isSeller, auctionType, auctionStatistics,
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <div className="rounded-2xl bg-neutral-900 p-4">
             <div className="text-[10px] font-bold text-neutral-500">입찰 범위</div>
             <div className="mt-2 text-sm font-black text-neutral-100">
               {bidRange
                 ? `${formatPrice(bidRange.minPrice, { suffix: false })} ~ ${formatPrice(bidRange.maxPrice, { suffix: false })}`
                 : '-'}
-            </div>
-          </div>
-          <div className="rounded-2xl bg-neutral-900 p-4">
-            <div className="text-[10px] font-bold text-neutral-500">입찰 단위</div>
-            <div className="mt-2 text-sm font-black text-neutral-100">
-              {bidRange ? formatPrice(bidRange.bidUnit) : '-'}
             </div>
           </div>
         </div>
@@ -50,7 +44,7 @@ export default function AuctionPanel({ isSeller, auctionType, auctionStatistics,
               ? '입찰 금액은 경매 종료 전까지 공개되지 않습니다. 참여 인원만 실시간으로 갱신됩니다.'
               : uniqueBidSync?.hasBid
                 ? '이미 입찰을 완료했습니다. 동일 상품에는 한 번만 입찰할 수 있습니다.'
-                : '입찰 금액은 비공개입니다. 범위와 단위를 맞춰 한 번만 입찰할 수 있습니다.'}
+                : '입찰 금액은 비공개입니다. 제시된 범위 안에서 한 번만 입찰할 수 있습니다.'}
           </p>
         </div>
       </div>

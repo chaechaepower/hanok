@@ -6,39 +6,114 @@ import type {
   DeleteStreamResponse,
   EndStreamResponse,
   ItemSyncPayload,
-  Live,
   LiveCardData,
-  LiveStreamItem,
   StreamRequest,
+  StreamDetailResponse,
+  StreamDetailItem,
+  StreamEnterItem,
   UpdateStreamResponse,
 } from '@/types';
 
 import { getMockItemById } from './ItemHandler';
 import { getCurrentMockUser, mockLoginUsers } from './mockState';
 
-type RegisteredLive = Live & {
+type RegisteredLive = Omit<StreamDetailResponse, 'items'> & {
+  items: StreamEnterItem[];
   sellerId: number;
   sellerNickname: string;
   sellerProfileImage: string | null;
 };
 
-const createStreamItems = (itemIds: number[], category: string, thumbnail: string | null): LiveStreamItem[] =>
-  itemIds.map((itemId, index) => {
-    const mockItem = getMockItemById(itemId);
+type CreateStreamItemInput = StreamRequest['auctionItems'][number] | number;
+
+const normalizeAuctionItem = (
+  auctionItem: CreateStreamItemInput,
+  index: number,
+): StreamRequest['auctionItems'][number] => {
+  if (typeof auctionItem === 'number') {
+    return {
+      itemId: auctionItem,
+      auctionType: 'BOTTOM_UP',
+      auctionDuration: 60,
+      bottomUp: {
+        startPrice: 10000 * (index + 1),
+        bidUnit: 1000,
+      },
+      uniqueTop: null,
+    };
+  }
+
+  if (auctionItem.auctionType === 'UNIQUE_TOP') {
+    const minPrice = auctionItem.uniqueTop?.minPrice ?? 10000;
+    const maxPrice = auctionItem.uniqueTop?.maxPrice ?? minPrice;
 
     return {
-      itemId,
-      name: mockItem?.name ?? `Mock item ${itemId}`,
+      itemId: auctionItem.itemId,
+      auctionType: 'UNIQUE_TOP',
+      auctionDuration: auctionItem.auctionDuration,
+      bottomUp: null,
+      uniqueTop: {
+        minPrice,
+        maxPrice,
+      },
+    };
+  }
+
+  const startPrice = auctionItem.bottomUp?.startPrice ?? 10000;
+  const bidUnit = auctionItem.bottomUp?.bidUnit ?? 1000;
+
+  return {
+    itemId: auctionItem.itemId,
+    auctionType: 'BOTTOM_UP',
+    auctionDuration: auctionItem.auctionDuration,
+    bottomUp: {
+      startPrice,
+      bidUnit,
+    },
+    uniqueTop: null,
+  };
+};
+
+const createStreamItems = (
+  auctionItems: CreateStreamItemInput[],
+  category: string,
+  thumbnail: string | null,
+): StreamEnterItem[] =>
+  auctionItems.map((rawAuctionItem, index) => {
+    const auctionItem = normalizeAuctionItem(rawAuctionItem, index);
+    const mockItem = getMockItemById(auctionItem.itemId);
+
+    if (auctionItem.auctionType === 'BOTTOM_UP') {
+      return {
+        itemId: auctionItem.itemId,
+        name: mockItem?.name ?? `Mock item ${auctionItem.itemId}`,
+        category: mockItem?.category ?? category,
+        startPrice: auctionItem.bottomUp.startPrice,
+        status: 'READY',
+        auctionType: auctionItem.auctionType,
+        itemCondition: mockItem?.itemCondition ?? 'BRAND_NEW',
+        image1: mockItem?.images[0] ?? thumbnail,
+        createdAt: mockItem?.createdAt ?? new Date(Date.now() - index * 60000).toISOString(),
+        ...(mockItem?.description ? { description: mockItem.description } : {}),
+        bidUnit: auctionItem.bottomUp.bidUnit,
+        auctionTime: auctionItem.auctionDuration,
+      };
+    }
+
+    return {
+      itemId: auctionItem.itemId,
+      name: mockItem?.name ?? `Mock item ${auctionItem.itemId}`,
       category: mockItem?.category ?? category,
-      startPrice: mockItem?.startPrice ?? 10000 * (index + 1),
+      startPrice: auctionItem.uniqueTop.minPrice,
       status: 'READY',
-      auctionType: mockItem?.auctionType ?? 'BOTTOM_UP',
+      auctionType: auctionItem.auctionType,
       itemCondition: mockItem?.itemCondition ?? 'BRAND_NEW',
       image1: mockItem?.images[0] ?? thumbnail,
       createdAt: mockItem?.createdAt ?? new Date(Date.now() - index * 60000).toISOString(),
       ...(mockItem?.description ? { description: mockItem.description } : {}),
-      ...(typeof mockItem?.bidUnit === 'number' ? { bidUnit: mockItem.bidUnit } : {}),
-      ...(typeof mockItem?.auctionDuration === 'number' ? { auctionTime: mockItem.auctionDuration } : {}),
+      minPrice: auctionItem.uniqueTop.minPrice,
+      maxPrice: auctionItem.uniqueTop.maxPrice,
+      auctionTime: auctionItem.auctionDuration,
     };
   });
 
@@ -64,6 +139,45 @@ const getCurrentSellerSnapshot = () => {
 
 export const getRegisteredLiveById = (streamId: number) => registeredLives.find((item) => item.streamId === streamId);
 
+const toStreamDetailItem = (item: StreamEnterItem): StreamDetailItem =>
+  item.auctionType === 'UNIQUE_TOP'
+    ? {
+        itemId: item.itemId,
+        name: item.name,
+        description: item.description ?? '',
+        tags: getMockItemById(item.itemId)?.tags ?? [],
+        images: item.images ?? (item.image1 ? [item.image1] : []),
+        auctionType: 'UNIQUE_TOP',
+        auctionDuration: item.auctionTime ?? 0,
+        bottomUp: null,
+        uniqueTop: {
+          minPrice: item.minPrice ?? item.startPrice,
+          maxPrice: item.maxPrice ?? item.startPrice,
+        },
+        itemCondition: item.itemCondition,
+        category: item.category,
+        status: item.status,
+        createdAt: item.createdAt,
+      }
+    : {
+        itemId: item.itemId,
+        name: item.name,
+        description: item.description ?? '',
+        tags: getMockItemById(item.itemId)?.tags ?? [],
+        images: item.images ?? (item.image1 ? [item.image1] : []),
+        auctionType: 'BOTTOM_UP',
+        auctionDuration: item.auctionTime ?? 0,
+        bottomUp: {
+          startPrice: item.startPrice,
+          bidUnit: item.bidUnit ?? 0,
+        },
+        uniqueTop: null,
+        itemCondition: item.itemCondition,
+        category: item.category,
+        status: item.status,
+        createdAt: item.createdAt,
+      };
+
 export const getInitialItemSyncPayloadForStream = (streamId: number): ItemSyncPayload | null => {
   const live = getRegisteredLiveById(streamId);
 
@@ -72,20 +186,39 @@ export const getInitialItemSyncPayloadForStream = (streamId: number): ItemSyncPa
   }
 
   return {
-    items: live.items.map((item) => ({
-      auctionId: item.itemId,
-      itemName: item.name,
-      image: item.image1 ?? live.thumbnail ?? '',
-      startPrice: item.startPrice,
-      auctionStatus: item.status,
-      auctionType: item.auctionType ?? 'BOTTOM_UP',
-      finalPrice: item.status === 'SOLD' ? Math.round(item.startPrice * 1.5) : null,
-      itemCondition: item.itemCondition,
-      description: item.description,
-      bidUnit: item.bidUnit,
-      auctionTime: item.auctionTime,
-      images: item.images,
-    })),
+    items: live.items.map((item) =>
+      item.auctionType === 'UNIQUE_TOP'
+        ? {
+            auctionId: item.itemId,
+            itemName: item.name,
+            description: item.description ?? '',
+            images: item.images ?? (item.image1 ? [item.image1] : live.thumbnail ? [live.thumbnail] : []),
+            auctionType: 'UNIQUE_TOP',
+            auctionStatus: item.status,
+            auctionTime: item.auctionTime ?? 0,
+            itemCondition: item.itemCondition,
+            finalPrice: item.status === 'SOLD' ? Math.round((item.minPrice ?? item.startPrice) * 1.5) : null,
+            bidUnit: null,
+            startPrice: null,
+            minPrice: item.minPrice ?? item.startPrice,
+            maxPrice: item.maxPrice ?? item.startPrice,
+          }
+        : {
+            auctionId: item.itemId,
+            itemName: item.name,
+            description: item.description ?? '',
+            images: item.images ?? (item.image1 ? [item.image1] : live.thumbnail ? [live.thumbnail] : []),
+            auctionType: 'BOTTOM_UP',
+            auctionStatus: item.status,
+            auctionTime: item.auctionTime ?? 0,
+            itemCondition: item.itemCondition,
+            finalPrice: item.status === 'SOLD' ? Math.round(item.startPrice * 1.5) : null,
+            bidUnit: item.bidUnit ?? 0,
+            startPrice: item.startPrice,
+            minPrice: null,
+            maxPrice: null,
+          },
+    ),
   };
 };
 
@@ -455,7 +588,21 @@ export const LiveCreateHandlers = [
       return HttpResponse.json({ message: 'Forbidden' }, { status: 403 });
     }
 
-    return HttpResponse.json(live, { status: 200 });
+    return HttpResponse.json(
+      {
+        streamId: live.streamId,
+        title: live.title,
+        category: live.category,
+        thumbnail: live.thumbnail,
+        scheduledAt: live.scheduledAt,
+        startType: live.startType,
+        notice: live.notice,
+        isLive: live.isLive,
+        createdAt: live.createdAt,
+        items: live.items.map(toStreamDetailItem),
+      } satisfies StreamDetailResponse,
+      { status: 200 },
+    );
   }),
 
   http.post(`${BASE_URL}/v1/streams`, async ({ request }) => {
@@ -472,7 +619,7 @@ export const LiveCreateHandlers = [
       notice: body.notice ?? null,
       isLive: false,
       createdAt: new Date().toISOString(),
-      items: createStreamItems(body.itemIds, body.category, thumbnailUrl),
+      items: createStreamItems(body.auctionItems, body.category, thumbnailUrl),
       ...sellerSnapshot,
     };
 
@@ -481,8 +628,6 @@ export const LiveCreateHandlers = [
     return HttpResponse.json(
       {
         streamId: newId,
-        title: newLive.title,
-        status: 'SCHEDULED',
       },
       { status: 200 },
     );
@@ -517,7 +662,7 @@ export const LiveCreateHandlers = [
         notice: body.notice ?? null,
         isLive: true,
         createdAt: new Date().toISOString(),
-        items: createStreamItems(body.itemIds, body.category, resolvedThumbnail),
+        items: createStreamItems(body.auctionItems, body.category, resolvedThumbnail),
         ...sellerSnapshot,
       });
     } else {
@@ -533,7 +678,7 @@ export const LiveCreateHandlers = [
           startType: body.startType,
           notice: body.notice ?? null,
           isLive: true,
-          items: createStreamItems(body.itemIds, body.category, resolvedThumbnail),
+          items: createStreamItems(body.auctionItems, body.category, resolvedThumbnail),
         };
       }
     }
@@ -574,14 +719,12 @@ export const LiveCreateHandlers = [
         startType: body.startType,
         scheduledAt: body.scheduledAt || null,
         notice: body.notice ?? null,
-        items: createStreamItems(body.itemIds, body.category, resolvedThumbnail),
+        items: createStreamItems(body.auctionItems, body.category, resolvedThumbnail),
       };
     }
 
     const response: UpdateStreamResponse = {
       streamId,
-      title: body.title,
-      status: liveIndex !== -1 && registeredLives[liveIndex].isLive ? 'LIVE' : 'SCHEDULED',
     };
 
     return HttpResponse.json(response, { status: 200 });
