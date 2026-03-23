@@ -75,3 +75,8 @@ livekit:
 bizno:
   api:
     key: ${BIZNO_API_KEY}
+
+blockchain:
+  rpc-url: ${BLOCKCHAIN_RPC_URL}
+  private-key: ${SERVER_WALLET_PRIVATE_KEY}
+  contract-address: ${CONTRACT_ADDRESS}

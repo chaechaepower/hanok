@@ -6,7 +6,9 @@ import com.ssafy.be.domain.escrow.dto.request.EscrowCancelRequest;
 import com.ssafy.be.domain.escrow.dto.request.ShipmentRegisterRequest;
 import com.ssafy.be.domain.escrow.dto.response.EscrowDetailResponse;
 import com.ssafy.be.domain.escrow.dto.response.EscrowListResponse;
+import com.ssafy.be.domain.escrow.dto.response.NftReceiptResponse;
 import com.ssafy.be.domain.escrow.entity.Escrow;
+import com.ssafy.be.domain.escrow.event.EscrowCompletedEvent;
 import com.ssafy.be.domain.escrow.exception.EscorwErrorCode;
 import com.ssafy.be.domain.escrow.repository.EscrowRepository;
 import com.ssafy.be.domain.escrow.scheduler.EscrowCompleteScheduler;
@@ -25,6 +27,7 @@ import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
 import com.ssafy.be.global.websocket.exception.StompException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +48,7 @@ public class EscrowService {
     private final NotificationService notificationService;
     private final EscrowShipmentScheduler escrowShipmentScheduler;
     private final EscrowCompleteScheduler escrowCompleteScheduler;
+    private final ApplicationEventPublisher publisher;
 
     @Transactional
     public void startEscrow(Bid topBid, Auction auction, ShippingAddress shippingAddress) {
@@ -179,7 +183,9 @@ public class EscrowService {
         validateAvailableCompleteEscrow(escrow);
 
         // 3. 에스크로 구매 확정
-        escrow.completeEscrow(); // 에스크로 상태 -> 거래 완료
+        escrow.completeEscrow();
+
+        // 에스크로 상태 -> 거래 완료
         escrow.getAuction().getItem().sold(LocalDateTime.now()); // 물건 상태 -> 판매 완료
 
         // 거래 확정 24시간 타임아웃 스케줄러 예약 취소
@@ -229,6 +235,12 @@ public class EscrowService {
                 ESCROW_COMPLETED.renderBody(escrow.getAuction().getItem().getName()),
                 "/escrows/" + escrow.getId()
         );
+
+        // NFT 민팅 대기 상태로 변경
+        escrow.pendingMinting();
+
+        // 구매 확정 이벤트 발행 (DB 커밋 후 블록체인 민팅 시작)
+        publisher.publishEvent(new EscrowCompletedEvent(escrowId));
     }
 
     @Transactional(readOnly = true)
@@ -349,6 +361,19 @@ public class EscrowService {
                 .winningInfo(winningInfo)
                 .shippingAddress(shippingAddress)
                 .delivery(delivery)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public NftReceiptResponse getNftReceipt(Long escrowId) {
+        Escrow escrow = escrowRepository.findById(escrowId)
+                .orElseThrow(() -> new GlobalException(EscorwErrorCode.ESCROW_NOT_FOUND));
+
+        return NftReceiptResponse.builder()
+                .escrowId(escrow.getId())
+                .txHash(escrow.getTxHash())
+                .txStatus(escrow.getTxStatus())
+                .mintedAt(escrow.getMintedAt())
                 .build();
     }
 }
