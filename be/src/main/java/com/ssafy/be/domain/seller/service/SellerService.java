@@ -14,6 +14,7 @@ import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.stream.dto.response.ScheduledStreamResponse;
+import com.ssafy.be.domain.stream.dto.response.SellerRankingResponse;
 import com.ssafy.be.domain.stream.entity.StreamStatus;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
 import com.ssafy.be.domain.user.entity.User;
@@ -21,6 +22,7 @@ import com.ssafy.be.domain.user.exception.UserErrorCode;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +32,9 @@ import com.ssafy.be.domain.escrow.entity.EscrowStatus;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -326,4 +331,46 @@ public class SellerService {
                 reputationDto
         );
     }
+
+    @Transactional(readOnly = true)
+    public List<SellerRankingResponse> getTopSellers() {
+        // 1. 팔로워 수 상위 5명 집계
+        List<Object[]> rows = followRepository.findTopSellerIdsByFollowerCount(
+                PageRequest.of(0, 5)
+        );
+
+        if (rows.isEmpty()) return List.of();
+
+        // 2. sellerId → followerCount 매핑 (순서 보존)
+        List<Long> sellerIds = rows.stream()
+                .map(r -> ((Number) r[0]).longValue())
+                .toList();
+
+        Map<Long, Long> followerCountMap = rows.stream()
+                .collect(Collectors.toMap(
+                        r -> ((Number) r[0]).longValue(),
+                        r -> ((Number) r[1]).longValue()
+                ));
+
+        // 3. Seller 정보 벌크 조회 (N+1 방지)
+        Map<Long, Seller> sellerMap = sellerRepository.findAllByIdInWithUser(sellerIds)
+                .stream()
+                .collect(Collectors.toMap(Seller::getId, s -> s));
+
+        // 4. 순위 보존하며 DTO 변환
+        return IntStream.range(0, sellerIds.size())
+                .mapToObj(i -> {
+                    Long sellerId = sellerIds.get(i);
+                    Seller seller = sellerMap.get(sellerId);
+                    return new SellerRankingResponse(
+                            i + 1,
+                            sellerId,
+                            seller.getUser().getNickname(),
+                            seller.getUser().getProfileImage(),
+                            followerCountMap.get(sellerId)
+                    );
+                })
+                .toList();
+    }
+
 }

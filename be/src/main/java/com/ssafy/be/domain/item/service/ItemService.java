@@ -1,5 +1,6 @@
 package com.ssafy.be.domain.item.service;
 
+import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.item.dto.request.ItemRegisterRequest;
 import com.ssafy.be.domain.item.dto.request.ItemUpdateRequest;
 import com.ssafy.be.domain.item.dto.response.ItemRegisterResponse;
@@ -34,6 +35,7 @@ public class ItemService {
     private final SellerRepository sellerRepository;
     private final TagRepository tagRepository;
     private final GcsClient gcsClient;
+    private final AuctionRepository auctionRepository;
 
     @Transactional
     public ItemRegisterResponse register(Long userId, ItemRegisterRequest request, List<MultipartFile> images) {
@@ -137,16 +139,24 @@ public class ItemService {
         }
 
         if (images != null && !images.isEmpty()) {
-            // 기존 이미지 삭제
-            gcsClient.deleteImage(item.getImage1());
-            gcsClient.deleteImage(item.getImage2());
-            gcsClient.deleteImage(item.getImage3());
+
+            // 기존 URL 백업
+            String old1 = item.getImage1();
+            String old2 = item.getImage2();
+            String old3 = item.getImage3();
+
+
 
             try {
                 String image1 = getImage(images, 0, seller.getId(), itemId);
                 String image2 = getImage(images, 1, seller.getId(), itemId);
                 String image3 = getImage(images, 2, seller.getId(), itemId);
                 item.updateImages(image1, image2, image3);
+
+                // 업로드 성공 후에 기존 이미지 삭제
+                gcsClient.deleteImage(item.getImage1());
+                gcsClient.deleteImage(item.getImage2());
+                gcsClient.deleteImage(item.getImage3());
             } catch (IOException e) {
                 throw new GlobalException(ItemErrorCode.FILE_UPLOAD_FAILED);
             }
@@ -163,10 +173,21 @@ public class ItemService {
         Item item = itemRepository.findByIdAndSellerId(itemId, seller.getId())
                 .orElseThrow(() -> new GlobalException(ItemErrorCode.ITEM_NOT_FOUND));
 
+        // 상태 가드
+        if (item.getStatus() == ItemStatus.PENDING) {
+            throw new GlobalException(ItemErrorCode.ITEM_NOT_DELETABLE_LIVE);
+        }
+        if (item.getStatus() == ItemStatus.SOLD) {
+            throw new GlobalException(ItemErrorCode.ITEM_NOT_DELETABLE_SOLD);
+        }
+
+        // FK 의존성 먼저 제거
+        auctionRepository.deleteByItemId(itemId);
+
         gcsClient.deleteImage(item.getImage1());
         gcsClient.deleteImage(item.getImage2());
         gcsClient.deleteImage(item.getImage3());
-
         itemRepository.delete(item);
     }
+
 }

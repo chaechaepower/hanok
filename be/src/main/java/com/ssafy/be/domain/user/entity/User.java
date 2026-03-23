@@ -76,6 +76,7 @@ public class User {
     private Boolean notificationSetting; // 알림 설정 (기본값 true)
 
     @OneToMany(mappedBy = "user")
+    @Builder.Default
     List<TradeReport> tradeReports = new ArrayList<>();
 
     // 회원가입 시 User 생성을 위한 정적 팩토리 메서드
