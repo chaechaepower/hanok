@@ -44,7 +44,7 @@ export default function SellerGuideOverlay({ defaultOpen = true }: SellerGuideOv
     <div className="pointer-events-none absolute left-3 top-[43%] z-20 -translate-y-1/2">
       <div className="pointer-events-auto flex items-center gap-1.5">
         <div className="group relative z-30">
-          <div className="pointer-events-none absolute left-full top-1/2 z-40 ml-2 -translate-y-1/2 whitespace-nowrap rounded-full border border-neutral-700 bg-surface/92 px-3 py-1 text-[11px] font-medium text-neutral-300 opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.24)] transition duration-200 group-hover:opacity-100">
+          <div className="pointer-events-none absolute left-full top-1/2 z-40 ml-2 -translate-y-1/2 whitespace-nowrap rounded-full border border-neutral-700 bg-surface/92 px-3 py-1 text-label font-medium text-neutral-300 opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.24)] transition duration-200 group-hover:opacity-100">
             판매가이드
           </div>
 
@@ -103,11 +103,11 @@ export default function SellerGuideOverlay({ defaultOpen = true }: SellerGuideOv
 
                     <div className="min-w-0 flex-1">
                       <p
-                        className={`text-[13px] font-semibold leading-5 ${isChecked ? 'text-neutral-100' : 'text-neutral-300'}`}
+                        className={`text-body-md font-semibold leading-5 ${isChecked ? 'text-neutral-100' : 'text-neutral-300'}`}
                       >
                         {step.title}
                       </p>
-                      <p className="text-[10px] leading-4.5 text-neutral-500">{step.description}</p>
+                      <p className="text-caption leading-4.5 text-neutral-500">{step.description}</p>
                     </div>
 
                   </button>

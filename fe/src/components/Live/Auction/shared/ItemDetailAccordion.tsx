@@ -59,38 +59,42 @@ export default function ItemDetailAccordion({ item }: { item: AuctionItem }) {
           <div className="flex flex-wrap gap-3">
             {item.auctionTime && (
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold text-neutral-600">경매 시간</span>
-                <span className="text-[11px] font-extrabold text-gold-dark">{formatAuctionTime(item.auctionTime)}</span>
+                <span className="text-caption font-bold text-neutral-600">경매 시간</span>
+                <span className="text-label font-extrabold text-gold-dark">{formatAuctionTime(item.auctionTime)}</span>
               </div>
             )}
             {item.auctionType === 'BOTTOM_UP' && hasBottomUpPrice && (
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold text-neutral-600">시작가</span>
-                <span className="text-[11px] font-extrabold text-gold-dark">{formatPrice(item.startPrice ?? 0)}</span>
+                <span className="text-caption font-bold text-neutral-600">시작가</span>
+                <span className="text-label font-extrabold text-gold-dark">{formatPrice(item.startPrice ?? 0)}</span>
               </div>
             )}
             {item.auctionType === 'BOTTOM_UP' && hasBidUnit && (
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold text-neutral-600">입찰 단위</span>
-                <span className="text-[11px] font-extrabold text-gold-dark">{formatPrice(item.bidUnit ?? 0)}</span>
+                <span className="text-caption font-bold text-neutral-600">입찰 단위</span>
+                <span className="text-label font-extrabold text-gold-dark">{formatPrice(item.bidUnit ?? 0)}</span>
               </div>
             )}
             {item.auctionType === 'UNIQUE_TOP' && hasUniqueRange && (
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] font-bold text-neutral-600">가격 범위</span>
-                <span className="text-[11px] font-extrabold text-gold-dark">
+                <span className="text-caption font-bold text-neutral-600">가격 범위</span>
+                <span className="text-label font-extrabold text-gold-dark">
                   {formatPrice(item.minPrice ?? 0)} ~ {formatPrice(item.maxPrice ?? 0)}
                 </span>
               </div>
             )}
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold text-neutral-600">경매 방식</span>
-              <span className="text-[11px] font-extrabold text-gold-dark">{AUCTION_TYPE_LABELS[item.auctionType]}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-caption font-bold text-neutral-600">경매 방식</span>
+                <span className="text-label font-extrabold text-gold-dark">
+                  {AUCTION_TYPE_LABELS[item.auctionType]}
+                </span>
+              </div>
             </div>
           </div>
         )}
 
-        {item.description && <p className="text-[11px] leading-relaxed text-neutral-500">{item.description}</p>}
+        {item.description && <p className="text-label leading-relaxed text-neutral-500">{item.description}</p>}
 
         {item.images && item.images.length > 0 && (
           <div className="flex gap-1.5">
@@ -127,7 +131,7 @@ export default function ItemDetailAccordion({ item }: { item: AuctionItem }) {
           >
             <button
               type="button"
-              className="flex h-11 items-center justify-center bg-black/36 px-4 text-[13px] font-bold text-white transition hover:bg-black/54"
+              className="flex h-11 items-center justify-center bg-black/36 px-4 text-label font-bold text-white transition hover:bg-black/54"
               onClick={(event) => {
                 event.stopPropagation();
                 setSelectedImageIndex(null);
@@ -136,7 +140,7 @@ export default function ItemDetailAccordion({ item }: { item: AuctionItem }) {
               <FiX size={20} />
             </button>
 
-            <div className="w-full overflow-hidden rounded-[24px] border border-white/10 bg-black/30 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
+            <div className="w-full overflow-hidden rounded-(--radius-panel) border border-white/10 bg-black/30 shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
               <img
                 src={selectedImageSrc}
                 alt={`${item.name} 확대 이미지 ${selectedImageNumber}`}

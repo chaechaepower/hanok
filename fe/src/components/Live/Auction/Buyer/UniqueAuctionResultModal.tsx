@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { FiAlertCircle } from 'react-icons/fi';
 import { GoTrophy } from 'react-icons/go';
-
+import { useEscKey } from '@/hooks/useEscKey';
 import type { UniqueAuctionEndPayload } from '@/types';
 import { launchConfetti } from '@/utils/confetti';
 import { launchGloomEffect } from '@/utils/gloomEffect';
@@ -19,14 +19,7 @@ export default function UniqueAuctionResultModal({ isOpen, itemName, payload, on
   const isWon = payload.isWon;
   const hasTopDuplicates = Boolean(payload.topDuplicates && payload.topDuplicates.length > 0);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onClose]);
+  useEscKey(isOpen, onClose);
 
   useEffect(() => {
     if (!isOpen) {
@@ -106,19 +99,19 @@ export default function UniqueAuctionResultModal({ isOpen, itemName, payload, on
 
         <div className="relative flex flex-col gap-5 px-7 py-7">
           {isWon ? (
-            <div className="rounded-[24px] border border-gold/12 bg-[linear-gradient(180deg,rgba(205,145,80,0.12)_0%,rgba(255,255,255,0.03)_100%)] px-5 py-5">
-              <div className="text-[14px] font-extrabold text-gold-light/80">최종 낙찰 가격</div>
-              <div className="mt-3 text-[34px] leading-none font-black text-point">
+            <div className="rounded-(--radius-panel) border border-gold/12 bg-[linear-gradient(180deg,rgba(205,145,80,0.12)_0%,rgba(255,255,255,0.03)_100%)] px-5 py-5">
+              <div className="text-sub-sm font-extrabold text-gold-light/80">최종 낙찰 가격</div>
+              <div className="mt-3 text-price-lg leading-none font-black text-point">
                 {payload.winnerPrice !== null ? formatPrice(payload.winnerPrice) : '-'}
               </div>
             </div>
           ) : (
-            <div className="rounded-[24px] border border-slate-300/10 bg-[linear-gradient(180deg,rgba(148,163,184,0.08)_0%,rgba(255,255,255,0.02)_100%)] px-5 py-5">
+            <div className="rounded-(--radius-panel) border border-slate-300/10 bg-[linear-gradient(180deg,rgba(148,163,184,0.08)_0%,rgba(255,255,255,0.02)_100%)] px-5 py-5">
               {hasTopDuplicates ? (
                 <>
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <div className="text-[15px] font-extrabold text-slate-300/90">상위 중복 금액</div>
+                      <div className="text-sub-lg font-extrabold text-slate-300/90">상위 중복 금액</div>
                     </div>
                     <div className="rounded-full border border-slate-300/12 bg-black/20 px-3 py-1 text-[12px] font-bold text-slate-300">
                       {payload.topDuplicates?.length}건
@@ -147,8 +140,8 @@ export default function UniqueAuctionResultModal({ isOpen, itemName, payload, on
                 </>
               ) : (
                 <>
-                  <div className="text-[14px] font-extrabold text-slate-300/80">입찰 없음</div>
-                  <p className="mt-2 text-[20px] font-black text-white">이번 라운드에서는 낙찰자가 없었습니다</p>
+                  <div className="text-body-sm font-extrabold text-slate-300/80">입찰 없음</div>
+                  <p className="mt-2 text-price-md font-black text-white">이번 라운드에서는 낙찰자가 없었습니다</p>
                 </>
               )}
             </div>
@@ -162,7 +155,7 @@ export default function UniqueAuctionResultModal({ isOpen, itemName, payload, on
           </div>
 
           <button
-            className={`mt-1 flex w-full items-center justify-center rounded-[20px] px-4 py-3.5 text-[16px] font-bold transition ${
+            className={`mt-1 flex w-full items-center justify-center rounded-(--radius-panel) px-4 py-3.5 text-sub-lg font-bold transition ${
               isWon
                 ? 'bg-point text-background hover:opacity-90'
                 : 'border border-white/8 bg-white/6 text-white hover:bg-white/10'

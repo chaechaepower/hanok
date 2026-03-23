@@ -1,17 +1,12 @@
 import { useState } from 'react';
+import { IoChevronDown } from 'react-icons/io5';
 
 import { AUCTION_STATUS_BADGES } from '@/constants/auction';
 
 import ItemDetailAccordion from './ItemDetailAccordion';
 import type { AuctionItem } from '@/types';
+import { formatAuctionLabel } from '@/utils/formatAuctionLabel';
 import { formatPrice } from '@/utils/formatPrice';
-
-const formatAuctionLabel = (item: AuctionItem) =>
-  item.auctionType === 'UNIQUE_TOP'
-    ? item.minPrice !== null && item.maxPrice !== null && item.maxPrice > item.minPrice
-      ? `${formatPrice(item.minPrice)} ~ ${formatPrice(item.maxPrice)}`
-      : formatPrice(item.minPrice ?? 0)
-    : formatPrice(item.startPrice ?? 0);
 
 export default function DoneItemCard({ item }: { item: AuctionItem }) {
   const [expanded, setExpanded] = useState(false);
@@ -42,19 +37,10 @@ export default function DoneItemCard({ item }: { item: AuctionItem }) {
           <span className={`rounded-full px-1.5 py-0.5 text-caption font-extrabold ${statusBadge.className}`}>
             {statusBadge.label}
           </span>
-          <svg
-            className={`h-3 w-3 text-neutral-600 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
-            viewBox="0 0 12 12"
-            fill="none"
-          >
-            <path
-              d="M2.5 4.5L6 8L9.5 4.5"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <IoChevronDown
+            size={12}
+            className={`text-neutral-600 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+          />
         </div>
       </div>
 

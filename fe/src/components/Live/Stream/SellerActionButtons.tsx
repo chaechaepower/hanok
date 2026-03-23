@@ -28,22 +28,22 @@ export default function SellerActionButtons({
         type="button"
         onClick={onIntroduce}
         disabled={!canIntroduce}
-        className={`flex flex-1 w-full items-center justify-center gap-2 rounded-xl bg-surface-elevated text-sm font-bold text-neutral-300 transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-elevated ${introduceButtonClassName}`}
+        className={`flex flex-1 w-full items-center justify-center gap-2 rounded-xl bg-surface-elevated text-base font-bold text-neutral-300 transition hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-surface-elevated ${introduceButtonClassName}`}
       >
         <GoClock size={15} />
         설명 시작
-        <span className="rounded bg-neutral-800 px-1.5 py-0.5 text-[10px] text-neutral-500">SPACE</span>
+        <span className="rounded bg-neutral-800 px-1.5 py-0.5 text-caption text-neutral-500">SPACE</span>
       </button>
       <button
         ref={startButtonRef}
         type="button"
         onClick={onStart}
         disabled={!canStart}
-        className={`flex flex-1 w-full items-center justify-center gap-2 rounded-xl bg-gold text-sm font-black text-background transition hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-gold ${startButtonClassName}`}
+        className={`flex flex-1 w-full items-center justify-center gap-2 rounded-xl bg-gold text-base font-black text-background transition hover:bg-gold-light disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-gold ${startButtonClassName}`}
       >
         <PlayIcon />
         경매 시작
-        <span className="rounded bg-background/15 px-1.5 py-0.5 text-[10px] font-bold text-background/50">
+        <span className="rounded bg-background/15 px-1.5 py-0.5 text-caption font-bold text-background/50">
           ENTER
         </span>
       </button>

@@ -144,9 +144,9 @@ export default function StreamOverlay({ viewerCount = 0, isSeller = false }: Pro
   return (
     <>
       <div className="absolute top-3 left-3 z-10 flex items-center gap-3">
-        <div className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1">
+        <div className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5">
           <div className="h-2 w-2 animate-pulse rounded-full bg-white" />
-          <span className="text-xs font-black text-white">LIVE {viewerCount.toLocaleString('ko-KR')}</span>
+          <span className="translate-y-px text-xs font-black leading-none text-white">LIVE {viewerCount.toLocaleString('ko-KR')}</span>
         </div>
       </div>
 

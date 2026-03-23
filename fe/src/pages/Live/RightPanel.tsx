@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { usePostFollow } from '@/api/hooks/usePostFollow';
@@ -23,18 +23,19 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
   const { messages, sendMessage, sendMacro, connectionState } = useStompChat(streamEnter?.category ?? '');
   const [followStateOverride, setFollowStateOverride] = useState<{ sellerId: number; value: boolean } | null>(null);
   const { mutate: postFollow, isPending: isFollowPending } = usePostFollow();
-  const storedUserId = localStorage.getItem('userId');
-  const parsedUserId = storedUserId ? Number(storedUserId) : NaN;
-  const currentUserId = Number.isNaN(parsedUserId) ? null : parsedUserId;
+  const currentUserId = useMemo(() => {
+    const stored = localStorage.getItem('userId');
+    const parsed = stored ? Number(stored) : NaN;
+    return Number.isNaN(parsed) ? null : parsed;
+  }, []);
   const sellerId = streamEnter?.seller.sellerId ?? 0;
   const sellerNickname = streamEnter?.seller.nickname ?? 'seller';
   const sellerProfileImage = streamEnter?.seller.profileImage ?? null;
-  const isFollowActionPending = isFollowPending;
   const isFollowing =
     followStateOverride?.sellerId === sellerId ? followStateOverride.value : (streamEnter?.isFollowing ?? false);
 
   const handleFollowToggle = () => {
-    if (sellerId <= 0 || isFollowActionPending) {
+    if (sellerId <= 0 || isFollowPending) {
       return;
     }
 
@@ -48,44 +49,67 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
 
   return (
     <div className="flex h-full w-full flex-col rounded-2xl bg-background text-point">
-      <div className="flex items-center justify-between gap-2.5 px-3 py-2">
-        <button
-          type="button"
-          onClick={() => sellerId > 0 && !isSeller && navigate(`/profile/${sellerId}`)}
-          className="flex min-w-0 items-center gap-2.5 rounded-lg transition hover:opacity-80"
-        >
-          {sellerProfileImage ? (
-            <img src={sellerProfileImage} alt={sellerNickname} className="h-7 w-7 shrink-0 rounded-full object-cover" />
-          ) : (
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-800 text-[10px] font-bold text-gold">
-              {getSellerInitial(sellerNickname)}
-            </div>
-          )}
-          <span className="min-w-0 truncate text-xs font-bold text-neutral-100">{sellerNickname}</span>
-        </button>
-
-        {sellerId > 0 && !isSeller && (
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(205,145,80,0.06)_0%,transparent_50%)]" />
+        <div className="relative flex items-center gap-4 px-4 py-4">
           <button
             type="button"
-            onClick={handleFollowToggle}
-            disabled={isFollowActionPending}
-            className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold transition ${
-              isFollowing
-                ? 'border border-neutral-600 bg-transparent text-neutral-300 hover:bg-warm/10'
-                : 'bg-neutral-100 text-background hover:bg-neutral-200'
-            } disabled:cursor-not-allowed disabled:opacity-50`}
+            onClick={() => sellerId > 0 && !isSeller && navigate(`/profile/${sellerId}`)}
+            disabled={sellerId <= 0 || isSeller}
+            className="group relative shrink-0"
           >
-            {isFollowing ? '언팔로우' : '팔로우'}
+            <div className="relative">
+              {sellerProfileImage ? (
+                <img
+                  src={sellerProfileImage}
+                  alt={sellerNickname}
+                  className="h-13 w-13 rounded-full object-cover shadow-[0_0_0_2px_rgba(205,145,80,0.15)] transition group-hover:shadow-[0_0_0_2px_rgba(205,145,80,0.4)]"
+                />
+              ) : (
+                <div className="flex h-13 w-13 items-center justify-center rounded-full bg-gradient-to-br from-neutral-700 to-neutral-800 text-sm font-bold text-gold shadow-[0_0_0_2px_rgba(205,145,80,0.15)] transition group-hover:shadow-[0_0_0_2px_rgba(205,145,80,0.4)]">
+                  {getSellerInitial(sellerNickname)}
+                </div>
+              )}
+              <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-[2.5px] border-background bg-ember shadow-[0_0_6px_rgba(94,205,172,0.4)]" />
+            </div>
           </button>
-        )}
+
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <button
+              type="button"
+              onClick={() => sellerId > 0 && !isSeller && navigate(`/profile/${sellerId}`)}
+              disabled={sellerId <= 0 || isSeller}
+              className="w-fit text-left disabled:cursor-default"
+            >
+              <span className="flex items-center gap-1.5">
+                <span className="truncate text-base font-bold text-neutral-100 transition hover:text-gold-light">{sellerNickname}</span>
+                <span className="shrink-0 rounded bg-gold/15 px-1.5 py-0.5 text-label font-bold text-gold">판매자</span>
+              </span>
+            </button>
+            {sellerId > 0 && !isSeller && (
+              <button
+                type="button"
+                onClick={handleFollowToggle}
+                disabled={isFollowPending}
+                className={`mt-1 w-fit rounded-full px-3 py-1 text-label font-bold transition ${
+                  isFollowing
+                    ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-200'
+                    : 'bg-gold/15 text-gold hover:bg-gold/25'
+                } disabled:cursor-not-allowed disabled:opacity-50`}
+              >
+                {isFollowing ? '✓ 팔로잉' : '+ 팔로우'}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="flex border-b border-neutral-800" role="tablist">
         <button
           role="tab"
           aria-selected={activeTab === 'chat'}
-          className={`flex-1 py-3 text-body-md font-bold transition ${
-            activeTab === 'chat' ? 'border-b-2 border-gold text-neutral-100' : 'text-neutral-600'
+          className={`flex-1 py-3 text-sm font-bold transition ${
+            activeTab === 'chat' ? 'border-b-2 border-gold text-neutral-100' : 'text-neutral-500'
           }`}
           onClick={() => setActiveTab('chat')}
         >
@@ -94,8 +118,8 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
         <button
           role="tab"
           aria-selected={activeTab === 'auction'}
-          className={`flex-1 py-3 text-body-md font-bold transition ${
-            activeTab === 'auction' ? 'border-b-2 border-gold text-neutral-100' : 'text-neutral-600'
+          className={`flex-1 py-3 text-sm font-bold transition ${
+            activeTab === 'auction' ? 'border-b-2 border-gold text-neutral-100' : 'text-neutral-500'
           }`}
           onClick={() => setActiveTab('auction')}
         >
