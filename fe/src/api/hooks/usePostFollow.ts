@@ -18,6 +18,7 @@ export const usePostFollow = () => {
       queryClient.invalidateQueries({ queryKey: ['sellerReputation', variables.targetSellerId] });
       queryClient.invalidateQueries({ queryKey: ['liveCards'] });
       queryClient.invalidateQueries({ queryKey: ['followedStores'] });
+      queryClient.invalidateQueries({ queryKey: ['sellerRanking'] });
       queryClient.invalidateQueries({ queryKey: ['sellerProfile', variables.targetSellerId] });
     },
   });
