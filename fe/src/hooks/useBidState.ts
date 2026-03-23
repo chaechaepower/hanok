@@ -168,8 +168,8 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
   useEffect(() => {
     if (hasActiveAuction) {
       hadActiveAuctionRef.current = true;
-      setAuctionEndPhase(null);
-      return;
+      const resetTimer = window.setTimeout(() => setAuctionEndPhase(null), 0);
+      return () => window.clearTimeout(resetTimer);
     }
     if (hadActiveAuctionRef.current) {
       const endedTimer = window.setTimeout(() => setAuctionEndPhase('ended'), 0);
