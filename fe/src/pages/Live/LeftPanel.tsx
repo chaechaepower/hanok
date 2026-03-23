@@ -73,7 +73,7 @@ export default function LeftPanel({
           <span className="text-[11px] font-bold text-neutral-600">{totalCount}</span>
         </div>
 
-        <div className="left-panel-scroll flex flex-1 flex-col gap-2 overflow-y-auto pr-2">
+        <div className="left-panel-scroll flex flex-1 flex-col gap-2 overflow-y-auto">
           {activeItems.map((item) => (
             <ActiveItemCard
               key={item.id}

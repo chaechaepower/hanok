@@ -24,7 +24,7 @@ export default function AuctionCommentToast({ message }: Props) {
 
   return (
     <div className="pointer-events-none absolute top-3 left-1/2 z-40 w-[min(70%,24rem)] -translate-x-1/2">
-      <div className={`${message ? 'animate-toast-in' : 'animate-toast-out'} relative overflow-hidden rounded-[28px] border border-accent/30 bg-background/92 shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-xl`}>
+      <div className={`${message ? 'animate-toast-in' : 'animate-toast-out'} relative overflow-hidden rounded-(--radius-panel) border border-accent/30 bg-background/92 shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-xl`}>
         <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-accent via-gold to-accent-light" />
         <div className="absolute -top-10 right-8 h-24 w-24 rounded-full bg-accent/20 blur-3xl" />
         <div className="absolute -bottom-8 left-10 h-20 w-20 rounded-full bg-gold/15 blur-3xl" />

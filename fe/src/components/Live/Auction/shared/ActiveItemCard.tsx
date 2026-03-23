@@ -42,17 +42,17 @@ export default function ActiveItemCard({ item, isSelected, isSeller, onSelect }:
 
   return (
     <div
-      className={`flex cursor-pointer flex-col rounded-[20px] border bg-surface p-3.5 transition-all duration-200 ${borderClass}`}
+      className={`flex cursor-pointer flex-col rounded-(--radius-panel) border bg-surface p-3.5 transition-all duration-200 ${borderClass}`}
       onClick={handleCardClick}
     >
       <div className="flex gap-3">
         {item.thumbnailUrl ? (
           <div
-            className="h-16 w-16 shrink-0 rounded-[14px] bg-neutral-800 bg-cover bg-center"
+            className="h-16 w-16 shrink-0 rounded-(--radius-control) bg-neutral-800 bg-cover bg-center"
             style={{ backgroundImage: `url(${item.thumbnailUrl})` }}
           />
         ) : (
-          <div className="h-16 w-16 shrink-0 rounded-[14px] bg-neutral-800" />
+          <div className="h-16 w-16 shrink-0 rounded-(--radius-control) bg-neutral-800" />
         )}
 
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
