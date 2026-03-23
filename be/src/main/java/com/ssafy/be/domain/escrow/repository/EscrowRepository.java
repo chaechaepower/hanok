@@ -2,6 +2,7 @@ package com.ssafy.be.domain.escrow.repository;
 
 import com.ssafy.be.domain.escrow.entity.Escrow;
 import com.ssafy.be.domain.escrow.entity.EscrowStatus;
+import com.ssafy.be.domain.escrow.entity.TxStatus;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -74,5 +75,7 @@ public interface EscrowRepository extends JpaRepository<Escrow, Long> {
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
+
+    List<Escrow> findByTxStatus(TxStatus txStatus);
 }
 
