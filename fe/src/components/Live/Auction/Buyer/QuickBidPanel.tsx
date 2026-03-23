@@ -11,13 +11,13 @@ export default function QuickBidPanel({ bid }: Props) {
     <div className="flex flex-1 gap-2">
       <div className="flex flex-1 flex-col items-center justify-center rounded-lg bg-neutral-900 px-3 py-1">
         <div className="flex items-center gap-4">
-          <span className="text-[10px] text-neutral-500">잔고</span>
+          <span className="text-caption text-neutral-500">잔고</span>
           <span className="text-xs font-bold tabular-nums text-neutral-100">
             {bid.balance.toLocaleString()}원
           </span>
         </div>
         {bid.isInsufficientBalance && (
-          <span className="mt-1 text-[10px] font-bold text-accent-light">잔고 부족</span>
+          <span className="mt-1 text-caption font-bold text-accent-light">잔고 부족</span>
         )}
       </div>
       <button
@@ -35,7 +35,7 @@ export default function QuickBidPanel({ bid }: Props) {
             <span className="text-xs font-bold text-gold-light">(+{bid.increment.toLocaleString()})</span>
           )}
         </div>
-        <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">
+        <span className="rounded bg-warm/15 px-1.5 py-3 text-caption font-bold text-gold-light">
           ENTER
         </span>
       </button>

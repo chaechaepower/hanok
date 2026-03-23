@@ -16,7 +16,7 @@ export default function CustomBidPanel({ bid }: Props) {
             <button
               key={option.label}
               type="button"
-              className={`flex-1 rounded-md py-1.5 text-[10px] font-bold transition ${
+              className={`flex-1 rounded-md py-1.5 text-caption font-bold transition ${
                 bid.activeCustomUnit === option.value ? 'bg-gold text-neutral-100' : 'text-neutral-500'
               }`}
               onClick={() => bid.setCustomUnit(option.value)}
@@ -29,13 +29,13 @@ export default function CustomBidPanel({ bid }: Props) {
         <div className="flex flex-1 items-center gap-2">
           <div className="flex min-h-8 shrink-0 flex-col justify-center rounded-lg bg-neutral-900 px-2.5 py-1">
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-neutral-500">잔고</span>
+              <span className="text-caption text-neutral-500">잔고</span>
               <span className="text-xs font-bold tabular-nums text-neutral-100">
                 {bid.balance.toLocaleString()}원
               </span>
             </div>
             {bid.isInsufficientBalance && (
-              <span className="mt-1 text-[10px] font-bold text-accent-light">잔고 부족</span>
+              <span className="mt-1 text-caption font-bold text-accent-light">잔고 부족</span>
             )}
           </div>
           <div className="h-5 w-px bg-neutral-700" />
@@ -95,14 +95,14 @@ export default function CustomBidPanel({ bid }: Props) {
           <span className="text-lg font-black">입찰</span>
           {bid.hasActiveAuction && (
             <>
-              <span className="text-[10px] font-bold tabular-nums text-gold-light">
+              <span className="text-caption font-bold tabular-nums text-gold-light">
                 {bid.effectiveBidAmount.toLocaleString()}원
               </span>
-              <span className="text-[10px] font-bold text-gold">+{bid.increment.toLocaleString()}</span>
+              <span className="text-caption font-bold text-gold">+{bid.increment.toLocaleString()}</span>
             </>
           )}
         </div>
-        <span className="rounded bg-warm/15 px-1.5 py-3 text-[10px] font-bold text-gold-light">
+        <span className="rounded bg-warm/15 px-1.5 py-3 text-caption font-bold text-gold-light">
           ENTER
         </span>
       </button>

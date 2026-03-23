@@ -63,7 +63,7 @@ export default function StreamDisconnected({ initialSeconds = 300, onTimeout, on
             <button
               type="button"
               onClick={onExit}
-              className="w-[70%] rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-[15px] font-bold text-white/80 transition hover:bg-white/10"
+              className="w-[70%] rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sub-lg font-bold text-white/80 transition hover:bg-white/10"
             >
               나가기
             </button>

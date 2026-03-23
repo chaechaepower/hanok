@@ -62,38 +62,38 @@ export default function KeyboardGuide({ open, onToggle, activeKeys = new Set() }
           </div>
           <div className="mt-0.5 flex w-full gap-1">
             <div
-              className={`flex-1 rounded-lg py-1.5 text-center text-[10px] font-bold tracking-widest transition-colors duration-100 ${
+              className={`flex-1 rounded-lg py-1.5 text-center text-caption font-bold tracking-widest transition-colors duration-100 ${
                 isActive('Enter') ? 'bg-gold text-background' : 'bg-gold/20 text-gold-light'
               }`}
             >
               ENTER
             </div>
-            <span className="flex h-auto items-center justify-center px-1 text-[10px] text-neutral-400">입찰</span>
+            <span className="flex h-auto items-center justify-center px-1 text-caption text-neutral-400">입찰</span>
           </div>
         </div>
 
         {/* 단축키 설명 */}
-        <div className="flex flex-col justify-center gap-3 text-[11px] text-neutral-400">
+        <div className="flex flex-col justify-center gap-3 text-label text-neutral-400">
           <div className="flex items-center gap-2">
-            <span className={`h-7 px-2 text-[10px] font-bold ${BADGE_BASE} ${isActive('Tab') ? BADGE_ACTIVE : BADGE_INACTIVE}`}>
+            <span className={`h-7 px-2 text-caption font-bold ${BADGE_BASE} ${isActive('Tab') ? BADGE_ACTIVE : BADGE_INACTIVE}`}>
               Tab
             </span>
             <span>탭 전환</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`h-7 w-7 text-[10px] font-bold ${BADGE_BASE} ${isActive('ArrowUp') ? BADGE_ACTIVE : BADGE_INACTIVE}`}>
+            <span className={`h-7 w-7 text-caption font-bold ${BADGE_BASE} ${isActive('ArrowUp') ? BADGE_ACTIVE : BADGE_INACTIVE}`}>
               ↑
             </span>
-            <span className={`h-7 w-7 text-[10px] font-bold ${BADGE_BASE} ${isActive('ArrowDown') ? BADGE_ACTIVE : BADGE_INACTIVE}`}>
+            <span className={`h-7 w-7 text-caption font-bold ${BADGE_BASE} ${isActive('ArrowDown') ? BADGE_ACTIVE : BADGE_INACTIVE}`}>
               ↓
             </span>
             <span>금액 조절</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`h-7 w-7 text-[10px] font-bold ${BADGE_BASE} ${isActive('ArrowLeft') ? BADGE_ACTIVE : BADGE_INACTIVE}`}>
+            <span className={`h-7 w-7 text-caption font-bold ${BADGE_BASE} ${isActive('ArrowLeft') ? BADGE_ACTIVE : BADGE_INACTIVE}`}>
               ←
             </span>
-            <span className={`h-7 w-7 text-[10px] font-bold ${BADGE_BASE} ${isActive('ArrowRight') ? BADGE_ACTIVE : BADGE_INACTIVE}`}>
+            <span className={`h-7 w-7 text-caption font-bold ${BADGE_BASE} ${isActive('ArrowRight') ? BADGE_ACTIVE : BADGE_INACTIVE}`}>
               →
             </span>
             <span>단위 변경</span>

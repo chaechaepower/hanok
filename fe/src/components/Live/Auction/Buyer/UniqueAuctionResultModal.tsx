@@ -37,15 +37,17 @@ export default function UniqueAuctionResultModal({ isOpen, itemName, payload, on
         <div className="flex flex-col gap-4 px-7 py-6">
           {payload.isWon ? (
             <div className="rounded-(--radius-panel) border border-white/6 bg-white/3 px-4.5 py-5">
-              <div className="text-[11px] font-bold text-neutral-500">낙찰 금액</div>
+              <div className="text-label font-bold text-neutral-500">낙찰 금액</div>
               <div className="mt-2 text-2xl font-black text-point">
                 {payload.winnerPrice !== null ? formatPrice(payload.winnerPrice) : '-'}
               </div>
-              <p className="mt-3 text-[11px] leading-6 text-neutral-400">유일한 최고 입찰가로 낙찰되었습니다</p>
+              <p className="mt-3 text-label leading-6 text-neutral-400">
+                유일한 최고 입찰가로 낙찰되었습니다.
+              </p>
             </div>
           ) : (
             <div className="rounded-(--radius-panel) border border-white/6 bg-white/3 px-4.5 py-5">
-              <div className="text-[11px] font-bold text-neutral-500">최상위 중복 입찰</div>
+              <div className="text-label font-bold text-neutral-500">최상위 중복 입찰</div>
               {payload.topDuplicates && payload.topDuplicates.length > 0 ? (
                 <div className="mt-3 flex flex-col gap-2">
                   {payload.topDuplicates.map((duplicate) => (
@@ -59,13 +61,13 @@ export default function UniqueAuctionResultModal({ isOpen, itemName, payload, on
                   ))}
                 </div>
               ) : (
-                <p className="mt-3 text-[11px] leading-6 text-neutral-400">중복 입찰 정보가 없습니다</p>
+                <p className="mt-3 text-label leading-6 text-neutral-400">중복 입찰 정보가 없습니다.</p>
               )}
             </div>
           )}
 
           <button
-            className="mt-2 flex w-full items-center justify-center rounded-(--radius-panel) bg-point px-4 py-3 text-[15px] text-background transition hover:opacity-90"
+            className="mt-2 flex w-full items-center justify-center rounded-(--radius-panel) bg-point px-4 py-3 text-sub-lg text-background transition hover:opacity-90"
             onClick={onClose}
           >
             확인

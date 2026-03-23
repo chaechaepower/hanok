@@ -54,7 +54,7 @@ export default function AuctionCommentToast({ message }: Props) {
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-semibold leading-[1.55] text-warm drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)]">
+            <p className="text-body-sm font-semibold leading-[1.55] text-warm drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)]">
               {displayMessage}
             </p>
           </div>

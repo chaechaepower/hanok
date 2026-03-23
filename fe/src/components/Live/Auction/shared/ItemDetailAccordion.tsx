@@ -33,38 +33,38 @@ export default function ItemDetailAccordion({ item }: { item: AuctionItem }) {
         <div className="flex flex-wrap gap-3">
           {item.auctionTime && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold text-neutral-600">경매 시간</span>
-              <span className="text-[11px] font-extrabold text-gold-dark">{formatAuctionTime(item.auctionTime)}</span>
+              <span className="text-caption font-bold text-neutral-600">경매 시간</span>
+              <span className="text-label font-extrabold text-gold-dark">{formatAuctionTime(item.auctionTime)}</span>
             </div>
           )}
           {item.auctionType === 'BOTTOM_UP' && hasBottomUpPrice && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold text-neutral-600">시작가</span>
-              <span className="text-[11px] font-extrabold text-gold-dark">{formatPrice(item.startPrice ?? 0)}</span>
+              <span className="text-caption font-bold text-neutral-600">시작가</span>
+              <span className="text-label font-extrabold text-gold-dark">{formatPrice(item.startPrice ?? 0)}</span>
             </div>
           )}
           {item.auctionType === 'BOTTOM_UP' && hasBidUnit && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold text-neutral-600">입찰 단위</span>
-              <span className="text-[11px] font-extrabold text-gold-dark">{formatPrice(item.bidUnit ?? 0)}</span>
+              <span className="text-caption font-bold text-neutral-600">입찰 단위</span>
+              <span className="text-label font-extrabold text-gold-dark">{formatPrice(item.bidUnit ?? 0)}</span>
             </div>
           )}
           {item.auctionType === 'UNIQUE_TOP' && hasUniqueRange && (
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] font-bold text-neutral-600">가격 범위</span>
-              <span className="text-[11px] font-extrabold text-gold-dark">
+              <span className="text-caption font-bold text-neutral-600">가격 범위</span>
+              <span className="text-label font-extrabold text-gold-dark">
                 {formatPrice(item.minPrice ?? 0)} ~ {formatPrice(item.maxPrice ?? 0)}
               </span>
             </div>
           )}
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-bold text-neutral-600">경매 방식</span>
-            <span className="text-[11px] font-extrabold text-gold-dark">{AUCTION_TYPE_LABELS[item.auctionType]}</span>
+            <span className="text-caption font-bold text-neutral-600">경매 방식</span>
+            <span className="text-label font-extrabold text-gold-dark">{AUCTION_TYPE_LABELS[item.auctionType]}</span>
           </div>
         </div>
       )}
 
-      {item.description && <p className="text-[11px] leading-relaxed text-neutral-500">{item.description}</p>}
+      {item.description && <p className="text-label leading-relaxed text-neutral-500">{item.description}</p>}
 
       {item.images && item.images.length > 0 && (
         <div className="flex gap-1.5">

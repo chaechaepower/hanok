@@ -115,7 +115,7 @@ export default function ChatInput({ streamId, category, connectionState, onSendM
                 type="button"
                 disabled={!isConnected}
                 onClick={() => void handleMacroClick(macro.command)}
-                className="shrink-0 rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-[10px] font-bold text-neutral-400 transition-all hover:border-gold hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+                className="shrink-0 rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-caption font-bold text-neutral-400 transition-all hover:border-gold hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {macro.command}
               </button>
@@ -138,7 +138,7 @@ export default function ChatInput({ streamId, category, connectionState, onSendM
               void handleSubmit();
             }
           }}
-          className="w-full rounded-2xl border-none bg-surface-elevated px-4 py-3 pr-20 text-[13px] text-neutral-100 placeholder:text-neutral-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-55"
+          className="w-full rounded-2xl border-none bg-surface-elevated px-4 py-3 pr-20 text-body-md text-neutral-100 placeholder:text-neutral-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-55"
         />
         <div className="absolute right-3 flex items-center gap-2">
           <button
