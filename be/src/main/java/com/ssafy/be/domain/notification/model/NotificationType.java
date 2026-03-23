@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 public enum NotificationType {
 
     // ===== 거래 시작 =====
-
     ESCROW_STARTED_FOR_BUYER(
             "거래 시작",
             "%s을 낙찰하여 거래가 시작되었습니다."
@@ -20,7 +19,6 @@ public enum NotificationType {
     ),
 
     // ===== 배송 시작 =====
-
     ESCROW_SHIPPED_FOR_BUYER(
             "상품 발송",
             "%s님이 %s을 발송했습니다. 곧 받아보실 수 있어요."
@@ -32,7 +30,6 @@ public enum NotificationType {
     ),
 
     // ===== 거래 완료 =====
-
     ESCROW_COMPLETED(
             "거래 완료",
             "%s 거래가 안전하게 완료되었습니다."
@@ -44,11 +41,23 @@ public enum NotificationType {
     ),
 
     // ===== 거래 취소 =====
-
     ESCROW_CANCELLED(
-        "거래 취소",
-                "%s 거래가 취소되었습니다."
+            "거래 취소",
+            "%s 거래가 취소되었습니다."
+    ),
+
+    // ===== 공지사항 등록 =====
+    NOTICE_CREATE(
+            "공지사항 등록",
+            "%s님이 공지사항을 게시했습니다."
+    ),
+
+    // ===== 방송 시작 =====
+    STREAM_START(
+            "방송 시작",
+                    "%s님이 방송을 시작했습니다."
     );
+
 
     private final String title;
     private final String body;

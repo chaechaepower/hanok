@@ -14,6 +14,7 @@ import com.ssafy.be.domain.item.entity.ItemStatus;
 import com.ssafy.be.domain.item.entity.Tag;
 import com.ssafy.be.domain.item.exception.ItemErrorCode;
 import com.ssafy.be.domain.item.repository.ItemRepository;
+import com.ssafy.be.domain.notification.service.NotificationService;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
@@ -61,10 +62,13 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import static com.ssafy.be.domain.notification.model.NotificationType.STREAM_START;
+
 @Service
 @RequiredArgsConstructor
 public class StreamService {
 
+    private final NotificationService notificationService;
     private final StreamRepository streamRepository;
     private final SellerRepository sellerRepository;
     private final GcsClient gcsClient;
@@ -317,6 +321,17 @@ public class StreamService {
                         .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
         stream.start();
+
+        // 팔로워들에게 알림 발송
+        followRepository.findBySeller(seller).forEach(follow -> {
+            notificationService.sendNotification(
+                    follow.getUser().getId(),
+                    STREAM_START.name(),
+                    STREAM_START.getTitle(),
+                    STREAM_START.renderBody(seller.getUser().getNickname()),
+                    "/streams/%d/enter".formatted(stream.getId())
+            );
+        });
     }
 
     @Transactional
