@@ -19,6 +19,7 @@ import SellerGuideOverlay from '@/components/Live/Stream/SellerGuideOverlay';
 import StreamOverlay from '@/components/Live/Stream/StreamOverlay';
 import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
 import type { StreamEnterResponse, StreamRequest } from '@/types';
+import { sendStreamMessage } from '@/websocket/stompClient';
 
 import LeftPanel from './LeftPanel';
 import LiveHeader from './LiveHeader';
@@ -86,6 +87,7 @@ export default function LivePage() {
   const [showSellerStartModal, setShowSellerStartModal] = useState(false);
   const [showStreamEndModal, setShowStreamEndModal] = useState(false);
   const autoOpenedStartModalStreamIdRef = useRef<number | null>(null);
+  const uniqueCalculatingSentAuctionIdRef = useRef<number | null>(null);
   const postStartStream = usePostStartStream();
   const postEndStream = usePostEndStream();
   const [isChatOpen, setIsChatOpen] = useState(true);
@@ -300,6 +302,29 @@ export default function LivePage() {
     clearUniqueAuctionResult();
   };
 
+  const handleAuctionTimerExpire = useCallback(() => {
+    if (!streamId || activeAuctionType !== 'UNIQUE_TOP' || activeBidAuctionId === null) {
+      return;
+    }
+
+    if (uniqueCalculatingSentAuctionIdRef.current === activeBidAuctionId) {
+      return;
+    }
+
+    uniqueCalculatingSentAuctionIdRef.current = activeBidAuctionId;
+
+    void sendStreamMessage(streamId, {
+      eventType: 'UNIQUE_AUCTION_CALCULATING',
+      payload: {
+        auctionId: activeBidAuctionId,
+        message: '집계 중입니다...',
+      },
+    }).catch((error) => {
+      uniqueCalculatingSentAuctionIdRef.current = null;
+      console.error('[stream] failed to send unique auction calculating event', error);
+    });
+  }, [activeAuctionType, activeBidAuctionId, streamId]);
+
   return (
     <div className="flex h-screen w-full flex-col bg-surface p-3">
       <LiveHeader
@@ -365,7 +390,7 @@ export default function LivePage() {
           {auctionComment && <AuctionCommentToast key={auctionComment.id} message={auctionComment?.message ?? null} />}
 
           <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
-            {timer && <AuctionTimer key={timer.receivedAtMs} timer={timer} onExpire={() => undefined} />}
+            {timer && <AuctionTimer key={timer.receivedAtMs} timer={timer} onExpire={handleAuctionTimerExpire} />}
           </div>
 
           <SellerStartModal

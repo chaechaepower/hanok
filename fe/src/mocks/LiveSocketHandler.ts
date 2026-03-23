@@ -818,59 +818,71 @@ const scheduleWinnerAnnouncement = (streamId: string) => {
 
 const scheduleUniqueAuctionEnd = (streamId: string) => {
   clearWinnerAnnouncement(streamId);
+};
 
+const handleUniqueAuctionCalculating = (destination: string, body: string) => {
+  const streamId = getStreamIdFromDestination(destination);
   const currentState = streamTimerStates.get(streamId);
+  const activeItem = getActiveLiveItem(streamId);
 
-  if (!currentState) {
+  if (!currentState || activeItem?.auctionType !== 'UNIQUE_TOP') {
     return;
   }
 
-  const remainingMs = Math.max(0, currentState.startedAtMs + currentState.durationSeconds * 1000 - Date.now());
-  const winnerAnnouncementTimer = globalThis.setTimeout(() => {
-    const bidAmounts = streamUniqueBidAmountsStates.get(streamId) ?? [];
-    const priceCountMap = new Map<number, number>();
+  const payload = JSON.parse(body) as {
+    payload?: {
+      auctionId?: number;
+      message?: string;
+    };
+  };
 
-    bidAmounts.forEach((amount) => {
-      priceCountMap.set(amount, (priceCountMap.get(amount) ?? 0) + 1);
-    });
+  if (typeof payload.payload?.auctionId === 'number' && activeItem.auctionId !== payload.payload.auctionId) {
+    return;
+  }
 
-    const uniquePrices = [...priceCountMap.entries()]
-      .filter(([, count]) => count === 1)
-      .map(([price]) => price)
-      .sort((a, b) => b - a);
-    const winnerPrice = uniquePrices[0] ?? null;
-    const topDuplicates =
-      winnerPrice === null
-        ? [...priceCountMap.entries()]
-            .filter(([, count]) => count > 1)
-            .sort((a, b) => b[0] - a[0])
-            .slice(0, 3)
-            .map(([price, cnt]) => ({ price, cnt }))
-        : null;
+  const bidAmounts = streamUniqueBidAmountsStates.get(streamId) ?? [];
+  const priceCountMap = new Map<number, number>();
 
-    broadcastToDestination(`/broadcast/streams/${streamId}`, {
-      eventType: 'UNIQUE_AUCTION_CALCULATING',
-      payload: null,
-    });
+  bidAmounts.forEach((amount) => {
+    priceCountMap.set(amount, (priceCountMap.get(amount) ?? 0) + 1);
+  });
 
-    completeUniqueLiveItem(streamId, winnerPrice !== null, winnerPrice);
-    streamTimerStates.delete(streamId);
-    streamUniqueBidSyncStates.delete(streamId);
-    streamUniqueBidAmountsStates.delete(streamId);
+  const uniquePrices = [...priceCountMap.entries()]
+    .filter(([, count]) => count === 1)
+    .map(([price]) => price)
+    .sort((a, b) => b - a);
+  const winnerPrice = uniquePrices[0] ?? null;
+  const topDuplicates =
+    winnerPrice === null
+      ? [...priceCountMap.entries()]
+          .filter(([, count]) => count > 1)
+          .sort((a, b) => b[0] - a[0])
+          .slice(0, 3)
+          .map(([price, cnt]) => ({ price, cnt }))
+      : null;
 
-    broadcastToDestination(`/broadcast/streams/${streamId}`, {
-      eventType: 'UNIQUE_AUCTION_END',
-      payload: {
-        isWon: winnerPrice !== null,
-        winnerPrice,
-        topDuplicates,
-      },
-    });
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'UNIQUE_AUCTION_CALCULATING',
+    payload: {
+      auctionId: activeItem.auctionId,
+      message: payload.payload?.message ?? '집계 중입니다...',
+    },
+  });
 
-    winnerAnnouncementTimers.delete(streamId);
-  }, remainingMs);
+  completeUniqueLiveItem(streamId, winnerPrice !== null, winnerPrice);
+  clearWinnerAnnouncement(streamId);
+  streamTimerStates.delete(streamId);
+  streamUniqueBidSyncStates.delete(streamId);
+  streamUniqueBidAmountsStates.delete(streamId);
 
-  winnerAnnouncementTimers.set(streamId, winnerAnnouncementTimer);
+  broadcastToDestination(`/broadcast/streams/${streamId}`, {
+    eventType: 'UNIQUE_AUCTION_END',
+    payload: {
+      isWon: winnerPrice !== null,
+      winnerPrice,
+      topDuplicates,
+    },
+  });
 };
 
 const handleAuctionStart = (destination: string, body: string) => {
@@ -1252,6 +1264,10 @@ const handleSendFrame = (frame: StompFrame) => {
 
     if (body.eventType === 'UNIQUE_BID_SYNC') {
       handleUniqueBidSync(frame.headers.destination);
+    }
+
+    if (body.eventType === 'UNIQUE_AUCTION_CALCULATING') {
+      handleUniqueAuctionCalculating(frame.headers.destination, frame.body);
     }
 
     if (body.eventType === 'ITEM_SYNC') {

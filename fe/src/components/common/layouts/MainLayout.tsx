@@ -3,7 +3,6 @@ import { Suspense } from 'react';
 import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary';
 
-import Footer from '@/components/common/layouts/Footer';
 import Loading from '@/components/common/layouts/Loading';
 import Header from '@/components/common/layouts/Header';
 import MainSkeleton from '@/components/Main/MainSkeleton';
@@ -34,8 +33,6 @@ export default function MainLayout() {
             )}
           </QueryErrorResetBoundary>
         </div>
-
-        <Footer />
       </div>
     </>
   );

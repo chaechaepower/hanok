@@ -140,6 +140,11 @@ export type UniqueAuctionEndDuplicate = {
   cnt: number;
 };
 
+export type UniqueAuctionCalculatingPayload = {
+  auctionId: number;
+  message: string;
+};
+
 export type UniqueAuctionEndPayload = {
   isWon: boolean;
   winnerPrice: number | null;
@@ -416,7 +421,7 @@ export type BroadcastStreamEvent =
     }
   | {
       eventType: 'UNIQUE_AUCTION_CALCULATING';
-      payload: null;
+      payload?: UniqueAuctionCalculatingPayload | null;
     }
   | {
       eventType: 'UNIQUE_AUCTION_END';
