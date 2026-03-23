@@ -12,13 +12,14 @@ import WinModal from '@/components/Live/Auction/Buyer/WinModal';
 import UniqueAuctionResultModal from '@/components/Live/Auction/Buyer/UniqueAuctionResultModal';
 import AuctionTimer from '@/components/Live/Auction/shared/AuctionTimer';
 import AuctionCommentToast from '@/components/Live/Stream/AuctionCommentToast';
-import ControlBar from '@/components/Live/Stream/ControlBar';
+import SellerControlBar from '@/components/Live/Stream/SellerControlBar';
+import BuyerControlBar from '@/components/Live/Stream/BuyerControlBar';
 import StreamDisconnected from '@/components/Live/Stream/Streamdisconnected';
 import StreamEnded from '@/components/Live/Stream/StreamEnded';
 import SellerGuideOverlay from '@/components/Live/Stream/SellerGuideOverlay';
 import StreamOverlay from '@/components/Live/Stream/StreamOverlay';
 import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
-import type { StreamEnterResponse, StreamRequest } from '@/types';
+import type { StreamRequest } from '@/types';
 import { sendStreamMessage } from '@/websocket/stompClient';
 
 import LeftPanel from './LeftPanel';
@@ -28,6 +29,10 @@ import SellerStartModal from './SellerStartModal';
 import StreamEndModal from './StreamEndModal';
 
 const STARTED_STREAM_IDS_STORAGE_KEY = 'startedLiveStreamIds';
+
+const CHAT_PANEL_INITIAL = { flex: 0, opacity: 0 };
+const CHAT_PANEL_ANIMATE = { flex: 1, opacity: 1 };
+const CHAT_PANEL_TRANSITION = { type: 'spring', stiffness: 400, damping: 30 } as const;
 
 const getStartedLiveStreamIds = () => {
   if (typeof window === 'undefined') {
@@ -93,9 +98,10 @@ export default function LivePage() {
   const [isChatOpen, setIsChatOpen] = useState(true);
   const handleToggleChat = useCallback(() => setIsChatOpen((prev) => !prev), []);
 
-  const activeStreamEnter: StreamEnterResponse | null = streamEnter ?? null;
+  const activeStreamEnter = streamEnter ?? null;
   const isSeller = activeStreamEnter?.isHost ?? false;
-  const hasStartedThisStream = Number.isFinite(numericStreamId) && getStartedLiveStreamIds().has(numericStreamId);
+  const [startedStreamIds] = useState(() => getStartedLiveStreamIds());
+  const hasStartedThisStream = Number.isFinite(numericStreamId) && startedStreamIds.has(numericStreamId);
 
   const {
     isStreamLive,
@@ -117,7 +123,10 @@ export default function LivePage() {
     clearUniqueAuctionResult,
   } = useLiveStream(streamId, activeStreamEnter?.status === 'LIVE');
 
-  const readyItems = itemSync?.items.filter((item) => item.auctionStatus === 'READY') ?? [];
+  const readyItems = useMemo(
+    () => itemSync?.items.filter((item) => item.auctionStatus === 'READY') ?? [],
+    [itemSync?.items],
+  );
   const selectedAuctionItem = itemSync?.items.find((item) => item.auctionId === selectedAuctionId) ?? null;
   const visibleSelectedAuctionId =
     selectedAuctionItem &&
@@ -292,7 +301,6 @@ export default function LivePage() {
   }, [numericStreamId, streamState]);
 
   const handleWinConfirm = async () => {
-    await Promise.resolve();
     await queryClient.invalidateQueries({ queryKey: ['wallet'] });
     clearWinnerInfo();
   };
@@ -364,28 +372,32 @@ export default function LivePage() {
             className={`relative h-full w-full object-contain -scale-x-100 ${livekitState === 'connected' ? '' : 'hidden'}`}
           />
           {livekitState !== 'connected' && <StreamPlaceholder />}
-          <ControlBar
-            isSeller={isSeller}
-            auctionType={activeAuctionType}
-            bidSync={bidSync}
-            uniqueBidSync={uniqueBidSync}
-            activeBidAuctionId={activeBidAuctionId}
-            introduceAuctionId={introduceAuctionId}
-            startAuctionId={startAuctionId}
-            startAuctionType={startAuctionType}
-            canIntroduce={canIntroduceAuction}
-            canStart={canStartAuction}
-            readyItems={readyItems}
-            selectedAuctionId={selectedAuctionId}
-            onSelectAuctionItem={setSelectedAuctionId}
-            toggleMic={toggleMic}
-            toggleCamera={toggleCamera}
-            isMicOn={isMicOn}
-            isCameraOn={isCameraOn}
-            isRemoteAudioMuted={isRemoteAudioMuted}
-            onToggleMute={toggleRemoteAudio}
-            onToggleChat={handleToggleChat}
-          />
+          {isSeller ? (
+            <SellerControlBar
+              introduceAuctionId={introduceAuctionId}
+              startAuctionId={startAuctionId}
+              startAuctionType={startAuctionType}
+              canIntroduce={canIntroduceAuction}
+              canStart={canStartAuction}
+              readyItems={readyItems}
+              selectedAuctionId={selectedAuctionId}
+              onSelectAuctionItem={setSelectedAuctionId}
+              toggleMic={toggleMic}
+              toggleCamera={toggleCamera}
+              isMicOn={isMicOn}
+              isCameraOn={isCameraOn}
+            />
+          ) : (
+            <BuyerControlBar
+              auctionType={activeAuctionType}
+              bidSync={bidSync}
+              uniqueBidSync={uniqueBidSync}
+              activeAuctionId={activeBidAuctionId}
+              isRemoteAudioMuted={isRemoteAudioMuted}
+              onToggleMute={toggleRemoteAudio}
+              onToggleChat={handleToggleChat}
+            />
+          )}
 
           {auctionComment && <AuctionCommentToast key={auctionComment.id} message={auctionComment?.message ?? null} />}
 
@@ -451,10 +463,10 @@ export default function LivePage() {
             <motion.div
               key="right-panel"
               className="min-w-0 overflow-hidden rounded-2xl"
-              initial={{ flex: 0, opacity: 0 }}
-              animate={{ flex: 1, opacity: 1 }}
-              exit={{ flex: 0, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+              initial={CHAT_PANEL_INITIAL}
+              animate={CHAT_PANEL_ANIMATE}
+              exit={CHAT_PANEL_INITIAL}
+              transition={CHAT_PANEL_TRANSITION}
             >
               <RightPanel
                 isSeller={isSeller}

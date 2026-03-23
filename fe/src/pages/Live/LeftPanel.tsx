@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import type { AuctionItem, ItemStatus, ItemSyncItem } from '@/types';
 
@@ -45,24 +45,34 @@ export default function LeftPanel({
   onSelectAuctionItem,
 }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
-  const items: AuctionItem[] = syncedItems ? toAuctionItems(syncedItems) : [];
+  const items = useMemo<AuctionItem[]>(
+    () => (syncedItems ? toAuctionItems(syncedItems) : []),
+    [syncedItems],
+  );
 
-  const activeItems = items
-    .map((item, index) => ({ item, index }))
-    .filter(({ item }) => item.status !== 'SOLD' && item.status !== 'UNSOLD')
-    .sort((a, b) => {
-      const priorityDiff =
-        ACTIVE_STATUS_PRIORITY[a.item.status as Exclude<ItemStatus, 'SOLD' | 'UNSOLD'>] -
-        ACTIVE_STATUS_PRIORITY[b.item.status as Exclude<ItemStatus, 'SOLD' | 'UNSOLD'>];
+  const activeItems = useMemo(
+    () =>
+      items
+        .map((item, index) => ({ item, index }))
+        .filter(({ item }) => item.status !== 'SOLD' && item.status !== 'UNSOLD')
+        .sort((a, b) => {
+          const priorityDiff =
+            ACTIVE_STATUS_PRIORITY[a.item.status as Exclude<ItemStatus, 'SOLD' | 'UNSOLD'>] -
+            ACTIVE_STATUS_PRIORITY[b.item.status as Exclude<ItemStatus, 'SOLD' | 'UNSOLD'>];
 
-      if (priorityDiff !== 0) {
-        return priorityDiff;
-      }
+          if (priorityDiff !== 0) {
+            return priorityDiff;
+          }
 
-      return a.index - b.index;
-    })
-    .map(({ item }) => item);
-  const doneItems = items.filter((item) => item.status === 'SOLD' || item.status === 'UNSOLD');
+          return a.index - b.index;
+        })
+        .map(({ item }) => item),
+    [items],
+  );
+  const doneItems = useMemo(
+    () => items.filter((item) => item.status === 'SOLD' || item.status === 'UNSOLD'),
+    [items],
+  );
   const totalCount = items.length;
 
   return (

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { usePostFollow } from '@/api/hooks/usePostFollow';
@@ -23,18 +23,19 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
   const { messages, sendMessage, sendMacro, connectionState } = useStompChat(streamEnter?.category ?? '');
   const [followStateOverride, setFollowStateOverride] = useState<{ sellerId: number; value: boolean } | null>(null);
   const { mutate: postFollow, isPending: isFollowPending } = usePostFollow();
-  const storedUserId = localStorage.getItem('userId');
-  const parsedUserId = storedUserId ? Number(storedUserId) : NaN;
-  const currentUserId = Number.isNaN(parsedUserId) ? null : parsedUserId;
+  const currentUserId = useMemo(() => {
+    const stored = localStorage.getItem('userId');
+    const parsed = stored ? Number(stored) : NaN;
+    return Number.isNaN(parsed) ? null : parsed;
+  }, []);
   const sellerId = streamEnter?.seller.sellerId ?? 0;
   const sellerNickname = streamEnter?.seller.nickname ?? 'seller';
   const sellerProfileImage = streamEnter?.seller.profileImage ?? null;
-  const isFollowActionPending = isFollowPending;
   const isFollowing =
     followStateOverride?.sellerId === sellerId ? followStateOverride.value : (streamEnter?.isFollowing ?? false);
 
   const handleFollowToggle = () => {
-    if (sellerId <= 0 || isFollowActionPending) {
+    if (sellerId <= 0 || isFollowPending) {
       return;
     }
 
@@ -68,7 +69,7 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
           <button
             type="button"
             onClick={handleFollowToggle}
-            disabled={isFollowActionPending}
+            disabled={isFollowPending}
             className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold transition ${
               isFollowing
                 ? 'border border-neutral-600 bg-transparent text-neutral-300 hover:bg-warm/10'
