@@ -1,0 +1,2 @@
+test_name,vus_max,p95_ms,p99_ms,avg_ms,tps,error_rate,ws_error_rate
+chat_01_smoke,5,172.15,N/A,158.83,0.11,0.00,0.00
