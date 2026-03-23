@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFetchInstance } from '@/api/instance';
 import type { StartStreamResponse, StreamMultipartPayload } from '@/types';
-import { buildStreamFormData } from './buildStreamFormData';
+import { buildStreamFormData } from '../../utils/buildStreamFormData';
 
 export const usePostStartStream = () => {
   const queryClient = useQueryClient();
@@ -10,11 +10,9 @@ export const usePostStartStream = () => {
     throwOnError: false,
     mutationFn: async ({ streamId, ...payload }) => {
       const formData = buildStreamFormData(payload);
-      const res = await getFetchInstance().post<StartStreamResponse>(
-        `/v1/streams/${streamId}/start`,
-        formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
-      );
+      const res = await getFetchInstance().post<StartStreamResponse>(`/v1/streams/${streamId}/start`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       return res.data;
     },
     onSuccess: (_data, variables) => {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FiPackage, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { useGetTracking } from '@/api/hooks/useGetTracking';
-import { CARRIERS } from '@/pages/SellerOnboarding/constants';
+import { CARRIERS } from '@/constants/sellerRegister';
 import type { PostTrackingInfoPayload } from '@/types';
 
 const CARRIER_CODE_MAP = Object.fromEntries(CARRIERS.map((c) => [c.name, c.code]));
@@ -108,7 +108,7 @@ export default function DeliveryTracker({ carrierName, trackingNumber }: PostTra
                   })}
                 </div>
               ) : (
-                <p className="text-neutral-500 text-sm text-center py-2">배송 상세 정보가 없습니다.</p>
+                <p className="text-neutral-500 text-sm text-center py-2">배송 상세 정보가 없습니다</p>
               )}
             </>
           )}

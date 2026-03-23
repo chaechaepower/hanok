@@ -16,6 +16,14 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
     Optional<Follow> findByUserAndSeller(User user, Seller seller);
 
+    @Query("""
+            SELECT DISTINCT f
+            FROM Follow f
+            JOIN FETCH f.user
+            WHERE f.seller = :seller
+            """)
+    List<Follow> findBySeller(@Param("seller") Seller seller);
+
     boolean existsByUserAndSeller(User user, Seller seller);
 
     long countBySeller(Seller seller);

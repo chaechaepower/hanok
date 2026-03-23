@@ -220,12 +220,12 @@ export default function WalletPage() {
               <h1 className="text-2xl font-bold text-warm leading-tight">내 가상머니</h1>
             </div>
             <p className="text-neutral-500 text-sm mt-1 ml-12">
-              경매 입찰을 위한 가상머니 충전 및 정산 내역을 관리합니다.
+              경매 입찰을 위한 가상머니 충전 및 정산 내역을 관리합니다
             </p>
           </div>
 
           <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
-            <article className="relative overflow-hidden rounded-[28px] bg-surface-elevated px-8 py-6 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
+            <article className="relative overflow-hidden rounded-(--radius-panel) bg-surface-elevated px-8 py-6 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
               <div className="relative z-10 flex max-w-67.5 flex-col gap-5">
                 <div className="space-y-3">
                   <p className="text-lg font-semibold text-white">보유 머니</p>
@@ -269,7 +269,7 @@ export default function WalletPage() {
               <img src={coins} alt="coins" className="absolute right-4 bottom-6 w-50 md:block" />
             </article>
 
-            <article className="flex flex-col justify-between rounded-[28px] bg-surface-elevated px-8 py-6 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
+            <article className="flex flex-col justify-between rounded-(--radius-panel) bg-surface-elevated px-8 py-6 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
               <div className="space-y-3">
                 <p className="text-lg font-semibold text-white">경매 예치 머니</p>
                 <div className="space-y-2">
@@ -283,7 +283,7 @@ export default function WalletPage() {
                       <p className="text-[32px] font-bold tracking-[-0.03em] text-gold">
                         {formatMoney(depositedBalance)} 원
                       </p>
-                      <p className="text-[14px] text-neutral-500">현재 거래 대기 중인 금액입니다.</p>
+                      <p className="text-[14px] text-neutral-500">현재 거래 대기 중인 금액입니다</p>
                     </>
                   )}
                 </div>
@@ -291,12 +291,12 @@ export default function WalletPage() {
 
               <div className="flex items-center gap-3 rounded-2xl border border-primary-muted bg-primary-muted/30 px-4 py-3 text-[14px] text-gold">
                 <FiInfo className="h-4 w-4 shrink-0" />
-                <p>거래 완료 또는 유찰 시 자동 반환/정산됩니다.</p>
+                <p>거래 완료 또는 유찰 시 자동 반환/정산됩니다</p>
               </div>
             </article>
           </div>
 
-          <article className="rounded-[30px] bg-surface-elevated px-5 py-5 shadow-[0_26px_70px_rgba(0,0,0,0.24)] sm:px-7 sm:py-6">
+          <article className="rounded-(--radius-section) bg-surface-elevated px-5 py-5 shadow-[0_26px_70px_rgba(0,0,0,0.24)] sm:px-7 sm:py-6">
             <div className="border-b border-neutral-800">
               <div className="macro-scroll flex gap-2 overflow-x-auto">
                 {walletTabs.map((tab) => {
@@ -330,7 +330,7 @@ export default function WalletPage() {
                   />
                 ))
               ) : (
-                <div className="px-2 py-10 text-center text-sm text-neutral-500">내역이 없습니다.</div>
+                <div className="px-2 py-10 text-center text-sm text-neutral-500">내역이 없습니다</div>
               )}
             </div>
           </article>
@@ -384,7 +384,7 @@ function HistoryRow({ item, onClick }: { item: WalletHistoryItem; onClick?: () =
 
   return (
     <div
-      className={`flex flex-col items-start gap-4 rounded-[22px] px-2 py-4 transition hover:bg-white/2 sm:flex-row sm:items-center sm:justify-between sm:px-3 ${onClick ? 'cursor-pointer' : ''}`}
+      className={`flex flex-col items-start gap-4 rounded-(--radius-panel) px-2 py-4 transition hover:bg-white/2 sm:flex-row sm:items-center sm:justify-between sm:px-3 ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
       <div className="flex min-w-0 items-center gap-4">

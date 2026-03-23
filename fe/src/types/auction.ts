@@ -25,14 +25,16 @@ export type ItemCondition = ItemSyncItem['itemCondition'];
 export interface AuctionItem {
   id: number;
   name: string;
-  startPrice: number;
+  startPrice: number | null;
+  bidUnit: number | null;
+  minPrice: number | null;
+  maxPrice: number | null;
   finalPrice?: number;
   status: ItemStatus;
   auctionType: ItemSyncItem['auctionType'];
   condition: ItemCondition;
   thumbnailUrl?: string;
   description?: string;
-  bidUnit?: number;
   auctionTime?: number;
   images?: string[];
 }

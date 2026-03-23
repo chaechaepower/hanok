@@ -44,7 +44,7 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
           <h2 className="m-0 text-white text-xl font-bold">신고하기</h2>
         </div>
         <p className="m-0 text-[14px] text-neutral-400">
-          <span className="text-gold-light font-bold">{sellerNickname}</span> 스토어를 신고합니다.
+          <span className="text-gold-light font-bold">{sellerNickname}</span> 스토어를 신고합니다
         </p>
         <div className="flex flex-col gap-2">
           <label className="text-[14px] text-neutral-300 font-semibold">신고 사유</label>

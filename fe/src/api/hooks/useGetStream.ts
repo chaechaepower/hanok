@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { getFetchInstance } from '@/api/instance';
-import type { Live } from '@/types';
+import type { StreamDetailResponse } from '@/types';
 
 export const useGetStream = (streamId: number) => {
-  return useQuery<Live, Error>({
+  return useQuery<StreamDetailResponse, Error>({
     queryKey: ['stream', streamId],
     queryFn: async () => {
-      const res = await getFetchInstance().get<Live>(`/v1/streams/${streamId}`);
+      const res = await getFetchInstance().get<StreamDetailResponse>(`/v1/streams/${streamId}`);
       return res.data;
     },
     enabled: !!streamId,

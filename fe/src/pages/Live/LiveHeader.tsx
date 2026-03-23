@@ -60,12 +60,12 @@ export default function LiveHeader({
     <div className="mb-2 flex shrink-0 items-center">
       <button
         type="button"
-        className="flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-[11px] font-bold text-neutral-500 transition hover:bg-warm/5 hover:text-neutral-400"
+        className="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-bold text-neutral-400 transition hover:bg-warm/5 hover:text-neutral-200"
         onClick={() => navigate('/')}
       >
         <svg
-          width="14"
-          height="14"
+          width="18"
+          height="18"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -75,7 +75,7 @@ export default function LiveHeader({
         >
           <path d="M15 18l-6-6 6-6" />
         </svg>
-        <GoHomeFill />
+        <GoHomeFill size={16} />
       </button>
 
       <div className="min-w-0 flex-1 text-center">

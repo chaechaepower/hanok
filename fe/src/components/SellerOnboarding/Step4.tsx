@@ -4,8 +4,10 @@ import { useRegisterSeller } from '@/api/hooks/usePostRegisterSeller';
 import Button from '@/components/common/Button';
 import type { AccountData, BusinessType } from '@/types';
 import axios from 'axios';
+import { useToast } from '@/hooks/useToast';
 
-const inputClass = 'w-full h-14 bg-surface border border-neutral-700 rounded-xl text-base px-5 outline-none font-[inherit] text-white';
+const inputClass =
+  'w-full h-14 bg-surface border border-neutral-700 rounded-xl text-base px-5 outline-none font-[inherit] text-white';
 
 export default function Step4({
   onPrev,
@@ -27,6 +29,8 @@ export default function Step4({
   const [instaLink, setInstaLink] = useState('');
   const [tictokLink, setTictokLink] = useState('');
   const [error, setError] = useState('');
+
+  const { showToast } = useToast();
 
   const handleRegister = async () => {
     if (!nickname.trim()) {
@@ -50,7 +54,7 @@ export default function Step4({
       navigate('/');
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 409) {
-        alert('이미 판매자로 등록된 사용자입니다.');
+        showToast({ message: '이미 판매자로 등록된 사용자입니다.' });
         navigate('/');
         return;
       }

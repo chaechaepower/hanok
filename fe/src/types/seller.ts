@@ -39,6 +39,14 @@ export type SellerStatusResponse = {
   sellerId: number | null;
 };
 
+export type SellerRankingItem = {
+  rank: number;
+  sellerId: number;
+  nickname: string;
+  profileImage: string | null;
+  followerCount: number;
+};
+
 export type SellerProfileStats = {
   rating: number;
   avgShipDays: number;

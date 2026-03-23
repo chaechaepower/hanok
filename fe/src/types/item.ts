@@ -4,13 +4,7 @@ export type CreateItemPayload = {
   name: string;
   description: string;
   category: string;
-  startPrice: number | null;
-  minPrice: number | null;
-  maxPrice: number | null;
-  bidUnit: number | null;
-  auctionDuration: number;
   itemCondition: string;
-  auctionType: ItemAuctionType;
   tags?: string[];
   images?: File[];
 };
@@ -21,16 +15,11 @@ export type CreateItemResponse = {
   status: string;
 };
 
-export type UpdateItemPayload = {
-  name?: string;
-  description?: string;
-  category?: string;
-  startPrice?: number;
-  bidUnit?: number;
-  auctionDuration?: number;
-  itemCondition?: string;
-  tags?: string[];
-  images?: File[];
+export type UpdateItemPayload = Omit<CreateItemPayload, 'images'> & {
+  images: [string | null, string | null, string | null];
+  image1?: File;
+  image2?: File;
+  image3?: File;
 };
 
 export type UpdateItemResponse = {
@@ -44,7 +33,7 @@ export type DeleteItemResponse = {
   status: string;
 };
 
-export type ProductStatus = 'READY' | 'SCHEDULED' | 'PENDING' | 'SOLD';
+export type ProductStatus = 'READY' | 'SCHEDULED' | 'PENDING' | 'INTRODUCING' | 'LIVE' | 'SOLD' | 'UNSOLD';
 
 export interface Product {
   itemId: number;
@@ -52,14 +41,14 @@ export interface Product {
   description: string;
   tags: string[];
   images: string[];
-  startPrice: number;
+  startPrice?: number;
   minPrice?: number | null;
   maxPrice?: number | null;
-  bidUnit: number;
-  auctionDuration: number;
+  bidUnit?: number;
+  auctionDuration?: number;
   itemCondition: string;
   category: string;
-  auctionType: ItemAuctionType;
+  auctionType?: ItemAuctionType;
   status: ProductStatus;
   createdAt?: string;
 }

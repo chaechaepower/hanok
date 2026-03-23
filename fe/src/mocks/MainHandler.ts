@@ -2,7 +2,15 @@ import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
 import { MAIN_CATEGORY_IDS } from '@/constants/category';
-import type { LiveCardData, PageResponse, SearchMatchReason, SearchStreamResult, SearchStreamStatus } from '@/types';
+import type {
+  LiveCardData,
+  NewSellerRecommendedStream,
+  NewSellerRecommendedStreamsResponse,
+  PageResponse,
+  SearchMatchReason,
+  SearchStreamResult,
+  SearchStreamStatus,
+} from '@/types';
 
 import { getRegisteredLiveById, getRegisteredLiveCards } from './LiveCreateHandler';
 import { getCurrentMockUser, isSellerFollowed } from './mockState';
@@ -15,6 +23,8 @@ const SELLERS = [
   { sellerId: 14, nickname: 'card_deck' },
   { sellerId: 15, nickname: 'bag_corner' },
 ];
+
+const NEW_SELLER_IDS = new Set([10, 11, 12]);
 
 const isActiveStreamStatus = (streamStatus: SearchStreamStatus) => streamStatus === 'LIVE' || streamStatus === 'PAUSED';
 
@@ -201,6 +211,17 @@ const buildSearchMatchReasons = (entry: SearchMockEntry, keyword: string) => {
   return reasons;
 };
 
+const toNewSellerRecommendedStream = (stream: LiveCardData): NewSellerRecommendedStream => ({
+  streamId: stream.streamId,
+  title: stream.title,
+  category: stream.category,
+  thumbnail: stream.thumbnailUri,
+  status: stream.streamStatus,
+  viewerCount: stream.viewerCount,
+  startedAt: stream.startedAt,
+  seller: stream.seller,
+});
+
 export const mainHandlers = [
   http.get(`${BASE_URL}/v1/streams/:streamId/enter`, ({ params }) => {
     const streamId = Number(params.streamId);
@@ -245,7 +266,7 @@ export const mainHandlers = [
       category: stream?.category ?? 'ELECTRONICS',
       thumbnail: stream?.thumbnailUri ?? null,
       scheduledAt: stream?.scheduledAt ?? null,
-      startType: stream?.streamStatus === 'SCHEDULED' ? 'SCHEDULED' : 'IMMEDIATE',
+      startType: stream?.streamStatus === 'SCHEDULED' ? 'SCHEDULED' : 'INSTANT',
       status: stream?.streamStatus ?? 'LIVE',
       notice: 'Welcome to the live auction.',
       isLive: stream ? isActiveStreamStatus(stream.streamStatus) : true,
@@ -329,6 +350,36 @@ export const mainHandlers = [
       last: end >= totalElements,
       empty: content.length === 0,
     };
+
+    return HttpResponse.json(response);
+  }),
+
+  http.get(`${BASE_URL}/v1/streams/recommend/new-seller`, ({ request }) => {
+    const url = new URL(request.url);
+    const withinDays = Math.max(1, toNumber(url.searchParams.get('withinDays'), 30));
+    const limit = Math.max(1, toNumber(url.searchParams.get('limit'), 10));
+    const thresholdDate = new Date();
+    thresholdDate.setDate(thresholdDate.getDate() - withinDays);
+
+    const registeredLiveCards = getRegisteredLiveCards();
+    const registeredIds = new Set(registeredLiveCards.map((stream) => stream.streamId));
+    const streams = [
+      ...registeredLiveCards,
+      ...MAIN_LIVE_STREAMS.filter((stream) => !registeredIds.has(stream.streamId)),
+    ]
+      .filter((stream) => NEW_SELLER_IDS.has(stream.seller.sellerId))
+      .filter((stream) => stream.streamStatus === 'LIVE')
+      .filter((stream) => {
+        const startedAt = Date.parse(stream.startedAt ?? '');
+        return startedAt ? startedAt >= thresholdDate.getTime() : true;
+      })
+      .sort((a, b) => {
+        const aDate = Date.parse(a.startedAt ?? '') || 0;
+        const bDate = Date.parse(b.startedAt ?? '') || 0;
+        return bDate - aDate;
+      });
+
+    const response: NewSellerRecommendedStreamsResponse = streams.slice(0, limit).map(toNewSellerRecommendedStream);
 
     return HttpResponse.json(response);
   }),

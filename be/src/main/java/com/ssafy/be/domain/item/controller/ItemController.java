@@ -45,8 +45,10 @@ public class ItemController {
             @AuthenticationPrincipal String principal,
             @PathVariable Long itemId,
             @RequestPart("request") @Valid ItemUpdateRequest request,
-            @RequestPart(value = "images", required = false) List<MultipartFile> images) {
-        return ResponseEntity.ok(itemService.updateItem(Long.parseLong(principal), itemId, request, images));
+            @RequestPart(value = "image1", required = false) MultipartFile image1,
+            @RequestPart(value = "image2", required = false) MultipartFile image2,
+            @RequestPart(value = "image3", required = false) MultipartFile image3) {
+        return ResponseEntity.ok(itemService.updateItem(Long.parseLong(principal), itemId, request, image1, image2, image3));
     }
 
     @DeleteMapping("/{itemId}")

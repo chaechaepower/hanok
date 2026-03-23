@@ -41,7 +41,7 @@ export default function SellerGuideOverlay({ defaultOpen = true }: SellerGuideOv
   };
 
   return (
-    <div className="pointer-events-none absolute left-4 top-[43%] z-20 -translate-y-1/2">
+    <div className="pointer-events-none absolute left-3 top-[43%] z-20 -translate-y-1/2">
       <div className="pointer-events-auto flex items-center gap-1.5">
         <div className="group relative z-30">
           <div className="pointer-events-none absolute left-full top-1/2 z-40 ml-2 -translate-y-1/2 whitespace-nowrap rounded-full border border-neutral-700 bg-surface/92 px-3 py-1 text-[11px] font-medium text-neutral-300 opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.24)] transition duration-200 group-hover:opacity-100">
@@ -51,7 +51,7 @@ export default function SellerGuideOverlay({ defaultOpen = true }: SellerGuideOv
           <button
             type="button"
             onClick={() => setIsOpen((current) => !current)}
-            className={`flex items-center justify-center rounded-[14px] border border-neutral-700 bg-surface/85 text-neutral-400 backdrop-blur-xl transition hover:border-gold-muted/45 hover:text-neutral-200 ${
+            className={`flex items-center justify-center rounded-(--radius-control) bg-surface/80 text-neutral-400 backdrop-blur-xl transition hover:bg-surface/90 hover:text-neutral-200 ${
               isOpen
                 ? 'h-12 w-6 shadow-[0_10px_20px_rgba(0,0,0,0.16)]'
                 : 'h-14 w-7 shadow-[0_12px_28px_rgba(0,0,0,0.28)]'
@@ -63,7 +63,7 @@ export default function SellerGuideOverlay({ defaultOpen = true }: SellerGuideOv
         </div>
 
         <div
-          className={`relative w-[min(21rem,calc(100vw-4.5rem))] overflow-hidden rounded-[28px] border border-neutral-700 bg-surface/85 text-neutral-200 shadow-[0_24px_60px_rgba(0,0,0,0.34)] backdrop-blur-2xl transition-all duration-300 ${
+          className={`relative w-[min(22rem,calc(100vw-4.5rem))] overflow-hidden rounded-(--radius-panel) bg-surface/80 text-neutral-200 shadow-[0_24px_60px_rgba(0,0,0,0.34)] backdrop-blur-2xl transition-all duration-300 ${
             isOpen ? 'translate-x-0 opacity-100' : '-translate-x-6 opacity-0 pointer-events-none'
           }`}
         >
@@ -85,17 +85,17 @@ export default function SellerGuideOverlay({ defaultOpen = true }: SellerGuideOv
                     key={step.title}
                     type="button"
                     onClick={() => toggleStep(index)}
-                    className={`flex w-full items-start gap-3 rounded-[18px] border px-3 py-3 text-left transition ${
+                    className={`flex w-full items-center gap-3 rounded-(--radius-panel) px-3 py-3 text-left transition ${
                       isChecked
-                        ? 'border-gold-light/40 bg-gold-light/10'
-                        : 'border-neutral-700/50 bg-warm/3 hover:border-neutral-600 hover:bg-warm/5'
+                        ? 'bg-gold-light/10'
+                        : 'bg-warm/3 hover:bg-warm/5'
                     }`}
                   >
                     <div
-                      className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] border text-sm font-bold ${
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-(--radius-control) text-sm font-bold ${
                         isChecked
-                          ? 'border-gold-light bg-gold-light text-background'
-                          : 'border-neutral-600 bg-neutral-800 text-gold-light'
+                          ? 'bg-gold-light text-background'
+                          : 'bg-neutral-800 text-gold-light'
                       }`}
                     >
                       {isChecked ? <FiCheck className="h-4 w-4" /> : index + 1}
@@ -107,14 +107,9 @@ export default function SellerGuideOverlay({ defaultOpen = true }: SellerGuideOv
                       >
                         {step.title}
                       </p>
-                      <p className="mt-1 text-[10px] leading-4.5 text-neutral-500">{step.description}</p>
+                      <p className="text-[10px] leading-4.5 text-neutral-500">{step.description}</p>
                     </div>
 
-                    <div
-                      className={`mt-1 h-5 w-5 shrink-0 rounded-md border transition ${
-                        isChecked ? 'border-gold-light bg-gold-light/22' : 'border-neutral-600 bg-transparent'
-                      }`}
-                    />
                   </button>
                 );
               })}

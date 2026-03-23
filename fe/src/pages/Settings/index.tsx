@@ -9,7 +9,6 @@ import { useLogout as useLogout } from '@/api/hooks/usePostLogout';
 import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
 import { useGetWallet } from '@/api/hooks/useGetWallet';
 import SideBar from '@/components/common/layouts/SideBar';
-import { settingsSidebarItems } from '@/components/common/layouts/settingsSidebarItems';
 import AccountSection from '@/components/Settings/AccountSection';
 import FollowedStoresSection from '@/components/Settings/FollowedStoresSection';
 import OrderHistorySection from '@/components/Settings/OrderHistorySection';
@@ -18,6 +17,7 @@ import ShippingSection from '@/components/Settings/ShippingSection';
 import { formatPrice } from '@/utils/formatPrice';
 import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
 import { useToast } from '@/hooks/useToast';
+import { settingsSidebarItems } from '@/constants/sidebar';
 
 type SettingsTab = 'account' | 'stores' | 'shipping' | 'payment' | 'order';
 const SETTINGS_TABS: SettingsTab[] = ['account', 'stores', 'shipping', 'payment', 'order'];
@@ -70,7 +70,7 @@ export default function SettingsPage() {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-neutral-700 border-t-gold-light" />
-        <p className="mt-3 text-neutral-400">정보를 불러오는 중입니다.</p>
+        <p className="mt-3 text-neutral-400">정보를 불러오는 중입니다</p>
       </div>
     );
   }

@@ -1,6 +1,6 @@
 export default function HistoryRowSkeleton() {
   return (
-    <div className="flex flex-col items-start gap-4 rounded-[22px] px-2 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-3">
+    <div className="flex flex-col items-start gap-4 rounded-(--radius-panel) px-2 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-3">
       <div className="flex min-w-0 items-center gap-4">
         <div className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-white/10" />
         <div className="space-y-2">

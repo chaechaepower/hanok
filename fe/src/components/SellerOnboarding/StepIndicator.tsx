@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { STEPS } from '../../pages/SellerOnboarding/constants';
+import { STEPS } from '../../constants/sellerRegister';
 
 export default function StepIndicator({ current }: { current: number }) {
   const progress = ((current - 1) / (STEPS.length - 1)) * 100;
@@ -23,7 +23,13 @@ export default function StepIndicator({ current }: { current: number }) {
                   }`}
                 >
                   {step.id < current ? (
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <svg
+                      className="w-3.5 h-3.5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                    >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   ) : (
