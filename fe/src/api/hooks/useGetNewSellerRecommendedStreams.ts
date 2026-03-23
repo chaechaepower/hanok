@@ -1,48 +1,54 @@
-import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
-import type { NewSellerRecommendedStreamsResponse } from '@/types';
+import type { ApiResponse, NewSellerRecommendedStreamsResponse } from '@/types';
 
 import { getFetchInstance } from '../instance';
 
 type GetNewSellerRecommendedStreamsParams = {
-  page?: number;
-  size?: number;
+  withinDays?: number;
+  limit?: number;
 };
 
 export const getNewSellerRecommendedStreamsPath = () => '/v1/streams/recommend/new-seller';
 
 export const getNewSellerRecommendedStreams = async ({
-  page = 0,
-  size = 20,
+  withinDays = 30,
+  limit = 10,
 }: GetNewSellerRecommendedStreamsParams = {}) => {
-  const response = await getFetchInstance().get<NewSellerRecommendedStreamsResponse>(
+  const response = await getFetchInstance().get<
+    NewSellerRecommendedStreamsResponse | ApiResponse<NewSellerRecommendedStreamsResponse>
+  >(
     getNewSellerRecommendedStreamsPath(),
     {
       params: {
-        page,
-        size,
+        withinDays,
+        limit,
       },
     },
   );
 
-  return response.data;
+  const payload = response.data;
+
+  if (Array.isArray(payload)) {
+    return payload;
+  }
+
+  return Array.isArray(payload?.data) ? payload.data : [];
 };
 
-type UseGetNewSellerRecommendedStreamsParams = Omit<GetNewSellerRecommendedStreamsParams, 'page'>;
+type UseGetNewSellerRecommendedStreamsParams = GetNewSellerRecommendedStreamsParams;
 
 export const useGetNewSellerRecommendedStreams = (params: UseGetNewSellerRecommendedStreamsParams = {}) => {
-  const size = params.size ?? 20;
+  const withinDays = params.withinDays ?? 30;
+  const limit = params.limit ?? 10;
 
-  return useInfiniteQuery({
-    queryKey: ['newSellerRecommendedStreams', size],
-    initialPageParam: 0,
-    queryFn: ({ pageParam }) =>
+  return useQuery({
+    queryKey: ['newSellerRecommendedStreams', withinDays, limit],
+    queryFn: () =>
       getNewSellerRecommendedStreams({
-        page: typeof pageParam === 'number' ? pageParam : 0,
-        size,
+        withinDays,
+        limit,
       }),
-    getNextPageParam: (lastPage) => (lastPage.hasNext ? lastPage.page + 1 : undefined),
     staleTime: 1000 * 60,
-    placeholderData: keepPreviousData,
   });
 };
