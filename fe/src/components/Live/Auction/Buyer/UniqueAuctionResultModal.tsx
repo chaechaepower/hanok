@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-
+import { useEscKey } from '@/hooks/useEscKey';
 import type { UniqueAuctionEndPayload } from '@/types';
 import { formatPrice } from '@/utils/formatPrice';
 
@@ -11,14 +10,7 @@ type Props = {
 };
 
 export default function UniqueAuctionResultModal({ isOpen, itemName, payload, onClose }: Props) {
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onClose]);
+  useEscKey(isOpen, onClose);
 
   if (!isOpen) {
     return null;

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEscKey } from '@/hooks/useEscKey';
 
 type BidAccessModalProps = {
   isOpen: boolean;
@@ -7,14 +7,7 @@ type BidAccessModalProps = {
 };
 
 export default function BidAccessModal({ isOpen, onClose, onAction }: BidAccessModalProps) {
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [isOpen, onClose]);
+  useEscKey(isOpen, onClose);
 
   if (!isOpen) {
     return null;

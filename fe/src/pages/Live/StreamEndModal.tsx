@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
 import { MdOutlinePowerSettingsNew } from 'react-icons/md';
+
+import { useEscKey } from '@/hooks/useEscKey';
 
 interface Props {
   open: boolean;
@@ -10,12 +11,7 @@ interface Props {
 }
 
 export default function StreamEndModal({ open, isPending, hasRemainingItems, onClose, onConfirm }: Props) {
-  useEffect(() => {
-    if (!open) return;
-    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [open, onClose]);
+  useEscKey(open, onClose);
 
   if (!open) {
     return null;

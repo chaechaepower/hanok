@@ -1,7 +1,7 @@
-import { useEffect } from 'react';
-
 import { AUCTION_STATUS_BADGES } from '@/constants/auction';
+import { useEscKey } from '@/hooks/useEscKey';
 import type { AuctionItem } from '@/types';
+import { formatAuctionLabel } from '@/utils/formatAuctionLabel';
 import { formatPrice } from '@/utils/formatPrice';
 
 interface Props {
@@ -11,13 +11,6 @@ interface Props {
 }
 
 const STAT_COLORS = ['text-neutral-400', 'text-gold', 'text-ember'] as const;
-
-const formatAuctionLabel = (item: AuctionItem) =>
-  item.auctionType === 'UNIQUE_TOP'
-    ? item.minPrice !== null && item.maxPrice !== null && item.maxPrice > item.minPrice
-      ? `${formatPrice(item.minPrice)} ~ ${formatPrice(item.maxPrice)}`
-      : formatPrice(item.minPrice ?? 0)
-    : formatPrice(item.startPrice ?? 0);
 
 export default function AuctionReportModal({ open, onClose, items }: Props) {
   const doneItems = items.filter((item) => item.status === 'SOLD' || item.status === 'UNSOLD');
@@ -33,20 +26,7 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
     weekday: 'long',
   });
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const handler = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [open, onClose]);
+  useEscKey(open, onClose);
 
   return (
     <div
