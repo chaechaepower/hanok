@@ -15,7 +15,12 @@ export type CreateItemResponse = {
   status: string;
 };
 
-export type UpdateItemPayload = CreateItemPayload;
+export type UpdateItemPayload = Omit<CreateItemPayload, 'images'> & {
+  images: [string | null, string | null, string | null];
+  image1?: File;
+  image2?: File;
+  image3?: File;
+};
 
 export type UpdateItemResponse = {
   itemId: number;

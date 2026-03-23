@@ -122,6 +122,19 @@ export const itemHandlers = [
     const requestBlob = formData.get('request');
     const body = requestBlob ? (JSON.parse(await (requestBlob as Blob).text()) as Record<string, unknown>) : {};
     const currentItem = mockItems[itemIndex];
+    const requestedImages = Array.isArray(body.images) ? body.images : currentItem.images;
+    const nextImages = [1, 2, 3]
+      .map((slot) => {
+        const uploadedFile = formData.get(`image${slot}`);
+
+        if (uploadedFile instanceof File && uploadedFile.size > 0) {
+          return Logo;
+        }
+
+        const requestedImage = requestedImages[slot - 1];
+        return typeof requestedImage === 'string' && requestedImage ? requestedImage : null;
+      })
+      .filter((image): image is string => Boolean(image));
 
     mockItems[itemIndex] = {
       ...currentItem,
@@ -130,6 +143,7 @@ export const itemHandlers = [
       tags: (body.tags as string[]) || currentItem.tags,
       itemCondition: ((body.itemCondition as ItemSyncItemCondition | undefined) ?? currentItem.itemCondition),
       category: (body.category as string) || currentItem.category,
+      images: nextImages,
     };
 
     return HttpResponse.json({

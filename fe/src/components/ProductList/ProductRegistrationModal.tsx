@@ -24,6 +24,8 @@ const parseHashtags = (value: string) =>
     .map((tag) => tag.replace(/^#/, '').trim())
     .filter((tag) => tag.length > 0);
 
+const EMPTY_IMAGE_SLOTS: [string | null, string | null, string | null] = [null, null, null];
+
 interface ProductRegistrationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -140,6 +142,23 @@ function ProductRegistrationModalContent({ onClose, onSuccess, initialData }: Pr
 
     try {
       if (initialData) {
+        const combinedImages = [
+          ...existingImages.map((url) => ({ kind: 'existing' as const, url })),
+          ...images.map((file) => ({ kind: 'new' as const, file })),
+        ].slice(0, MAX_IMAGES);
+
+        const imageSlots: [string | null, string | null, string | null] = [...EMPTY_IMAGE_SLOTS];
+        const imageFiles: [File | undefined, File | undefined, File | undefined] = [undefined, undefined, undefined];
+
+        combinedImages.forEach((image, index) => {
+          if (image.kind === 'existing') {
+            imageSlots[index] = image.url;
+            return;
+          }
+
+          imageFiles[index] = image.file;
+        });
+
         await updateItem({
           itemId: initialData.itemId,
           payload: {
@@ -148,7 +167,10 @@ function ProductRegistrationModalContent({ onClose, onSuccess, initialData }: Pr
             category,
             itemCondition,
             tags: parsedTags,
-            images: images.length > 0 ? images : undefined,
+            images: imageSlots,
+            image1: imageFiles[0],
+            image2: imageFiles[1],
+            image3: imageFiles[2],
           },
         });
       } else {

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 
-import { ArrowRight, Eye, Play } from 'lucide-react';
+import { ArrowRight, Eye } from 'lucide-react';
 import { FaHeart } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 import { useGetMe } from '@/api/hooks/useGetMe';
+import Logo from '@/assets/Logo.png';
 import { getCategoryLabel } from '@/constants/category';
 import type { LiveCardData } from '@/types';
 
@@ -54,15 +55,11 @@ export default function FollowingBanner({ streams }: FollowingBannerProps) {
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.75fr)_320px]">
         <div className="group relative min-h-[360px] overflow-hidden rounded-[28px] bg-surface text-left">
-          {featuredStream.thumbnailUri ? (
-            <img
-              src={featuredStream.thumbnailUri}
-              alt={featuredStream.title}
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-primary-muted via-surface to-background" />
-          )}
+          <img
+            src={featuredStream.thumbnailUri ?? Logo}
+            alt={featuredStream.title}
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
 
           <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/45 to-background/80" />
 
@@ -143,13 +140,7 @@ export default function FollowingBanner({ streams }: FollowingBannerProps) {
                   }`}
                 >
                   <div className="relative h-20 w-32 shrink-0 overflow-hidden rounded-2xl bg-neutral-800">
-                    {stream.thumbnailUri ? (
-                      <img src={stream.thumbnailUri} alt={stream.title} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-primary-muted text-warm/60">
-                        <Play size={18} />
-                      </div>
-                    )}
+                    <img src={stream.thumbnailUri ?? Logo} alt={stream.title} className="h-full w-full object-cover" />
                   </div>
 
                   <div className="min-w-0 flex-1">
