@@ -8,7 +8,7 @@ import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import { getCategoryLabel } from '@/constants/category';
 import SideBar from '@/components/common/layouts/SideBar';
-import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
+import { sellerSidebarItems } from '@/constants/sidebar';
 import CategorySelectModal from '@/components/LiveCreate/CategorySelectModal';
 import { useToast } from '@/hooks/useToast';
 

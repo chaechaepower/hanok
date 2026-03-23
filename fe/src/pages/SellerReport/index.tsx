@@ -15,7 +15,7 @@ import {
 } from 'recharts';
 import { FiTrendingUp, FiTrendingDown, FiAward, FiPackage, FiAlertCircle } from 'react-icons/fi';
 import SideBar from '@/components/common/layouts/SideBar';
-import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
+import { sellerSidebarItems } from '@/constants/sidebar';
 import { useGetSellerReport } from '@/api/hooks/useGetSellerReport';
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
 import { getCategoryLabel } from '@/constants/category';

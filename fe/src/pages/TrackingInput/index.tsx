@@ -8,7 +8,7 @@ import { useGetEscrowsSeller } from '@/api/hooks/useGetEscrowsSeller';
 import { usePostTrackingInfo } from '@/api/hooks/usePostTrackingInfo';
 import EscrowDetailCard from '@/components/common/EscrowDetailCard';
 import SideBar from '@/components/common/layouts/SideBar';
-import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
+import { sellerSidebarItems } from '@/constants/sidebar';
 import { CARRIERS } from '@/constants/sellerRegister';
 import type { EscrowItem } from '@/types';
 import {
