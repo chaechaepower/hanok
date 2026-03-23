@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Button from '@/components/common/Button';
-import { TERMS_CONTENT } from '../../pages/SellerOnboarding/constants';
+import { TERMS_CONTENT } from '../../constants/sellerRegister';
 
 export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: () => void }) {
   const [agreed, setAgreed] = useState(false);
@@ -13,9 +13,7 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
   return (
     <div className="contain-[inline-size]">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-white mb-3">
-          경매 판매자 이용약관 동의
-        </h2>
+        <h2 className="text-2xl font-bold text-white mb-3">경매 판매자 이용약관 동의</h2>
         <p className="text-base text-primary-light leading-[1.7] mb-1">
           한옥(한반도 옥션)에서 판매자로 활동하기 위해서는 아래 약관에 동의해야 합니다.
         </p>
@@ -28,10 +26,7 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
         {TERMS_CONTENT.map((term, idx) => {
           const isOpen = openIndex === idx;
           return (
-            <div
-              key={idx}
-              className="border border-neutral-800 rounded-xl overflow-hidden"
-            >
+            <div key={idx} className="border border-neutral-800 rounded-xl overflow-hidden">
               <button
                 type="button"
                 onClick={() => toggleTerm(idx)}
@@ -86,9 +81,7 @@ export default function Step2({ onPrev, onNext }: { onPrev: () => void; onNext: 
             </svg>
           )}
         </div>
-        <span className="text-base text-neutral-200">
-          판매자 이용약관 및 경매 정책을 모두 확인하고 동의합니다.
-        </span>
+        <span className="text-base text-neutral-200">판매자 이용약관 및 경매 정책을 모두 확인하고 동의합니다.</span>
       </label>
 
       <div className="flex justify-between sticky bottom-0 pt-8 pb-6 bg-background">

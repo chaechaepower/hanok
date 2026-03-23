@@ -10,5 +10,6 @@ public record ItemUpdateRequest(
         String description,
         Category category,
         ItemCondition itemCondition,
-        List<String> tags
+        List<String> tags,
+        List<String> images
 ) {}

@@ -113,6 +113,9 @@ dependencies {
     // flyway
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-mysql'
+
+    // block chain
+    implementation 'org.web3j:core:4.10.3'
 }
 
 dependencyManagement {

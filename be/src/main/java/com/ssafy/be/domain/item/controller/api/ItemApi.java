@@ -36,7 +36,13 @@ public interface ItemApi {
             mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
             schema = @Schema(implementation = ItemUpdateSwaggerRequest.class)
     ))
-    ResponseEntity<ItemRegisterResponse> updateItem(String userId, Long itemId, ItemUpdateRequest request, List<MultipartFile> images);
+    ResponseEntity<ItemRegisterResponse> updateItem(
+            String userId,
+            Long itemId,
+            ItemUpdateRequest request,
+            MultipartFile image1,
+            MultipartFile image2,
+            MultipartFile image3);
 
     @Operation(summary = "물품 삭제")
     ResponseEntity<Void> deleteItem(String userId, Long itemId);

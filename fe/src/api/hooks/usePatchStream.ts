@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFetchInstance } from '@/api/instance';
 import type { StreamMultipartPayload, UpdateStreamResponse } from '@/types';
-import { buildStreamFormData } from './buildStreamFormData';
+import { buildStreamFormData } from '../../utils/buildStreamFormData';
 
 export const usePatchStream = (streamId: number) => {
   const queryClient = useQueryClient();

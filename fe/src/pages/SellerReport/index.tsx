@@ -15,7 +15,7 @@ import {
 } from 'recharts';
 import { FiTrendingUp, FiTrendingDown, FiAward, FiPackage, FiAlertCircle } from 'react-icons/fi';
 import SideBar from '@/components/common/layouts/SideBar';
-import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
+import { sellerSidebarItems } from '@/constants/sidebar';
 import { useGetSellerReport } from '@/api/hooks/useGetSellerReport';
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
 import { getCategoryLabel } from '@/constants/category';
@@ -96,11 +96,15 @@ export default function SellerReportPage() {
           </div>
           <div className="bg-surface-elevated rounded-2xl border border-neutral-800 p-5 flex flex-col gap-2">
             <span className="text-neutral-500 text-sm">정산 완료</span>
-            <span className="text-xl font-bold text-green-400">{formatPrice(report.escrowSummary.completedSettlementAmount)}</span>
+            <span className="text-xl font-bold text-green-400">
+              {formatPrice(report.escrowSummary.completedSettlementAmount)}
+            </span>
           </div>
           <div className="bg-surface-elevated rounded-2xl border border-neutral-800 p-5 flex flex-col gap-2">
             <span className="text-neutral-500 text-sm">정산 대기</span>
-            <span className="text-xl font-bold text-yellow-400">{formatPrice(report.escrowSummary.pendingSettlementAmount)}</span>
+            <span className="text-xl font-bold text-yellow-400">
+              {formatPrice(report.escrowSummary.pendingSettlementAmount)}
+            </span>
           </div>
         </div>
 
@@ -115,13 +119,19 @@ export default function SellerReportPage() {
                 <FiTrendingDown className="text-red-400" size={18} />
               )}
               <span className={`text-sm font-semibold ${growthPositive ? 'text-green-400' : 'text-red-400'}`}>
-                전월 대비 {growthPositive ? '+' : ''}{report.trendGraph.growthRate}%
+                전월 대비 {growthPositive ? '+' : ''}
+                {report.trendGraph.growthRate}%
               </span>
             </div>
           </div>
           <div className="flex items-center gap-6 mb-4 text-sm text-neutral-400">
-            <span>이번 달: <span className="text-white font-semibold">{formatPrice(report.trendGraph.currentMonthTotal)}</span></span>
-            <span>지난 달: <span className="text-neutral-300">{formatPrice(report.trendGraph.lastMonthTotal)}</span></span>
+            <span>
+              이번 달:{' '}
+              <span className="text-white font-semibold">{formatPrice(report.trendGraph.currentMonthTotal)}</span>
+            </span>
+            <span>
+              지난 달: <span className="text-neutral-300">{formatPrice(report.trendGraph.lastMonthTotal)}</span>
+            </span>
           </div>
           <div className="w-full h-[260px] overflow-hidden">
             <ResponsiveContainer width="100%" height={260}>
@@ -216,8 +226,16 @@ export default function SellerReportPage() {
                   }}
                 />
                 <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-3 py-2 bg-neutral-900 border border-white/10 rounded-lg shadow-xl text-xs text-neutral-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 whitespace-nowrap">
-                  <p className="m-0">거래 완료: <span className="text-white font-semibold">{report.transactionStats.completedTrades}건</span> / 거래 취소: <span className="text-red-400 font-semibold">{report.transactionStats.cancelledTrades}건</span></p>
-                  <p className="m-0 mt-1">성사율: <span className="text-gold-light font-semibold">{report.transactionStats.completionRate}%</span></p>
+                  <p className="m-0">
+                    거래 완료:{' '}
+                    <span className="text-white font-semibold">{report.transactionStats.completedTrades}건</span> / 거래
+                    취소:{' '}
+                    <span className="text-red-400 font-semibold">{report.transactionStats.cancelledTrades}건</span>
+                  </p>
+                  <p className="m-0 mt-1">
+                    성사율:{' '}
+                    <span className="text-gold-light font-semibold">{report.transactionStats.completionRate}%</span>
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 mt-2">
@@ -262,7 +280,7 @@ export default function SellerReportPage() {
               ))}
             </div>
           ) : (
-            <p className="text-neutral-500 text-sm m-0">아직 입찰된 상품이 없습니다.</p>
+            <p className="text-neutral-500 text-sm m-0">아직 입찰된 상품이 없습니다</p>
           )}
         </div>
 
@@ -286,7 +304,14 @@ export default function SellerReportPage() {
                       if (!active || !payload?.length) return null;
                       const data = payload[0].payload as { name: string; 매출: number; 건수: number };
                       return (
-                        <div style={{ backgroundColor: '#1a1a1a', border: '1px solid #333', borderRadius: 8, padding: '8px 12px' }}>
+                        <div
+                          style={{
+                            backgroundColor: '#1a1a1a',
+                            border: '1px solid #333',
+                            borderRadius: 8,
+                            padding: '8px 12px',
+                          }}
+                        >
                           <p style={{ color: '#999', margin: 0, marginBottom: 4 }}>{label}</p>
                           <p style={{ color: '#fff', margin: 0 }}>매출: {formatPrice(data.매출)}</p>
                           <p style={{ color: '#fff', margin: 0 }}>판매: {data.건수}건</p>
@@ -299,7 +324,7 @@ export default function SellerReportPage() {
               </ResponsiveContainer>
             </div>
           ) : (
-            <p className="text-neutral-500 text-sm m-0">카테고리별 매출 데이터가 없습니다.</p>
+            <p className="text-neutral-500 text-sm m-0">카테고리별 매출 데이터가 없습니다</p>
           )}
         </div>
 
@@ -318,9 +343,14 @@ export default function SellerReportPage() {
               <span className="text-2xl font-bold text-white">{report.reputation.avgShipDays}일</span>
             </div>
             <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-neutral-800/50">
-              <FiAlertCircle className={report.reputation.penaltyCount > 0 ? 'text-red-400' : 'text-green-400'} size={24} />
+              <FiAlertCircle
+                className={report.reputation.penaltyCount > 0 ? 'text-red-400' : 'text-green-400'}
+                size={24}
+              />
               <span className="text-neutral-500 text-xs">패널티</span>
-              <span className={`text-2xl font-bold ${report.reputation.penaltyCount > 0 ? 'text-red-400' : 'text-white'}`}>
+              <span
+                className={`text-2xl font-bold ${report.reputation.penaltyCount > 0 ? 'text-red-400' : 'text-white'}`}
+              >
                 {report.reputation.penaltyCount}건
               </span>
             </div>

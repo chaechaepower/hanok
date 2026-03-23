@@ -1,6 +1,7 @@
 import { getCategoryLabel } from '@/constants/category';
 import type { LiveCardData, SearchStreamStatus } from '@/types';
 import { useNavigate } from 'react-router-dom';
+import Logo from '@/assets/Logo.png';
 
 type LiveCardProps = {
   stream: LiveCardData;
@@ -146,17 +147,11 @@ export default function LiveCard({
         } disabled:pointer-events-none`}
       >
         <div className={livePreviewClassName}>
-          {stream.thumbnailUri ? (
-            <img
-              src={stream.thumbnailUri}
-              alt={stream.title}
-              className="h-full w-full object-cover transition-transform duration-300 ease-out will-change-transform group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-neutral-600 text-[13px] font-medium tracking-[0.08em] text-neutral-400">
-              LIVE THUMBNAIL
-            </div>
-          )}
+          <img
+            src={stream.thumbnailUri ?? Logo}
+            alt={stream.title}
+            className="h-full w-full object-cover transition-transform duration-300 ease-out will-change-transform group-hover:scale-105"
+          />
 
           {!resolvedStatusBadge && isScheduledCard && scheduledAtLabel && (
             <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-linear-to-b from-black/70 via-black/45 to-black/75">

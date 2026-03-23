@@ -12,6 +12,13 @@ interface Props {
 
 const STAT_COLORS = ['text-neutral-400', 'text-gold', 'text-ember'] as const;
 
+const formatAuctionLabel = (item: AuctionItem) =>
+  item.auctionType === 'UNIQUE_TOP'
+    ? item.minPrice !== null && item.maxPrice !== null && item.maxPrice > item.minPrice
+      ? `${formatPrice(item.minPrice)} ~ ${formatPrice(item.maxPrice)}`
+      : formatPrice(item.minPrice ?? 0)
+    : formatPrice(item.startPrice ?? 0);
+
 export default function AuctionReportModal({ open, onClose, items }: Props) {
   const doneItems = items.filter((item) => item.status === 'SOLD' || item.status === 'UNSOLD');
   const remainItems = items.filter((item) => item.status !== 'SOLD' && item.status !== 'UNSOLD');
@@ -43,7 +50,7 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
 
   return (
     <div
-      className={`fixed inset-0 z-100 flex items-center justify-center bg-black/75 backdrop-blur-[12px] transition-opacity duration-250 ${open ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
+      className={`fixed inset-0 z-100 flex items-center justify-center bg-(--modal-backdrop) backdrop-blur-(--modal-blur) transition-opacity duration-250 ${open ? 'opacity-100' : 'pointer-events-none opacity-0'}`}
       onClick={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
@@ -51,7 +58,7 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
       }}
     >
       <div
-        className={`flex max-h-[80vh] w-130 flex-col overflow-hidden rounded-[28px] border border-white/7 bg-surface shadow-[0_32px_80px_rgba(0,0,0,0.6)] transition-transform duration-250 ${open ? 'translate-y-0' : 'translate-y-4'}`}
+        className={`flex max-h-[80vh] w-130 flex-col overflow-hidden rounded-(--radius-panel) border border-white/6 bg-surface shadow-[0_32px_80px_rgba(0,0,0,0.6)] transition-transform duration-250 ${open ? 'translate-y-0' : 'translate-y-4'}`}
       >
         <div className="flex shrink-0 items-start justify-between border-b border-white/5 px-7 pt-6 pb-5">
           <div>
@@ -86,7 +93,7 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
             ].map((stat, idx) => (
               <div
                 key={stat.label}
-                className="flex flex-col gap-1 rounded-[20px] border border-white/6 bg-white/[0.02] p-4"
+                className="flex flex-col gap-1 rounded-(--radius-panel) border border-white/6 bg-white/[0.02] p-4"
               >
                 <span className="text-[10px] font-bold uppercase tracking-wider text-neutral-600">{stat.label}</span>
                 <span className={`text-[26px] font-black leading-none ${STAT_COLORS[idx]}`}>{stat.value}</span>
@@ -107,7 +114,7 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-[20px] border border-gold/12 bg-gold/5 px-5 py-4">
+          <div className="flex items-center justify-between rounded-(--radius-panel) border border-gold/12 bg-gold/5 px-5 py-4">
             <div className="flex flex-col gap-0.5">
               <span className="text-[10px] font-bold uppercase text-neutral-600">총 낙찰 금액</span>
               <span className="text-2xl font-black text-gold">{formatPrice(totalSales)}</span>
@@ -145,7 +152,7 @@ export default function AuctionReportModal({ open, onClose, items }: Props) {
                   </span>
                   <div className="flex flex-col items-end gap-0.5">
                     <span className="text-[10px] font-medium text-neutral-600">
-                      시작가 {formatPrice(item.startPrice)}
+                      {item.auctionType === 'UNIQUE_TOP' ? '응찰 범위' : '시작가'} {formatAuctionLabel(item)}
                     </span>
                     {isDone && item.finalPrice ? (
                       <span className="text-xs font-black text-gold">{formatPrice(item.finalPrice)}</span>

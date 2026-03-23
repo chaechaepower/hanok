@@ -5,6 +5,7 @@ import com.ssafy.be.domain.escrow.dto.request.EscrowCancelRequest;
 import com.ssafy.be.domain.escrow.dto.request.ShipmentRegisterRequest;
 import com.ssafy.be.domain.escrow.dto.response.EscrowDetailResponse;
 import com.ssafy.be.domain.escrow.dto.response.EscrowListResponse;
+import com.ssafy.be.domain.escrow.dto.response.NftReceiptResponse;
 import com.ssafy.be.domain.escrow.service.EscrowService;
 import com.ssafy.be.global.common.response.ApiResponse;
 import jakarta.validation.Valid;
@@ -77,5 +78,14 @@ public class EscrowController implements EscrowApi {
 
     private Long getUserId(String principal) {
         return Long.parseLong(principal);
+    }
+
+    @GetMapping("/{escrowId}/nft")
+    public ResponseEntity<?> getNftReceipt(
+            @PathVariable Long escrowId,
+            @AuthenticationPrincipal String principal
+    ) {
+        NftReceiptResponse response = escrowService.getNftReceipt(escrowId);
+        return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

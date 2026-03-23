@@ -1,5 +1,7 @@
 package com.ssafy.be.domain.stream.service;
 
+import com.ssafy.be.domain.item.entity.ItemStatus;
+import com.ssafy.be.domain.item.repository.ItemRepository;
 import com.ssafy.be.domain.stream.entity.Stream;
 import com.ssafy.be.domain.stream.entity.StreamStatus;
 import com.ssafy.be.domain.stream.exception.StreamErrorCode;
@@ -21,7 +23,8 @@ public class StreamReconnectService {
     private final StreamRepository streamRepository;
     private final StreamReconnectRedisRepository reconnectRedisRepository;
     private final StreamPublisher streamPublisher;
-    private final StreamViewerService streamViewerService; // 추가
+    private final StreamViewerService streamViewerService;
+    private final ItemRepository itemRepository;
 
     // 판매자 연결 끊김 처리
     @Transactional
@@ -88,7 +91,9 @@ public class StreamReconnectService {
             log.info("[Stream] 상태 ENDED 변경 - streamId: {}", streamId);
         });
 
-        streamViewerService.clearViewers(streamId); // 추가
+        itemRepository.updateScheduledItemsToReadyByStreamId(streamId, ItemStatus.SCHEDULED, ItemStatus.READY);
+
+        streamViewerService.clearViewers(streamId);
         streamPublisher.broadcast(streamId, StreamEventType.STREAM_FAILED, null);
     }
 }

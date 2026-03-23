@@ -42,6 +42,13 @@ public class Escrow {
 
     private String cancelReason;
 
+    private String txHash;
+
+    @Enumerated(EnumType.STRING)
+    private TxStatus txStatus;
+
+    private LocalDateTime mintedAt;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "auction_id")
     private Auction auction;
@@ -77,7 +84,11 @@ public class Escrow {
                    Seller seller,
                    ShippingAddress shippingAddress,
                    LocalDateTime createdAt,
-                   LocalDateTime modifiedAt) {
+                   LocalDateTime modifiedAt,
+                   String txHash,
+                   TxStatus txStatus,
+                   LocalDateTime mintedAt
+                   ) {
         this.winningPrice = winningPrice;
         this.feeAmount = feeAmount;
         this.escrowStatus = escrowStatus;
@@ -90,6 +101,9 @@ public class Escrow {
         this.shippingAddress = shippingAddress;
         this.createdAt = createdAt;
         this.modifiedAt = modifiedAt;
+        this.txHash = txHash;
+        this.txStatus = txStatus;
+        this.mintedAt = mintedAt;
     }
 
     public void registerShipment(String carrierName, String trackingNumber, LocalDateTime submittedAt) {
@@ -105,6 +119,20 @@ public class Escrow {
 
     public void completeEscrow() {
         this.escrowStatus = COMPLETED;
+    }
+
+    public void completeMinting(String txHash) {
+        this.txHash = txHash;
+        this.txStatus = TxStatus.COMPLETED;
+        this.mintedAt = LocalDateTime.now();
+    }
+
+    public void failMinting() {
+        this.txStatus = TxStatus.FAILED;
+    }
+
+    public void pendingMinting() {
+        this.txStatus = TxStatus.PENDING;
     }
 
     public void manualCancelEscrow(String cancelReason) {

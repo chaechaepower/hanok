@@ -8,8 +8,8 @@ import { useGetEscrowsSeller } from '@/api/hooks/useGetEscrowsSeller';
 import { usePostTrackingInfo } from '@/api/hooks/usePostTrackingInfo';
 import EscrowDetailCard from '@/components/common/EscrowDetailCard';
 import SideBar from '@/components/common/layouts/SideBar';
-import { sellerSidebarItems } from '@/components/common/layouts/sellerSidebarItems';
-import { CARRIERS } from '@/pages/SellerOnboarding/constants';
+import { sellerSidebarItems } from '@/constants/sidebar';
+import { CARRIERS } from '@/constants/sellerRegister';
 import type { EscrowItem } from '@/types';
 import {
   getEscrowStateUI,
@@ -96,7 +96,7 @@ function CancelModal({
 
         <h2 className="text-xl font-bold text-neutral-100 m-0">거래를 취소하시겠습니까?</h2>
 
-        <div className="flex items-center gap-2.5 bg-neutral-800 rounded-[10px] p-[12px_16px] w-full">
+        <div className="flex items-center gap-2.5 bg-neutral-800 rounded-(--radius-control) p-[12px_16px] w-full">
           <BsBox size={18} className="text-neutral-500" />
           <span className="text-[15px] text-neutral-100 font-medium">{itemName}</span>
         </div>
@@ -108,7 +108,7 @@ function CancelModal({
             onChange={(e) => setReason(e.target.value)}
             placeholder="취소 사유를 입력해주세요."
             rows={4}
-            className="w-full p-3.5 text-sm text-neutral-100 border border-neutral-700 rounded-[10px] resize-none outline-none font-[inherit] box-border bg-surface leading-[1.6]"
+            className="w-full p-3.5 text-sm text-neutral-100 border border-neutral-700 rounded-(--radius-control) resize-none outline-none font-[inherit] box-border bg-surface leading-[1.6]"
           />
         </div>
 
@@ -254,7 +254,7 @@ export default function TrackingInput() {
                   </div>
                 ))
               ) : (
-                <div className="py-5 text-center text-neutral-500 text-sm">대기 중인 배송이 없습니다.</div>
+                <div className="py-5 text-center text-neutral-500 text-sm">대기 중인 배송이 없습니다</div>
               )}
             </div>
           </section>
@@ -278,7 +278,7 @@ export default function TrackingInput() {
                   />
                 ))
               ) : (
-                <div className="py-5 text-center text-neutral-500 text-sm">완료된 배송이 없습니다.</div>
+                <div className="py-5 text-center text-neutral-500 text-sm">완료된 배송이 없습니다</div>
               )}
             </div>
           </section>
@@ -328,7 +328,7 @@ export default function TrackingInput() {
               footer={
                 isTrackingSubmitted ? (
                   <div className="bg-neutral-800 rounded-xl p-5 border border-neutral-700 text-center text-neutral-500 text-sm">
-                    운송장이 등록된 상품입니다.
+                    운송장이 등록된 상품입니다
                   </div>
                 ) : (
                   <>

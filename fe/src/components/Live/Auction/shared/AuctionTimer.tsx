@@ -20,7 +20,7 @@ const phaseStyles = {
     border: 'border-accent-light/50',
     text: 'text-accent-light',
     label: 'text-accent-light',
-    glow: 'shadow-[0_0_14px_rgba(201,100,90,.2)]',
+    glow: 'shadow-[0_0_14px_var(--color-accent-light)/20]',
     animation: 'animate-urgent-pulse',
   },
   ended: {
@@ -35,7 +35,7 @@ const phaseStyles = {
 const sizeStyles = {
   sm: 'text-base',
   md: 'text-xl',
-  lg: 'text-[32px]',
+  lg: 'text-h1',
 };
 
 export default function AuctionTimer({ timer, onExpire }: Props) {
@@ -60,9 +60,9 @@ export default function AuctionTimer({ timer, onExpire }: Props) {
 
   return (
     <div
-      className={`flex flex-col items-center gap-1 rounded-2xl border bg-black/50 px-5 py-3 transition-all ${style.border} ${style.glow} ${style.animation}`}
+      className={`flex flex-col items-center gap-1 rounded-2xl border bg-background/80 px-5 py-3 transition-all ${style.border} ${style.glow} ${style.animation}`}
     >
-      <span className={`text-[10px] font-medium ${style.label}`}>{phase === 'ended' ? '경매 종료' : '남은 시간'}</span>
+      <span className={`text-caption font-medium ${style.label}`}>{phase === 'ended' ? '경매 종료' : '남은 시간'}</span>
       <span
         className={`font-black leading-none tabular-nums ${style.text} ${sizeStyles[displaySize]} ${
           pop ? 'animate-pop' : ''

@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
 import type { PostStreamResponse, StreamMultipartPayload } from '@/types';
-import { buildStreamFormData } from './buildStreamFormData';
+import { buildStreamFormData } from '../../utils/buildStreamFormData';
 
 // POST /api/v1/streams - 방송 생성 (multipart/form-data: request + thumbnail)
 export const usePostStream = () => {

@@ -27,10 +27,6 @@ export const notificationHandlers = [
   }),
 
   http.get('*/v1/notifications/unread-count', () => {
-    return HttpResponse.json({
-      status: 200,
-      message: 'OK',
-      data: 0,
-    });
+    return HttpResponse.json(0);
   }),
 ];

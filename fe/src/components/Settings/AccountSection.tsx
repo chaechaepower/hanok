@@ -100,7 +100,7 @@ export default function AccountSection() {
     <>
       <div className="flex flex-col gap-2 mb-2">
         <h2 className="m-0 text-2xl font-bold text-white">계정 관리</h2>
-        <p className="m-0 text-[15px] text-neutral-400">계정을 관리합니다.</p>
+        <p className="m-0 text-[15px] text-neutral-400">계정을 관리합니다</p>
       </div>
 
       <div className="w-full box-border rounded-2xl p-8 bg-surface-elevated flex flex-col gap-8">
@@ -139,7 +139,7 @@ export default function AccountSection() {
           <div className="flex flex-col gap-2">
             <span className="text-[15px] text-white font-bold">팔로우 알림 설정</span>
             <p className="m-0 text-[14px] text-neutral-400">
-              팔로우한 판매자의 경매 방송이 시작 시 푸시 알림을 받습니다.
+              팔로우한 판매자의 경매 방송이 시작 시 푸시 알림을 받습니다
             </p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">

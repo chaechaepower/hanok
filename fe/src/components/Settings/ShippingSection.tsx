@@ -62,7 +62,7 @@ export default function ShippingSection() {
         <div className="flex flex-col gap-1">
           <h2 className="m-0 text-2xl font-bold text-white">배송지 관리</h2>
           <p className="m-0 text-[15px] text-neutral-400">
-            주문에 사용할 배송지를 관리할 수 있습니다.
+            주문에 사용할 배송지를 관리할 수 있습니다
             {addresses.length > 0 ? (
               <span className="ml-2 font-semibold text-gold-light">등록된 배송지 {addresses.length}개</span>
             ) : null}
@@ -76,7 +76,7 @@ export default function ShippingSection() {
       {addresses.length === 0 ? (
         <div className="flex w-full flex-col items-center gap-4 rounded-2xl bg-surface-elevated p-12">
           <FaMapMarkerAlt size={40} className="text-neutral-700" />
-          <p className="m-0 text-[15px] text-neutral-500">등록된 배송지가 없습니다.</p>
+          <p className="m-0 text-[15px] text-neutral-500">등록된 배송지가 없습니다</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
