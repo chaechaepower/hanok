@@ -74,14 +74,14 @@
 
   /* 부제목 (Subtitle) — 700 Bold */
   --text-sub-lg: 15px;
-  --text-sub-md: 13px;
-  --text-sub-sm: 12px;
+  --text-sub-md: 15px;
+  --text-sub-sm: 14px;
 
   /* 본문 (Body) — 400 Regular */
   --text-body-lg: 14px;
-  --text-body-md: 13px;
-  --text-body-sm: 12px;
-  --text-body-xs: 11px;
+  --text-body-md: 15px;
+  --text-body-sm: 14px;
+  --text-body-xs: 13px;
 
   /* 가격 (Price) — 800 ExtraBold */
   --text-price-lg: 24px;
@@ -89,8 +89,8 @@
   --text-price-sm: 14px;
 
   /* 캡션/라벨 — 700 Bold */
-  --text-label: 11px;
-  --text-caption: 10px;
+  --text-label: 13px;
+  --text-caption: 12px;
 
   /* ── 네비게이션 버튼 ── */
   --nav-btn-height: 40px;
