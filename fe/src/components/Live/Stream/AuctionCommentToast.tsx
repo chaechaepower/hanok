@@ -6,13 +6,15 @@ type Props = {
 
 export default function AuctionCommentToast({ message }: Props) {
   const [visible, setVisible] = useState(false);
-  const [current, setCurrent] = useState(message);
+  const [displayMessage, setDisplayMessage] = useState(message ?? '');
+
+  if (message && (message !== displayMessage || !visible)) {
+    setDisplayMessage(message);
+    setVisible(true);
+  }
 
   useEffect(() => {
-    if (message) {
-      setCurrent(message);
-      setVisible(true);
-    } else if (visible) {
+    if (!message) {
       const timer = setTimeout(() => setVisible(false), 300);
       return () => clearTimeout(timer);
     }
@@ -53,7 +55,7 @@ export default function AuctionCommentToast({ message }: Props) {
 
           <div className="min-w-0 flex-1">
             <p className="text-[12px] font-semibold leading-[1.55] text-warm drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)]">
-              {current}
+              {displayMessage}
             </p>
           </div>
         </div>

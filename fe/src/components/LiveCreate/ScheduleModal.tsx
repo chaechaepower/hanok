@@ -1,6 +1,6 @@
 import { formatStreamScheduledAt } from '@/utils/streamDateTime';
 import { useState } from 'react';
-import { FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaTimes, FaChevronLeft, FaChevronRight, FaChevronUp, FaChevronDown } from 'react-icons/fa';
 
 type Props = {
   onConfirm: (scheduledAt: string) => void;
@@ -14,6 +14,12 @@ today.setHours(0, 0, 0, 0);
 
 const maxDate = new Date(today);
 maxDate.setDate(maxDate.getDate() + 30);
+
+const defaultTime = (() => {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() + 10);
+  return { hour: now.getHours(), minute: now.getMinutes() };
+})();
 
 const isSameDay = (a: Date, b: Date) =>
   a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
@@ -43,8 +49,8 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
   const [selectedDate, setSelectedDate] = useState(new Date(today));
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth());
-  const [hour, setHour] = useState(21);
-  const [minute, setMinute] = useState(0);
+  const [hour, setHour] = useState(defaultTime.hour);
+  const [minute, setMinute] = useState(defaultTime.minute);
 
   const calendarDays = getCalendarDays(viewYear, viewMonth);
 
@@ -69,10 +75,30 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
 
   const isSelectable = (d: Date) => d >= today && d <= maxDate;
 
+  const getScheduled = () => {
+    const d = new Date(selectedDate);
+    d.setHours(hour, minute, 0, 0);
+    return d;
+  };
+
+  const isPast = getScheduled() <= new Date();
+
   const handleConfirm = () => {
-    const scheduled = new Date(selectedDate);
-    scheduled.setHours(hour, minute, 0, 0);
-    onConfirm(formatStreamScheduledAt(scheduled));
+    if (isPast) return;
+    onConfirm(formatStreamScheduledAt(getScheduled()));
+  };
+
+  const isAm = hour < 12;
+  const displayH = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+
+  const incHour = () => setHour((h) => (h + 1) % 24);
+  const decHour = () => setHour((h) => (h - 1 + 24) % 24);
+  const incMinute = () => setMinute((m) => (m + 1) % 60);
+  const decMinute = () => setMinute((m) => (m - 1 + 60) % 60);
+
+  const toggleAmPm = (toAm: boolean) => {
+    if (toAm && hour >= 12) setHour(hour - 12);
+    if (!toAm && hour < 12) setHour(hour + 12);
   };
 
   return (
@@ -93,9 +119,12 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
           <p className="text-neutral-500 text-xs mb-5">오늘로부터 최대 30일 이내로 예약할 수 있습니다.</p>
 
           <div className="bg-surface rounded-xl px-4 py-3 mb-5 text-center">
-            <span className="text-gold-light font-semibold text-base">{formatDisplay(selectedDate, hour, minute)}</span>
+            <span className="text-gold-light font-semibold text-base">
+              {formatDisplay(selectedDate, hour, minute)}
+            </span>
           </div>
 
+          {/* ── Calendar ── */}
           <div className="mb-5">
             <div className="flex items-center justify-between mb-3">
               <button
@@ -161,27 +190,23 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
             </div>
           </div>
 
+          {/* ── Time Picker (Stepper) ── */}
           <div className="mb-6">
             <label className="text-neutral-100 text-sm font-medium mb-3 block">시간 선택</label>
-            <div className="flex gap-2">
-              <div className="flex flex-col gap-1">
+
+            <div className="flex items-center justify-center gap-4">
+              {/* AM / PM */}
+              <div className="flex flex-col gap-1.5">
                 {(['오전', '오후'] as const).map((label) => {
-                  const isAm = label === '오전';
-                  const isActive = isAm ? hour < 12 : hour >= 12;
+                  const targetAm = label === '오전';
+                  const active = targetAm === isAm;
                   return (
                     <button
                       key={label}
                       type="button"
-                      onClick={() => {
-                        if (isAm && hour >= 12) setHour(hour - 12);
-                        if (!isAm && hour < 12) setHour(hour + 12);
-                      }}
-                      className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all
-                        ${
-                          isActive
-                            ? 'bg-gold text-background'
-                            : 'bg-surface text-neutral-500 hover:text-neutral-100 hover:bg-warm/10'
-                        }`}
+                      onClick={() => toggleAmPm(targetAm)}
+                      className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all
+                        ${active ? 'bg-gold text-background' : 'bg-surface text-neutral-500 hover:text-neutral-100 hover:bg-warm/10'}`}
                     >
                       {label}
                     </button>
@@ -189,55 +214,87 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
                 })}
               </div>
 
-              <div className="flex-1 bg-surface rounded-xl p-2">
-                <div className="text-neutral-500 text-[10px] mb-1 text-center">시</div>
-                <div className="grid grid-cols-4 gap-1">
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const displayH = i + 1;
-                    const h24 = displayH === 12 ? (hour < 12 ? 0 : 12) : hour < 12 ? displayH : displayH + 12;
-                    const actualH = h24;
-                    return (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setHour(actualH)}
-                        className={`py-1.5 rounded-lg text-xs font-medium transition-all
-                          ${
-                            hour === actualH
-                              ? 'bg-gold text-background font-bold'
-                              : 'text-neutral-400 hover:bg-warm/10 hover:text-neutral-100'
-                          }`}
-                      >
-                        {displayH}
-                      </button>
-                    );
-                  })}
-                </div>
+              {/* Hour stepper */}
+              <div className="flex flex-col items-center gap-1">
+                <button
+                  type="button"
+                  onClick={incHour}
+                  className="w-[72px] h-8 flex items-center justify-center rounded-lg bg-surface text-neutral-500 hover:text-neutral-100 hover:bg-warm/10 transition-colors"
+                >
+                  <FaChevronUp size={12} />
+                </button>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={displayH}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, '');
+                    if (v === '') return;
+                    let n = Math.min(12, Math.max(1, Number(v)));
+                    if (n === 12) n = 0;
+                    setHour(isAm ? n : n + 12);
+                  }}
+                  onBlur={(e) => {
+                    const v = Number(e.target.value);
+                    if (isNaN(v) || v < 1 || v > 12) {
+                      setHour(isAm ? 0 : 12);
+                    }
+                  }}
+                  className="w-[72px] h-[56px] rounded-xl bg-surface border border-gold/30 text-gold-light text-2xl font-bold text-center outline-none focus:border-gold transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={decHour}
+                  className="w-[72px] h-8 flex items-center justify-center rounded-lg bg-surface text-neutral-500 hover:text-neutral-100 hover:bg-warm/10 transition-colors"
+                >
+                  <FaChevronDown size={12} />
+                </button>
               </div>
 
-              <div className="w-[80px] bg-surface rounded-xl p-2">
-                <div className="text-neutral-500 text-[10px] mb-1 text-center">분</div>
-                <div className="grid grid-cols-2 gap-1">
-                  {[0, 10, 20, 30, 40, 50].map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setMinute(m)}
-                      className={`py-1.5 rounded-lg text-xs font-medium transition-all
-                        ${
-                          minute === m
-                            ? 'bg-gold text-background font-bold'
-                            : 'text-neutral-400 hover:bg-warm/10 hover:text-neutral-100'
-                        }`}
-                    >
-                      {m.toString().padStart(2, '0')}
-                    </button>
-                  ))}
-                </div>
+              {/* Colon */}
+              <span className="text-neutral-400 text-2xl font-bold">:</span>
+
+              {/* Minute stepper */}
+              <div className="flex flex-col items-center gap-1">
+                <button
+                  type="button"
+                  onClick={incMinute}
+                  className="w-[72px] h-8 flex items-center justify-center rounded-lg bg-surface text-neutral-500 hover:text-neutral-100 hover:bg-warm/10 transition-colors"
+                >
+                  <FaChevronUp size={12} />
+                </button>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={minute.toString().padStart(2, '0')}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, '');
+                    if (v === '') return;
+                    const n = Math.min(59, Math.max(0, Number(v)));
+                    setMinute(n);
+                  }}
+                  onBlur={(e) => {
+                    const v = Number(e.target.value);
+                    if (isNaN(v) || v < 0 || v > 59) setMinute(0);
+                  }}
+                  className="w-[72px] h-[56px] rounded-xl bg-surface border border-gold/30 text-gold-light text-2xl font-bold text-center outline-none focus:border-gold transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={decMinute}
+                  className="w-[72px] h-8 flex items-center justify-center rounded-lg bg-surface text-neutral-500 hover:text-neutral-100 hover:bg-warm/10 transition-colors"
+                >
+                  <FaChevronDown size={12} />
+                </button>
               </div>
             </div>
           </div>
 
+          {isPast && (
+            <p className="text-accent-light text-xs text-center mb-2">현재 시간 이후로 선택해 주세요.</p>
+          )}
+
+          {/* ── Actions ── */}
           <div className="flex gap-3">
             <button
               type="button"
@@ -249,7 +306,9 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
             <button
               type="button"
               onClick={handleConfirm}
-              className="flex-1 py-3.5 rounded-2xl bg-gold text-background text-sm font-bold hover:bg-gold-dark transition-colors"
+              disabled={isPast}
+              className={`flex-1 py-3.5 rounded-2xl text-sm font-bold transition-colors
+                ${isPast ? 'bg-neutral-700 text-neutral-500 cursor-not-allowed' : 'bg-gold text-background hover:bg-gold-dark'}`}
             >
               예약확정
             </button>
