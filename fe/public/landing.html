@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한옥 경매</title>
+    <link rel="preload" href="landging_model.glb" as="fetch" crossorigin>
+    <link rel="preload" href="Logo.png" as="image">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { overflow: hidden; background: #0e0c0a; }
+        #canvas-container { width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; }
+
+        /* 로딩 오버레이 */
+        #loading-overlay {
+            position: fixed; inset: 0; z-index: 100;
+            background: #0e0c0a;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.8s ease;
+        }
+        #loading-overlay.hidden { opacity: 0; pointer-events: none; }
+
+        /* 원형 게이지 */
+        .progress-ring {
+            width: 56px; height: 56px;
+            transform: rotate(-90deg);
+        }
+        .progress-ring__bg {
+            fill: none;
+            stroke: rgba(201,169,110,0.12);
+            stroke-width: 3;
+        }
+        .progress-ring__bar {
+            fill: none;
+            stroke: #c9a96e;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-dasharray: 150.8;
+            stroke-dashoffset: 150.8;
+            transition: stroke-dashoffset 0.3s ease;
+        }
+        .progress-pct {
+            margin-top: 12px;
+            color: rgba(201,169,110,0.6);
+            font-size: 13px;
+            letter-spacing: 2px;
+            font-family: system-ui, sans-serif;
+        }
+
+        /* 로딩 로고 */
+        .loading-logo {
+            margin-bottom: 32px;
+        }
+        .loading-logo img {
+            height: 80px;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+        }
+
+        /* UI 오버레이 */
+        #ui-overlay {
+            position: fixed; inset: 0; z-index: 10;
+            pointer-events: none;
+            opacity: 0; transition: opacity 1s ease 0.5s;
+        }
+        #ui-overlay.visible { opacity: 1; }
+
+        /* 로고 - 좌상단 */
+        .logo {
+            position: absolute; top: 30px; left: 40px;
+            z-index: 20;
+            transition: opacity 0.5s ease;
+        }
+        .logo.fade-out { opacity: 0; }
+        .logo img {
+            height: 100px;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .logo { top: 20px; left: 20px; }
+            .logo img { height: 70px; }
+            .loading-logo img { height: 60px; }
+        }
+        @media (max-width: 480px) {
+            .logo { top: 16px; left: 16px; }
+            .logo img { height: 55px; }
+            .loading-logo img { height: 50px; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 로딩 오버레이 -->
+    <div id="loading-overlay">
+        <svg class="progress-ring" viewBox="0 0 52 52">
+            <circle class="progress-ring__bg" cx="26" cy="26" r="24" />
+            <circle class="progress-ring__bar" id="progress-bar" cx="26" cy="26" r="24" />
+        </svg>
+        <div class="progress-pct" id="progress-pct">0%</div>
+    </div>
+
+    <!-- UI 오버레이 -->
+    <div id="ui-overlay">
+        <div class="logo" id="logo"><img src="Logo.png" alt="한옥"></div>
+    </div>
+
+    <!-- 페이드아웃 오버레이 -->
+    <div id="fade-overlay" style="position:fixed;inset:0;z-index:999;background:#0e0c0a;opacity:0;pointer-events:none;transition:opacity 0.3s ease;"></div>
+
+    <!-- 3D 캔버스 -->
+    <div id="canvas-container"></div>
+
+    <!-- Three.js (ES Module) -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+        const container = document.getElementById('canvas-container');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const uiOverlay = document.getElementById('ui-overlay');
+        const logo = document.getElementById('logo');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPct = document.getElementById('progress-pct');
+        const CIRCUMFERENCE = 2 * Math.PI * 24; // r=24
+
+        // ─── 렌더러 ───
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.5;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+        container.appendChild(renderer.domElement);
+
+        // ─── 씬 ───
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0e0c0a);
+        scene.fog = new THREE.FogExp2(0x0e0c0a, 0.012);
+
+        // ─── 카메라 ───
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 300);
+        camera.position.set(0, 8, 28);
+
+        let cameraInitPos = new THREE.Vector3();
+        let cameraInitTarget = new THREE.Vector3();
+        let cameraZoomPos = new THREE.Vector3();
+        let cameraZoomTarget = new THREE.Vector3();
+        let cameraTween = null;
+
+        // ─── 조명 ───
+        const ambient = new THREE.AmbientLight(0xf0e6d8, 1.2);
+        scene.add(ambient);
+
+        const hemi = new THREE.HemisphereLight(0xf5ead6, 0x8a7a6a, 1.0);
+        scene.add(hemi);
+
+        const keyLight = new THREE.DirectionalLight(0xf0c878, 2.5);
+        keyLight.position.set(8, 18, 12);
+        keyLight.castShadow = true;
+        keyLight.shadow.mapSize.set(2048, 2048);
+        keyLight.shadow.camera.near = 1;
+        keyLight.shadow.camera.far = 60;
+        keyLight.shadow.camera.left = -20;
+        keyLight.shadow.camera.right = 20;
+        keyLight.shadow.camera.top = 20;
+        keyLight.shadow.camera.bottom = -5;
+        keyLight.shadow.bias = -0.001;
+        keyLight.shadow.normalBias = 0.02;
+        scene.add(keyLight);
+
+        const fillLight = new THREE.DirectionalLight(0x8ab4d0, 1.0);
+        fillLight.position.set(-10, 10, 5);
+        scene.add(fillLight);
+
+        const rimLight = new THREE.DirectionalLight(0xffd4a0, 1.2);
+        rimLight.position.set(0, 8, -15);
+        scene.add(rimLight);
+
+        const spotLight = new THREE.SpotLight(0xf5deb3, 8.0, 60, Math.PI / 3, 0.4, 0.8);
+        spotLight.position.set(0, 14, 20);
+        spotLight.target.position.set(0, 4, 0);
+        spotLight.castShadow = true;
+        spotLight.shadow.mapSize.set(1024, 1024);
+        scene.add(spotLight);
+        scene.add(spotLight.target);
+
+        const innerLight = new THREE.PointLight(0xf5a623, 0, 20, 1.5);
+        innerLight.position.set(0, 5, -3);
+        scene.add(innerLight);
+
+        // ─── 바닥 ───
+        const floorGeo = new THREE.PlaneGeometry(100, 100);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x0e0c0a, roughness: 0.95, metalness: 0.0 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        // ─── GLB 모델 로드 ───
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/libs/draco/');
+
+        const loader = new GLTFLoader();
+        loader.setDRACOLoader(dracoLoader);
+        let mixer = null;
+        let animations = [];
+        let model = null;
+        let doorOpen = false;
+        let actions = [];
+
+        loader.load(
+            'landging_model.glb',
+            (gltf) => {
+                model = gltf.scene;
+
+                model.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                        const name = (child.name || '').toLowerCase();
+                        if (name.includes('floor') || name.includes('ground') || name.includes('plane') || name.includes('바닥')) {
+                            child.material = child.material.clone();
+                            child.material.color.set(0x0e0c0a);
+                        }
+                    }
+                });
+
+                const box = new THREE.Box3().setFromObject(model);
+                const size = box.getSize(new THREE.Vector3());
+                const center = box.getCenter(new THREE.Vector3());
+
+                model.position.y -= box.min.y;
+                model.position.x -= center.x;
+                model.position.z -= center.z;
+                scene.add(model);
+
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const dist = maxDim * 2.2;
+
+                cameraInitPos.set(0, size.y * 0.5, dist * 0.6);
+                cameraInitTarget.set(0, size.y * 0.4, 0);
+                cameraZoomPos.set(0, size.y * 0.45, -size.z * 0.5);
+                cameraZoomTarget.set(0, size.y * 0.4, -size.z * 3);
+
+                camera.position.copy(cameraInitPos);
+                camera.lookAt(cameraInitTarget);
+
+                innerLight.position.set(0, size.y * 0.4, -size.z * 0.3);
+
+                if (gltf.animations && gltf.animations.length > 0) {
+                    mixer = new THREE.AnimationMixer(model);
+                    animations = gltf.animations;
+                }
+
+                // 로딩 완료 → UI 표시 → 자동 문열림
+                loadingOverlay.classList.add('hidden');
+                setTimeout(() => {
+                    uiOverlay.classList.add('visible');
+                    loadingOverlay.style.display = 'none';
+
+                    // 1.5초 후 자동 문열림
+                    setTimeout(openDoor, 1500);
+                }, 800);
+            },
+            (xhr) => {
+                if (xhr.lengthComputable) {
+                    const pct = Math.round(xhr.loaded / xhr.total * 100);
+                    progressBar.style.strokeDashoffset = CIRCUMFERENCE * (1 - pct / 100);
+                    progressPct.textContent = pct + '%';
+                }
+            },
+            (error) => {
+                console.error('모델 로드 실패:', error);
+            }
+        );
+
+        // ─── 자동 문열림 ───
+        function openDoor() {
+            if (!mixer || animations.length === 0 || doorOpen) return;
+
+            actions.forEach(a => a.stop());
+            actions = [];
+            animations.forEach((clip) => {
+                const action = mixer.clipAction(clip);
+                action.setLoop(THREE.LoopOnce);
+                action.clampWhenFinished = true;
+                action.timeScale = 1;
+                action.reset().play();
+                actions.push(action);
+            });
+
+            doorOpen = true;
+            gsapTo(innerLight, 'intensity', 3.0, 1.5);
+
+            // 0.5초 후 카메라 빨려들어가기
+            setTimeout(() => {
+                cameraTween = { start: performance.now(), duration: 1.6, direction: 'in' };
+            }, 500);
+        }
+
+        // 간단한 트윈 유틸
+        function gsapTo(obj, prop, target, duration) {
+            const start = obj[prop];
+            const startTime = performance.now();
+            function tick() {
+                const elapsed = (performance.now() - startTime) / 1000;
+                const t = Math.min(elapsed / duration, 1);
+                const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+                obj[prop] = start + (target - start) * ease;
+                if (t < 1) requestAnimationFrame(tick);
+            }
+            tick();
+        }
+
+        // ─── 애니메이션 루프 ───
+        const clock = new THREE.Clock();
+        const currentCamPos = new THREE.Vector3();
+        const currentCamTarget = new THREE.Vector3();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            if (mixer) mixer.update(delta);
+
+            if (cameraTween) {
+                const elapsed = (performance.now() - cameraTween.start) / 1000;
+                const t = Math.max(0, Math.min(elapsed / cameraTween.duration, 1));
+                const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+                currentCamPos.lerpVectors(cameraInitPos, cameraZoomPos, ease);
+                currentCamTarget.lerpVectors(cameraInitTarget, cameraZoomTarget, ease);
+
+                renderer.toneMappingExposure = 1.5 * (1 - ease * 0.9);
+                scene.fog.density = 0.012 + ease * 0.08;
+                ambient.intensity = 1.2 * (1 - ease * 0.8);
+
+                camera.position.copy(currentCamPos);
+                camera.lookAt(currentCamTarget);
+
+                if (t >= 0.1) logo.classList.add('fade-out');
+                if (t >= 0.8) document.getElementById('fade-overlay').style.opacity = '1';
+
+                if (t >= 1) {
+                    cameraTween = null;
+                    window.location.href = 'https://j14d105.p.ssafy.io/';
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // ─── 리사이즈 ───
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+
+</html>
