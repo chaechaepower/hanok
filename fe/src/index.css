@@ -381,12 +381,12 @@ ul {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #2c2c2e;
+  background: var(--color-neutral-700);
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #3a3a3c;
+  background: var(--color-neutral-600);
 }
 
 blockquote,
@@ -847,7 +847,7 @@ table {
 @supports not selector(::-webkit-scrollbar) {
   .left-panel-scroll {
     scrollbar-width: thin;
-    scrollbar-color: #222 transparent;
+    scrollbar-color: var(--color-neutral-900) transparent;
   }
 }
 
@@ -860,7 +860,7 @@ table {
 }
 
 .left-panel-scroll::-webkit-scrollbar-thumb {
-  background: #222;
+  background: var(--color-neutral-900);
   border-radius: 999px;
 }
 
