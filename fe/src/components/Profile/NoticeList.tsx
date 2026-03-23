@@ -64,7 +64,7 @@ export default function NoticeList({
               {isMyProfile && (
                 <div className="flex gap-3">
                   <button
-                    className="rounded-md bg-transparent px-2 py-1 text-body-md text-neutral-500 transition-colors hover:bg-white/5 hover:text-neutral-200"
+                    className="btn-ghost px-2 py-1 text-body-md"
                     onClick={(event) => {
                       event.stopPropagation();
                       onEditNotice(notice);

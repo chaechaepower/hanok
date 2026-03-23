@@ -135,7 +135,7 @@ export default function SignUpPage() {
   };
 
   const inputContainerClass =
-    'flex items-center border border-neutral-800 rounded-[10px] h-[52px] px-3 bg-transparent focus-within:border-primary transition-colors';
+    'flex items-center border border-neutral-800 rounded-(--radius-control) h-[52px] px-3 bg-transparent focus-within:border-primary transition-colors';
   const inputClass =
     'flex-1 bg-transparent text-[15px] text-neutral-100 px-2 focus:outline-none placeholder-neutral-600';
   const iconClass = 'w-5 h-5 text-neutral-600';

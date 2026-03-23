@@ -411,7 +411,7 @@ export default function ProfilePage() {
             {isMyProfile && (
               <button
                 onClick={handleOpenProfileEdit}
-                className="self-end border-none bg-transparent text-neutral-500 text-body-sm cursor-pointer rounded-lg px-3 py-1 hover:bg-white/5 hover:text-neutral-200 transition-colors"
+                className="btn-ghost self-end px-3 py-1 text-body-sm"
               >
                 수정
               </button>
@@ -419,7 +419,7 @@ export default function ProfilePage() {
             {!isMyProfile && (
               <button
                 onClick={() => setIsReportModalOpen(true)}
-                className="self-end border-none bg-transparent text-neutral-600 text-body-sm cursor-pointer rounded-lg px-3 py-1 hover:bg-white/5 hover:text-neutral-400 transition-colors"
+                className="btn-ghost self-end px-3 py-1 text-body-sm"
               >
                 신고
               </button>

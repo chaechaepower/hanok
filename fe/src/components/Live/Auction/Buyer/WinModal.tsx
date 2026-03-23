@@ -31,10 +31,10 @@ export default function WinModal({ isOpen, itemName, itemCond, finalPrice, addre
   }
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/45 px-4 backdrop-blur-[10px]">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-(--modal-backdrop) px-4 backdrop-blur-(--modal-blur)">
       <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-101" />
 
-      <div className="relative z-100 w-105 overflow-hidden rounded-4xl bg-surface">
+      <div className="relative z-100 w-full max-w-md overflow-hidden rounded-(--radius-panel) border border-white/6 bg-surface">
         <div className="flex flex-col items-center gap-3 border-b border-gold/10 bg-[linear-gradient(160deg,rgba(205,145,80,.08)_0%,transparent_60%)] px-7 py-8 pb-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-full border border-gold/18 bg-gold/[0.08] text-[30px]">
             <GoTrophy className="text-primary-light" />
@@ -44,7 +44,7 @@ export default function WinModal({ isOpen, itemName, itemCond, finalPrice, addre
         </div>
 
         <div className="flex flex-col gap-4 px-7 py-6">
-          <div className="flex items-center justify-between gap-4 rounded-[20px] border border-white/6 bg-white/3 px-4.5 py-5">
+          <div className="flex items-center justify-between gap-4 rounded-(--radius-panel) border border-white/6 bg-white/3 px-4.5 py-5">
             <div className="min-w-0 flex shrink-0 flex-col gap-2">
               <p className="truncate text-[13px] font-bold text-white">{itemName}</p>
               <p className="text-[10px] text-neutral-500">{itemCond}</p>
@@ -70,7 +70,7 @@ export default function WinModal({ isOpen, itemName, itemCond, finalPrice, addre
           </div>
 
           <button
-            className="flex w-full items-center justify-center gap-2 rounded-[20px] mt-4 mb-4 px-4 py-3 text-[15px] bg-point text-background outline-none transition disabled:cursor-not-allowed disabled:opacity-40"
+            className="flex w-full items-center justify-center gap-2 rounded-(--radius-panel) mt-4 mb-4 px-4 py-3 text-[15px] bg-point text-background outline-none transition disabled:cursor-not-allowed disabled:opacity-40"
             onClick={handleConfirm}
             disabled={isLoading}
           >

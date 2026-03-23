@@ -100,7 +100,7 @@ export default function Header() {
         <button
           type="button"
           onClick={handleSellerButtonClick}
-          className="flex items-center gap-1.5 whitespace-nowrap rounded-[10px] border border-primary/35 bg-primary/15 px-3.5 py-[7px] text-subtitle-sm text-primary-light transition-all hover:border-primary/50 hover:bg-primary/25 hover:text-neutral-100"
+          className="flex h-(--nav-btn-height) items-center gap-1.5 whitespace-nowrap rounded-(--nav-btn-radius) bg-primary/15 px-3.5 text-subtitle-sm text-primary-light transition-all hover:bg-primary/25 hover:text-neutral-100"
         >
           <Home size={14} className="opacity-85" />
           <span>{sellerButtonLabel}</span>
@@ -129,10 +129,10 @@ export default function Header() {
           </>
         ) : (
           <>
-            <Button variant="navSignup" size="small" onClick={() => navigate('/signup')} className="px-[18px] py-2">
+            <Button variant="navSignup" onClick={() => navigate('/signup')} className="px-[18px]">
               회원가입
             </Button>
-            <Button variant="navLogin" size="small" onClick={() => navigate('/login')} className="px-[18px] py-2">
+            <Button variant="navLogin" onClick={() => navigate('/login')} className="px-[18px]">
               로그인
             </Button>
           </>
@@ -158,7 +158,7 @@ function HeaderIcon({ children, onClick, ariaLabel, tooltip, badgeCount, hasNoti
         type="button"
         onClick={onClick}
         aria-label={ariaLabel}
-        className={`relative flex h-10 w-10 items-center justify-center rounded-xl border border-transparent transition-all hover:border-warm/6 hover:bg-warm/5 active:scale-95 ${hasNoti ? 'text-neutral-200 hover:text-neutral-100' : ''}`}
+        className={`relative flex h-(--nav-btn-height) w-(--nav-btn-height) items-center justify-center rounded-(--nav-btn-radius) border border-transparent transition-all hover:border-warm/6 hover:bg-warm/5 active:scale-95 ${hasNoti ? 'text-neutral-200 hover:text-neutral-100' : ''}`}
       >
         {children}
         {badgeCount != null && badgeCount > 0 && (

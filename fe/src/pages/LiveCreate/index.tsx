@@ -174,7 +174,7 @@ export default function LiveCreatePage() {
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="btn-primary-outline flex cursor-pointer items-center gap-1.5 rounded-[10px] px-5 py-2.5 text-sm font-semibold"
+            className="btn-primary-outline flex cursor-pointer items-center gap-1.5 rounded-(--radius-control) px-5 py-2.5 text-sm font-semibold"
           >
             <FaPlus size={12} />
             라이브 방송 등록

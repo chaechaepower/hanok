@@ -23,14 +23,14 @@ export default function FollowingBanner({ streams }: FollowingBannerProps) {
 
   if (streams.length === 0) {
     return (
-      <section className="rounded-[32px] border border-primary-dark/30 bg-surface-elevated p-8">
+      <section className="rounded-(--radius-section) bg-surface-elevated p-8">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-point/15 text-point">
             <FaHeart size={18} />
           </div>
           <div>
-            <h2 className="text-[26px] font-semibold text-warm">{bannerTitle}</h2>
-            <p className="mt-1 text-sm text-neutral-500">팔로우한 상점의 진행 중인 경매가 없습니다</p>
+            <h2 className="text-[26px] font-semibold leading-tight text-warm">{bannerTitle}</h2>
+            <p className="mt-0.5 text-sm leading-tight text-neutral-500">팔로우한 상점의 진행 중인 경매가 없습니다</p>
           </div>
         </div>
       </section>
@@ -42,19 +42,19 @@ export default function FollowingBanner({ streams }: FollowingBannerProps) {
   const canNavigateToProfile = featuredStream.seller.sellerId > 0;
 
   return (
-    <section className="rounded-[32px] border border-primary-dark/30 bg-surface-elevated p-4 shadow-[0_24px_60px_rgba(0,0,0,0.24)]">
+    <section className="rounded-(--radius-section) bg-surface-elevated p-4 shadow-[0_24px_60px_rgba(0,0,0,0.24)]">
       <div className="mb-4 flex items-center gap-3 px-2 pt-2">
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-point/15 text-point">
           <FaHeart size={18} />
         </div>
         <div>
-          <h2 className="text-[26px] font-semibold text-warm">{bannerTitle}</h2>
-          <p className="mt-1 text-sm text-neutral-500">팔로우한 상점의 실시간 경매를 한눈에 확인해보세요.</p>
+          <h2 className="text-[26px] font-semibold leading-tight text-warm">{bannerTitle}</h2>
+          <p className="mt-0.5 text-sm leading-tight text-neutral-500">팔로우한 상점의 실시간 경매를 한눈에 확인해보세요.</p>
         </div>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.75fr)_320px]">
-        <div className="group relative min-h-[360px] overflow-hidden rounded-[28px] bg-surface text-left">
+        <div className="group relative min-h-[360px] overflow-hidden rounded-(--radius-panel) bg-surface text-left">
           <img
             src={featuredStream.thumbnailUri ?? Logo}
             alt={featuredStream.title}
@@ -114,7 +114,7 @@ export default function FollowingBanner({ streams }: FollowingBannerProps) {
               <button
                 type="button"
                 onClick={() => navigate(`/live/${featuredStream.streamId}`)}
-                className="inline-flex shrink-0 items-center gap-2 rounded-full border border-accent/35 bg-accent/20 px-5 py-3 text-sm font-semibold text-accent-light transition hover:bg-accent/30"
+                className="inline-flex shrink-0 items-center gap-2 rounded-full bg-accent/20 px-5 py-3 text-sm font-semibold text-accent-light transition hover:bg-accent/30"
               >
                 <span>입장하기</span>
                 <ArrowRight size={16} />
@@ -123,8 +123,8 @@ export default function FollowingBanner({ streams }: FollowingBannerProps) {
           </div>
         </div>
 
-        <div className="rounded-[28px] bg-surface p-3">
-          <div className="custom-scrollbar flex max-h-[360px] flex-col gap-3 overflow-y-auto pr-1">
+        <div className="overflow-hidden rounded-(--radius-panel) bg-surface">
+          <div className="custom-scrollbar flex max-h-[360px] flex-col gap-3 overflow-y-auto p-3">
             {streams.map((stream) => {
               const isSelected = stream.streamId === featuredStream.streamId;
 
@@ -133,10 +133,10 @@ export default function FollowingBanner({ streams }: FollowingBannerProps) {
                   key={stream.streamId}
                   type="button"
                   onClick={() => setSelectedStreamId(stream.streamId)}
-                  className={`flex items-center gap-3 rounded-[22px] border p-3 text-left transition ${
+                  className={`flex items-center gap-3 rounded-(--radius-panel) p-3 text-left transition ${
                     isSelected
-                      ? 'border-primary/40 bg-primary-muted/45 shadow-[0_10px_24px_rgba(0,0,0,0.18)]'
-                      : 'border-transparent bg-background/40 hover:bg-primary-muted/30'
+                      ? 'bg-primary-muted/45 shadow-[0_10px_24px_rgba(0,0,0,0.18)]'
+                      : 'bg-background/40 hover:bg-primary-muted/30'
                   }`}
                 >
                   <div className="relative h-20 w-32 shrink-0 overflow-hidden rounded-2xl bg-neutral-800">

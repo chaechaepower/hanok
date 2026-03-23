@@ -26,7 +26,7 @@ export default function NewSellerLiveSection({ streams }: NewSellerLiveSectionPr
   };
 
   return (
-    <section className="relative rounded-[32px] border border-white/8 bg-background px-6 pb-6 pt-6">
+    <section className="relative rounded-(--radius-section) bg-background px-6 pb-6 pt-6">
       <div className="mb-6">
         <div>
           <h2 className="text-[28px] font-semibold text-warm">신규 상점 경매</h2>
@@ -39,7 +39,7 @@ export default function NewSellerLiveSection({ streams }: NewSellerLiveSectionPr
           <button
             type="button"
             onClick={() => scrollByOffset('left')}
-            className="absolute left-3 top-[calc(50%+12px)] z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-primary-dark/30 bg-surface-elevated text-warm shadow-[0_14px_30px_rgba(0,0,0,0.18)] transition hover:bg-primary-muted"
+            className="absolute left-3 top-[calc(50%+12px)] z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-surface-elevated text-warm shadow-[0_14px_30px_rgba(0,0,0,0.18)] transition hover:bg-primary-muted"
             aria-label="신규 상점 경매 왼쪽으로 이동"
           >
             <ChevronLeft size={18} />
@@ -48,7 +48,7 @@ export default function NewSellerLiveSection({ streams }: NewSellerLiveSectionPr
           <button
             type="button"
             onClick={() => scrollByOffset('right')}
-            className="absolute right-3 top-[calc(50%+12px)] z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-primary-dark/30 bg-surface-elevated text-warm shadow-[0_14px_30px_rgba(0,0,0,0.18)] transition hover:bg-primary-muted"
+            className="absolute right-3 top-[calc(50%+12px)] z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-surface-elevated text-warm shadow-[0_14px_30px_rgba(0,0,0,0.18)] transition hover:bg-primary-muted"
             aria-label="신규 상점 경매 오른쪽으로 이동"
           >
             <ChevronRight size={18} />

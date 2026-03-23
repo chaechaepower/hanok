@@ -27,7 +27,7 @@ export default function AllLiveSection({
   triggerRef,
 }: AllLiveSectionProps) {
   return (
-    <section className="rounded-[32px] border border-white/8 bg-background px-6 pb-10 pt-6">
+    <section className="rounded-(--radius-section) bg-background px-6 pb-10 pt-6">
       <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
           <h2 className="text-[28px] font-semibold text-warm">진행 중인 경매</h2>

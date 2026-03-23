@@ -80,9 +80,11 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
         )}
       </div>
 
-      <div className="flex border-b border-neutral-800">
+      <div className="flex border-b border-neutral-800" role="tablist">
         <button
-          className={`flex-1 py-3 text-[13px] font-bold transition ${
+          role="tab"
+          aria-selected={activeTab === 'chat'}
+          className={`flex-1 py-3 text-body-md font-bold transition ${
             activeTab === 'chat' ? 'border-b-2 border-gold text-neutral-100' : 'text-neutral-600'
           }`}
           onClick={() => setActiveTab('chat')}
@@ -90,7 +92,9 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
           채팅
         </button>
         <button
-          className={`flex-1 py-3 text-[13px] font-bold transition ${
+          role="tab"
+          aria-selected={activeTab === 'auction'}
+          className={`flex-1 py-3 text-body-md font-bold transition ${
             activeTab === 'auction' ? 'border-b-2 border-gold text-neutral-100' : 'text-neutral-600'
           }`}
           onClick={() => setActiveTab('auction')}

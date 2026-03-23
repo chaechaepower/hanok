@@ -26,11 +26,11 @@ export default function MainCategoryPanel({ activeItemId, onItemClick }: MainCat
   };
 
   return (
-    <div className="rounded-[28px] border border-primary-dark/30 bg-surface p-3">
+    <div className="rounded-(--radius-panel) bg-surface">
       <button
         type="button"
         onClick={handleAllClick}
-        className="flex w-full items-center justify-between rounded-2xl px-4 py-2 text-left transition 
+        className="flex w-full items-center justify-between rounded-(--radius-panel) px-6 py-4 text-left transition
           text-neutral-200 hover:bg-surface-elevated"
       >
         <span className="flex items-center gap-3">
@@ -38,7 +38,8 @@ export default function MainCategoryPanel({ activeItemId, onItemClick }: MainCat
             <LayoutGrid size={18} />
           </span>
           <span>
-            <span className="block text-[15px] font-semibold leading-none">전체</span>
+            <span className="block text-[15px] font-semibold leading-tight">전체</span>
+            <span className="mt-0.5 block text-[11px] leading-tight text-neutral-500">카테고리별 경매 보기</span>
           </span>
         </span>
         <ChevronDown size={18} className={`transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
@@ -68,7 +69,7 @@ export default function MainCategoryPanel({ activeItemId, onItemClick }: MainCat
                         : 'text-neutral-400 hover:bg-surface-elevated hover:text-neutral-100'
                     }`}
                   >
-                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-muted/70">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-primary-muted/70">
                       {item.icon}
                     </span>
                     <span className="truncate text-[14px] font-medium">{item.label}</span>

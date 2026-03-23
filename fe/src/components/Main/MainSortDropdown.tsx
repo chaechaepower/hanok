@@ -39,7 +39,7 @@ export default function MainSortDropdown({
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="inline-flex items-center justify-center gap-2 rounded-[14px] border border-primary-dark/30 bg-surface-elevated px-4 py-2 text-warm transition hover:bg-primary-muted/40"
+        className="inline-flex items-center justify-center gap-2 rounded-(--radius-control) bg-surface-elevated px-4 py-2 text-warm transition hover:bg-primary-muted/40"
       >
         <span className="text-sm font-semibold">{selectedLabel}</span>
         <span className={`text-caption text-warm/70 transition-transform ${isOpen ? 'rotate-180' : ''}`}>
@@ -48,7 +48,7 @@ export default function MainSortDropdown({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-full overflow-hidden rounded-[14px] border border-primary-dark/30 bg-surface p-1">
+        <div className="absolute right-0 top-[calc(100%+8px)] z-30 min-w-full overflow-hidden rounded-(--radius-control) bg-surface p-1">
           {options.map((option) => {
             const isSelected = selectedValue === option.value;
 

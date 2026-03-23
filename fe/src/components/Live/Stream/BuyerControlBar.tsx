@@ -349,7 +349,7 @@ export default function BuyerControlBar({
 
   return (
     <>
-      <div className="absolute bottom-4 left-4 right-4 flex flex-col gap-2">
+      <div className="absolute bottom-3 left-3 right-3 flex flex-col gap-2">
         <div className="flex items-center justify-between">
           <KeyboardGuide open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} />
 

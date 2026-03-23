@@ -154,7 +154,7 @@ export default function SellerControlBar({
   }, [handleKeyDown, handleKeyUp]);
 
   return (
-    <div className="absolute bottom-4 left-4 right-4 flex items-stretch justify-between">
+    <div className="absolute bottom-3 left-3 right-3 flex items-stretch justify-between">
       {/* 좌하단: 키보드 가이드 */}
       <KeyboardGuide open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} />
 

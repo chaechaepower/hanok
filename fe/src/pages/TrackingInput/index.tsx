@@ -96,7 +96,7 @@ function CancelModal({
 
         <h2 className="text-xl font-bold text-neutral-100 m-0">거래를 취소하시겠습니까?</h2>
 
-        <div className="flex items-center gap-2.5 bg-neutral-800 rounded-[10px] p-[12px_16px] w-full">
+        <div className="flex items-center gap-2.5 bg-neutral-800 rounded-(--radius-control) p-[12px_16px] w-full">
           <BsBox size={18} className="text-neutral-500" />
           <span className="text-[15px] text-neutral-100 font-medium">{itemName}</span>
         </div>
@@ -108,7 +108,7 @@ function CancelModal({
             onChange={(e) => setReason(e.target.value)}
             placeholder="취소 사유를 입력해주세요."
             rows={4}
-            className="w-full p-3.5 text-sm text-neutral-100 border border-neutral-700 rounded-[10px] resize-none outline-none font-[inherit] box-border bg-surface leading-[1.6]"
+            className="w-full p-3.5 text-sm text-neutral-100 border border-neutral-700 rounded-(--radius-control) resize-none outline-none font-[inherit] box-border bg-surface leading-[1.6]"
           />
         </div>
 

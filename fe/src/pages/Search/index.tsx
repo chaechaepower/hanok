@@ -74,7 +74,7 @@ function SearchResultReasonChip({ reason, keyword }: { reason: SearchMatchReason
 function SearchResultSkeleton() {
   return (
     <div className="flex flex-col gap-4">
-      <div className="overflow-hidden rounded-[28px] border border-white/8 bg-white/[0.03]">
+      <div className="overflow-hidden rounded-(--radius-panel) border border-white/8 bg-white/[0.03]">
         <div className="aspect-3/4 animate-pulse bg-white/[0.05]" />
         <div className="space-y-3 p-5">
           <div className="h-6 w-20 animate-pulse rounded-lg bg-white/[0.06]" />
@@ -82,7 +82,7 @@ function SearchResultSkeleton() {
           <div className="h-4 w-2/3 animate-pulse rounded-lg bg-white/[0.06]" />
         </div>
       </div>
-      <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
+      <div className="rounded-(--radius-panel) border border-white/8 bg-white/[0.03] p-4">
         <div className="mb-3 h-4 w-24 animate-pulse rounded-lg bg-white/[0.06]" />
         <div className="flex gap-2">
           <div className="h-8 w-24 animate-pulse rounded-full bg-white/[0.06]" />
@@ -127,7 +127,7 @@ export default function SearchPage() {
         )}
 
         {!keywordParam && (
-          <div className="rounded-[28px] border border-dashed border-white/10 bg-white/[0.03] px-6 py-14 text-center text-white/55">
+          <div className="rounded-(--radius-panel) border border-dashed border-white/10 bg-white/[0.03] px-6 py-14 text-center text-white/55">
             라이브 제목, 상품명, 해시태그 중 하나를 입력해 검색을 시작하세요.
           </div>
         )}
@@ -147,7 +147,7 @@ export default function SearchPage() {
         )}
 
         {isSearchEnabled && !isLoading && !error && results.length === 0 && (
-          <div className="rounded-[28px] border border-white/8 bg-white/[0.03] px-6 py-14 text-center">
+          <div className="rounded-(--radius-panel) border border-white/8 bg-white/[0.03] px-6 py-14 text-center">
             <p className="text-[18px] font-semibold text-point">일치하는 라이브가 없습니다.</p>
             <p className="mt-2 text-[14px] text-white/50">다른 키워드나 상품명, 해시태그 조합으로 다시 검색해보세요.</p>
           </div>
@@ -161,7 +161,7 @@ export default function SearchPage() {
                 <div key={result.streamId} className="flex flex-col gap-4">
                   <LiveCard stream={toLiveCardStream(result)} className="max-w-none" />
 
-                  <div className="rounded-[24px] border border-white/8 bg-white/[0.03] p-4">
+                  <div className="rounded-(--radius-panel) border border-white/8 bg-white/[0.03] p-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <p className="text-[14px] font-semibold text-point">탐색 결과</p>
                       <p className="text-[12px] text-white/45">{result.matchReasons.length}건 일치</p>

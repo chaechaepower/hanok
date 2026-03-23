@@ -28,8 +28,8 @@ export default function ActiveItemCard({ item, isSelected, isSeller, onSelect }:
   const conditionBadge = ITEM_CONDITION_BADGE[item.condition];
   const isExpanded = isSeller ? isSelected : expanded;
   const borderClass = isSelected
-    ? 'border-gold/55 shadow-[0_0_12px_rgba(205,145,80,0.15)]'
-    : `${CARD_BORDER_CLASS[item.status]} ${item.status === 'LIVE' ? 'shadow-[0_0_12px_rgba(205,145,80,0.1)]' : ''}`;
+    ? 'border-gold/55 shadow-primary-glow'
+    : `${CARD_BORDER_CLASS[item.status]} ${item.status === 'LIVE' ? 'shadow-primary-glow' : ''}`;
 
   const handleCardClick = () => {
     if (isSeller) {
@@ -42,25 +42,25 @@ export default function ActiveItemCard({ item, isSelected, isSeller, onSelect }:
 
   return (
     <div
-      className={`flex cursor-pointer flex-col rounded-[20px] border bg-white/[0.02] p-3.5 transition-all duration-200 ${borderClass}`}
+      className={`flex cursor-pointer flex-col rounded-(--radius-panel) border bg-surface p-3.5 transition-all duration-200 ${borderClass}`}
       onClick={handleCardClick}
     >
       <div className="flex gap-3">
         {item.thumbnailUrl ? (
           <div
-            className="h-16 w-16 shrink-0 rounded-[14px] bg-neutral-800 bg-cover bg-center"
+            className="h-16 w-16 shrink-0 rounded-(--radius-control) bg-neutral-800 bg-cover bg-center"
             style={{ backgroundImage: `url(${item.thumbnailUrl})` }}
           />
         ) : (
-          <div className="h-16 w-16 shrink-0 rounded-[14px] bg-neutral-800" />
+          <div className="h-16 w-16 shrink-0 rounded-(--radius-control) bg-neutral-800" />
         )}
 
         <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
           <span className="truncate text-xs font-bold leading-snug text-white">{item.name}</span>
           <div className="flex items-center gap-1.5 whitespace-nowrap">
-            <span className={`text-[13px] font-black ${PRICE_CLASS[item.status]}`}>{formatAuctionLabel(item)}</span>
+            <span className={`text-body-md font-black ${PRICE_CLASS[item.status]}`}>{formatAuctionLabel(item)}</span>
             <span
-              className={`shrink-0 rounded-full bg-gold/[0.08] px-1.5 py-0.5 text-[9px] font-extrabold ${conditionBadge.className}`}
+              className={`shrink-0 rounded-full bg-gold/[0.08] px-1.5 py-0.5 text-caption font-extrabold ${conditionBadge.className}`}
             >
               {conditionBadge.label}
             </span>
@@ -68,7 +68,7 @@ export default function ActiveItemCard({ item, isSelected, isSeller, onSelect }:
         </div>
 
         <div className="flex shrink-0 flex-col items-center justify-center gap-1">
-          <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-extrabold ${statusBadge.className}`}>
+          <span className={`rounded-full px-1.5 py-0.5 text-caption font-extrabold ${statusBadge.className}`}>
             {statusBadge.label}
           </span>
           <button

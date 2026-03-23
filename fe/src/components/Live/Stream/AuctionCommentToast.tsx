@@ -1,15 +1,30 @@
+import { useEffect, useState } from 'react';
+
 type Props = {
   message?: string | null;
 };
 
 export default function AuctionCommentToast({ message }: Props) {
-  if (!message) {
+  const [visible, setVisible] = useState(false);
+  const [current, setCurrent] = useState(message);
+
+  useEffect(() => {
+    if (message) {
+      setCurrent(message);
+      setVisible(true);
+    } else if (visible) {
+      const timer = setTimeout(() => setVisible(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
+
+  if (!visible && !message) {
     return null;
   }
 
   return (
-    <div className="pointer-events-none absolute top-4 left-1/2 z-40 w-[min(70%,24rem)] -translate-x-1/2">
-      <div className="animate-toast-in relative overflow-hidden rounded-[28px] border border-accent/30 bg-background/92 shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-xl">
+    <div className="pointer-events-none absolute top-3 left-1/2 z-40 w-[min(70%,24rem)] -translate-x-1/2">
+      <div className={`${message ? 'animate-toast-in' : 'animate-toast-out'} relative overflow-hidden rounded-(--radius-panel) border border-accent/30 bg-background/92 shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-xl`}>
         <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-accent via-gold to-accent-light" />
         <div className="absolute -top-10 right-8 h-24 w-24 rounded-full bg-accent/20 blur-3xl" />
         <div className="absolute -bottom-8 left-10 h-20 w-20 rounded-full bg-gold/15 blur-3xl" />
@@ -38,7 +53,7 @@ export default function AuctionCommentToast({ message }: Props) {
 
           <div className="min-w-0 flex-1">
             <p className="text-[12px] font-semibold leading-[1.55] text-warm drop-shadow-[0_2px_10px_rgba(0,0,0,0.4)]">
-              {message}
+              {current}
             </p>
           </div>
         </div>

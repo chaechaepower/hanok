@@ -43,7 +43,7 @@ export default function Toast({ id, title, message, duration = 4000, onClose }: 
       onClick={dismiss}
       role="alert"
       aria-live="polite"
-      className={`flex cursor-pointer select-none items-center gap-3 rounded-[14px]
+      className={`flex cursor-pointer select-none items-center gap-3 rounded-(--radius-control)
         border border-accent/20 bg-background/95 px-[18px] py-[14px]
         shadow-[0_12px_40px_rgba(0,0,0,0.5)] backdrop-blur-[20px]
         ${isExiting ? 'animate-toast-out' : 'animate-toast-in'}

@@ -10,13 +10,23 @@ interface Props {
 
 export default function ChatMessage({ messages, connectionState }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isNearBottomRef = useRef(true);
+
+  const handleScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+  };
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ block: 'end' });
+    if (isNearBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ block: 'end' });
+    }
   }, [messages]);
 
   return (
-    <div className="chat-scroll flex flex-1 flex-col gap-2.5 overflow-y-auto p-4">
+    <div ref={containerRef} onScroll={handleScroll} className="chat-scroll flex flex-1 flex-col gap-2.5 overflow-y-auto p-4">
       {messages.length === 0 ? (
         <div className="flex h-full items-center justify-center">
           <p className="text-[11px] font-medium tracking-wide text-neutral-700">

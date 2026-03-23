@@ -58,7 +58,7 @@ export default function PointManagementModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-135 rounded-[28px] bg-surface-elevated px-8 py-9 shadow-[0_30px_90px_rgba(0,0,0,0.45)]"
+        className="w-full max-w-135 rounded-(--radius-panel) bg-surface-elevated px-8 py-9 shadow-[0_30px_90px_rgba(0,0,0,0.45)]"
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -107,7 +107,7 @@ export default function PointManagementModal({
               value={formattedAmount}
               onChange={(event) => onAmountChange(event.target.value)}
               placeholder="0"
-              className="h-16 w-full rounded-[20px] border border-neutral-800 bg-transparent px-6 pr-16 text-right text-[28px] font-semibold text-neutral-100 outline-none placeholder:text-neutral-600 focus:border-gold-light transition-colors"
+              className="h-16 w-full rounded-(--radius-panel) border border-neutral-800 bg-transparent px-6 pr-16 text-right text-[28px] font-semibold text-neutral-100 outline-none placeholder:text-neutral-600 focus:border-gold-light transition-colors"
             />
             <span className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 text-[18px] font-semibold text-neutral-500">
               원
@@ -123,7 +123,7 @@ export default function PointManagementModal({
                   key={amount}
                   type="button"
                   onClick={() => onPresetClick(amount)}
-                  className={`flex h-12 items-center justify-center rounded-[14px] border text-[16px] font-semibold transition ${
+                  className={`flex h-12 items-center justify-center rounded-(--radius-control) border text-[16px] font-semibold transition ${
                     isSelected
                       ? 'border-gold bg-gold/10 text-neutral-100'
                       : 'border-neutral-800 text-neutral-100 hover:border-neutral-600'
@@ -137,7 +137,7 @@ export default function PointManagementModal({
             <button
               type="button"
               onClick={onDirectInputClick}
-              className={`flex h-12 items-center justify-center rounded-[14px] border text-[16px] font-semibold transition ${
+              className={`flex h-12 items-center justify-center rounded-(--radius-control) border text-[16px] font-semibold transition ${
                 isDirectInputMode
                   ? 'border-gold bg-gold/10 text-neutral-100'
                   : 'border-neutral-800 text-neutral-100 hover:border-neutral-600'
@@ -155,7 +155,7 @@ export default function PointManagementModal({
               type="text"
               value={registeredWithdrawAccount}
               readOnly
-              className="mt-4 h-14 w-full rounded-[20px] border border-neutral-800 bg-transparent px-6 text-[16px] font-medium text-neutral-500 outline-none"
+              className="mt-4 h-14 w-full rounded-(--radius-panel) border border-neutral-800 bg-transparent px-6 text-[16px] font-medium text-neutral-500 outline-none"
             />
           </div>
         )}
@@ -168,7 +168,7 @@ export default function PointManagementModal({
         <div className="mt-6">
           <Button
             variant="white"
-            className="h-15 rounded-[18px] text-[18px] font-semibold"
+            className="h-15 rounded-(--radius-panel) text-[18px] font-semibold"
             disabled={isSubmitting || !amountInput || Number(amountInput) <= 0}
             onClick={onSubmit}
           >

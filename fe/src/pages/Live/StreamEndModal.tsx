@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { MdOutlinePowerSettingsNew } from 'react-icons/md';
 
 interface Props {
@@ -9,6 +10,13 @@ interface Props {
 }
 
 export default function StreamEndModal({ open, isPending, hasRemainingItems, onClose, onConfirm }: Props) {
+  useEffect(() => {
+    if (!open) return;
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [open, onClose]);
+
   if (!open) {
     return null;
   }
@@ -18,10 +26,14 @@ export default function StreamEndModal({ open, isPending, hasRemainingItems, onC
     : '방송을 종료하시겠습니까?\n 종료 후에는 진행 중인 화면으로 다시 돌아갈 수 없습니다.';
 
   return (
-    <>
-      <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-        <div className="flex w-full max-w-105 flex-col gap-6 rounded-2xl border border-white/10 bg-surface p-8 shadow-2xl">
+    <div
+      className="fixed inset-0 z-100 flex items-center justify-center bg-(--modal-backdrop) px-4 backdrop-blur-(--modal-blur)"
+      onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+    >
+      <div
+        className="flex w-full max-w-105 flex-col gap-6 rounded-(--radius-panel) border border-white/6 bg-surface p-8 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
+      >
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/15">
               <MdOutlinePowerSettingsNew size={32} className="text-accent-light" />
@@ -49,8 +61,7 @@ export default function StreamEndModal({ open, isPending, hasRemainingItems, onC
               {isPending ? '종료 중...' : '종료'}
             </button>
           </div>
-        </div>
       </div>
-    </>
+    </div>
   );
 }

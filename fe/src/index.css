@@ -92,6 +92,19 @@
   --text-label: 11px;
   --text-caption: 10px;
 
+  /* ── 네비게이션 버튼 ── */
+  --nav-btn-height: 40px;
+  --nav-btn-radius: 10px;
+
+  /* ── 라운딩 ── */
+  --radius-section: 32px;
+  --radius-panel: 24px;
+  --radius-control: 12px;
+
+  /* ── 모달 ── */
+  --modal-backdrop: rgba(0, 0, 0, 0.6);
+  --modal-blur: 12px;
+
   /* ── 애니메이션 ── */
   --animate-shimmer: shimmer 2.5s ease-in-out infinite;
   --animate-urgent-pulse: urgentPulse 1s ease-in-out infinite;
@@ -368,12 +381,12 @@ ul {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #2c2c2e;
+  background: var(--color-neutral-700);
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #3a3a3c;
+  background: var(--color-neutral-600);
 }
 
 blockquote,
@@ -572,6 +585,37 @@ table {
 .btn-primary-outline:hover {
   background-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
   border-color: var(--color-primary);
+}
+
+/* Ghost — 텍스트만, 호버 시 배경 */
+.btn-ghost {
+  color: var(--color-neutral-400);
+  background-color: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.btn-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--color-neutral-200);
+}
+
+.btn-primary-ghost {
+  color: var(--color-primary-light);
+  background-color: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btn-primary-ghost:hover {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 /* Accent — 경고, 신고 */
@@ -803,7 +847,7 @@ table {
 @supports not selector(::-webkit-scrollbar) {
   .left-panel-scroll {
     scrollbar-width: thin;
-    scrollbar-color: #222 transparent;
+    scrollbar-color: var(--color-neutral-900) transparent;
   }
 }
 
@@ -816,7 +860,7 @@ table {
 }
 
 .left-panel-scroll::-webkit-scrollbar-thumb {
-  background: #222;
+  background: var(--color-neutral-900);
   border-radius: 999px;
 }
 

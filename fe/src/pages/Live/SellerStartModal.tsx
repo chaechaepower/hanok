@@ -13,10 +13,8 @@ export default function SellerStartModal({ open, streamTitle, isPending, onConfi
   }
 
   return (
-    <>
-      <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" />
-      <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-        <div className="flex w-full max-w-105 flex-col gap-6 rounded-2xl border border-white/10 bg-surface p-8 shadow-2xl">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-(--modal-backdrop) px-4 backdrop-blur-(--modal-blur)">
+      <div className="flex w-full max-w-105 flex-col gap-6 rounded-(--radius-panel) border border-white/6 bg-surface p-8 shadow-2xl">
           <div className="flex flex-col items-center gap-3 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent/15">
               <MdLiveTv size={32} className="text-accent" />
@@ -46,8 +44,7 @@ export default function SellerStartModal({ open, streamTitle, isPending, onConfi
               {isPending ? '시작 중...' : '방송 시작'}
             </button>
           </div>
-        </div>
       </div>
-    </>
+    </div>
   );
 }
