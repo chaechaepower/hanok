@@ -7,6 +7,7 @@ import { usePostCompleteEscrow } from '@/api/hooks/usePostCompleteEscrow';
 import { useGetEscrowDetail } from '@/api/hooks/useGetEscrowDetail';
 import { useGetEscrowsBuyer } from '@/api/hooks/useGetEscrowsBuyer';
 import EscrowDetailCard from '@/components/common/EscrowDetailCard';
+import NftReceiptCard from '@/components/common/NftReceiptCard';
 import { ESCROW_STATUS_OPTIONS, getEscrowStateUI, type EscrowStatusFilter } from '@/utils/getEscrowStateUI';
 import { formatPrice } from '@/utils/formatPrice';
 import { useToast } from '@/hooks/useToast';
@@ -232,24 +233,29 @@ export default function OrderHistorySection() {
                 minHeightClassName="min-h-0"
                 showHeaderCloseButton={false}
                 footer={
-                  <div className="mt-6 flex gap-3">
-                    <button
-                      type="button"
-                      onClick={handleCloseModal}
-                      className="flex-1 rounded-2xl border border-neutral-700 bg-transparent py-3 text-sm font-bold text-neutral-300 transition hover:bg-warm/10"
-                    >
-                      닫기
-                    </button>
-                    {canCompletePurchase && (
+                  <div className="mt-6 flex flex-col gap-3">
+                    {selectedEscrow?.escrowStatus === 'COMPLETED' && (
+                      <NftReceiptCard escrowId={selectedItemId!} />
+                    )}
+                    <div className="flex gap-3">
                       <button
                         type="button"
-                        onClick={() => void handleCompletePurchase()}
-                        disabled={isCompletingEscrow}
-                        className="flex-1 rounded-2xl bg-gold py-3 text-sm font-bold text-background transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-50"
+                        onClick={handleCloseModal}
+                        className="flex-1 rounded-2xl border border-neutral-700 bg-transparent py-3 text-sm font-bold text-neutral-300 transition hover:bg-warm/10"
                       >
-                        구매확정
+                        닫기
                       </button>
-                    )}
+                      {canCompletePurchase && (
+                        <button
+                          type="button"
+                          onClick={() => void handleCompletePurchase()}
+                          disabled={isCompletingEscrow}
+                          className="flex-1 rounded-2xl bg-gold py-3 text-sm font-bold text-background transition hover:bg-gold-dark disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          구매확정
+                        </button>
+                      )}
+                    </div>
                   </div>
                 }
               />
