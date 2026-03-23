@@ -4,6 +4,7 @@ import com.ssafy.be.domain.escrow.entity.Escrow;
 import com.ssafy.be.domain.escrow.exception.EscorwErrorCode;
 import com.ssafy.be.domain.escrow.repository.EscrowRepository;
 import com.ssafy.be.global.exception.GlobalException;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,6 +24,7 @@ import java.math.BigInteger;
 public class BlockchainService {
 
     private final EscrowRepository escrowRepository;
+    private Credentials credentials;
 
     @Value("${blockchain.rpc-url}")
     private String rpcUrl;
@@ -33,23 +35,31 @@ public class BlockchainService {
     @Value("${blockchain.contract-address}")
     private String contractAddress;
 
+    private HanokReceiptContract contract;
+
+    // 서버 시작 시 한 번만 Contract 초기화
+    @PostConstruct
+    public void initContract() {
+        Web3j web3j = Web3j.build(new HttpService(rpcUrl));
+        this.credentials = Credentials.create(privateKey);
+        this.contract = HanokReceiptContract.load(
+                contractAddress,
+                web3j,
+                this.credentials,
+                new DefaultGasProvider()
+        );
+        log.info("[Blockchain] Contract 초기화 완료 address={}", contractAddress);
+    }
+
     @Async
     public void issueNFTReceiptAsync(Long escrowId) {
         Escrow escrow = escrowRepository.findById(escrowId)
                 .orElseThrow(() -> new GlobalException(EscorwErrorCode.ESCROW_NOT_FOUND));
 
         try {
-            Web3j web3j = Web3j.build(new HttpService(rpcUrl));
-            Credentials credentials = Credentials.create(privateKey);
-
-            HanokReceiptContract contract = HanokReceiptContract.load(
-                    contractAddress,
-                    web3j,
-                    credentials,
-                    new DefaultGasProvider()
-            );
-
-            String buyerAddress = credentials.getAddress(); // 임시: 서버 지갑 주소 사용
+            String buyerAddress = credentials != null
+                    ? credentials.getAddress()
+                    : "0x0000000000000000000000000000000000000000";
             BigInteger escrowIdBig = BigInteger.valueOf(escrowId);
             BigInteger price = BigInteger.valueOf(escrow.getWinningPrice());
             String itemName = escrow.getAuction().getItem().getName();
@@ -70,5 +80,10 @@ public class BlockchainService {
         }
 
         escrowRepository.save(escrow);
+    }
+
+    // 테스트용 Contract 주입
+    public void setContract(HanokReceiptContract contract) {
+        this.contract = contract;
     }
 }
