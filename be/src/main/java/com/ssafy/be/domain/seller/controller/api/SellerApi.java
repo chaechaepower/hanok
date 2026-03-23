@@ -4,6 +4,7 @@ import com.ssafy.be.domain.escrow.dto.response.EscrowListResponse;
 import com.ssafy.be.domain.seller.dto.request.SellerProfileUpdateRequest;
 import com.ssafy.be.domain.seller.dto.request.SellerRegisterRequest;
 import com.ssafy.be.domain.seller.dto.response.*;
+import com.ssafy.be.domain.stream.dto.response.SellerRankingResponse;
 import com.ssafy.be.global.common.response.ApiResponse;
 import com.ssafy.be.global.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -74,4 +75,10 @@ public interface SellerApi {
     ResponseEntity<ApiResponse<SellerReportResponse>> getSellerReport(
             @PathVariable Long sellerId,
             @AuthenticationPrincipal String principal);
+
+
+    @Operation(summary = "인기 셀러 랭킹 Top 5 조회")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "랭킹 조회 성공")
+    @GetMapping("/ranking")
+    ResponseEntity<ApiResponse<List<SellerRankingResponse>>> getTopSellers();
 }

@@ -67,13 +67,17 @@ public class SearchService {
     }
 
     private StreamSearchResult toResult(StreamSearchRow row) {
+        //SCHEDULED 상태는 시청자 없으니 0으로 처리
+        StreamStatus status = row.status() != null ? StreamStatus.valueOf(row.status()) : null;
         return StreamSearchResult.builder()
                 .streamId(row.streamId())
                 .title(row.title())
                 .thumbnail(row.thumbnail())
-                .status(row.status() != null ? StreamStatus.valueOf(row.status()) : null)
+                .status(status)
                 .scheduledAt(row.scheduledAt())
-                .viewerCount((int) streamViewerService.getViewerCount(row.streamId()))
+                .viewerCount(status == StreamStatus.LIVE
+                        ? (int) streamViewerService.getViewerCount(row.streamId())
+                        : 0)
                 .category(row.category())
                 .seller(SellerInfo.builder()
                         .sellerId(row.sellerId())

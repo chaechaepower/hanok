@@ -175,20 +175,6 @@
             return buildSyncResponse(auction, auction.getUniqueBidAuctionDetail(), userId);
         }
 
-        @Transactional(readOnly = true)
-        public UniqueBidItemSyncResponse syncItem(Long streamId) {
-            List<Auction> auctions = auctionRepository.findByStreamId(streamId)
-                    .stream()
-                    .filter(auction -> auction.getAuctionType() == AuctionType.UNIQUE_TOP)
-                    .toList();
-
-            List<UniqueBidItemSyncResponse.ItemInfo> items = auctions.stream()
-                    .map(this::buildItemSyncInfo)
-                    .toList();
-            return UniqueBidItemSyncResponse.builder()
-                    .items(items)
-                    .build();
-        }
 
         public Long getStreamIdByAuctionId(Long auctionId) {
             return findAuctionById(auctionId).getStream().getId();

@@ -10,6 +10,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Tag(name = "Stream", description = "방송 API")
 public interface StreamApi {
 
@@ -46,4 +48,6 @@ public interface StreamApi {
     @Operation(summary = "예정 방송 목록 조회", description = "로그인한 사용자(userId)가 판매자인 LIVE + SCHEDULED 방송만 슬라이스 조회")
     ResponseEntity<ScheduledStreamListResponse> getScheduledStreamList(String userId, int page, int size);
 
+    @Operation(summary = "신규 셀러 라이브 방송 목록 조회", description = "가입 N일 이내 신규 셀러의 LIVE 방송 목록을 조회합니다.")
+    ResponseEntity<List<StreamRecommendResponse>> getNewSellerLiveStreams(int withinDays, int limit);
 }
