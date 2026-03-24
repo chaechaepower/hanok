@@ -2,6 +2,7 @@ package com.ssafy.be.search;
 
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
+import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.repository.ItemRepository;
 import com.ssafy.be.domain.search.dto.response.MatchReason;
@@ -179,7 +180,7 @@ class SearchIntegrationTest {
         @DisplayName("I-4. 방송제목 + 아이템명 동시 매칭 → 1건 병합 + reasons 2개")
         void search_titleAndItemMatch_mergedWithMultipleReasons() {
             Item item = itemRepository.save(TestFixture.createItem("나이키 운동화"));
-            auctionRepository.save(TestFixture.createAuction(READY, stream, item));
+            auctionRepository.save(TestFixture.createAuction(AuctionType.BOTTOM_UP, READY, stream, item));
 
             TEST_LOG.info("    [요청] keyword = \"나이키\" | stream title + item name 모두 매칭");
 

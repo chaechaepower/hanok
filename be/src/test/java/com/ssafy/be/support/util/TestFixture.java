@@ -3,6 +3,7 @@ package com.ssafy.be.support.util;
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
 import com.ssafy.be.domain.bottomupauction.entity.BottomUpAuctionDetail;
+import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
@@ -76,9 +77,9 @@ public class TestFixture {
                 .build();
     }
 
-    public static Auction createAuction(AuctionStatus status, Stream stream, Item item) {
+    public static Auction createAuction(AuctionType type, AuctionStatus status, Stream stream, Item item) {
         return Auction.builder()
-                .auctionType(BOTTOM_UP)
+                .auctionType(type)
                 .auctionDuration(TEST_AUCTION_DURATION_SEC)
                 .auctionStatus(status)
                 .stream(stream)
@@ -92,6 +93,11 @@ public class TestFixture {
                 .startPrice(TEST_BOTTOM_UP_START_PRICE)
                 .bidUnit(TEST_BOTTOM_UP_BID_UNIT)
                 .build();
+    }
+
+    public static BottomUpAuctionDetail createBottomUpAuction(AuctionStatus status, Stream stream, Item item) {
+        Auction auction = createAuction(BOTTOM_UP, status, stream, item);
+        return createBottomUpAuctionDetail(auction);
     }
 
     public static ShippingAddress createShippingAddress(User user) {

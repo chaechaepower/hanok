@@ -1,4 +1,4 @@
-package com.ssafy.be.domain.auction;
+package com.ssafy.be.domain.bottomupauction;
 
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.bottomupauction.dto.request.BidPlaceRequest;
@@ -9,6 +9,7 @@ import com.ssafy.be.domain.bottomupauction.model.Bid;
 import com.ssafy.be.domain.bottomupauction.repository.AuctionBidRepository;
 import com.ssafy.be.domain.bottomupauction.repository.BottomUpAuctionDetailRepository;
 import com.ssafy.be.domain.auction.util.AuctionRedisKeys;
+import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.repository.ItemRepository;
 import com.ssafy.be.domain.seller.entity.Seller;
@@ -31,6 +32,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import java.util.List;
 
 import static com.ssafy.be.domain.auction.entity.AuctionStatus.LIVE;
+import static com.ssafy.be.domain.item.entity.AuctionType.BOTTOM_UP;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @IntegrationTest
@@ -100,7 +102,7 @@ public class AuctionBidLockTest {
         seller = sellerRepository.save(TestFixture.createSeller(sellerUser));
         stream = streamRepository.save(TestFixture.createStream("테스트 라이브 방송", seller));
         item = itemRepository.save(TestFixture.createItem("테스트 상품"));
-        liveAuction = auctionRepository.save(TestFixture.createAuction(LIVE, stream, item));
+        liveAuction = auctionRepository.save(TestFixture.createAuction(BOTTOM_UP, LIVE, stream, item));
         bottomUpAuctionDetailRepository.save(TestFixture.createBottomUpAuctionDetail(liveAuction));
         auctionRepository.flush();
         liveAuction = auctionRepository.findByIdWithBottomUpDetail(liveAuction.getId()).orElseThrow();

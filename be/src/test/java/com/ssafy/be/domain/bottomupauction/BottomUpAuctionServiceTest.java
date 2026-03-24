@@ -1,8 +1,8 @@
-package com.ssafy.be.domain.auction;
+package com.ssafy.be.domain.bottomupauction;
 
+import com.ssafy.be.domain.auction.entity.AuctionStatus;
 import com.ssafy.be.domain.bottomupauction.dto.request.AuctionStartRequest;
 import com.ssafy.be.domain.bottomupauction.dto.request.BidPlaceRequest;
-import com.ssafy.be.domain.auction.dto.request.ItemIntroduceRequest;
 import com.ssafy.be.domain.bottomupauction.entity.BottomUpAuctionDetail;
 import com.ssafy.be.domain.bottomupauction.dto.response.AuctionStartResponse;
 import com.ssafy.be.domain.bottomupauction.dto.response.BidPlaceResponse;
@@ -21,8 +21,10 @@ import com.ssafy.be.domain.escrow.service.EscrowService;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.repository.ItemRepository;
 import com.ssafy.be.domain.seller.entity.Seller;
+import com.ssafy.be.domain.seller.exception.SellerErrorCode;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
+import com.ssafy.be.domain.shippingaddress.exception.ShippingAddressErrorCode;
 import com.ssafy.be.domain.shippingaddress.repository.ShippingAddressRepository;
 import com.ssafy.be.domain.stream.entity.Stream;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
@@ -49,10 +51,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @IntegrationTest
-@DisplayName("BottomUpAuction 통합 테스트 (Smoke + Step-up)")
+@DisplayName("BottomUpAuction 통합 테스트")
 @TestClassOrder(ClassOrderer.OrderAnnotation.class)
 class BottomUpAuctionServiceTest {
 
@@ -94,7 +98,6 @@ class BottomUpAuctionServiceTest {
 
     @BeforeAll
     static void suiteStart() {
-        IT_LOG.info("");
         IT_LOG.info("╔════════════════════════════════════════════════════════════╗");
         IT_LOG.info("║           BottomUpAuction 통합 테스트 Suite 시작               ║");
         IT_LOG.info("║             Layer  : Service → Redis / DB                  ║");
@@ -113,6 +116,7 @@ class BottomUpAuctionServiceTest {
 
     @BeforeEach
     void setUp() {
+        clearInvocations(escrowService);
         sellerUser = userRepository.save(TestFixture.createUser("판매자"));
         seller = sellerRepository.save(TestFixture.createSeller(sellerUser));
         stream = streamRepository.save(TestFixture.createStream("테스트 라이브 방송", seller));
@@ -123,6 +127,7 @@ class BottomUpAuctionServiceTest {
     void cleanup() {
         auctionRepository.findAll().forEach(auction -> {
             Long auctionId = auction.getId();
+
             redisTemplate.delete(AuctionRedisKeys.getTimerKey(auctionId));
             redisTemplate.delete(AuctionRedisKeys.getBidKey(auctionId));
             redisTemplate.delete(AuctionRedisKeys.getLockKey(auctionId));
@@ -137,58 +142,27 @@ class BottomUpAuctionServiceTest {
         userRepository.deleteAllInBatch();
     }
 
-    private Auction saveBottomUpAuction(com.ssafy.be.domain.auction.entity.AuctionStatus status) {
-        Auction auction = auctionRepository.save(
-                Auction.builder()
-                        .auctionType(com.ssafy.be.domain.item.entity.AuctionType.BOTTOM_UP)
-                        .auctionDuration(TestFixture.TEST_AUCTION_DURATION_SEC)
-                        .auctionStatus(status)
-                        .stream(stream)
-                        .item(item)
-                        .build());
-
-        BottomUpAuctionDetail detail = TestFixture.createBottomUpAuctionDetail(auction);
-        bottomUpAuctionDetailRepository.save(detail);
-
-        return auction;
-    }
-
     // ═══ Section 1 : 물품 소개 및 경매 시작 ════════════════════════════
     @Nested
     @Order(1)
-    @DisplayName("Section 1 │ 경매 물품 소개 및 시작")
+    @DisplayName("Section 1 │ 경매 시작")
     @ExtendWith(IntegrationTestExtension.class)
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class AuctionStartFlowTest {
 
         @Test
         @Order(1)
-        @DisplayName("I-1. 라이브 스트림 호스트는 물품 소개(Introduce)를 할 수 있다.")
-        void introduceItem() {
-            IT_LOG.info("    [요청] 물품 소개 모드 전환");
-            Auction readyAuction = saveBottomUpAuction(READY);
-            ItemIntroduceRequest request = ItemIntroduceRequest.builder().auctionId(readyAuction.getId()).build();
-
-            // 공통 로직이므로 AuctionService를 사용
-            auctionService.introduceItem(request, stream.getId(), sellerUser.getId());
-
-            Auction introducedAuction = auctionRepository.findById(readyAuction.getId()).orElseThrow();
-            assertThat(introducedAuction.getAuctionStatus()).isEqualTo(INTRODUCING);
-            IT_LOG.info("    [검증] ✔ INTRODUCING 상태 변경 확인");
-        }
-
-        @Test
-        @Order(2)
-        @DisplayName("I-2. 소개중인 물품의 경매를 시작한다 (Start)")
+        @DisplayName("I-1. 소개중인 물품의 경매를 시작한다.")
         void startAuction() {
             IT_LOG.info("    [요청] 상향식 경매 시작");
+            // given
             Auction introductingAuction = saveBottomUpAuction(INTRODUCING);
             AuctionStartRequest request = AuctionStartRequest.builder().auctionId(introductingAuction.getId()).build();
 
-            // 상향식 비즈니스 로직이므로 BottomUpAuctionService 사용
-            List<StreamPublishTask> tasks = bottomUpAuctionService.startAuction(request, stream.getId(),
-                    sellerUser.getId());
+            // when
+            List<StreamPublishTask> tasks = bottomUpAuctionService.startAuction(request, stream.getId(), sellerUser.getId());
 
+            // then
             Auction savedAuction = auctionRepository.findById(introductingAuction.getId()).orElseThrow();
             assertThat(savedAuction.getAuctionStatus()).isEqualTo(LIVE);
             assertThat(savedAuction.getStartedAt()).isNotNull();
@@ -204,6 +178,62 @@ class BottomUpAuctionServiceTest {
             assertThat(response.item().startPrice()).isEqualTo(10000L);
             IT_LOG.info("    [검증] ✔ LIVE 상태 변경 및 Redis 타이머 등록 확인");
         }
+
+        @Test
+        @Order(2)
+        @DisplayName("I-1b. 설명중 상태가 아닌 경매는 시작할 수 없다.")
+        void startAuction_whenNotIntroducing() {
+            IT_LOG.info("    [요청] LIVE 상태 경매에 경매 시작 시도");
+            // given
+            Auction liveAuction = saveBottomUpAuction(LIVE);
+            AuctionStartRequest request = AuctionStartRequest.builder().auctionId(liveAuction.getId()).build();
+
+            // when // then
+            StompException ex = assertThrows(StompException.class,
+                    () -> bottomUpAuctionService.startAuction(request, stream.getId(), sellerUser.getId()));
+
+            assertThat(ex.getErrorType()).isEqualTo(AuctionErrorCode.AUCTION_NOT_INTRODUCING);
+            IT_LOG.info("    [검증] ✔ AUCTION_NOT_INTRODUCING 예외 확인");
+        }
+
+        @Test
+        @Order(3)
+        @DisplayName("I-1c. 해당 스트림 호스트가 아니면 경매 시작할 수 없다.")
+        void startAuction_whenNotStreamHost() {
+            IT_LOG.info("    [요청] 타 스트림 ID로 경매 시작 시도 (호스트 불일치)");
+            // given
+            User otherSellerUser = userRepository.save(TestFixture.createUser("다른 판매자"));
+            Seller otherSeller = sellerRepository.save(TestFixture.createSeller(otherSellerUser));
+            Stream otherStream = streamRepository.save(TestFixture.createStream("다른 방송", otherSeller));
+
+            Auction introducingAuction = saveBottomUpAuction(INTRODUCING);
+            AuctionStartRequest request = AuctionStartRequest.builder().auctionId(introducingAuction.getId()).build();
+
+            // when // then
+            StompException ex = assertThrows(StompException.class,
+                    () -> bottomUpAuctionService.startAuction(request, otherStream.getId(), sellerUser.getId()));
+
+            assertThat(ex.getErrorType()).isEqualTo(AuctionErrorCode.AUCTION_UNAUTHORIZED);
+            IT_LOG.info("    [검증] ✔ AUCTION_UNAUTHORIZED 예외 확인");
+        }
+
+        @Test
+        @Order(4)
+        @DisplayName("I-1d. 판매자 등록이 안되있는 경우, 경매를 시작할 수 없다.")
+        void startAuction_whenSellerNotFound() {
+            IT_LOG.info("    [요청] 셀러 미등록 사용자로 경매 시작 시도");
+            // given
+            User buyerOnly = userRepository.save(TestFixture.createUser("구매자만"));
+            Auction introducingAuction = saveBottomUpAuction(INTRODUCING);
+            AuctionStartRequest request = AuctionStartRequest.builder().auctionId(introducingAuction.getId()).build();
+
+            // when // then
+            StompException ex = assertThrows(StompException.class,
+                    () -> bottomUpAuctionService.startAuction(request, stream.getId(), buyerOnly.getId()));
+
+            assertThat(ex.getErrorType()).isEqualTo(SellerErrorCode.SELLER_NOT_FOUND);
+            IT_LOG.info("    [검증] ✔ SELLER_NOT_FOUND 예외 확인");
+        }
     }
 
     // ═══ Section 2 : 경매 입찰 ════════════════════════════
@@ -216,20 +246,21 @@ class BottomUpAuctionServiceTest {
 
         @Test
         @Order(1)
-        @DisplayName("I-3. 정상적인 범위의 금액 및 잔액으로 입찰 수행")
+        @DisplayName("I-3. 정상 입찰 — 스나이핑 구간이 아니면 snipingTimer는 null")
         void placeBid_Success() {
-            IT_LOG.info("    [요청] 상향식 경매 실시간 입찰 수행");
+            IT_LOG.info("    [요청] 상향식 경매 실시간 입찰 수행 (잔여 시간 충분 → 스나이핑 미발동)");
+            // given
             Auction liveAuction = saveBottomUpAuction(LIVE);
-            User bidder = userRepository
-                    .save(TestFixture.createUser("입찰자").toBuilder().balance(50000L).depositedBidBalance(0L).build());
+            User bidder = userRepository.save(TestFixture.createUser("입찰자").toBuilder().balance(50000L).depositedBidBalance(0L).build());
             auctionTimerRepository.save(liveAuction.getId(), liveAuction.getAuctionDuration());
 
             long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE + TestFixture.TEST_BOTTOM_UP_BID_UNIT;
-            BidPlaceRequest request = BidPlaceRequest.builder().auctionId(liveAuction.getId()).amount(bidAmount)
-                    .build();
+            BidPlaceRequest request = BidPlaceRequest.builder().auctionId(liveAuction.getId()).amount(bidAmount).build();
 
+            // when
             List<StreamPublishTask> tasks = bottomUpAuctionService.placeBidWithLock(request, stream.getId(), bidder.getId());
 
+            // then
             BidPlaceResponse response = tasks.stream()
                     .map(StreamPublishTask::getPayload)
                     .filter(BidPlaceResponse.class::isInstance)
@@ -238,22 +269,25 @@ class BottomUpAuctionServiceTest {
 
             assertThat(response.bidInfo().nickname()).isEqualTo(bidder.getNickname());
             assertThat(response.bidInfo().amount()).isEqualTo(bidAmount);
-            assertThat(response.snipingTimer()).isNull();
-            IT_LOG.info("    [검증] ✔ 입찰 내역 Payload 정상 반환 확인");
+            assertThat(response.snipingTimer())
+                    .as("일반 구간 입찰에서는 스나이핑 연장 없음 → snipingTimer 유지 null")
+                    .isNull();
+            IT_LOG.info("    [검증] ✔ 입찰 Payload 정상, snipingTimer=null (스나이핑 미발동)");
         }
 
         @Test
         @Order(2)
-        @DisplayName("I-4. 시작가보다 낮거나 단위 불일치 입찰 시 방어 로직 (Exception)")
+        @DisplayName("I-4. 시작가 미만 입찰 시 방어 (AUCTION_BID_BELOW_START_PRICE)")
         void placeBid_BelowStartPrice() {
             IT_LOG.info("    [요청] 시작가 10000원 보다 낮은 9999원으로 입찰 시도");
+            // given
             Auction liveAuction = saveBottomUpAuction(LIVE);
             User bidder = userRepository.save(TestFixture.createUser("입찰자").toBuilder().balance(50000L).build());
 
             long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE - 1;
-            BidPlaceRequest request = BidPlaceRequest.builder().auctionId(liveAuction.getId()).amount(bidAmount)
-                    .build();
+            BidPlaceRequest request = BidPlaceRequest.builder().auctionId(liveAuction.getId()).amount(bidAmount).build();
 
+            // when // then
             StompException ex = assertThrows(StompException.class, () -> {
                 bottomUpAuctionService.placeBidWithLock(request, stream.getId(), bidder.getId());
             });
@@ -267,6 +301,7 @@ class BottomUpAuctionServiceTest {
         @DisplayName("I-5. 계좌 잔액이 부족한 상태에서 고액 입찰 시 방어 (Exception)")
         void placeBid_InsufficientBalance() {
             IT_LOG.info("    [요청] 잔액이 부족한 상태로 무리한 고액 입찰 시도");
+            // given
             Auction liveAuction = saveBottomUpAuction(LIVE);
             User bidder = userRepository.save(TestFixture.createUser("입찰자").toBuilder().balance(100L).build());
 
@@ -274,6 +309,7 @@ class BottomUpAuctionServiceTest {
             BidPlaceRequest request = BidPlaceRequest.builder().auctionId(liveAuction.getId()).amount(bidAmount)
                     .build();
 
+            // when // then
             StompException ex = assertThrows(StompException.class, () -> {
                 bottomUpAuctionService.placeBidWithLock(request, stream.getId(), bidder.getId());
             });
@@ -284,21 +320,22 @@ class BottomUpAuctionServiceTest {
 
         @Test
         @Order(4)
-        @DisplayName("I-6. 스나이핑 구간(막판 5초 이내) 입찰 시 타이머 자동 연장")
+        @DisplayName("I-6. 스나이핑 구간 입찰 시 snipingTimer 설정 및 타이머 연장")
         void placeBid_SnipingExtendsTimer() {
             IT_LOG.info("    [요청] 경매 종료 직전(3초 남음) 상황에서 돌발 스나이핑 입찰 발생");
+            // given
             Auction liveAuction = saveBottomUpAuction(LIVE);
             User bidder = userRepository.save(TestFixture.createUser("입찰자").toBuilder().balance(50000L).build());
-
-            // 3초 남음
-            auctionTimerRepository.save(liveAuction.getId(), 3);
+            auctionTimerRepository.save(liveAuction.getId(), 3); // 3초 남음
 
             long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE + TestFixture.TEST_BOTTOM_UP_BID_UNIT;
             BidPlaceRequest request = BidPlaceRequest.builder().auctionId(liveAuction.getId()).amount(bidAmount)
                     .build();
 
+            // when
             List<StreamPublishTask> tasks = bottomUpAuctionService.placeBidWithLock(request, stream.getId(), bidder.getId());
 
+            // then
             BidPlaceResponse response = tasks.stream()
                     .map(StreamPublishTask::getPayload)
                     .filter(BidPlaceResponse.class::isInstance)
@@ -309,25 +346,68 @@ class BottomUpAuctionServiceTest {
             assertThat(response.snipingTimer().durationSeconds()).isEqualTo(5); // 스나이핑 임계시간으로 재설정됨
             IT_LOG.info("    [검증] ✔ snipingTimer가 발동되어 수명의 연장 처리가 되었음 확인");
         }
+
+        @Test
+        @Order(5)
+        @DisplayName("I-7. 판매자 스스로 입찰할 수 없다.")
+        void placeBid_whenSellerSelfBid() {
+            IT_LOG.info("    [요청] 스트림 호스트(판매자) 본인 입찰 시도");
+            // given
+            Auction liveAuction = saveBottomUpAuction(LIVE);
+            auctionTimerRepository.save(liveAuction.getId(), liveAuction.getAuctionDuration());
+
+            long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE + TestFixture.TEST_BOTTOM_UP_BID_UNIT;
+            BidPlaceRequest request = BidPlaceRequest.builder().auctionId(liveAuction.getId()).amount(bidAmount).build();
+
+            // when // then
+            StompException ex = assertThrows(StompException.class,
+                    () -> bottomUpAuctionService.placeBidWithLock(request, stream.getId(), sellerUser.getId()));
+
+            assertThat(ex.getErrorType()).isEqualTo(AuctionErrorCode.AUCTION_SELF_BID_NOT_ALLOWED);
+            IT_LOG.info("    [검증] ✔ AUCTION_SELF_BID_NOT_ALLOWED 예외 확인");
+        }
+
+        @Test
+        @Order(6)
+        @DisplayName("I-8. LIVE가 아닌 경매에는 입찰할 수 없다.")
+        void placeBid_whenNotLive() {
+            IT_LOG.info("    [요청] INTRODUCING 경매에 입찰 시도");
+            // given
+            Auction introducingAuction = saveBottomUpAuction(INTRODUCING);
+            User bidder = userRepository.save(TestFixture.createUser("입찰자").toBuilder().balance(50000L).build());
+
+            long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE + TestFixture.TEST_BOTTOM_UP_BID_UNIT;
+            BidPlaceRequest request = BidPlaceRequest.builder().auctionId(introducingAuction.getId()).amount(bidAmount).build();
+
+            // when // then
+            StompException ex = assertThrows(StompException.class,
+                    () -> bottomUpAuctionService.placeBidWithLock(request, stream.getId(), bidder.getId()));
+
+            assertThat(ex.getErrorType()).isEqualTo(AuctionErrorCode.AUCTION_NOT_LIVE);
+            IT_LOG.info("    [검증] ✔ AUCTION_NOT_LIVE 예외 확인");
+        }
     }
 
     // ═══ Section 3 : 경매 종료 및 에스크로 ════════════════════════════
     @Nested
     @Order(3)
-    @DisplayName("Section 3 │ 상향식 경매 종료 시나리오 (End / Aggregation)")
+    @DisplayName("Section 3 │ 상향식 경매 종료 시나리오")
     @ExtendWith(IntegrationTestExtension.class)
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class AuctionEndTest {
 
         @Test
         @Order(1)
-        @DisplayName("I-7. 아무도 입찰하지 않고 타이머 완전 종료 시 유찰 처리")
+        @DisplayName("I-9. 아무도 입찰하지 않고 타이머 완전 종료 시 유찰 처리된다.")
         void end_UnsoldAuction() {
             IT_LOG.info("    [요청] 경매 시간 초과 후 아무도 입찰안한 상황에서의 종료 결산");
+            // given
             Auction liveAuction = saveBottomUpAuction(LIVE);
 
+            // when
             bottomUpAuctionService.endAuction(liveAuction.getId());
 
+            // then
             Auction endedAuction = auctionRepository.findById(liveAuction.getId()).orElseThrow();
             assertThat(endedAuction.getAuctionStatus()).isEqualTo(UNSOLD);
             IT_LOG.info("    [검증] ✔ UNSOLD(유찰) 처리 검증 완료");
@@ -335,9 +415,10 @@ class BottomUpAuctionServiceTest {
 
         @Test
         @Order(2)
-        @DisplayName("I-8. 최고 입찰자가 존속하며 종료 시 낙찰 처리 및 에스크로 서비스 인계")
+        @DisplayName("I-10. 최고 입찰자가 존재할 때 낙찰 처리 및 에스크로 서비스 인계")
         void end_SoldAuction() {
             IT_LOG.info("    [요청] 입찰자가 존재하는 상태로 경매 종달 처리");
+            // given
             Auction liveAuction = saveBottomUpAuction(LIVE);
             User bidder = userRepository.save(TestFixture.createUser("입찰자").toBuilder().balance(50000L).build());
             shippingAddressRepository.save(TestFixture.createShippingAddress(bidder));
@@ -346,8 +427,10 @@ class BottomUpAuctionServiceTest {
             Bid topBid = new Bid(bidder.getId(), bidder.getNickname(), bidAmount, LocalDateTime.now());
             auctionBidRepository.save(liveAuction.getId(), topBid); // 탑 입찰 등록
 
+            // when
             List<StreamPublishTask> tasks = bottomUpAuctionService.endAuction(liveAuction.getId());
 
+            // then
             Auction endedAuction = auctionRepository.findById(liveAuction.getId()).orElseThrow();
             assertThat(endedAuction.getAuctionStatus()).isEqualTo(SOLD);
             assertThat(endedAuction.getFinalPrice()).isEqualTo(bidAmount);
@@ -363,5 +446,34 @@ class BottomUpAuctionServiceTest {
             assertThat(winnerResponse.item().finalPrice()).isEqualTo(bidAmount);
             IT_LOG.info("    [검증] ✔ SOLD(낙찰) 처리 및 외부 컴포넌트(에스크로 모듈) 정상 호출 확인");
         }
+
+        @Test
+        @Order(3)
+        @DisplayName("I-11. 입찰은 있으나 기본 배송지가 없으면 낙찰될 수 없다.")
+        void end_whenBidExistsButNoDefaultShipping() {
+            IT_LOG.info("    [요청] 입찰만 있고 기본 배송지 없는 상태로 경매 종료");
+            // given
+            Auction liveAuction = saveBottomUpAuction(LIVE);
+            User bidder = userRepository.save(TestFixture.createUser("입찰자").toBuilder().balance(50000L).build());
+            // 배송지 미저장
+
+            long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE + TestFixture.TEST_BOTTOM_UP_BID_UNIT;
+            Bid topBid = new Bid(bidder.getId(), bidder.getNickname(), bidAmount, LocalDateTime.now());
+            auctionBidRepository.save(liveAuction.getId(), topBid);
+
+            // when // then
+            StompException ex = assertThrows(StompException.class,
+                    () -> bottomUpAuctionService.endAuction(liveAuction.getId()));
+
+            assertThat(ex.getErrorType()).isEqualTo(ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND);
+            IT_LOG.info("    [검증] ✔ DEFAULT_SHIPPING_ADDRESS_NOT_FOUND 예외 확인");
+        }
+    }
+
+    private Auction saveBottomUpAuction(AuctionStatus status) {
+        BottomUpAuctionDetail detail = TestFixture.createBottomUpAuction(status, stream, item);
+        Auction saved = auctionRepository.save(detail.getAuction());
+        bottomUpAuctionDetailRepository.save(detail);
+        return saved;
     }
 }
