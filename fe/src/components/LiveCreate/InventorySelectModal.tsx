@@ -1,5 +1,6 @@
 import type { Product } from '@/types';
 import { FaBox } from 'react-icons/fa';
+import NoItem from '@/components/common/NoItem';
 
 type Props = {
   categoryLabel: string;
@@ -41,7 +42,7 @@ export default function InventorySelectModal({
                 <div className="w-8 h-8 border-4 border-neutral-700 border-t-gold rounded-full animate-spin" />
               </div>
             ) : items.length === 0 ? (
-              <p className="text-center text-neutral-500 py-16">해당 카테고리의 물품이 없습니다</p>
+              <NoItem message="해당 카테고리의 물품이 없습니다" />
             ) : (
               items.map((item) => {
                 const selected = isSelected(item);

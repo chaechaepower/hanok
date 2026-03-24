@@ -5,6 +5,7 @@ import { useGetNotifications } from '@/api/hooks/useGetNotifications';
 import { usePatchNotificationRead } from '@/api/hooks/usePatchNotificationRead';
 import { usePatchNotificationReadAll } from '@/api/hooks/usePatchNotificationReadAll';
 import NotificationItem from '@/components/common/NotificationItem';
+import NoItem from '@/components/common/NoItem';
 import type { Notification } from '@/types';
 
 interface NotificationPanelProps {
@@ -68,7 +69,7 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
 
         <div className="scrollbar-hide max-h-80 overflow-y-auto">
           {notifications.length === 0 ? (
-            <p className="px-4 py-8 text-center text-sm text-neutral-500">알림이 없습니다</p>
+            <NoItem message="알림이 없습니다" className="px-4 py-8" textClassName="text-sm text-neutral-500" />
           ) : (
             notifications.map((notification, index) => (
               <div

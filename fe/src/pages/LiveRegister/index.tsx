@@ -24,7 +24,7 @@ import {
   type AuctionNumberField,
   type LiveRegisterMacroField,
 } from '@/utils/liveRegister';
-import useLiveRegisterCamera from '@/components/LiveCreate/useLiveRegisterCamera';
+import useLiveRegisterCamera from '@/hooks/useLiveRegisterCamera';
 import LiveRegisterTutorial from '@/components/LiveCreate/LiveRegisterTutorial';
 import LiveRegisterItemsPanel from '@/components/LiveCreate/LiveRegisterItemsPanel';
 import LiveRegisterPreviewPanel from '@/components/LiveCreate/LiveRegisterPreviewPanel';

@@ -1,5 +1,6 @@
 import { FaCamera } from 'react-icons/fa';
 
+import NoItem from '@/components/common/NoItem';
 import type { LiveRegisterMacroField } from '../../utils/liveRegister';
 
 type Props = {
@@ -114,9 +115,7 @@ export default function LiveRegisterSettingsPanel({
               );
             })}
 
-            {!macroFields.length && (
-              <p className="text-sm font-bold text-neutral-600">해당 카테고리의 매크로가 없습니다</p>
-            )}
+            {!macroFields.length && <NoItem message="해당 카테고리의 매크로가 없습니다" className="py-6" textClassName="text-sm font-bold text-neutral-600" />}
           </div>
         </div>
       </div>

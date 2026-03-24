@@ -1,3 +1,4 @@
+import EditDeleteActions from '@/components/common/EditDeleteActions';
 import type { Address } from '@/types';
 
 interface AddressCardProps {
@@ -41,21 +42,15 @@ export default function AddressCard({
             기본 배송지로 설정
           </button>
         ) : null}
-        <button
-          type="button"
-          onClick={() => onEdit(address)}
-          className="btn btn-primary-outline !px-3 !py-1.5 !text-[12px]"
-        >
-          수정
-        </button>
-        <button
-          type="button"
-          onClick={() => onDelete(address.id)}
-          disabled={isDeleteDisabled}
-          className="btn btn-accent-outline !px-3 !py-1.5 !text-[12px] disabled:cursor-not-allowed disabled:opacity-30"
-        >
-          삭제
-        </button>
+
+        <EditDeleteActions
+          onEdit={() => onEdit(address)}
+          onDelete={() => onDelete(address.id)}
+          isDeleteDisabled={isDeleteDisabled}
+          containerClassName="flex items-center gap-2"
+          editClassName="btn btn-primary-outline !px-3 !py-1.5 !text-[12px]"
+          deleteClassName="btn btn-accent-outline !px-3 !py-1.5 !text-[12px] disabled:cursor-not-allowed disabled:opacity-30"
+        />
       </div>
     </div>
   );

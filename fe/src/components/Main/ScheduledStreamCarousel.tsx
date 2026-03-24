@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { CalendarClock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import NoItem from '@/components/common/NoItem';
 import { getCategoryLabel } from '@/constants/category';
 import type { LiveCardData } from '@/types';
 import { formatScheduledDateTime } from '@/utils/formatDateTime';
@@ -129,8 +130,12 @@ export default function ScheduledStreamCarousel({ streams }: ScheduledStreamCaro
           </div>
         </>
       ) : (
-        <div className="flex min-h-[160px] items-center justify-center rounded-(--radius-panel) border border-dashed border-primary-dark/30 text-sm text-neutral-500">
-          예정된 경매가 없습니다
+        <div className="rounded-(--radius-panel) border border-dashed border-primary-dark/30">
+          <NoItem
+            message="예정된 경매가 없습니다"
+            className="flex min-h-[160px] items-center justify-center"
+            textClassName="text-sm text-neutral-500"
+          />
         </div>
       )}
     </section>

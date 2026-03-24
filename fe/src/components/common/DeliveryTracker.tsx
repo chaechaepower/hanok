@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FiPackage, FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { useGetTracking } from '@/api/hooks/useGetTracking';
+import NoItem from '@/components/common/NoItem';
 import { CARRIERS } from '@/constants/sellerRegister';
 import type { PostTrackingInfoPayload } from '@/types';
 
@@ -114,7 +115,7 @@ export default function DeliveryTracker({ carrierName, trackingNumber }: PostTra
                   })}
                 </div>
               ) : (
-                <p className="text-neutral-500 text-sm text-center py-2">배송 상세 정보가 없습니다</p>
+                <NoItem message="배송 상세 정보가 없습니다" className="py-2" textClassName="text-sm text-neutral-500" />
               )}
             </>
           )}
