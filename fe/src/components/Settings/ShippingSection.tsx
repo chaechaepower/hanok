@@ -7,7 +7,7 @@ import { usePatchAddress } from '@/api/hooks/usePatchAddress';
 import type { Address, AddressModalMode } from '@/types';
 
 import AddressCard from './AddressCard';
-import AddressFormModal from './AddressFormModal';
+import AddressFormModal from '@/components/common/modal/AddressFormModal';
 
 export default function ShippingSection() {
   const [modalOpen, setModalOpen] = useState(false);

@@ -2,10 +2,11 @@ import type { RefObject } from 'react';
 
 import type { MainStreamSort } from '@/api/hooks/useGetMain';
 import LiveCard from '@/components/Main/LiveCard';
+import NoItem from '@/components/common/NoItem';
+import SortDropdown from '@/components/common/SortDropdown';
 import type { LiveCardData } from '@/types';
 
-import MainSortDropdown from './MainSortDropdown';
-import { GRID_CLASS_NAME, SORT_OPTIONS } from './mainStreamSectionUtils';
+import { GRID_CLASS_NAME, SORT_OPTIONS } from '@/utils/mainStreamSection';
 
 type AllLiveSectionProps = {
   streams: LiveCardData[];
@@ -35,11 +36,18 @@ export default function AllLiveSection({
         </div>
 
         <div className="flex items-center gap-3">
-          <MainSortDropdown
+          <SortDropdown
             options={SORT_OPTIONS}
-            selectedValue={sortFilter}
+            value={sortFilter}
             selectedLabel={selectedSortLabel}
-            onSelect={onSortChange}
+            onChange={(value) => onSortChange(value as MainStreamSort)}
+            buttonClassName="bg-surface-elevated px-4 py-2 text-warm hover:bg-primary-muted/40"
+            labelClassName="text-sm font-semibold"
+            iconClassName="text-caption text-warm/70 transition-transform"
+            menuClassName="min-w-full bg-surface"
+            optionClassName="flex w-full items-center justify-center rounded-xl px-3 py-2 text-center text-sm transition"
+            selectedOptionClassName="bg-primary-muted font-semibold text-warm"
+            unselectedOptionClassName="text-neutral-300 hover:bg-surface-elevated"
           />
         </div>
       </div>
@@ -59,7 +67,7 @@ export default function AllLiveSection({
           )}
         </>
       ) : (
-        <p className="py-16 text-center text-base text-neutral-500">전체 경매 라이브가 없습니다</p>
+        <NoItem message="전체 경매 라이브가 없습니다" />
       )}
     </section>
   );

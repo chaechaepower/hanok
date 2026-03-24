@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { LuMic, LuMicOff, LuVideo, LuVideoOff } from 'react-icons/lu';
-import KeyboardGuide from '@/components/Live/Auction/Seller/KeyboardGuide';
+import KeyboardGuide from '@/components/Live/Auction/shared/KeyboardGuide';
 import SellerActionButtons from '@/components/Live/Stream/SellerActionButtons';
 import type { LiveAuctionType } from '@/types';
 import { useParams } from 'react-router-dom';
@@ -123,7 +123,7 @@ export default function SellerControlBar({
   return (
     <div className="absolute bottom-3 left-3 right-3 flex items-stretch justify-between">
       {/* 좌하단: 키보드 가이드 */}
-      <KeyboardGuide open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} />
+      <KeyboardGuide variant="seller" open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} />
 
       {/* 하단 중앙: 액션 버튼 */}
       <div className="flex flex-1 items-center flex-col gap-2 px-2.5">

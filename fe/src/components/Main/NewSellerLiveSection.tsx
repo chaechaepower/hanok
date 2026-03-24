@@ -3,6 +3,7 @@ import { useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import LiveCard from '@/components/Main/LiveCard';
+import NoItem from '@/components/common/NoItem';
 import type { LiveCardData } from '@/types';
 
 type NewSellerLiveSectionProps = {
@@ -63,7 +64,7 @@ export default function NewSellerLiveSection({ streams }: NewSellerLiveSectionPr
           </div>
         </>
       ) : (
-        <p className="py-16 text-center text-base text-neutral-500">신규 상점 경매가 없습니다</p>
+        <NoItem message="신규 상점 경매가 없습니다" />
       )}
     </section>
   );

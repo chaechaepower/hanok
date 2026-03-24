@@ -4,10 +4,10 @@ import { LuVolume2, LuVolumeOff } from 'react-icons/lu';
 
 import BidAccessModal from '@/components/Live/Auction/Buyer/BidAccessModal';
 import CustomBidPanel from '@/components/Live/Auction/Buyer/CustomBidPanel';
-import KeyboardGuide from '@/components/Live/Auction/Buyer/KeyboardGuide';
 import QuickBidPanel from '@/components/Live/Auction/Buyer/QuickBidPanel';
 import UniqueBidPanel from '@/components/Live/Auction/Buyer/UniqueBidPanel';
-import AddressFormModal from '@/components/Settings/AddressFormModal';
+import KeyboardGuide from '@/components/Live/Auction/shared/KeyboardGuide';
+import AddressFormModal from '@/components/common/modal/AddressFormModal';
 import type { BidSyncPayload, LiveAuctionType, UniqueBidSyncPayload } from '@/types';
 import { useBidState, CUSTOM_UNIT_OPTIONS } from '@/hooks/useBidState';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -84,7 +84,7 @@ export default function BuyerControlBar({
     <>
       <div className="absolute bottom-3 left-3 right-3 flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <KeyboardGuide open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} />
+          <KeyboardGuide variant="buyer" open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} />
 
           <div className="mx-4 flex min-h-32.5 flex-1">
             <div
