@@ -2,7 +2,6 @@ package com.ssafy.be.domain.auction;
 
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.bottomupauction.dto.request.BidPlaceRequest;
-import com.ssafy.be.domain.bottomupauction.entity.BottomUpAuctionDetail;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.auction.repository.AuctionTimerRepository;
 import com.ssafy.be.domain.bottomupauction.service.AuctionBidService;
@@ -21,6 +20,7 @@ import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.extension.IntegrationTestExtension;
 import com.ssafy.be.support.annotation.IntegrationTest;
+import com.ssafy.be.support.util.ConcurrentTestUtil;
 import com.ssafy.be.support.util.TestFixture;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,11 +42,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestClassOrder(ClassOrderer.OrderAnnotation.class)
 public class AuctionBidLockTest {
 
-    private static final Logger IT_LOG = LoggerFactory.getLogger("IT_REPORT");
-    private static final long SUITE_START = System.currentTimeMillis();
-
     public static final int NUMBER_OF_THREADS = 1000;
     private static final long BIDDER_BALANCE = 100000L;
+    private static final Logger IT_LOG = LoggerFactory.getLogger("IT_REPORT");
+    private static final long SUITE_START = System.currentTimeMillis();
 
     @Autowired
     private BottomUpAuctionService bottomUpAuctionService;
@@ -82,9 +81,9 @@ public class AuctionBidLockTest {
     static void suiteStart() {
         IT_LOG.info("");
         IT_LOG.info("╔════════════════════════════════════════════════════════════╗");
-        IT_LOG.info("║          Auction Bid Lock 통합 테스트 Suite 시작           ║");
-        IT_LOG.info("║  Layer  : Service → Redis Lock (Redisson)                  ║");
-        IT_LOG.info("║  시나리오: 동시성 처리가 강력한 분산 락 검증               ║");
+        IT_LOG.info("║             Auction Bid Lock 통합 테스트 Suite 시작            ║");
+        IT_LOG.info("║           Layer  : Service → Redis Lock (Redisson)         ║");
+        IT_LOG.info("║            시나리오: 동시성 처리가 강력한 분산 락 검증               ║");
         IT_LOG.info("╚════════════════════════════════════════════════════════════╝");
     }
 
@@ -107,12 +106,10 @@ public class AuctionBidLockTest {
         seller = sellerRepository.save(TestFixture.createSeller(sellerUser));
         stream = streamRepository.save(TestFixture.createStream("테스트 라이브 방송", seller));
         item = itemRepository.save(TestFixture.createItem("테스트 상품"));
-
         liveAuction = auctionRepository.save(TestFixture.createAuction(LIVE, stream, item));
-
-        BottomUpAuctionDetail detail = TestFixture.createBottomUpAuctionDetail(liveAuction, item);
-        bottomUpAuctionDetailRepository.save(detail);
-
+        bottomUpAuctionDetailRepository.save(TestFixture.createBottomUpAuctionDetail(liveAuction));
+        auctionRepository.flush();
+        liveAuction = auctionRepository.findByIdWithBottomUpDetail(liveAuction.getId()).orElseThrow();
         auctionTimerRepository.save(liveAuction.getId(), liveAuction.getAuctionDuration());
     }
 
@@ -124,6 +121,7 @@ public class AuctionBidLockTest {
             redisTemplate.delete(AuctionRedisKeys.getBidKey(auctionId));
             redisTemplate.delete(AuctionRedisKeys.getLockKey(auctionId));
         }
+
         bottomUpAuctionDetailRepository.deleteAllInBatch();
         auctionRepository.deleteAllInBatch();
         itemRepository.deleteAllInBatch();
@@ -143,34 +141,30 @@ public class AuctionBidLockTest {
         @Order(1)
         @DisplayName("I-1. 락 적용 시, 1000명이 같은 가격으로 동시 입찰하면 단 1명만 성공해야 한다.")
         void onlyOneSucceeds_withLock() throws InterruptedException {
+            // given
             IT_LOG.info("    [요청] 1000명의 동시 입찰 요청 발생 (Lock 적용)");
 
-            long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE + TestFixture.TEST_BOTTOM_UP_BID_UNIT;
+            long bidAmount = liveAuction.getBottomUpAuctionDetail().getStartPrice()
+                    + liveAuction.getBottomUpAuctionDetail().getBidUnit(); // 시작가 + 입찰 단위
+
             BidPlaceRequest bidPlaceRequest = BidPlaceRequest.builder()
-                    .auctionId(liveAuction.getId()).amount(bidAmount).build();
+                    .auctionId(liveAuction.getId())
+                    .amount(bidAmount)
+                    .build();
 
-            ExecutorService executorService = Executors.newFixedThreadPool(32);
-            CountDownLatch latch = new CountDownLatch(NUMBER_OF_THREADS);
-
+            // when
             long startTime = System.currentTimeMillis();
 
-            for (User bidder : bidders) {
-                executorService.submit(() -> {
-                    try {
-                        // 정상적인 실제 비즈니스 흐름 (Facade Lock 포함됨)
-                        bottomUpAuctionService.placeBid(bidPlaceRequest, stream.getId(), bidder.getId());
-                    } catch (Exception e) {
-                        // 중복 입찰 등 충돌 무시 (원하는 효과)
-                    } finally {
-                        latch.countDown();
-                    }
-                });
-            }
+            ConcurrentTestUtil.executeConcurrentBids(
+                    bidPlaceRequest,
+                    stream.getId(),
+                    bidders,
+                    (request, streamId, userId) -> bottomUpAuctionService.placeBidWithLock(request, streamId, userId)
+            );
 
-            latch.await();
-            executorService.shutdown();
             long executionTime = System.currentTimeMillis() - startTime;
 
+            // then
             List<Bid> bids = auctionBidRepository.findAll(liveAuction.getId());
 
             IT_LOG.info("    [검증] 실행 시간: {}ms, DB 저장된 참가자 수: {}", executionTime, bids.size());
@@ -183,34 +177,28 @@ public class AuctionBidLockTest {
         @Order(2)
         @DisplayName("I-2. 락 미적용 시, 중복 입찰이 다수 발생하게 된다.")
         void multipleSucceed_noLock() throws InterruptedException {
+            // given
             IT_LOG.info("    [요청] 1000명의 동시 입찰 요청 발생 (Lock 미적용 순수 저장 로직 호출)");
 
-            long bidAmount = TestFixture.TEST_BOTTOM_UP_START_PRICE + TestFixture.TEST_BOTTOM_UP_BID_UNIT;
+            long bidAmount = liveAuction.getBottomUpAuctionDetail().getStartPrice()
+                    + liveAuction.getBottomUpAuctionDetail().getBidUnit(); // 시작가 + 입찰 단위
+
             BidPlaceRequest bidPlaceRequest = BidPlaceRequest.builder()
                     .auctionId(liveAuction.getId()).amount(bidAmount).build();
 
-            ExecutorService executorService = Executors.newFixedThreadPool(32);
-            CountDownLatch latch = new CountDownLatch(NUMBER_OF_THREADS);
-
+            // when
             long startTime = System.currentTimeMillis();
 
-            for (User bidder : bidders) {
-                executorService.submit(() -> {
-                    try {
-                        // Facade Lock을 거치지 않는 내부 순수 DB/Redis 인서트 로직을 직접 타기
-                        auctionBidService.saveBid(bidPlaceRequest, liveAuction, bidder);
-                    } catch (Exception e) {
-                        // 무결성 에러 무시
-                    } finally {
-                        latch.countDown();
-                    }
-                });
-            }
+            ConcurrentTestUtil.executeConcurrentBids(
+                    bidPlaceRequest,
+                    stream.getId(),
+                    bidders,
+                    (request, streamId, userId) -> bottomUpAuctionService.placeBidWithoutLock(request, streamId, userId)
+            );
 
-            latch.await();
-            executorService.shutdown();
             long executionTime = System.currentTimeMillis() - startTime;
 
+            // then
             List<Bid> bids = auctionBidRepository.findAll(liveAuction.getId());
 
             IT_LOG.info("    [검증] 실행 시간: {}ms, DB 저장된 참가자 수: {}", executionTime, bids.size());

@@ -86,7 +86,7 @@ public class TestFixture {
                 .build();
     }
 
-    public static BottomUpAuctionDetail createBottomUpAuctionDetail(Auction auction, Item item) {
+    public static BottomUpAuctionDetail createBottomUpAuctionDetail(Auction auction) {
         return BottomUpAuctionDetail.builder()
                 .auction(auction)
                 .startPrice(TEST_BOTTOM_UP_START_PRICE)

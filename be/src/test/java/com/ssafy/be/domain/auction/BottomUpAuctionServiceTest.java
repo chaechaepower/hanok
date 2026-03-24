@@ -147,7 +147,7 @@ class BottomUpAuctionServiceTest {
                         .item(item)
                         .build());
 
-        BottomUpAuctionDetail detail = TestFixture.createBottomUpAuctionDetail(auction, item);
+        BottomUpAuctionDetail detail = TestFixture.createBottomUpAuctionDetail(auction);
         bottomUpAuctionDetailRepository.save(detail);
 
         return auction;
@@ -228,7 +228,7 @@ class BottomUpAuctionServiceTest {
             BidPlaceRequest request = BidPlaceRequest.builder().auctionId(liveAuction.getId()).amount(bidAmount)
                     .build();
 
-            List<StreamPublishTask> tasks = bottomUpAuctionService.placeBid(request, stream.getId(), bidder.getId());
+            List<StreamPublishTask> tasks = bottomUpAuctionService.placeBidWithLock(request, stream.getId(), bidder.getId());
 
             BidPlaceResponse response = tasks.stream()
                     .map(StreamPublishTask::getPayload)
@@ -255,7 +255,7 @@ class BottomUpAuctionServiceTest {
                     .build();
 
             StompException ex = assertThrows(StompException.class, () -> {
-                bottomUpAuctionService.placeBid(request, stream.getId(), bidder.getId());
+                bottomUpAuctionService.placeBidWithLock(request, stream.getId(), bidder.getId());
             });
 
             assertThat(ex.getErrorType()).isEqualTo(AuctionErrorCode.AUCTION_BID_BELOW_START_PRICE);
@@ -275,7 +275,7 @@ class BottomUpAuctionServiceTest {
                     .build();
 
             StompException ex = assertThrows(StompException.class, () -> {
-                bottomUpAuctionService.placeBid(request, stream.getId(), bidder.getId());
+                bottomUpAuctionService.placeBidWithLock(request, stream.getId(), bidder.getId());
             });
 
             assertThat(ex.getErrorType()).isEqualTo(AuctionErrorCode.AUCTION_BID_INSUFFICIENT_BALANCE);
@@ -297,7 +297,7 @@ class BottomUpAuctionServiceTest {
             BidPlaceRequest request = BidPlaceRequest.builder().auctionId(liveAuction.getId()).amount(bidAmount)
                     .build();
 
-            List<StreamPublishTask> tasks = bottomUpAuctionService.placeBid(request, stream.getId(), bidder.getId());
+            List<StreamPublishTask> tasks = bottomUpAuctionService.placeBidWithLock(request, stream.getId(), bidder.getId());
 
             BidPlaceResponse response = tasks.stream()
                     .map(StreamPublishTask::getPayload)

@@ -31,7 +31,7 @@ public class BottomUpBidPlaceHandler implements StreamEventHandler {
     public void handle(StompRequest<?> request, Long streamId, Principal principal) {
         BidPlaceRequest requestPayload = jsonConverter.convert(request.getPayload(), BidPlaceRequest.class);
 
-        List<StreamPublishTask> streamPublishTasks = bottomUpAuctionService.placeBid(requestPayload, streamId, Long.parseLong(principal.getName()));
+        List<StreamPublishTask> streamPublishTasks = bottomUpAuctionService.placeBidWithLock(requestPayload, streamId, Long.parseLong(principal.getName()));
 
         streamPublishTasks.forEach(streamPublisher::publish);
     }

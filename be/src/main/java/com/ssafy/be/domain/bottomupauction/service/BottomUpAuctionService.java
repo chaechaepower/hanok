@@ -56,6 +56,7 @@ import static com.ssafy.be.global.websocket.enums.StreamEventType.*;
 public class BottomUpAuctionService {
     private static final long SNIPING_THRESHOLD_SECONDS = 5L;
     private final AuctionBidFacade auctionBidFacade;
+    private final AuctionBidService auctionBidService;
     private final AuctionRepository auctionRepository;
     private final AuctionBidRepository auctionBidRepository;
     private final AuctionTimerRepository auctionTimerRepository;
@@ -114,7 +115,7 @@ public class BottomUpAuctionService {
     }
 
     @Transactional // TODO: 트랜잭션 범위 줄이기
-    public List<StreamPublishTask> placeBid(BidPlaceRequest request, Long streamId, Long userId) {
+    public List<StreamPublishTask> placeBidWithLock(BidPlaceRequest request, Long streamId, Long userId) {
         Auction auction = auctionRepository.findById(request.auctionId())
                 .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
 
@@ -134,6 +135,78 @@ public class BottomUpAuctionService {
 
         // 4. 락 걸어서 입찰가 검증 및 저장
         BidPlaceResponse.BidInfoDto bidInfoDto = auctionBidFacade.processBid(request, auction, user);
+
+        // 5. 스나이핑 방지 - 잔여 시간이 5초 이내면 5초로 연장
+        boolean isSniping = preventSniping(auction.getId());
+
+        // 6. 응답
+        // 6-1. BID_PLACE로 입찰 정보 브로드캐스트
+        StreamPublishTask bidPlacePublishTask = buildStreamPublishTask(
+                BROADCAST,
+                streamId,
+                null,
+                BID_PLACED,
+                buildBidPlaceResponse(
+                        bidInfoDto,
+                        isSniping ? buildSnipingTimerDto(TimeUtils.nowAsString()) : null));
+
+        // 6-2. AUCTION_STATISTICS로 실시간 통계 정보 브로드캐스트
+        List<Bid> bids = auctionBidRepository.findAll(auction.getId());
+
+        List<AuctionStatisticsResponse.RecentBidDto> recentBids = bids.stream()
+                .limit(15)
+                .map(this::buildRecentBidDto)
+                .toList();
+
+        AuctionStatisticsResponse auctionStatisticsResponse = buildAuctionStatisticsResponse(
+                auction.getItem().getName(),
+                bids.stream().mapToLong(Bid::amount).sum(),
+                bids.size(),
+                detail.getStartPrice(),
+                bids.isEmpty() ? detail.getStartPrice() : bids.getFirst().amount(),
+                recentBids);
+
+        StreamPublishTask statisticsPublishTask = buildStreamPublishTask(
+                BROADCAST,
+                streamId,
+                null,
+                AUCTION_STATISTICS,
+                auctionStatisticsResponse);
+
+        // 6-3. AUCTION_COMMENT로 경매 중계 메시지 브로드캐스트
+        String formattedMessage = String.format(BID_PLACE.getValue(), user.getNickname(), request.amount());
+
+        StreamPublishTask auctionCommentPublishTask = buildStreamPublishTask(
+                BROADCAST,
+                streamId,
+                null,
+                AUCTION_COMMENT,
+                buildAuctionCommentResponse(formattedMessage));
+
+        return List.of(bidPlacePublishTask, statisticsPublishTask, auctionCommentPublishTask);
+    }
+
+    @Transactional // 테스트용
+    public List<StreamPublishTask> placeBidWithoutLock(BidPlaceRequest request, Long streamId, Long userId) {
+        Auction auction = auctionRepository.findById(request.auctionId())
+                .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
+
+        BottomUpAuctionDetail detail = auction.getBottomUpAuctionDetail();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new StompException(UserErrorCode.USER_NOT_FOUND));
+
+        // 1. 현재 진행중인 경매인지 검증
+        validateLiveAuction(auction);
+
+        // 2. 판매자 본인 물건 입찰 방지 검증
+        validateNotSelfBid(auction, userId);
+
+        // 3. 사용자 잔액 >= 입찰가 검증
+        validateSufficientBalance(request.amount(), user);
+
+        // 4. 락 걸어서 입찰가 검증 및 저장
+        BidPlaceResponse.BidInfoDto bidInfoDto = auctionBidService.saveBid(request, auction, user);
 
         // 5. 스나이핑 방지 - 잔여 시간이 5초 이내면 5초로 연장
         boolean isSniping = preventSniping(auction.getId());

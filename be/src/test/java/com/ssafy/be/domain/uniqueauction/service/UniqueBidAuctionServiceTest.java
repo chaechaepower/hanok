@@ -11,7 +11,6 @@ import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.shippingaddress.repository.ShippingAddressRepository;
 import com.ssafy.be.domain.stream.entity.Stream;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
-import com.ssafy.be.domain.uniqueaction.dto.model.UniqueAuctionResult;
 import com.ssafy.be.domain.uniqueaction.dto.request.UniqueBidCalculateRequest;
 import com.ssafy.be.domain.uniqueaction.dto.request.UniqueBidPlaceRequest;
 import com.ssafy.be.domain.uniqueaction.dto.request.UniqueBidStartRequest;
@@ -23,6 +22,7 @@ import com.ssafy.be.domain.uniqueaction.service.UniqueBidAuctionService;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.extension.IntegrationTestExtension;
+import com.ssafy.be.global.websocket.enums.DestType;
 import com.ssafy.be.global.websocket.dto.StreamPublishTask;
 import com.ssafy.be.global.websocket.exception.StompException;
 import com.ssafy.be.support.annotation.IntegrationTest;
@@ -220,11 +220,11 @@ class UniqueBidAuctionServiceTest {
             IT_LOG.info("    [요청] 입찰 건 없는 상태로 집계 시작");
             UniqueBidCalculateRequest request = UniqueBidCalculateRequest.builder().auctionId(auction.getId()).build();
 
-            UniqueAuctionResult result = uniqueBidAuctionService.aggregate(request);
+            List<StreamPublishTask> publishTasks = uniqueBidAuctionService.aggregate(request);
 
             Auction endedAuction = auctionRepository.findById(auction.getId()).orElseThrow();
             assertThat(endedAuction.getAuctionStatus()).isEqualTo(AuctionStatus.UNSOLD);
-            assertThat(result.isWon()).isFalse();
+            assertThat(publishTasks).isNotEmpty();
             
             IT_LOG.info("    [검증] ✔ UNSOLD 처리 완료 확인");
         }
@@ -245,13 +245,14 @@ class UniqueBidAuctionServiceTest {
 
             IT_LOG.info("    [요청] 눈치게임 집계 시작");
             UniqueBidCalculateRequest request = UniqueBidCalculateRequest.builder().auctionId(auction.getId()).build();
-            UniqueAuctionResult result = uniqueBidAuctionService.aggregate(request);
+            List<StreamPublishTask> publishTasks = uniqueBidAuctionService.aggregate(request);
 
             Auction endedAuction = auctionRepository.findById(auction.getId()).orElseThrow();
             assertThat(endedAuction.getAuctionStatus()).isEqualTo(AuctionStatus.SOLD);
             assertThat(endedAuction.getFinalPrice()).isEqualTo(45000L);
-            assertThat(result.isWon()).isTrue();
-            assertThat(result.winnerId()).isEqualTo(bidder2.getId());
+            assertThat(publishTasks).isNotEmpty();
+            assertThat(publishTasks).anyMatch(
+                    t -> DestType.PRIVATE.equals(t.getDestType()) && bidder2.getId().equals(t.getUserId()));
             
             IT_LOG.info("    [검증] ✔ 50000원 중복 탈락 처리 및 45000원 유일 입찰자(B2) 최종 승리 확인!");
         }
