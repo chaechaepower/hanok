@@ -96,7 +96,7 @@ LKEOF
                         docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis livekit prometheus grafana loki promtail nginx
                         
                         # 배포 타겟 결정
-                        ACTIVE_TARGET=$(grep "server backend" infra/nginx/conf.d/upstream.conf | awk '{print $2}' | cut -d':' -f1 || echo "backend-green")
+                        ACTIVE_TARGET=$(grep -oP 'server \\K[^:]+' infra/nginx/conf.d/upstream.conf || echo "backend-green")
                         
                         if [ "$ACTIVE_TARGET" = "backend-prod" ] || [ -z "$ACTIVE_TARGET" ]; then
                             TARGET="backend-green"
