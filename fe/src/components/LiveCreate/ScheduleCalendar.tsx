@@ -1,6 +1,6 @@
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
-import { SCHEDULE_DAY_LABELS, getCalendarDays, isSameDay } from './scheduleUtils';
+import { SCHEDULE_DAY_LABELS, getCalendarDays, isSameDay } from '@/utils/schedule';
 
 type Props = {
   selectedDate: Date;

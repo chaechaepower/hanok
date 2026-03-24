@@ -3,9 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import CustomSelectDescriptionPanel from './Select/CustomSelectDescriptionPanel';
 import CustomSelectOptionList from './Select/CustomSelectOptionList';
 import CustomSelectTrigger from './Select/CustomSelectTrigger';
-import type { CustomSelectOption, CustomSelectProps, DescriptionPosition } from './Select/types';
-
-export type { CustomSelectOption } from './Select/types';
+import type { CustomSelectOption, CustomSelectProps, DescriptionPosition } from '@/types';
 
 export default function CustomSelect({
   value,

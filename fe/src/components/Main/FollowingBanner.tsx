@@ -4,10 +4,10 @@ import { useNavigate } from 'react-router-dom';
 
 import { useGetMe } from '@/api/hooks/useGetMe';
 
-import FollowingBannerFeaturedCard from './following-banner/FollowingBannerFeaturedCard';
-import FollowingBannerHeader from './following-banner/FollowingBannerHeader';
-import FollowingBannerStreamItem from './following-banner/FollowingBannerStreamItem';
-import type { FollowingBannerProps } from './following-banner/types';
+import FollowingBannerFeaturedCard from './followingBanner/FollowingBannerFeaturedCard';
+import FollowingBannerHeader from './followingBanner/FollowingBannerHeader';
+import FollowingBannerStreamItem from './followingBanner/FollowingBannerStreamItem';
+import type { FollowingBannerProps } from './followingBanner/types';
 
 export default function FollowingBanner({ streams }: FollowingBannerProps) {
   const navigate = useNavigate();

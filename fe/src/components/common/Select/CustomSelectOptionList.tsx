@@ -1,4 +1,4 @@
-import type { CustomSelectOption } from './types';
+import type { CustomSelectOption } from '@/types';
 
 type CustomSelectOptionListProps = {
   options: CustomSelectOption[];

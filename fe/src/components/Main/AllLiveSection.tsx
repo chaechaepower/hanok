@@ -5,7 +5,7 @@ import LiveCard from '@/components/Main/LiveCard';
 import type { LiveCardData } from '@/types';
 
 import MainSortDropdown from './MainSortDropdown';
-import { GRID_CLASS_NAME, SORT_OPTIONS } from './mainStreamSectionUtils';
+import { GRID_CLASS_NAME, SORT_OPTIONS } from '@/utils/mainStreamSection';
 
 type AllLiveSectionProps = {
   streams: LiveCardData[];

@@ -1,6 +1,5 @@
+import type { CustomSelectOption, DescriptionPlacement, DescriptionPosition } from '@/types';
 import { createPortal } from 'react-dom';
-
-import type { CustomSelectOption, DescriptionPlacement, DescriptionPosition } from './types';
 
 type CustomSelectDescriptionPanelProps = {
   option: CustomSelectOption;

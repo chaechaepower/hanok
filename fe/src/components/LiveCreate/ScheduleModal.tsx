@@ -5,12 +5,7 @@ import { formatStreamScheduledAt } from '@/utils/streamDateTime';
 
 import ScheduleCalendar from './ScheduleCalendar';
 import ScheduleTimePicker from './ScheduleTimePicker';
-import {
-  getDefaultScheduleTime,
-  getScheduleMaxDate,
-  getScheduleToday,
-  mergeDateAndTime,
-} from './scheduleUtils';
+import { getDefaultScheduleTime, getScheduleMaxDate, getScheduleToday, mergeDateAndTime } from '@/utils/schedule';
 
 type Props = {
   onConfirm: (scheduledAt: string) => void;
@@ -28,10 +23,7 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
   const [hour, setHour] = useState(defaultTime.hour);
   const [minute, setMinute] = useState(defaultTime.minute);
 
-  const scheduledDate = useMemo(
-    () => mergeDateAndTime(selectedDate, hour, minute),
-    [selectedDate, hour, minute],
-  );
+  const scheduledDate = useMemo(() => mergeDateAndTime(selectedDate, hour, minute), [selectedDate, hour, minute]);
   const isPast = scheduledDate <= new Date();
   const canPrev = viewYear > today.getFullYear() || viewMonth > today.getMonth();
   const canNext = new Date(viewYear, viewMonth + 1, 1) <= maxDate;
@@ -123,7 +115,9 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
               onClick={handleConfirm}
               disabled={isPast}
               className={`flex-1 rounded-2xl py-3.5 text-sm font-bold transition-colors ${
-                isPast ? 'cursor-not-allowed bg-neutral-700 text-neutral-500' : 'bg-gold text-background hover:bg-gold-dark'
+                isPast
+                  ? 'cursor-not-allowed bg-neutral-700 text-neutral-500'
+                  : 'bg-gold text-background hover:bg-gold-dark'
               }`}
             >
               예약하기

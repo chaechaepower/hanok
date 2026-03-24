@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import HoverTooltip from '@/components/common/HoverTooltip';
+
 type HeaderIconProps = {
   children: ReactNode;
   onClick: () => void;
@@ -25,9 +27,7 @@ export default function HeaderIcon({ children, onClick, ariaLabel, tooltip, badg
           </span>
         )}
       </button>
-      <span className="pointer-events-none absolute top-full z-10 mt-2 whitespace-nowrap rounded-lg bg-neutral-800 px-2.5 py-1 text-xs text-neutral-200 opacity-0 shadow-lg transition duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-        {tooltip}
-      </span>
+      <HoverTooltip label={tooltip} />
     </div>
   );
 }

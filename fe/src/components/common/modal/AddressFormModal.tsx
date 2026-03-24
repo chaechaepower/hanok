@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
-import { FaMapMarkerAlt } from 'react-icons/fa';
+import { useState } from 'react';
 import { FiSearch } from 'react-icons/fi';
 
 import { useGetAddresses } from '@/api/hooks/useGetAddresses';
@@ -7,16 +6,10 @@ import { usePatchAddress } from '@/api/hooks/usePatchAddress';
 import { usePostAddress } from '@/api/hooks/usePostAddress';
 import type { Address, AddressFormState, AddressModalMode, JusoResult } from '@/types';
 
-const JUSO_API_KEY = import.meta.env.VITE_JUSO_API_KEY as string;
-
-const EMPTY_FORM: AddressFormState = {
-  addressName: '',
-  recipientName: '',
-  postalCode: '',
-  address: '',
-  addressDetail: '',
-  phone: '010',
-};
+import { EMPTY_FORM } from '@/constants/addressForm';
+import useAddressSearch from '@/hooks/useAddressSearch';
+import { formatPhoneNumber, isValidPhoneNumber } from '@/utils/addressForm';
+import AddressSearchModal from './AddressSearchModal';
 
 type AddressFormModalProps = {
   isOpen: boolean;
@@ -28,109 +21,51 @@ type AddressFormModalProps = {
   onSuccess?: () => void;
 };
 
-export default function AddressFormModal({
-  isOpen,
+type AddressFormModalContentProps = Omit<AddressFormModalProps, 'isOpen'>;
+
+const getInitialFormState = (mode: AddressModalMode, initialAddress?: Address | null): AddressFormState => {
+  if (mode === 'edit' && initialAddress) {
+    return {
+      addressName: initialAddress.addressName,
+      recipientName: initialAddress.recipientName,
+      postalCode: String(initialAddress.postalCode),
+      address: initialAddress.address,
+      addressDetail: initialAddress.addressDetail || '',
+      phone: initialAddress.phone,
+    };
+  }
+
+  return EMPTY_FORM;
+};
+
+function AddressFormModalContent({
   mode,
   initialAddress = null,
   defaultOnCreate = false,
   description,
   onClose,
   onSuccess,
-}: AddressFormModalProps) {
-  const [form, setForm] = useState<AddressFormState>(EMPTY_FORM);
+}: AddressFormModalContentProps) {
+  const [form, setForm] = useState<AddressFormState>(() => getInitialFormState(mode, initialAddress));
   const [formError, setFormError] = useState('');
   const [phoneError, setPhoneError] = useState('');
-  const [addressSearchOpen, setAddressSearchOpen] = useState(false);
-  const [searchKeyword, setSearchKeyword] = useState('');
-  const [searchResults, setSearchResults] = useState<JusoResult[]>([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchError, setSearchError] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const countPerPage = 10;
-  const { data: addresses } = useGetAddresses(isOpen);
+  const { data: addresses } = useGetAddresses(true);
   const { mutate: createAddress, isPending: isCreatePending } = usePostAddress();
   const { mutate: updateAddress, isPending: isUpdatePending } = usePatchAddress();
-
-  useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
-
-    if (mode === 'edit' && initialAddress) {
-      setForm({
-        addressName: initialAddress.addressName,
-        recipientName: initialAddress.recipientName,
-        postalCode: String(initialAddress.postalCode),
-        address: initialAddress.address,
-        addressDetail: initialAddress.addressDetail || '',
-        phone: initialAddress.phone,
-      });
-    } else {
-      setForm(EMPTY_FORM);
-    }
-
-    setFormError('');
-    setPhoneError('');
-    setAddressSearchOpen(false);
-    setSearchKeyword('');
-    setSearchResults([]);
-    setSearchLoading(false);
-    setSearchError('');
-    setCurrentPage(1);
-    setTotalCount(0);
-  }, [initialAddress, isOpen, mode]);
-
-  const searchAddress = useCallback(
-    async (page: number = 1) => {
-      if (!searchKeyword.trim()) {
-        setSearchError('검색할 주소를 입력해주세요.');
-        return;
-      }
-
-      setSearchLoading(true);
-      setSearchError('');
-
-      try {
-        const params = new URLSearchParams({
-          confmKey: JUSO_API_KEY,
-          currentPage: String(page),
-          countPerPage: String(countPerPage),
-          keyword: searchKeyword.trim(),
-          resultType: 'json',
-        });
-
-        const res = await fetch(`https://business.juso.go.kr/addrlink/addrLinkApi.do?${params.toString()}`);
-        const data = await res.json();
-        const result = data.results;
-
-        if (result.common.errorCode !== '0') {
-          setSearchError(result.common.errorMessage || '주소 검색 중 오류가 발생했습니다.');
-          setSearchResults([]);
-          return;
-        }
-
-        setSearchResults(result.juso ?? []);
-        setTotalCount(Number(result.common.totalCount));
-        setCurrentPage(page);
-      } catch {
-        setSearchError('주소 검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-        setSearchResults([]);
-      } finally {
-        setSearchLoading(false);
-      }
-    },
-    [searchKeyword],
-  );
-
-  const openAddressSearch = () => {
-    setSearchKeyword('');
-    setSearchResults([]);
-    setSearchError('');
-    setCurrentPage(1);
-    setTotalCount(0);
-    setAddressSearchOpen(true);
-  };
+  const {
+    addressSearchOpen,
+    searchKeyword,
+    searchResults,
+    searchLoading,
+    searchError,
+    currentPage,
+    totalCount,
+    countPerPage,
+    setSearchKeyword,
+    openAddressSearch,
+    closeAddressSearch,
+    searchAddress,
+  } = useAddressSearch();
 
   const selectAddress = (juso: JusoResult) => {
     setForm((prev) => ({
@@ -139,7 +74,7 @@ export default function AddressFormModal({
       address: juso.roadAddr,
       addressDetail: '',
     }));
-    setAddressSearchOpen(false);
+    closeAddressSearch();
   };
 
   const handleSubmit = () => {
@@ -148,8 +83,8 @@ export default function AddressFormModal({
       return;
     }
 
-    if (!/^01[016789]-?\d{3,4}-?\d{4}$/.test(form.phone)) {
-      setPhoneError('올바른 휴대폰 번호 형식으로 입력해주세요.');
+    if (!isValidPhoneNumber(form.phone)) {
+      setPhoneError('올바른 휴대폰번호 형식으로 입력해주세요.');
       return;
     }
 
@@ -200,10 +135,6 @@ export default function AddressFormModal({
     );
   };
 
-  if (!isOpen) {
-    return null;
-  }
-
   const isPending = isCreatePending || isUpdatePending;
   const totalPages = Math.ceil(totalCount / countPerPage);
 
@@ -239,7 +170,7 @@ export default function AddressFormModal({
                 type="text"
                 value={form.addressName}
                 onChange={(event) => setForm((prev) => ({ ...prev, addressName: event.target.value }))}
-                placeholder="예: 집, 회사"
+                placeholder="집, 회사"
                 className="box-border w-full rounded-lg border border-white/5 bg-white/[0.02] px-4 py-3 text-[15px] text-white outline-none transition-colors focus:border-gold-light"
               />
             </div>
@@ -284,27 +215,19 @@ export default function AddressFormModal({
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[14px] font-medium text-neutral-400">휴대폰 번호</label>
+              <label className="text-[14px] font-medium text-neutral-400">휴대폰번호</label>
               <input
                 type="tel"
                 value={form.phone}
                 onChange={(event) => {
-                  const raw = event.target.value.replace(/^010-?/, '').replace(/[^0-9]/g, '');
-                  const formatted =
-                    raw.length <= 4
-                      ? raw.length > 0
-                        ? `010-${raw}`
-                        : '010'
-                      : `010-${raw.slice(0, 4)}-${raw.slice(4, 8)}`;
-
-                  setForm((prev) => ({ ...prev, phone: formatted }));
+                  setForm((prev) => ({ ...prev, phone: formatPhoneNumber(event.target.value) }));
                   if (phoneError) {
                     setPhoneError('');
                   }
                 }}
                 onBlur={() => {
-                  if (form.phone && !/^01[016789]-?\d{3,4}-?\d{4}$/.test(form.phone)) {
-                    setPhoneError('올바른 휴대폰 번호 형식으로 입력해주세요.');
+                  if (form.phone && !isValidPhoneNumber(form.phone)) {
+                    setPhoneError('올바른 휴대폰번호 형식으로 입력해주세요.');
                   }
                 }}
                 placeholder="010-0000-0000"
@@ -329,130 +252,49 @@ export default function AddressFormModal({
         </div>
       </div>
 
-      {addressSearchOpen ? (
-        <div
-          className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80"
-          onClick={() => setAddressSearchOpen(false)}
-        >
-          <div
-            className="max-h-[80vh] w-[520px] overflow-hidden rounded-2xl border border-white/5 bg-background p-8 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="mb-5">
-              <h2 className="m-0 text-xl font-bold text-white">주소 검색</h2>
-            </div>
-
-            <div className="flex flex-col gap-5">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={searchKeyword}
-                  onChange={(event) => setSearchKeyword(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter') {
-                      void searchAddress(1);
-                    }
-                  }}
-                  placeholder="도로명, 건물명, 지번을 입력하세요"
-                  autoFocus
-                  className="box-border flex-1 rounded-lg border border-white/5 bg-white/[0.02] px-4 py-3 text-[15px] text-white outline-none transition-colors focus:border-gold-light"
-                />
-                <button
-                  type="button"
-                  onClick={() => void searchAddress(1)}
-                  disabled={searchLoading}
-                  className="btn btn-gold disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <FiSearch size={16} />
-                  검색
-                </button>
-              </div>
-
-              {searchResults.length === 0 && !searchError && !searchLoading ? (
-                <div className="flex flex-col items-center gap-3 py-8 text-neutral-500">
-                  <FaMapMarkerAlt size={32} />
-                  <div className="text-center text-[14px] leading-relaxed">
-                    <p className="m-0">도로명, 건물명 또는 지번을 입력해 주소를 검색해주세요.</p>
-                    <p className="mt-1 m-0 text-[13px] text-neutral-500">예: 테헤란로 235, 역삼동 159</p>
-                  </div>
-                </div>
-              ) : null}
-
-              {searchLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="h-6 w-6 animate-spin rounded-full border-[3px] border-neutral-700 border-t-gold-light" />
-                </div>
-              ) : null}
-
-              {searchError ? <p className="m-0 py-4 text-center text-[13px] text-accent-light">{searchError}</p> : null}
-
-              {!searchLoading && searchResults.length > 0 ? (
-                <>
-                  <p className="m-0 text-[13px] text-neutral-600">
-                    총 <span className="font-semibold text-gold-light">{totalCount.toLocaleString()}</span>건 검색
-                  </p>
-                  <div className="-mx-2 flex max-h-[340px] flex-col overflow-y-auto">
-                    {searchResults.map((juso, index) => (
-                      <button
-                        key={`${juso.zipNo}-${index}`}
-                        type="button"
-                        onClick={() => selectAddress(juso)}
-                        className="group mx-0 w-full rounded-lg border-none bg-transparent px-4 py-3.5 text-left transition-colors hover:bg-neutral-800"
-                      >
-                        <div className="flex items-start gap-3">
-                          <span className="mt-0.5 inline-flex flex-shrink-0 items-center rounded bg-gold-light/15 px-2 py-0.5 text-[12px] font-bold text-gold-light">
-                            {juso.zipNo}
-                          </span>
-                          <div className="min-w-0 flex flex-col gap-1">
-                            <span className="break-words text-[14px] text-white transition-colors group-hover:text-gold-light">
-                              {juso.roadAddr}
-                            </span>
-                            <span className="break-words text-[13px] text-neutral-600">{juso.jibunAddr}</span>
-                          </div>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-
-                  {totalPages > 1 ? (
-                    <div className="flex items-center justify-center gap-1 pt-2">
-                      <button
-                        type="button"
-                        onClick={() => void searchAddress(currentPage - 1)}
-                        disabled={currentPage <= 1}
-                        className="cursor-pointer rounded border border-white/5 bg-transparent px-3 py-1.5 text-[13px] text-neutral-400 transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-30"
-                      >
-                        이전
-                      </button>
-                      <span className="px-3 text-[13px] text-neutral-600">
-                        {currentPage} / {totalPages}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => void searchAddress(currentPage + 1)}
-                        disabled={currentPage >= totalPages}
-                        className="cursor-pointer rounded border border-white/5 bg-transparent px-3 py-1.5 text-[13px] text-neutral-400 transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:opacity-30"
-                      >
-                        다음
-                      </button>
-                    </div>
-                  ) : null}
-
-                  <div className="mt-5 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={() => setAddressSearchOpen(false)}
-                      className="btn btn-primary-outline"
-                    >
-                      닫기
-                    </button>
-                  </div>
-                </>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <AddressSearchModal
+        isOpen={addressSearchOpen}
+        searchKeyword={searchKeyword}
+        searchResults={searchResults}
+        searchLoading={searchLoading}
+        searchError={searchError}
+        currentPage={currentPage}
+        totalCount={totalCount}
+        totalPages={totalPages}
+        onClose={closeAddressSearch}
+        onKeywordChange={setSearchKeyword}
+        onSearch={searchAddress}
+        onSelectAddress={selectAddress}
+      />
     </>
+  );
+}
+
+export default function AddressFormModal({
+  isOpen,
+  mode,
+  initialAddress = null,
+  defaultOnCreate = false,
+  description,
+  onClose,
+  onSuccess,
+}: AddressFormModalProps) {
+  if (!isOpen) {
+    return null;
+  }
+
+  const modalKey =
+    mode === 'edit' && initialAddress ? `edit-${initialAddress.id}` : `add-${defaultOnCreate ? 'default' : 'normal'}`;
+
+  return (
+    <AddressFormModalContent
+      key={modalKey}
+      mode={mode}
+      initialAddress={initialAddress}
+      defaultOnCreate={defaultOnCreate}
+      description={description}
+      onClose={onClose}
+      onSuccess={onSuccess}
+    />
   );
 }

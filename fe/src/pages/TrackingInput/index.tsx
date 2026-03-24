@@ -9,7 +9,6 @@ import { validateTrackingInput } from '@/api/hooks/useGetTracking';
 import { usePostTrackingInfo } from '@/api/hooks/usePostTrackingInfo';
 import EscrowDetailCard from '@/components/common/EscrowDetailCard';
 import SideBar from '@/components/common/layouts/SideBar';
-import { sellerSidebarItems } from '@/constants/sidebar';
 import { CARRIERS } from '@/constants/sellerRegister';
 import type { EscrowItem } from '@/types';
 import {
@@ -21,6 +20,7 @@ import {
 import { formatDateTime } from '@/utils/formatDateTime';
 import { formatPrice } from '@/utils/formatPrice';
 import { useToast } from '@/hooks/useToast';
+import { sellerSidebarItems } from '@/constants/sidebar';
 
 function CompletedItemRow({
   item,

@@ -8,10 +8,10 @@ import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import ConfirmModal from '@/components/common/modal/ConfirmModal';
 import { getCategoryLabel } from '@/constants/category';
 import SideBar from '@/components/common/layouts/SideBar';
-import { sellerSidebarItems } from '@/constants/sidebar';
 import CategorySelectModal from '@/components/LiveCreate/CategorySelectModal';
 import { useToast } from '@/hooks/useToast';
 import { formatScheduledDateTime } from '@/utils/formatDateTime';
+import { sellerSidebarItems } from '@/constants/sidebar';
 
 export default function LiveCreatePage() {
   const navigate = useNavigate();
