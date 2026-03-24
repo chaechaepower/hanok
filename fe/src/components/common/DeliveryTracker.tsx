@@ -9,7 +9,7 @@ const CARRIER_CODE_MAP = Object.fromEntries(CARRIERS.map((c) => [c.name, c.code]
 export default function DeliveryTracker({ carrierName, trackingNumber }: PostTrackingInfoPayload) {
   const [isOpen, setIsOpen] = useState(false);
   const carrierCode = CARRIER_CODE_MAP[carrierName] ?? '';
-  const { data: tracking, isLoading, error } = useGetTracking(carrierCode, trackingNumber);
+  const { data: tracking, isLoading, error } = useGetTracking(carrierCode, trackingNumber, isOpen);
 
   if (!carrierCode) return null;
 
@@ -46,7 +46,13 @@ export default function DeliveryTracker({ carrierName, trackingNumber }: PostTra
             </div>
           )}
 
-          {error && <p className="text-neutral-500 text-sm text-center py-4">{(error as Error).message}</p>}
+          {error && (
+            <p className="py-4 text-center text-sm text-neutral-500">
+              {(error as Error).message}
+              <br />
+              잠시 후 다시 확인해주세요
+            </p>
+          )}
 
           {tracking && !isLoading && (
             <>

@@ -5,6 +5,7 @@ import { FiX } from 'react-icons/fi';
 import { usePostCancelEscrow } from '@/api/hooks/usePostCancelEscrow';
 import { useGetEscrowDetail } from '@/api/hooks/useGetEscrowDetail';
 import { useGetEscrowsSeller } from '@/api/hooks/useGetEscrowsSeller';
+import { validateTrackingInput } from '@/api/hooks/useGetTracking';
 import { usePostTrackingInfo } from '@/api/hooks/usePostTrackingInfo';
 import EscrowDetailCard from '@/components/common/EscrowDetailCard';
 import SideBar from '@/components/common/layouts/SideBar';
@@ -389,9 +390,21 @@ export default function TrackingInput() {
                     <div className="flex flex-col items-end gap-3">
                       <button
                         type="button"
-                        onClick={() => {
+                        onClick={async () => {
                           if (!carrier || !trackingNumber || !selectedItemId) {
                             showToast({ message: '택배사와 송장 번호를 모두 입력해주세요.' });
+                            return;
+                          }
+
+                          try {
+                            await validateTrackingInput(carrier, trackingNumber);
+                          } catch (error) {
+                            showToast({
+                              message:
+                                error instanceof Error
+                                  ? error.message
+                                  : '유효하지 않은 운송장번호이거나 택배사 코드입니다.',
+                            });
                             return;
                           }
 
