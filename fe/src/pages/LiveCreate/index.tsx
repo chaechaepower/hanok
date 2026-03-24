@@ -5,7 +5,7 @@ import { MdLiveTv } from 'react-icons/md';
 import { useDeleteStream } from '@/api/hooks/useDeleteStream';
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
-import ConfirmModal from '@/components/common/ConfirmModal';
+import ConfirmModal from '@/components/common/modal/ConfirmModal';
 import { getCategoryLabel } from '@/constants/category';
 import SideBar from '@/components/common/layouts/SideBar';
 import { sellerSidebarItems } from '@/constants/sidebar';

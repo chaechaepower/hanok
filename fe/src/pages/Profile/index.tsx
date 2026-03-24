@@ -15,7 +15,7 @@ import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
 import NoticeList from '@/components/Profile/NoticeList';
 import ProfileEditModal, { type ProfileFormState } from '@/components/Profile/ProfileEditModal';
 import ReportModal from '@/components/Profile/ReportModal';
-import ConfirmModal from '@/components/common/ConfirmModal';
+import ConfirmModal from '@/components/common/modal/ConfirmModal';
 import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
 import { usePatchSellerProfile } from '@/api/hooks/usePatchSellerProfile';
 import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';

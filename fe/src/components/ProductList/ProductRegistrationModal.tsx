@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { FaCloudUploadAlt, FaTimes } from 'react-icons/fa';
 
@@ -12,7 +12,7 @@ import type { Product } from '@/types';
 import { getUploadErrorMessage } from '@/utils/getUploadErrorMessage';
 
 const inputClass =
-  'w-full h-12 bg-background border border-neutral-800 rounded-lg text-neutral-100 text-sm px-4 outline-none focus:border-primary transition-colors';
+  'w-full h-10 bg-background border border-neutral-800 rounded-lg text-neutral-100 text-sm px-4 outline-none focus:border-primary transition-colors';
 const labelClass = 'block text-neutral-100 text-sm font-semibold mb-2';
 
 const MAX_IMAGES = 3;
@@ -205,17 +205,9 @@ function ProductRegistrationModalContent({ onClose, onSuccess, initialData }: Pr
       onClick={onClose}
     >
       <div
-        className="custom-scrollbar bg-surface-elevated w-[480px] max-h-[90vh] overflow-y-auto rounded-2xl p-8 relative shadow-2xl border border-neutral-800"
+        className="scrollbar-hide bg-surface-elevated w-[480px] max-h-[90vh] overflow-y-auto rounded-2xl p-8 relative shadow-2xl border border-neutral-800"
         onClick={(event) => event.stopPropagation()}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-6 right-6 bg-transparent border-none text-neutral-500 hover:text-neutral-100 cursor-pointer transition-colors"
-        >
-          <FaTimes size={20} />
-        </button>
-
         <h2 className="text-neutral-100 text-xl font-bold mt-0 mb-6">{initialData ? '상품 수정' : '상품 등록'}</h2>
 
         <input
@@ -392,9 +384,14 @@ function ProductRegistrationModalContent({ onClose, onSuccess, initialData }: Pr
               </Button>
             </div>
           ) : (
-            <Button type="submit" variant="yellow" disabled={isPending} className="!h-12 !text-sm">
-              {isPending ? '등록 중...' : '상품 등록'}
-            </Button>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={onClose} className="!h-12 !text-sm">
+                취소
+              </Button>
+              <Button type="submit" variant="yellow" disabled={isPending} className="!h-12 !text-sm">
+                {isPending ? '등록 중...' : '상품 등록'}
+              </Button>
+            </div>
           )}
         </form>
       </div>

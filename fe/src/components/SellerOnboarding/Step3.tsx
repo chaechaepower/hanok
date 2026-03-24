@@ -1,7 +1,7 @@
 ﻿import { useState } from 'react';
 
 import Button from '@/components/common/Button';
-import BankSelectModal from '@/components/common/BankSelectModal';
+import BankSelectModal from '@/components/common/modal/BankSelectModal';
 import type { AccountData } from '@/types';
 import type { UserAccountResponse } from '@/types/wallet';
 import { BANKS } from '@/constants/sellerRegister';

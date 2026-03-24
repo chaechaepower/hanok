@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import { FaTimes } from 'react-icons/fa';
 
 import { formatScheduledDateTime } from '@/utils/formatDateTime';
 import { formatStreamScheduledAt } from '@/utils/streamDateTime';
@@ -74,15 +73,7 @@ export default function ScheduleModal({ onConfirm, onClose }: Props) {
       <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-        <div className="relative w-full max-w-[480px] rounded-2xl border border-neutral-800 bg-surface-elevated p-6 shadow-2xl">
-          <button
-            type="button"
-            onClick={onClose}
-            className="absolute right-4 top-4 text-neutral-500 transition-colors hover:text-neutral-100"
-          >
-            <FaTimes size={14} />
-          </button>
-
+        <div className="w-full max-w-[480px] rounded-2xl border border-neutral-800 bg-surface-elevated p-6 shadow-2xl">
           <h2 className="mb-1 text-xl font-bold text-neutral-100">방송 예약 등록</h2>
           <p className="mb-5 text-xs text-neutral-500">현재 시점부터 최대 30일 이내 방송 일정을 설정할 수 있습니다</p>
 

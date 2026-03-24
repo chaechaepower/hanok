@@ -6,7 +6,7 @@ import { useGetAccount } from '@/api/hooks/useGetAccount';
 import { completeWalletCharge } from '@/api/hooks/usePostCompleteWalletCharge';
 import { createWalletCharge } from '@/api/hooks/usePostWalletCharge';
 import { useGetWallet } from '@/api/hooks/useGetWallet';
-import PointManagementModal, { type PointModalType } from '@/components/Wallet/PointManagementModal';
+import PointManagementModal, { type PointModalType } from '@/components/common/modal/PointManagementModal';
 import { MIN_WALLET_CHARGE_AMOUNT } from '@/constants/wallet';
 import { requestPointChargePayment } from '@/utils/requestPointChargePayment';
 import { IoMdShare } from 'react-icons/io';

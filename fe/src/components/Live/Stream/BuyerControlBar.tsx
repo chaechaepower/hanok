@@ -7,7 +7,7 @@ import CustomBidPanel from '@/components/Live/Auction/Buyer/CustomBidPanel';
 import KeyboardGuide from '@/components/Live/Auction/Buyer/KeyboardGuide';
 import QuickBidPanel from '@/components/Live/Auction/Buyer/QuickBidPanel';
 import UniqueBidPanel from '@/components/Live/Auction/Buyer/UniqueBidPanel';
-import AddressFormModal from '@/components/Settings/AddressFormModal';
+import AddressFormModal from '@/components/common/modal/AddressFormModal';
 import type { BidSyncPayload, LiveAuctionType, UniqueBidSyncPayload } from '@/types';
 import { useBidState, CUSTOM_UNIT_OPTIONS } from '@/hooks/useBidState';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';

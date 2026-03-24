@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { FaMapMarkerAlt } from 'react-icons/fa';
-import { FiSearch, FiX } from 'react-icons/fi';
+import { FiSearch } from 'react-icons/fi';
 
 import { useGetAddresses } from '@/api/hooks/useGetAddresses';
 import { usePatchAddress } from '@/api/hooks/usePatchAddress';
@@ -209,23 +209,16 @@ export default function AddressFormModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70" onClick={onClose}>
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70" onClick={onClose}>
         <div
           className="max-h-[90vh] w-[500px] overflow-y-auto rounded-2xl border border-white/5 bg-background p-8 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
           onClick={(event) => event.stopPropagation()}
         >
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-5">
             <div className="flex flex-col gap-1">
               <h2 className="m-0 text-xl font-bold text-white">{mode === 'add' ? '배송지 추가' : '배송지 수정'}</h2>
               {description ? <p className="m-0 text-[13px] text-neutral-400">{description}</p> : null}
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="cursor-pointer border-none bg-transparent text-neutral-600 transition-colors hover:text-white"
-            >
-              <FiX size={22} />
-            </button>
           </div>
 
           <div className="flex flex-col gap-5">
@@ -298,7 +291,11 @@ export default function AddressFormModal({
                 onChange={(event) => {
                   const raw = event.target.value.replace(/^010-?/, '').replace(/[^0-9]/g, '');
                   const formatted =
-                    raw.length <= 4 ? (raw.length > 0 ? `010-${raw}` : '010') : `010-${raw.slice(0, 4)}-${raw.slice(4, 8)}`;
+                    raw.length <= 4
+                      ? raw.length > 0
+                        ? `010-${raw}`
+                        : '010'
+                      : `010-${raw.slice(0, 4)}-${raw.slice(4, 8)}`;
 
                   setForm((prev) => ({ ...prev, phone: formatted }));
                   if (phoneError) {
@@ -341,15 +338,8 @@ export default function AddressFormModal({
             className="max-h-[80vh] w-[520px] overflow-hidden rounded-2xl border border-white/5 bg-background p-8 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="mb-5 flex items-center justify-between">
+            <div className="mb-5">
               <h2 className="m-0 text-xl font-bold text-white">주소 검색</h2>
-              <button
-                type="button"
-                onClick={() => setAddressSearchOpen(false)}
-                className="cursor-pointer border-none bg-transparent text-neutral-600 transition-colors hover:text-white"
-              >
-                <FiX size={22} />
-              </button>
             </div>
 
             <div className="flex flex-col gap-5">
@@ -447,6 +437,16 @@ export default function AddressFormModal({
                       </button>
                     </div>
                   ) : null}
+
+                  <div className="mt-5 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setAddressSearchOpen(false)}
+                      className="btn btn-primary-outline"
+                    >
+                      닫기
+                    </button>
+                  </div>
                 </>
               ) : null}
             </div>

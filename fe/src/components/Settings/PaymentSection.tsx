@@ -4,7 +4,7 @@ import { FaCreditCard } from 'react-icons/fa';
 
 import { useGetAccount } from '@/api/hooks/useGetAccount';
 import { usePostUserAccount } from '@/api/hooks/usePostUserAccount';
-import BankSelectModal from '@/components/common/BankSelectModal';
+import BankSelectModal from '@/components/common/modal/BankSelectModal';
 import { useToast } from '@/hooks/useToast';
 
 export default function PaymentSection() {
