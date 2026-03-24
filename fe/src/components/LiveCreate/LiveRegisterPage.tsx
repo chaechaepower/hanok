@@ -826,13 +826,13 @@ export default function LiveRegisterPage() {
             </div>
 
             <div className="flex gap-3 flex-1 min-h-0">
-              <aside className="min-w-0 flex-1 flex flex-col rounded-2xl bg-background px-4 py-6 overflow-hidden">
+              <aside className="scrollbar-hide min-w-0 flex-1 overflow-y-auto rounded-2xl bg-background px-4 py-6">
                 <div className="mb-4 flex items-center justify-between">
                   <span className="text-sm font-bold text-neutral-400">경매 물품 목록</span>
                   <span className="text-[13px] font-bold text-neutral-600">{tutorialVisibleItems.length}</span>
                 </div>
 
-                <div className="scrollbar-hide flex flex-col gap-2 overflow-y-auto pr-2">
+                <div className="flex flex-col gap-2 pr-2">
                   {tutorialVisibleItems.map((item, index) => {
                     const conditionLabel = getItemConditionLabel(item.itemCondition);
                     const isTutorialFocusItem = activeStepId === 'inventory' && index === 0;

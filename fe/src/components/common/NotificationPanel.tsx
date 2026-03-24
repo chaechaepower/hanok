@@ -107,7 +107,7 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
           )}
         </div>
 
-        <div className="max-h-80 overflow-y-auto">
+        <div className="scrollbar-hide max-h-80 overflow-y-auto">
           {notifications.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-neutral-500">알림이 없습니다</p>
           ) : (
