@@ -10,6 +10,12 @@ public record NftReceiptResponse(
         Long escrowId,
         String txHash,
         TxStatus txStatus,
-        LocalDateTime mintedAt
+        LocalDateTime mintedAt,
+        String itemName,
+        Long price,
+        String buyerNickname,
+        String sellerNickname,
+        Long tokenId,
+        Long blockNumber
 ) {
 }
