@@ -18,6 +18,7 @@ import SearchPage from './pages/Search';
 import SellerReportPage from './pages/SellerReport';
 import AdminPage from './pages/Admin';
 import AdminOnlyRoute from '@/routes/AdminOnlyRoute';
+import NftReceiptPage from './pages/NftReceipt';
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
         <Route path="search" element={<SearchPage />} />
         <Route path="login" element={<LoginPage />} />
         <Route path="wallet" element={<WalletPage />} />
+        <Route path="nft-receipt/:escrowId" element={<NftReceiptPage />} />
         <Route path="settings" element={<SettingsPage />} />
 
         <Route element={<SellerOnlyRoute />}>
