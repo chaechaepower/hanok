@@ -38,6 +38,12 @@ export type NftReceiptResponse = {
   txHash: string | null;
   txStatus: TxStatus | null;
   mintedAt: string | null;
+  itemName: string | null;
+  price: number | null;
+  buyerNickname: string | null;
+  sellerNickname: string | null;
+  tokenId: number | null;
+  blockNumber: number | null;
 };
 
 export type PostTrackingInfoPayload = {
