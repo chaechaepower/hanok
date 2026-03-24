@@ -8,6 +8,7 @@ import com.ssafy.be.domain.escrow.dto.response.EscrowDetailResponse;
 import com.ssafy.be.domain.escrow.dto.response.EscrowListResponse;
 import com.ssafy.be.domain.escrow.dto.response.NftReceiptResponse;
 import com.ssafy.be.domain.escrow.entity.Escrow;
+import com.ssafy.be.domain.escrow.entity.TxStatus;
 import com.ssafy.be.domain.escrow.event.EscrowCompletedEvent;
 import com.ssafy.be.domain.escrow.exception.EscorwErrorCode;
 import com.ssafy.be.domain.escrow.repository.EscrowRepository;
@@ -49,6 +50,7 @@ public class EscrowService {
     private final EscrowShipmentScheduler escrowShipmentScheduler;
     private final EscrowCompleteScheduler escrowCompleteScheduler;
     private final ApplicationEventPublisher publisher;
+    private final BlockchainService blockchainService;
 
     @Transactional
     public void startEscrow(Bid topBid, Auction auction, ShippingAddress shippingAddress) {
@@ -366,14 +368,29 @@ public class EscrowService {
 
     @Transactional(readOnly = true)
     public NftReceiptResponse getNftReceipt(Long escrowId) {
-        Escrow escrow = escrowRepository.findById(escrowId)
+        Escrow escrow = escrowRepository.findByIdWithAuctionAndItem(escrowId)
                 .orElseThrow(() -> new GlobalException(EscorwErrorCode.ESCROW_NOT_FOUND));
+
+        Long tokenId = null;
+        Long blockNumber = null;
+
+        // 민팅 완료된 경우에만 온체인 데이터 조회
+        if (escrow.getTxStatus() == TxStatus.COMPLETED && escrow.getTxHash() != null) {
+            tokenId = blockchainService.getTokenId(escrow.getTxHash());
+            blockNumber = blockchainService.getBlockNumber(escrow.getTxHash());
+        }
 
         return NftReceiptResponse.builder()
                 .escrowId(escrow.getId())
                 .txHash(escrow.getTxHash())
                 .txStatus(escrow.getTxStatus())
                 .mintedAt(escrow.getMintedAt())
+                .itemName(escrow.getAuction().getItem().getName())
+                .price(escrow.getWinningPrice())
+                .buyerNickname(escrow.getBuyer().getNickname())
+                .sellerNickname(escrow.getSeller().getUser().getNickname())
+                .tokenId(tokenId)
+                .blockNumber(blockNumber)
                 .build();
     }
 }
