@@ -88,12 +88,6 @@ const isSystemStreamEndEvent = (
 ): event is Extract<BroadcastStreamEvent, { eventType: 'SYSTEM_STREAM_END' }> =>
   event.eventType === 'SYSTEM_STREAM_END';
 
-const isLegacyUniqueAuctionEndEvent = (event: {
-  eventType: string;
-  payload?: unknown;
-}): event is { eventType: 'UNIQUE_AUCTION_END'; payload?: UniqueAuctionEndPayload } =>
-  event.eventType === 'UNIQUE_AUCTION_END';
-
 const isBidWinnerEvent = (
   event: PrivateStreamEvent,
 ): event is Extract<PrivateStreamEvent, { eventType: 'BID_WINNER' }> => event.eventType === 'BID_WINNER';
@@ -124,6 +118,18 @@ const isUniqueAlreadyBidError = (payload?: StompErrorPayload) => payload?.code =
 // ---------------------------------------------------------------------------
 
 const TIMER_SNAPSHOT_TOLERANCE_MS = 1000;
+const UNIQUE_WINNER_RESOLVE_DELAY_MS = 250;
+
+type WinnerInfoState = {
+  payload: BidWinnerPayload;
+  itemCond: ItemSyncItem['itemCondition'] | '';
+};
+
+type UniqueAuctionResultState = {
+  itemName: string;
+  payload: UniqueAuctionEndPayload;
+  winnerInfo: WinnerInfoState | null;
+};
 
 const createSyncedTimer = (timer: StreamTimerPayload): SyncedAuctionTimer => {
   const serverNowMs = Date.parse(timer.serverNow);
@@ -157,8 +163,8 @@ export type UseLiveStreamReturn = {
   streamState: StreamState;
   auctionStatistics: AuctionStatisticsPayload | null;
   auctionComment: { id: number; message: string } | null;
-  winnerInfo: { payload: BidWinnerPayload; itemCond: ItemSyncItem['itemCondition'] | '' } | null;
-  uniqueAuctionResult: { itemName: string; payload: UniqueAuctionEndPayload } | null;
+  winnerInfo: WinnerInfoState | null;
+  uniqueAuctionResult: UniqueAuctionResultState | null;
   liveAuctionItem: ItemSyncItem | null;
   introducingAuctionItem: ItemSyncItem | null;
   // actions
@@ -184,17 +190,15 @@ export function useLiveStream(streamId: string | undefined, isLiveFromServer: bo
   const [streamState, setStreamState] = useState<StreamState>('live');
   const [auctionStatistics, setAuctionStatistics] = useState<AuctionStatisticsPayload | null>(null);
   const [auctionComment, setAuctionComment] = useState<{ id: number; message: string } | null>(null);
-  const [winnerInfo, setWinnerInfo] = useState<{
-    payload: BidWinnerPayload;
-    itemCond: ItemSyncItem['itemCondition'] | '';
-  } | null>(null);
-  const [uniqueAuctionResult, setUniqueAuctionResult] = useState<{
-    itemName: string;
-    payload: UniqueAuctionEndPayload;
-  } | null>(null);
+  const [winnerInfo, setWinnerInfo] = useState<WinnerInfoState | null>(null);
+  const [uniqueAuctionResult, setUniqueAuctionResult] = useState<UniqueAuctionResultState | null>(null);
 
   const lastActiveItemRef = useRef<ItemSyncItem | null>(null);
+  const uniqueAuctionResultDismissedRef = useRef(true);
   const snipingTimerSetAtRef = useRef<number>(0);
+  const pendingAmbiguousUniqueEndRef = useRef<UniqueAuctionEndPayload | null>(null);
+  const pendingUniqueWinnerInfoRef = useRef<WinnerInfoState | null>(null);
+  const uniqueWinnerResolveTimeoutRef = useRef<number | null>(null);
   // Ref that is set once the STOMP subscription is established.
   // Used to gate ITEM_SYNC calls on subscription readiness (race condition fix).
   const requestItemSyncRef = useRef<(() => Promise<void>) | null>(null);
@@ -301,12 +305,58 @@ export function useLiveStream(streamId: string | undefined, isLiveFromServer: bo
     const applyItemSync = (payload?: ItemSyncPayload | null) => {
       setItemSync(payload ?? null);
       const nextActiveItem = payload?.items.find((item) => item.auctionStatus === 'LIVE') ?? null;
+      if (nextActiveItem?.auctionType === 'UNIQUE_TOP') {
+        uniqueAuctionResultDismissedRef.current = false;
+      }
       void requestActiveAuctionSync(nextActiveItem);
+    };
+
+    const clearPendingUniqueWinnerResolution = () => {
+      pendingAmbiguousUniqueEndRef.current = null;
+      pendingUniqueWinnerInfoRef.current = null;
+
+      if (uniqueWinnerResolveTimeoutRef.current !== null) {
+        window.clearTimeout(uniqueWinnerResolveTimeoutRef.current);
+        uniqueWinnerResolveTimeoutRef.current = null;
+      }
+    };
+
+    const applyUniqueAuctionResult = (payload: UniqueAuctionEndPayload, nextWinnerInfo: WinnerInfoState | null = null) => {
+      uniqueAuctionResultDismissedRef.current = false;
+      setUniqueAuctionResult((prev) => ({
+        itemName: lastActiveItemRef.current?.itemName ?? prev?.itemName ?? 'Auction item',
+        payload: {
+          ...payload,
+          myBidPrice: payload.myBidPrice ?? prev?.payload.myBidPrice ?? null,
+        },
+        winnerInfo: nextWinnerInfo,
+      }));
+    };
+
+    const tryFinalizeUniqueWinnerResult = () => {
+      const pendingWinnerEnd = pendingAmbiguousUniqueEndRef.current;
+      const pendingWinnerInfo = pendingUniqueWinnerInfoRef.current;
+
+      if (!pendingWinnerEnd || !pendingWinnerInfo) {
+        return;
+      }
+
+      applyUniqueAuctionResult(
+        {
+          ...pendingWinnerEnd,
+          myBidPrice: pendingWinnerEnd.myBidPrice ?? pendingWinnerInfo.payload.item.myBidPrice ?? pendingWinnerEnd.winnerPrice,
+        },
+        pendingWinnerInfo,
+      );
+      setWinnerInfo(null);
+      clearPendingUniqueWinnerResolution();
     };
 
     const handleBroadcastEvent = (event: BroadcastStreamEvent) => {
       console.log('[stream] broadcast event:', event);
       if (isAuctionStartEvent(event) && event.payload?.timer) {
+        clearPendingUniqueWinnerResolution();
+        uniqueAuctionResultDismissedRef.current = true;
         setStreamState('live');
         setTimer(createSyncedTimer(event.payload.timer));
         setUniqueBidSync(null);
@@ -327,10 +377,13 @@ export function useLiveStream(streamId: string | undefined, isLiveFromServer: bo
       }
 
       if (isUniqueAuctionStartEvent(event) && event.payload?.bidRange && event.payload?.timer) {
+        clearPendingUniqueWinnerResolution();
+        uniqueAuctionResultDismissedRef.current = false;
         setStreamState('live');
         setBidSync(null);
         setAuctionStatistics(null);
         setUniqueAuctionResult(null);
+        setWinnerInfo(null);
         setTimer(createSyncedTimer(event.payload.timer));
         setUniqueBidSync({
           bidRange: event.payload.bidRange,
@@ -386,6 +439,8 @@ export function useLiveStream(streamId: string | undefined, isLiveFromServer: bo
       }
 
       if (isSystemStreamEndEvent(event)) {
+        clearPendingUniqueWinnerResolution();
+        uniqueAuctionResultDismissedRef.current = true;
         setStreamState('ended');
         setLiveStateOverride(false);
         setTimer(null);
@@ -408,15 +463,47 @@ export function useLiveStream(streamId: string | undefined, isLiveFromServer: bo
       }
 
       if (isUniqueAuctionCalculatingEvent(event)) {
+        setUniqueBidSync((prev) =>
+          prev
+            ? {
+                ...prev,
+                participantCount: event.payload?.participantCount ?? prev.participantCount,
+              }
+            : prev,
+        );
         return;
       }
 
       if (isUniqueAuctionEndEvent(event) && event.payload) {
-        setUniqueAuctionResult({
-          itemName: lastActiveItemRef.current?.itemName ?? '경매 상품',
-          payload: event.payload,
-        });
+        setTimer(null);
         setUniqueBidSync(null);
+        if (event.payload.isWon && event.payload.myBidPrice === null) {
+          pendingAmbiguousUniqueEndRef.current = event.payload;
+
+          if (pendingUniqueWinnerInfoRef.current) {
+            tryFinalizeUniqueWinnerResult();
+            void requestItemSync();
+            return;
+          }
+
+          if (uniqueWinnerResolveTimeoutRef.current !== null) {
+            window.clearTimeout(uniqueWinnerResolveTimeoutRef.current);
+          }
+
+          uniqueWinnerResolveTimeoutRef.current = window.setTimeout(() => {
+            const pendingPayload = pendingAmbiguousUniqueEndRef.current;
+
+            if (pendingPayload) {
+              applyUniqueAuctionResult(pendingPayload);
+            }
+
+            clearPendingUniqueWinnerResolution();
+          }, UNIQUE_WINNER_RESOLVE_DELAY_MS);
+        } else {
+          clearPendingUniqueWinnerResolution();
+          applyUniqueAuctionResult(event.payload);
+        }
+
         void requestItemSync();
         return;
       }
@@ -464,6 +551,7 @@ export function useLiveStream(streamId: string | undefined, isLiveFromServer: bo
       }
 
       if (isUniqueBidSyncEvent(event)) {
+        uniqueAuctionResultDismissedRef.current = false;
         setUniqueBidSync(event.payload ?? null);
         if (event.payload?.timer) {
           setTimer(createSyncedTimer(event.payload.timer));
@@ -472,10 +560,20 @@ export function useLiveStream(streamId: string | undefined, isLiveFromServer: bo
       }
 
       if (isBidWinnerEvent(event) && event.payload) {
-        setWinnerInfo({
-          payload: event.payload,
+        const payload = event.payload;
+        const nextWinnerInfo: WinnerInfoState = {
+          payload,
           itemCond: lastActiveItemRef.current?.itemCondition ?? '',
-        });
+        };
+        const isUniqueWinnerEvent = payload.item.myBidPrice !== undefined;
+
+        if (isUniqueWinnerEvent) {
+          pendingUniqueWinnerInfoRef.current = nextWinnerInfo;
+          tryFinalizeUniqueWinnerResult();
+          return;
+        }
+
+        setWinnerInfo(nextWinnerInfo);
         return;
       }
 
@@ -485,12 +583,6 @@ export function useLiveStream(streamId: string | undefined, isLiveFromServer: bo
         return;
       }
 
-      if (isLegacyUniqueAuctionEndEvent(event) && event.payload) {
-        setUniqueAuctionResult({
-          itemName: lastActiveItemRef.current?.itemName ?? '경매 상품',
-          payload: event.payload,
-        });
-      }
     };
 
     const handleErrorEvent = (event: ErrorStreamEvent) => {
@@ -533,6 +625,12 @@ export function useLiveStream(streamId: string | undefined, isLiveFromServer: bo
     return () => {
       isDisposed = true;
       requestItemSyncRef.current = null;
+
+      if (uniqueWinnerResolveTimeoutRef.current !== null) {
+        window.clearTimeout(uniqueWinnerResolveTimeoutRef.current);
+        uniqueWinnerResolveTimeoutRef.current = null;
+      }
+
       unsubscribeStream();
     };
   }, [showToast, streamId]);
@@ -566,6 +664,16 @@ export function useLiveStream(streamId: string | undefined, isLiveFromServer: bo
   }, []);
 
   const clearUniqueAuctionResult = useCallback(() => {
+    uniqueAuctionResultDismissedRef.current = true;
+
+    pendingAmbiguousUniqueEndRef.current = null;
+    pendingUniqueWinnerInfoRef.current = null;
+
+    if (uniqueWinnerResolveTimeoutRef.current !== null) {
+      window.clearTimeout(uniqueWinnerResolveTimeoutRef.current);
+      uniqueWinnerResolveTimeoutRef.current = null;
+    }
+
     setUniqueAuctionResult(null);
   }, []);
 

@@ -126,7 +126,9 @@
         public List<StreamPublishTask> aggregate(UniqueBidCalculateRequest request) {
 
             Long auctionId = request.auctionId();
-            Auction auction = findAuctionById(auctionId);
+            // 🔒 비관적 락으로 조회: 동시 aggregate() 중복 호출 시 race condition 방지
+            Auction auction = auctionRepository.findByIdWithLock(auctionId)
+                    .orElseThrow(() -> new StompException(UniqueBidAuctionErrorCode.NOT_FOUND));
             Long streamId = auction.getStream().getId();
 
             if (!auction.isLive())

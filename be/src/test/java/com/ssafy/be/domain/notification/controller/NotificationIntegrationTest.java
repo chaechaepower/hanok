@@ -14,6 +14,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -351,6 +352,64 @@ class NotificationIntegrationTest {
 
             IT_LOG.info("    [결과] ✔ updatedCount = 0 확인");
             IT_LOG.info("    [해소] 중복 readAll 호출 시 멱등성 보장 (불필요한 Redis write 없음)");
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // Group 5 : 알림 설정 (Settings)
+    // ═══════════════════════════════════════════════════════════
+    @Nested
+    @Order(5)
+    @DisplayName("Group 5 │ 알림 설정 (Settings)")
+    @ExtendWith(IntegrationTestExtension.class)
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+    class NotificationSettings {
+
+        @BeforeAll
+        static void groupStart() {
+            IT_LOG.info("");
+            IT_LOG.info("┌────────────────────────────────────────────────────────────");
+            IT_LOG.info("│ 📦 Group 5 │ 알림 설정 (Settings)");
+            IT_LOG.info("│  검증 목표: 유저의 알림 수신 여부 조회 및 변경 연동 확인");
+            IT_LOG.info("└────────────────────────────────────────────────────────────");
+        }
+
+        @Test
+        @Order(1)
+        @DisplayName("I-9. 알림 설정 조회: 기본값(true) 반환 확인")
+        void getNotificationSetting() throws Exception {
+            IT_LOG.info("    [진행] GET /api/v1/users/me/notification");
+            mockMvc.perform(get("/api/v1/users/me/notification"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.notificationSetting").value(true));
+            
+            IT_LOG.info("    [결과] ✔ notificationSetting=true (기본값) 확인");
+        }
+
+        @Test
+        @Order(2)
+        @DisplayName("I-10. 알림 설정 수정: true → false 변경 및 조회 확인")
+        void updateNotificationSetting() throws Exception {
+            // 1. 설정 변경 (true -> false)
+            IT_LOG.info("    [진행] PATCH /api/v1/users/me/notification (Setting=false)");
+            String requestBody = "{\"notificationSetting\": false}";
+
+            mockMvc.perform(patch("/api/v1/users/me/notification")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(requestBody))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.notificationSetting").value(false));
+
+            IT_LOG.info("    [결과] ✔ PATCH 결과 notificationSetting=false 확인");
+
+            // 2. 재조회하여 검증
+            IT_LOG.info("    [진행] GET /api/v1/users/me/notification (변경 후 재조회)");
+            mockMvc.perform(get("/api/v1/users/me/notification"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.notificationSetting").value(false));
+
+            IT_LOG.info("    [결과] ✔ 재조회 결과 notificationSetting=false 확인");
+            IT_LOG.info("    [해소] 유저별 알림 수신 설정이 DB에 정상 반영 및 조회됨 보장");
         }
     }
 }

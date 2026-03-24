@@ -31,6 +31,10 @@ type MockUniqueBidSyncState = {
   };
   participantCount: number;
 };
+type MockUniqueBidEntry = {
+  userId: number | null;
+  amount: number;
+};
 type MockPausedTimerState = {
   remainingSeconds: number;
   finalPrice: number;
@@ -60,12 +64,13 @@ const CHAT_MACRO_RESPONSES: Record<string, string> = {
 
 const liveSocket = ws.link(getStreamSocketConnectUrl());
 const clientSubscriptions = new Map<string, Map<string, string>>();
+const clientUserIds = new Map<string, number | null>();
 const heartbeatTimers = new Map<string, number>();
 const streamTimerStates = new Map<string, MockTimerState>();
 const streamAuctionStatisticsStates = new Map<string, MockAuctionStatisticsState>();
 const streamBidSyncStates = new Map<string, MockBidSyncState>();
 const streamUniqueBidSyncStates = new Map<string, MockUniqueBidSyncState>();
-const streamUniqueBidAmountsStates = new Map<string, number[]>();
+const streamUniqueBidAmountsStates = new Map<string, MockUniqueBidEntry[]>();
 const streamItemSyncStates = new Map<string, ItemSyncPayload>();
 const winnerAnnouncementTimers = new Map<string, number>();
 const streamPausedTimerStates = new Map<string, MockPausedTimerState>();
@@ -193,6 +198,41 @@ const broadcastToDestination = (destination: string, payload: unknown) => {
   });
 };
 
+const sendToPrivateDestination = (destination: string, payload: unknown, userId: number | null) => {
+  if (userId === null) {
+    return;
+  }
+
+  liveSocket.clients.forEach((client) => {
+    if (clientUserIds.get(client.id) !== userId) {
+      return;
+    }
+
+    const subscriptions = clientSubscriptions.get(client.id);
+
+    if (!subscriptions) {
+      return;
+    }
+
+    subscriptions.forEach((subscribedDestination, subscriptionId) => {
+      if (subscribedDestination !== destination) {
+        return;
+      }
+
+      client.send(serializeFrame(createMessageFrame(subscriptionId, destination, payload)));
+    });
+  });
+};
+
+const getUserIdFromAuthorizationHeader = (authorizationHeader?: string) => {
+  if (!authorizationHeader?.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const accessToken = authorizationHeader.slice('Bearer '.length).trim();
+  return mockLoginUsers.find((user) => user.accessToken === accessToken)?.userId ?? null;
+};
+
 const createTimerPayload = (state: MockTimerState, nowMs: number) => ({
   durationSeconds: state.durationSeconds,
   serverNow: createTimestamp(nowMs),
@@ -202,6 +242,18 @@ const createTimerPayload = (state: MockTimerState, nowMs: number) => ({
 const getItemBidUnit = (item: ItemSyncPayload['items'][number]) => {
   return item.auctionType === 'BOTTOM_UP' ? item.bidUnit : 1000;
 };
+
+const getMockUniqueCompetingBid = (minPrice: number, maxPrice: number) => {
+  if (maxPrice <= minPrice) {
+    return minPrice;
+  }
+
+  const preferredBid = minPrice + Math.min(3000, Math.max(1000, maxPrice - minPrice));
+  return Math.min(maxPrice, preferredBid);
+};
+
+const getUniqueCompetingBuyer = (requesterUserId: number | null) =>
+  mockLoginUsers.find((user) => !user.isSeller && user.userId !== requesterUserId) ?? null;
 
 const createDefaultItemSyncPayload = (): ItemSyncPayload => ({
   items: [
@@ -574,7 +626,7 @@ const broadcastAuctionStatistics = (streamId: string) => {
   });
 };
 
-const createBidSyncPayload = (streamId: string, nowMs: number): BidSyncPayload | null => {
+const createBidSyncPayload = (streamId: string, nowMs: number, targetUserId: number | null): BidSyncPayload | null => {
   const timerState = streamTimerStates.get(streamId);
   const bidSyncState = streamBidSyncStates.get(streamId);
 
@@ -588,21 +640,25 @@ const createBidSyncPayload = (streamId: string, nowMs: number): BidSyncPayload |
       currentPrice: timerState.finalPrice,
     },
     timer: createTimerPayload(timerState, nowMs),
-    isHighestBidder:
-      bidSyncState.highestBidderUserId !== null && bidSyncState.highestBidderUserId === getCurrentMockUser()?.userId,
+    isHighestBidder: bidSyncState.highestBidderUserId !== null && bidSyncState.highestBidderUserId === targetUserId,
   };
 };
 
-const sendPrivateBidSync = (streamId: string) => {
-  broadcastToDestination(`/user/private/streams/${streamId}`, {
-    eventType: 'BID_SYNC',
-    payload: createBidSyncPayload(streamId, Date.now()),
-  });
+const sendPrivateBidSync = (streamId: string, userId: number | null) => {
+  sendToPrivateDestination(
+    `/user/private/streams/${streamId}`,
+    {
+      eventType: 'BID_SYNC',
+      payload: createBidSyncPayload(streamId, Date.now(), userId),
+    },
+    userId,
+  );
 };
 
-const createUniqueBidSyncPayload = (streamId: string, nowMs: number) => {
+const createUniqueBidSyncPayload = (streamId: string, nowMs: number, targetUserId: number | null) => {
   const timerState = streamTimerStates.get(streamId);
   const uniqueBidSyncState = streamUniqueBidSyncStates.get(streamId);
+  const bidEntries = streamUniqueBidAmountsStates.get(streamId) ?? [];
 
   if (!timerState || !uniqueBidSyncState) {
     return null;
@@ -612,7 +668,7 @@ const createUniqueBidSyncPayload = (streamId: string, nowMs: number) => {
     bidRange: uniqueBidSyncState.bidRange,
     timer: createTimerPayload(timerState, nowMs),
     participantCount: uniqueBidSyncState.participantCount,
-    hasBid: false,
+    hasBid: targetUserId !== null && bidEntries.some((entry) => entry.userId === targetUserId),
   };
 };
 
@@ -670,14 +726,18 @@ const ensureSeededBidAuctionState = (streamId: string) => {
   }
 };
 
-const sendPrivateUniqueBidSync = (streamId: string) => {
-  broadcastToDestination(`/user/private/streams/${streamId}`, {
-    eventType: 'UNIQUE_BID_SYNC',
-    payload: createUniqueBidSyncPayload(streamId, Date.now()),
-  });
+const sendPrivateUniqueBidSync = (streamId: string, userId: number | null) => {
+  sendToPrivateDestination(
+    `/user/private/streams/${streamId}`,
+    {
+      eventType: 'UNIQUE_BID_SYNC',
+      payload: createUniqueBidSyncPayload(streamId, Date.now(), userId),
+    },
+    userId,
+  );
 };
 
-const ensureSeededUniqueAuctionState = (streamId: string) => {
+const ensureSeededUniqueAuctionState = (streamId: string, requesterUserId: number | null) => {
   const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
   const activeUniqueItem = itemSyncPayload?.items.find(
     (item): item is UniqueTopItem => isUniqueTopItem(item) && item.auctionStatus === 'LIVE',
@@ -698,18 +758,38 @@ const ensureSeededUniqueAuctionState = (streamId: string) => {
     initializedTimer = true;
   }
 
+  const competingBuyer = getUniqueCompetingBuyer(requesterUserId);
+  const seededUniqueEntries = competingBuyer
+    ? [
+        {
+          userId: competingBuyer.userId,
+          amount: getMockUniqueCompetingBid(activeUniqueItem.minPrice, activeUniqueItem.maxPrice),
+        },
+      ]
+    : [];
+  const currentUniqueEntries = streamUniqueBidAmountsStates.get(streamId);
+
+  if (!streamUniqueBidAmountsStates.has(streamId) || (requesterUserId !== null && (currentUniqueEntries?.length ?? 0) === 0)) {
+    streamUniqueBidAmountsStates.set(streamId, seededUniqueEntries);
+  }
+
   if (!streamUniqueBidSyncStates.has(streamId)) {
     streamUniqueBidSyncStates.set(streamId, {
       bidRange: {
         minPrice: activeUniqueItem.minPrice,
         maxPrice: activeUniqueItem.maxPrice,
       },
-      participantCount: 0,
+      participantCount: streamUniqueBidAmountsStates.get(streamId)?.length ?? seededUniqueEntries.length,
     });
-  }
+  } else if (requesterUserId !== null) {
+    const currentUniqueBidSyncState = streamUniqueBidSyncStates.get(streamId);
 
-  if (!streamUniqueBidAmountsStates.has(streamId)) {
-    streamUniqueBidAmountsStates.set(streamId, []);
+    if (currentUniqueBidSyncState) {
+      streamUniqueBidSyncStates.set(streamId, {
+        ...currentUniqueBidSyncState,
+        participantCount: streamUniqueBidAmountsStates.get(streamId)?.length ?? currentUniqueBidSyncState.participantCount,
+      });
+    }
   }
 
   if (initializedTimer) {
@@ -717,14 +797,18 @@ const ensureSeededUniqueAuctionState = (streamId: string) => {
   }
 };
 
-const sendPrivateItemSync = (streamId: string) => {
+const sendPrivateItemSync = (streamId: string, userId: number | null) => {
   const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
 
   streamItemSyncStates.set(streamId, itemSyncPayload);
-  broadcastToDestination(`/user/private/streams/${streamId}`, {
-    eventType: 'ITEM_SYNC',
-    payload: itemSyncPayload,
-  });
+  sendToPrivateDestination(
+    `/user/private/streams/${streamId}`,
+    {
+      eventType: 'ITEM_SYNC',
+      payload: itemSyncPayload,
+    },
+    userId,
+  );
 };
 
 const broadcastAuctionComment = (streamId: string, message: string) => {
@@ -742,18 +826,18 @@ const broadcastChatEvent = (streamId: string, payload: unknown) => {
   broadcastToDestination(`/broadcast/streams/${streamId}`, payload);
 };
 
-const sendPrivateChatEvent = (streamId: string, payload: unknown) => {
-  broadcastToDestination(`/user/private/streams/${streamId}`, payload);
+const sendPrivateChatEvent = (streamId: string, payload: unknown, userId: number | null) => {
+  sendToPrivateDestination(`/user/private/streams/${streamId}`, payload, userId);
 };
 
 const sendItemSyncToClient = (
-  client: { send: (data: WebSocketData) => void },
+  client: { id: string; send: (data: WebSocketData) => void },
   subscriptionId: string,
   destination: string,
 ) => {
   const streamId = getStreamIdFromDestination(destination);
   ensureSeededBidAuctionState(streamId);
-  ensureSeededUniqueAuctionState(streamId);
+  ensureSeededUniqueAuctionState(streamId, clientUserIds.get(client.id) ?? null);
   const itemSyncPayload = streamItemSyncStates.get(streamId) ?? getInitialItemSyncPayload(streamId);
 
   streamItemSyncStates.set(streamId, itemSyncPayload);
@@ -784,7 +868,9 @@ const scheduleWinnerAnnouncement = (streamId: string) => {
       return;
     }
 
-    broadcastToDestination(`/user/private/streams/${streamId}`, {
+    sendToPrivateDestination(
+      `/user/private/streams/${streamId}`,
+      {
       eventType: 'BID_WINNER',
       payload: {
         item: {
@@ -800,7 +886,9 @@ const scheduleWinnerAnnouncement = (streamId: string) => {
           addressDetail: '멀티캠퍼스 10층',
         },
       },
-    });
+      },
+      streamBidSyncStates.get(streamId)?.highestBidderUserId ?? null,
+    );
 
     completeLiveItem(streamId, finalState.finalPrice);
     streamTimerStates.delete(streamId);
@@ -820,7 +908,7 @@ const scheduleUniqueAuctionEnd = (streamId: string) => {
   clearWinnerAnnouncement(streamId);
 };
 
-const handleUniqueAuctionCalculating = (destination: string, body: string) => {
+const handleUniqueAuctionCalculating = (destination: string, body: string, requesterUserId: number | null) => {
   const streamId = getStreamIdFromDestination(destination);
   const currentState = streamTimerStates.get(streamId);
   const activeItem = getActiveLiveItem(streamId);
@@ -840,32 +928,42 @@ const handleUniqueAuctionCalculating = (destination: string, body: string) => {
     return;
   }
 
-  const bidAmounts = streamUniqueBidAmountsStates.get(streamId) ?? [];
-  const priceCountMap = new Map<number, number>();
+  const bidEntries = streamUniqueBidAmountsStates.get(streamId) ?? [];
+  const currentUserEntry =
+    requesterUserId === null ? null : [...bidEntries].reverse().find((entry) => entry.userId === requesterUserId) ?? null;
+  const competitorEntries =
+    requesterUserId === null ? bidEntries : bidEntries.filter((entry) => entry.userId !== requesterUserId);
+  const topCompetitorEntry =
+    [...competitorEntries].sort((left, right) => right.amount - left.amount)[0] ?? null;
 
-  bidAmounts.forEach((amount) => {
-    priceCountMap.set(amount, (priceCountMap.get(amount) ?? 0) + 1);
-  });
+  let winnerPrice: number | null = null;
+  let winnerEntry: MockUniqueBidEntry | null = null;
+  let topDuplicates: Array<{ price: number; count: number }> | null = null;
 
-  const uniquePrices = [...priceCountMap.entries()]
-    .filter(([, count]) => count === 1)
-    .map(([price]) => price)
-    .sort((a, b) => b - a);
-  const winnerPrice = uniquePrices[0] ?? null;
-  const topDuplicates =
-    winnerPrice === null
-      ? [...priceCountMap.entries()]
-          .filter(([, count]) => count > 1)
-          .sort((a, b) => b[0] - a[0])
-          .slice(0, 3)
-          .map(([price, cnt]) => ({ price, cnt }))
-      : null;
+  if (!currentUserEntry && topCompetitorEntry) {
+    winnerPrice = topCompetitorEntry.amount;
+    winnerEntry = topCompetitorEntry;
+  } else if (currentUserEntry && !topCompetitorEntry) {
+    winnerPrice = currentUserEntry.amount;
+    winnerEntry = currentUserEntry;
+  } else if (currentUserEntry && topCompetitorEntry) {
+    if (currentUserEntry.amount > topCompetitorEntry.amount) {
+      winnerPrice = currentUserEntry.amount;
+      winnerEntry = currentUserEntry;
+    } else if (currentUserEntry.amount < topCompetitorEntry.amount) {
+      winnerPrice = topCompetitorEntry.amount;
+      winnerEntry = topCompetitorEntry;
+    } else {
+      winnerPrice = null;
+      winnerEntry = null;
+      topDuplicates = [{ price: currentUserEntry.amount, count: 2 }];
+    }
+  }
 
   broadcastToDestination(`/broadcast/streams/${streamId}`, {
     eventType: 'UNIQUE_AUCTION_CALCULATING',
     payload: {
-      auctionId: activeItem.auctionId,
-      message: payload.payload?.message ?? '집계 중입니다...',
+      participantCount: bidEntries.length,
     },
   });
 
@@ -880,9 +978,41 @@ const handleUniqueAuctionCalculating = (destination: string, body: string) => {
     payload: {
       isWon: winnerPrice !== null,
       winnerPrice,
+      myBidPrice: null,
       topDuplicates,
     },
   });
+
+  if (winnerEntry && winnerPrice !== null && winnerEntry.userId === requesterUserId) {
+    sendToPrivateDestination(`/user/private/streams/${streamId}`, {
+      eventType: 'UNIQUE_AUCTION_END',
+      payload: {
+        isWon: true,
+        winnerPrice,
+        myBidPrice: winnerEntry.amount,
+        topDuplicates: null,
+      },
+    }, winnerEntry.userId);
+
+    sendToPrivateDestination(`/user/private/streams/${streamId}`, {
+      eventType: 'BID_WINNER',
+      payload: {
+        item: {
+          itemName: activeItem.itemName,
+          finalPrice: winnerPrice,
+          myBidPrice: winnerEntry.amount,
+        },
+        shipping: {
+          recipientName: '김싸피',
+          phone: '010-1234-5678',
+          addressName: '집',
+          postalCode: 123412,
+          address: '서울특별시 강남구 테헤란로 212',
+          addressDetail: '멀티캠퍼스 10층',
+        },
+      },
+    }, winnerEntry.userId);
+  }
 };
 
 const handleAuctionStart = (destination: string, body: string) => {
@@ -963,7 +1093,7 @@ const handleAuctionStart = (destination: string, body: string) => {
   broadcastAuctionStatistics(streamId);
 };
 
-const handleUniqueAuctionStart = (destination: string, body: string) => {
+const handleUniqueAuctionStart = (destination: string, body: string, requesterUserId: number | null) => {
   const streamId = getStreamIdFromDestination(destination);
   const payload = JSON.parse(body) as {
     payload?: {
@@ -979,6 +1109,15 @@ const handleUniqueAuctionStart = (destination: string, body: string) => {
     itemSyncPayload.items.find((item) => item.auctionStatus === 'READY');
   const minPrice = targetItem?.minPrice ?? 1000;
   const maxPrice = targetItem?.maxPrice ?? minPrice;
+  const competingBuyer = getUniqueCompetingBuyer(requesterUserId);
+  const seededUniqueEntries = competingBuyer
+    ? [
+        {
+          userId: competingBuyer.userId,
+          amount: getMockUniqueCompetingBid(minPrice, maxPrice),
+        },
+      ]
+    : [];
   const state: MockTimerState = {
     durationSeconds: AUCTION_DURATION_SECONDS,
     startedAtMs: nowMs,
@@ -991,9 +1130,9 @@ const handleUniqueAuctionStart = (destination: string, body: string) => {
       minPrice,
       maxPrice,
     },
-    participantCount: 0,
+    participantCount: seededUniqueEntries.length,
   });
-  streamUniqueBidAmountsStates.set(streamId, []);
+  streamUniqueBidAmountsStates.set(streamId, seededUniqueEntries);
   activateNextReadyItem(streamId, auctionId);
   scheduleUniqueAuctionEnd(streamId);
 
@@ -1010,9 +1149,9 @@ const handleUniqueAuctionStart = (destination: string, body: string) => {
   broadcastAuctionComment(streamId, '경매가 시작되었습니다.');
 };
 
-const handleUniqueBidPlace = (destination: string, body: string) => {
+const handleUniqueBidPlace = (destination: string, body: string, requesterUserId: number | null) => {
   const streamId = getStreamIdFromDestination(destination);
-  ensureSeededUniqueAuctionState(streamId);
+  ensureSeededUniqueAuctionState(streamId, requesterUserId);
   const payload = JSON.parse(body) as {
     payload?: {
       amount?: number;
@@ -1020,7 +1159,10 @@ const handleUniqueBidPlace = (destination: string, body: string) => {
   };
   const amount = payload.payload?.amount ?? 0;
   const currentAmounts = streamUniqueBidAmountsStates.get(streamId) ?? [];
-  const nextAmounts = amount > 0 ? [...currentAmounts, amount] : currentAmounts;
+  const nextAmounts =
+    amount > 0
+      ? [...currentAmounts, { userId: requesterUserId, amount }]
+      : currentAmounts;
 
   streamUniqueBidAmountsStates.set(streamId, nextAmounts);
 
@@ -1033,12 +1175,12 @@ const handleUniqueBidPlace = (destination: string, body: string) => {
     });
   }
 
-  broadcastToDestination(`/user/private/streams/${streamId}`, {
+  sendToPrivateDestination(`/user/private/streams/${streamId}`, {
     eventType: 'UNIQUE_BID_ACK',
     payload: {
       amount,
     },
-  });
+  }, requesterUserId);
 
   broadcastToDestination(`/broadcast/streams/${streamId}`, {
     eventType: 'UNIQUE_AUCTION_STATS',
@@ -1048,7 +1190,7 @@ const handleUniqueBidPlace = (destination: string, body: string) => {
   });
 };
 
-const handleBidPlace = (destination: string, body: string) => {
+const handleBidPlace = (destination: string, body: string, requesterUserId: number | null) => {
   const streamId = getStreamIdFromDestination(destination);
   const payload = JSON.parse(body) as {
     payload?: {
@@ -1070,7 +1212,7 @@ const handleBidPlace = (destination: string, body: string) => {
   }
 
   const currentStatisticsState = streamAuctionStatisticsStates.get(streamId);
-  const currentUserId = getCurrentMockUser()?.userId ?? null;
+  const currentUserId = requesterUserId;
 
   if (bidAmount > 0) {
     const currentBidSyncState = streamBidSyncStates.get(streamId);
@@ -1131,23 +1273,23 @@ const handleBidPlace = (destination: string, body: string) => {
   broadcastAuctionStatistics(streamId);
 };
 
-const handleBidSync = (destination: string) => {
+const handleBidSync = (destination: string, requesterUserId: number | null) => {
   const streamId = getStreamIdFromDestination(destination);
   ensureSeededBidAuctionState(streamId);
-  sendPrivateBidSync(streamId);
+  sendPrivateBidSync(streamId, requesterUserId);
 };
 
-const handleUniqueBidSync = (destination: string) => {
+const handleUniqueBidSync = (destination: string, requesterUserId: number | null) => {
   const streamId = getStreamIdFromDestination(destination);
-  ensureSeededUniqueAuctionState(streamId);
-  sendPrivateUniqueBidSync(streamId);
+  ensureSeededUniqueAuctionState(streamId, requesterUserId);
+  sendPrivateUniqueBidSync(streamId, requesterUserId);
 };
 
-const handleItemSync = (destination: string) => {
+const handleItemSync = (destination: string, requesterUserId: number | null) => {
   const streamId = getStreamIdFromDestination(destination);
   ensureSeededBidAuctionState(streamId);
-  ensureSeededUniqueAuctionState(streamId);
-  sendPrivateItemSync(streamId);
+  ensureSeededUniqueAuctionState(streamId, requesterUserId);
+  sendPrivateItemSync(streamId, requesterUserId);
 };
 
 const handleAuctionItemIntroduce = (destination: string, body: string) => {
@@ -1207,7 +1349,7 @@ const handleChatMessage = (destination: string, body: string) => {
   });
 };
 
-const handleMacroTemplate = (destination: string, body: string) => {
+const handleMacroTemplate = (destination: string, body: string, requesterUserId: number | null) => {
   const streamId = getStreamIdFromDestination(destination);
   const payload = JSON.parse(body) as {
     payload?: {
@@ -1234,44 +1376,45 @@ const handleMacroTemplate = (destination: string, body: string) => {
         sender: 'seller',
         createdAt: new Date().toISOString(),
       },
-    });
+    }, requesterUserId);
   }, 250);
 };
 
-const handleSendFrame = (frame: StompFrame) => {
+const handleSendFrame = (clientId: string, frame: StompFrame) => {
   if (frame.headers.destination?.startsWith('/app/streams/')) {
     const body = JSON.parse(frame.body) as { eventType?: string };
+    const requesterUserId = clientUserIds.get(clientId) ?? null;
 
     if (body.eventType === 'AUCTION_START') {
       handleAuctionStart(frame.headers.destination, frame.body);
     }
 
     if (body.eventType === 'UNIQUE_AUCTION_START') {
-      handleUniqueAuctionStart(frame.headers.destination, frame.body);
+      handleUniqueAuctionStart(frame.headers.destination, frame.body, requesterUserId);
     }
 
     if (body.eventType === 'BID_PLACED') {
-      handleBidPlace(frame.headers.destination, frame.body);
+      handleBidPlace(frame.headers.destination, frame.body, requesterUserId);
     }
 
     if (body.eventType === 'UNIQUE_BID_PLACE') {
-      handleUniqueBidPlace(frame.headers.destination, frame.body);
+      handleUniqueBidPlace(frame.headers.destination, frame.body, requesterUserId);
     }
 
     if (body.eventType === 'BID_SYNC') {
-      handleBidSync(frame.headers.destination);
+      handleBidSync(frame.headers.destination, requesterUserId);
     }
 
     if (body.eventType === 'UNIQUE_BID_SYNC') {
-      handleUniqueBidSync(frame.headers.destination);
+      handleUniqueBidSync(frame.headers.destination, requesterUserId);
     }
 
     if (body.eventType === 'UNIQUE_AUCTION_CALCULATING') {
-      handleUniqueAuctionCalculating(frame.headers.destination, frame.body);
+      handleUniqueAuctionCalculating(frame.headers.destination, frame.body, requesterUserId);
     }
 
     if (body.eventType === 'ITEM_SYNC') {
-      handleItemSync(frame.headers.destination);
+      handleItemSync(frame.headers.destination, requesterUserId);
     }
 
     if (body.eventType === 'ITEM_INTRODUCE') {
@@ -1283,7 +1426,7 @@ const handleSendFrame = (frame: StompFrame) => {
     }
 
     if (body.eventType === 'MACRO_TEMPLATE') {
-      handleMacroTemplate(frame.headers.destination, frame.body);
+      handleMacroTemplate(frame.headers.destination, frame.body, requesterUserId);
     }
 
     if (body.eventType === 'STREAM_PAUSED') {
@@ -1316,6 +1459,10 @@ export const liveSocketHandler = liveSocket.addEventListener('connection', ({ cl
       }
 
       if (frame.command === 'CONNECT' || frame.command === 'STOMP') {
+        clientUserIds.set(
+          client.id,
+          getUserIdFromAuthorizationHeader(frame.headers.Authorization ?? frame.headers.authorization),
+        );
         sendConnectedFrame(client);
         startHeartbeat(client);
         return;
@@ -1353,7 +1500,7 @@ export const liveSocketHandler = liveSocket.addEventListener('connection', ({ cl
       }
 
       if (frame.command === 'SEND') {
-        handleSendFrame(frame);
+        handleSendFrame(client.id, frame);
       }
     });
   });
@@ -1378,6 +1525,7 @@ export const liveSocketHandler = liveSocket.addEventListener('connection', ({ cl
     }
 
     clientSubscriptions.delete(client.id);
+    clientUserIds.delete(client.id);
 
     affectedStreamIds.forEach((sid) => {
       broadcastViewerCount(sid);
