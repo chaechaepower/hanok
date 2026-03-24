@@ -1,22 +1,31 @@
 import { useEffect, useRef, useState } from 'react';
+import { GoTrophy } from 'react-icons/go';
 
 import { getItemConditionLabel } from '@/constants/itemCondition';
 import type { WinModalProps } from '@/types/auction';
 import { launchConfetti } from '@/utils/confetti';
-import { GoTrophy } from 'react-icons/go';
 
-export default function WinModal({ isOpen, itemName, itemCond, finalPrice, address, onConfirm }: WinModalProps) {
+export default function WinModal({
+  isOpen,
+  itemName,
+  itemCond,
+  finalPrice,
+  address,
+  onConfirm,
+  layout = 'modal',
+  disableConfetti = false,
+}: WinModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const itemConditionLabel = getItemConditionLabel(itemCond);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen || disableConfetti) {
       return;
     }
 
     return launchConfetti(canvasRef.current);
-  }, [isOpen]);
+  }, [disableConfetti, isOpen]);
 
   const handleConfirm = async () => {
     setIsLoading(true);
@@ -32,11 +41,11 @@ export default function WinModal({ isOpen, itemName, itemCond, finalPrice, addre
     return null;
   }
 
-  return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-(--modal-backdrop) px-4 backdrop-blur-(--modal-blur)">
-      <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-101" />
+  const content = (
+    <>
+      {!disableConfetti && <canvas ref={canvasRef} className="pointer-events-none fixed inset-0 z-101" />}
 
-      <div className="relative z-100 w-full max-w-md overflow-hidden rounded-(--radius-panel) border border-white/6 bg-surface">
+      <div className="relative z-100 w-full max-w-[560px] overflow-hidden rounded-(--radius-panel) border border-white/6 bg-surface">
         <div className="flex flex-col items-center gap-3 border-b border-gold/10 bg-[linear-gradient(160deg,rgba(205,145,80,.08)_0%,transparent_60%)] px-7 py-8 pb-6">
           <div className="flex h-16 w-16 items-center justify-center rounded-full border border-gold/18 bg-gold/[0.08] text-[30px]">
             <GoTrophy className="text-primary-light" />
@@ -74,7 +83,7 @@ export default function WinModal({ isOpen, itemName, itemCond, finalPrice, addre
           </div>
 
           <button
-            className="flex w-full items-center justify-center gap-2 rounded-(--radius-panel) mt-4 px-4 py-3 text-body-lg bg-point text-background outline-none transition disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-(--radius-panel) bg-point px-4 py-3 text-body-lg text-background outline-none transition disabled:cursor-not-allowed disabled:opacity-40"
             onClick={handleConfirm}
             disabled={isLoading}
           >
@@ -86,6 +95,16 @@ export default function WinModal({ isOpen, itemName, itemCond, finalPrice, addre
           </p>
         </div>
       </div>
+    </>
+  );
+
+  if (layout === 'panel') {
+    return <div className="relative flex w-full max-w-[560px] justify-center">{content}</div>;
+  }
+
+  return (
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-(--modal-backdrop) px-4 backdrop-blur-(--modal-blur)">
+      {content}
     </div>
   );
 }

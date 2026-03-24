@@ -303,10 +303,12 @@ export default function LivePage() {
   const handleWinConfirm = async () => {
     await queryClient.invalidateQueries({ queryKey: ['wallet'] });
     clearWinnerInfo();
+    clearUniqueAuctionResult();
   };
 
   const handleUniqueAuctionResultClose = () => {
     void queryClient.invalidateQueries({ queryKey: ['wallet'] });
+    clearWinnerInfo();
     clearUniqueAuctionResult();
   };
 
@@ -422,7 +424,7 @@ export default function LivePage() {
               void handleStreamEndConfirm();
             }}
           />
-          {winnerInfo && (
+          {!uniqueAuctionResult && winnerInfo && (
             <WinModal
               isOpen
               itemName={winnerInfo.payload.item.itemName}
@@ -438,6 +440,7 @@ export default function LivePage() {
               isOpen
               itemName={uniqueAuctionResult.itemName}
               payload={uniqueAuctionResult.payload}
+              winnerInfo={uniqueAuctionResult.winnerInfo}
               onClose={handleUniqueAuctionResultClose}
             />
           )}
