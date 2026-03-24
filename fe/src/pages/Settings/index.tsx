@@ -131,7 +131,7 @@ export default function SettingsPage() {
             onClick={() => navigate('/wallet')}
             className="flex min-w-[320px] cursor-pointer items-center justify-between rounded-xl bg-surface-elevated px-8 py-5 transition-colors hover:bg-surface"
           >
-            <span className="text-[17px] font-medium text-neutral-400">보유머니</span>
+            <span className="text-[17px] font-medium text-neutral-400 pr-4">보유머니</span>
             <div className="flex items-center gap-3">
               <span className="text-2xl font-bold text-gold-light">
                 {formatPrice(walletData?.balance, { suffix: false })} <span className="text-xl">원</span>
