@@ -90,7 +90,7 @@ export default function BuyerControlBar({
     <>
       <div className={`${variant === 'overlay' ? 'absolute bottom-3 left-3 right-3' : ''} flex flex-col gap-2`}>
         <div className="flex items-center justify-between">
-          <KeyboardGuide open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} placement={variant === 'inline' ? 'top' : 'left'} />
+          <KeyboardGuide variant="buyer" open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} placement={variant === 'inline' ? 'top' : 'left'} />
 
           <div className="mx-4 flex min-h-32.5 flex-1">
             <div
