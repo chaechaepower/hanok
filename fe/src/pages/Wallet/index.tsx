@@ -226,7 +226,7 @@ export default function WalletPage() {
 
           <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
             <article className="relative overflow-hidden rounded-(--radius-panel) bg-surface-elevated px-8 py-6 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
-              <div className="relative z-10 flex max-w-67.5 flex-col gap-5">
+              <div className="relative z-10 flex flex-col gap-5">
                 <div className="space-y-3">
                   <p className="text-lg font-semibold text-white">보유 머니</p>
                   <div className="space-y-2">
