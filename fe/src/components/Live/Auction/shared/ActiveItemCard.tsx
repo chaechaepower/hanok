@@ -49,7 +49,7 @@ export default function ActiveItemCard({ item, isSelected, isSeller, onSelect }:
           <div className="h-16 w-16 shrink-0 rounded-(--radius-control) bg-neutral-800" />
         )}
 
-        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1">
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
           <span className="truncate text-xs font-bold leading-snug text-white">{item.name}</span>
           <div className="flex items-center gap-1.5 whitespace-nowrap">
             <span className={`text-body-md font-black ${PRICE_CLASS[item.status]}`}>{formatAuctionLabel(item)}</span>
@@ -61,7 +61,7 @@ export default function ActiveItemCard({ item, isSelected, isSeller, onSelect }:
           </div>
         </div>
 
-        <div className="flex shrink-0 flex-col items-center justify-center gap-1">
+        <div className="flex shrink-0 flex-col items-center justify-center gap-2">
           <span className={`rounded-full px-1.5 py-0.5 text-caption font-extrabold ${statusBadge.className}`}>
             {statusBadge.label}
           </span>
