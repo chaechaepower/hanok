@@ -1,0 +1,2 @@
+test_name,vus_max,p95_ms,p99_ms,avg_ms,tps,error_rate,ws_error_rate
+chat_03_stress,450,123.91,N/A,120.50,0.02,0.00,0.00

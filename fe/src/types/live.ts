@@ -96,6 +96,7 @@ export type BidWinnerPayload = {
   item: {
     itemName: string;
     finalPrice: number;
+    myBidPrice?: number | null;
   };
   shipping: ShippingAddressResponse;
 };
@@ -137,17 +138,17 @@ export type UniqueBidAckPayload = {
 
 export type UniqueAuctionEndDuplicate = {
   price: number;
-  cnt: number;
+  count: number;
 };
 
 export type UniqueAuctionCalculatingPayload = {
-  auctionId: number;
-  message: string;
+  participantCount: number;
 };
 
 export type UniqueAuctionEndPayload = {
   isWon: boolean;
   winnerPrice: number | null;
+  myBidPrice: number | null;
   topDuplicates: UniqueAuctionEndDuplicate[] | null;
 };
 
@@ -453,6 +454,10 @@ export type PrivateStreamEvent =
   | {
       eventType: 'BID_WINNER';
       payload?: BidWinnerPayload;
+    }
+  | {
+      eventType: 'UNIQUE_AUCTION_END';
+      payload?: UniqueAuctionEndPayload;
     }
   | {
       eventType: 'BID_SYNC';

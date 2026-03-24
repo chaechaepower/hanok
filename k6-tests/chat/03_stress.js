@@ -48,7 +48,7 @@ export default function (data) {
 
   ws.connect(`${WS_BASE}?token=${token}`, wsParams, function (socket) {
     socket.on('open', () => {
-      wsSessions.add(1, { api: 'ws_connect' }); // ✅ 
+      wsSessions.add(1, { api: 'ws_connect' }); // ✅
       socket.send(`CONNECT\naccept-version:1.1,1.0\nheart-beat:10000,10000\nAuthorization:${token}\n\n\0`);
 
       const intervalId = setInterval(() => {
