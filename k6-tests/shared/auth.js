@@ -1,49 +1,75 @@
+// shared/auth.js
 import http from 'k6/http';
 import { SharedArray } from 'k6/data';
 
-const BASE = __ENV.BASE_URL || 'http://j14d105.p.ssafy.io/api/v1';
+// ✅ BASE_URL은 http://... 형태로 환경변수로만 받아오고, 코드에서 직접 붙임
+const BASE = (__ENV.BASE_URL || 'http://j14d105.p.ssafy.io:8080/api/v1').replace(/\/+$/, '');
 
-// 1. 테스트 유저 데이터 로드 (다른 스크립트에서도 쓸 수 있게 export)
 export const TEST_USERS = new SharedArray('users', function () {
   return JSON.parse(open('../users.json'));
 });
 
-// 2. Setup 단계용: 전체 유저 초기 로그인
 export function loginAll() {
   return TEST_USERS.map((user) => {
     const res = http.post(
       `${BASE}/auth/login`,
       JSON.stringify({ email: user.email, password: user.password }),
       {
-        headers: { 'Content-Type': 'application/json' },
-        tags: { api: 'auth_login_setup' }
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        tags: { api: 'auth_login_setup' },
       }
     );
 
     if (res.status !== 200) {
       console.error(`[Setup] 로그인 실패: ${user.email} → ${res.status}`);
+      console.log('응답 바디:', res.body);
       return null;
     }
 
-    const body = JSON.parse(res.body);
-    return `Bearer ${body.data.accessToken}`;
-  });
+    try {
+      const body = JSON.parse(res.body);
+      const token = body.data?.accessToken;
+      if (!token) {
+        console.log('로그인 응답에는 accessToken이 없음:', body);
+        return null;
+      }
+      return `Bearer ${token}`;
+    } catch (e) {
+      console.log('로그인 응답 파싱 실패:', e);
+      return null;
+    }
+  }).filter(Boolean); // null 제거
 }
 
-// 3. Main 단계용: 특정 유저의 토큰이 만료되었을 때 갱신하는 헬퍼 함수
 export function reLogin(user) {
   const res = http.post(
     `${BASE}/auth/login`,
     JSON.stringify({ email: user.email, password: user.password }),
     {
-      headers: { 'Content-Type': 'application/json' },
-      tags: { api: 'auth_login_refresh' }
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      tags: { api: 'auth_login_refresh' },
     }
   );
 
   if (res.status === 200) {
-    const body = JSON.parse(res.body);
-    return `Bearer ${body.data.accessToken}`;
+    try {
+      const body = JSON.parse(res.body);
+      const token = body.data?.accessToken;
+      return token ? `Bearer ${token}` : null;
+    } catch (e) {
+      return null;
+    }
   }
   return null;
+}
+
+export function authHeader(token) {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': token,
+  };
 }

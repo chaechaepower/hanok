@@ -112,5 +112,18 @@ class BadWordFilterTest {
             assertThat(result.maskedText()).isEqualTo("금칙어");
             TEST_LOG.info("    [검증] ✔ TextNormalizer 연계를 통한 변형 비속어 방어 확인");
         }
+
+        @Test
+        @Order(3)
+        @DisplayName("F-4. 허용어 포함 시 필터링 미감지 확인 (예: '발가락')")
+        void filter_allowedWord_returnsOriginal() {
+            TEST_LOG.info("    [진행] 허용어('발가락') 포함 문장 필터 동작 확인");
+            // '발'은 금칙어지만 '발가락'은 허용어 사전(allowed_words.txt)에 포함되어 있음
+            ChatFilterResult result = badWordFilter.filter("내 발가락 너무 길어");
+
+            assertThat(result.isDetected()).isFalse();
+            assertThat(result.maskedText()).isEqualTo("내 발가락 너무 길어");
+            TEST_LOG.info("    [검증] ✔ 허용어 우선순위 적용으로 정상 문장 통과 확인");
+        }
     }
 }

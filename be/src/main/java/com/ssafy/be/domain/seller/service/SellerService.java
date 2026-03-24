@@ -31,7 +31,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.client.RestClient;
 import com.ssafy.be.domain.escrow.entity.EscrowStatus;
 
 import java.time.LocalDateTime;
@@ -60,8 +59,6 @@ public class SellerService {
 
     @Value("${bizno.api.key}")
     private String biznoApiKey;
-
-    private final RestClient restClient = RestClient.create();
 
     @Transactional
     public SellerRegisterResponse register(Long userId, SellerRegisterRequest request) {

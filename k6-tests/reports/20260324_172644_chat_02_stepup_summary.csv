@@ -1,0 +1,2 @@
+test_name,vus_max,p95_ms,p99_ms,avg_ms,tps,error_rate,ws_error_rate,chat_sent,chat_received,chat_success_rate,stomp_error
+chat_02_stepup,1000,127.21,N/A,121.22,0.03,0.00,0.00,34956,3221463,100.00,0
