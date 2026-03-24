@@ -116,6 +116,9 @@ dependencies {
 
     // block chain
     implementation 'org.web3j:core:4.10.3'
+
+    implementation 'io.micrometer:micrometer-core'
+    runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
 }
 
 dependencyManagement {
