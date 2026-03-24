@@ -284,15 +284,15 @@ public class StreamService {
                 auction.getBottomUpAuctionDetail() == null
                         ? null
                         : new StreamAuctionItemSummaryResponse.BottomUpAuctionInfo(
-                                auction.getBottomUpAuctionDetail().getStartPrice(),
-                                auction.getBottomUpAuctionDetail().getBidUnit()
-                        ),
+                        auction.getBottomUpAuctionDetail().getStartPrice(),
+                        auction.getBottomUpAuctionDetail().getBidUnit()
+                ),
                 auction.getUniqueBidAuctionDetail() == null
                         ? null
                         : new StreamAuctionItemSummaryResponse.UniqueTopAuctionInfo(
-                                auction.getUniqueBidAuctionDetail().getMinPrice(),
-                                auction.getUniqueBidAuctionDetail().getMaxPrice()
-                        ),
+                        auction.getUniqueBidAuctionDetail().getMinPrice(),
+                        auction.getUniqueBidAuctionDetail().getMaxPrice()
+                ),
                 item.getItemCondition(),
                 item.getCategory(),
                 item.getStatus(),
@@ -393,10 +393,10 @@ public class StreamService {
     @Transactional
     public void startStream(Long userId, Long streamId) {
         Seller seller = sellerRepository.findByUserId(userId)
-                        .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
+                .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
 
         Stream stream = streamRepository.findByIdAndSellerId(streamId, seller.getId())
-                        .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
+                .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
         stream.start();
 
@@ -407,7 +407,7 @@ public class StreamService {
                     STREAM_START.name(),
                     STREAM_START.getTitle(),
                     STREAM_START.renderBody(seller.getUser().getNickname()),
-                    "/streams/%d/enter".formatted(stream.getId())
+                    "/live/" + stream.getId() // 프론트 라이브 방송 라우팅 경로: /live/{streamId}
             );
         });
     }
@@ -415,10 +415,10 @@ public class StreamService {
     @Transactional
     public void endStream(Long userId, Long streamId) {
         Seller seller = sellerRepository.findByUserId(userId)
-                        .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
+                .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
 
         Stream stream = streamRepository.findByIdAndSellerId(streamId, seller.getId())
-                        .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
+                .orElseThrow(() -> new GlobalException(StreamErrorCode.STREAM_NOT_FOUND));
 
         stream.end();
 
@@ -616,7 +616,6 @@ public class StreamService {
                 .limit(limit)
                 .toList();
     }
-
 
 
     @Transactional

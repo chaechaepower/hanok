@@ -81,7 +81,7 @@ public class EscrowService {
                 ESCROW_STARTED_FOR_BUYER.name(),
                 ESCROW_STARTED_FOR_BUYER.getTitle(),
                 ESCROW_STARTED_FOR_BUYER.renderBody(auction.getItem().getName()),
-                "/escrows/" + escrow.getId()
+                null
         );
 
         // 판매자
@@ -90,7 +90,7 @@ public class EscrowService {
                 ESCROW_STARTED_FOR_SELLER.name(),
                 ESCROW_STARTED_FOR_SELLER.getTitle(),
                 ESCROW_STARTED_FOR_SELLER.renderBody(buyer.getNickname(), auction.getItem().getName()),
-                "/escrows/" + escrow.getId()
+                null
         );
     }
 
@@ -121,7 +121,7 @@ public class EscrowService {
                 ESCROW_SHIPPED_FOR_BUYER.name(),
                 ESCROW_SHIPPED_FOR_BUYER.getTitle(),
                 ESCROW_SHIPPED_FOR_BUYER.renderBody(escrow.getSeller().getUser().getNickname(), escrow.getAuction().getItem().getName()),
-                "/escrows/" + escrow.getId()
+                null
         );
 
         // 판매자
@@ -130,7 +130,7 @@ public class EscrowService {
                 ESCROW_SHIPPED_FOR_SELLER.name(),
                 ESCROW_SHIPPED_FOR_SELLER.getTitle(),
                 ESCROW_SHIPPED_FOR_SELLER.renderBody(escrow.getAuction().getItem().getName()),
-                "/escrows/" + escrow.getId()
+                null
         );
     }
 
@@ -160,7 +160,7 @@ public class EscrowService {
                 ESCROW_CANCELLED.name(),
                 ESCROW_CANCELLED.getTitle(),
                 ESCROW_CANCELLED.renderBody(escrow.getAuction().getItem().getName()),
-                "/escrows/" + escrow.getId()
+                null
         );
 
         // 판매자
@@ -169,7 +169,7 @@ public class EscrowService {
                 ESCROW_CANCELLED.name(),
                 ESCROW_CANCELLED.getTitle(),
                 ESCROW_CANCELLED.renderBody(escrow.getAuction().getItem().getName()),
-                "/escrows/" + escrow.getId()
+                null
         );
     }
 
@@ -226,7 +226,7 @@ public class EscrowService {
                 ESCROW_COMPLETED.name(),
                 ESCROW_COMPLETED.getTitle(),
                 ESCROW_COMPLETED.renderBody(escrow.getAuction().getItem().getName()),
-                "/escrows/" + escrow.getId()
+                null
         );
 
         // 판매자
@@ -235,7 +235,7 @@ public class EscrowService {
                 ESCROW_COMPLETED.name(),
                 ESCROW_COMPLETED.getTitle(),
                 ESCROW_COMPLETED.renderBody(escrow.getAuction().getItem().getName()),
-                "/escrows/" + escrow.getId()
+                null
         );
 
         // NFT 민팅 대기 상태로 변경

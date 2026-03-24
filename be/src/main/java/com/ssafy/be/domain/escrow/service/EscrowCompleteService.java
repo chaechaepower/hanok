@@ -70,7 +70,7 @@ public class EscrowCompleteService {
                 ESCROW_AUTO_COMPLETED.name(),
                 ESCROW_AUTO_COMPLETED.getTitle(),
                 ESCROW_AUTO_COMPLETED.renderBody(escrow.getAuction().getItem().getName()),
-                "/escrows/" + escrow.getId()
+                null
         );
 
         // 판매자
@@ -79,7 +79,7 @@ public class EscrowCompleteService {
                 ESCROW_AUTO_COMPLETED.name(),
                 ESCROW_AUTO_COMPLETED.getTitle(),
                 ESCROW_AUTO_COMPLETED.renderBody(escrow.getAuction().getItem().getName()),
-                "/escrows/" + escrow.getId()
+                null
         );
     }
 

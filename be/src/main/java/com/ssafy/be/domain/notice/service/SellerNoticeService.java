@@ -51,7 +51,7 @@ public class SellerNoticeService {
                     NOTICE_CREATE.name(),
                     NOTICE_CREATE.getTitle(),
                     NOTICE_CREATE.renderBody(seller.getUser().getNickname()),
-                    "/sellers/%d/notices/%d".formatted(sellerId,savedNotice.getId())
+                    null
             );
         });
 
