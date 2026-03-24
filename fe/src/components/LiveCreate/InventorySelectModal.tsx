@@ -1,5 +1,6 @@
 import type { Product } from '@/types';
-import { FaTimes, FaBox } from 'react-icons/fa';
+import { FaBox } from 'react-icons/fa';
+import NoItem from '@/components/common/NoItem';
 
 type Props = {
   categoryLabel: string;
@@ -27,18 +28,11 @@ export default function InventorySelectModal({
       <div className="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-        <div className="relative w-full max-w-[420px] max-h-[85vh] bg-surface-elevated rounded-3xl overflow-hidden shadow-2xl flex flex-col border border-neutral-800">
+        <div className="w-full max-w-[420px] max-h-[85vh] overflow-hidden rounded-3xl border border-neutral-800 bg-surface-elevated shadow-2xl flex flex-col">
           <div className="flex items-center justify-between px-6 pt-6 pb-4">
             <h2 className="text-neutral-100 text-xl font-bold">내 인벤토리</h2>
             <div className="flex items-center gap-4">
               <span className="text-neutral-500 text-sm">카테고리 : {categoryLabel}</span>
-              <button
-                type="button"
-                onClick={onClose}
-                className="text-neutral-500 hover:text-neutral-100 transition-colors"
-              >
-                <FaTimes size={16} />
-              </button>
             </div>
           </div>
 
@@ -48,7 +42,7 @@ export default function InventorySelectModal({
                 <div className="w-8 h-8 border-4 border-neutral-700 border-t-gold rounded-full animate-spin" />
               </div>
             ) : items.length === 0 ? (
-              <p className="text-center text-neutral-500 py-16">해당 카테고리의 물품이 없습니다</p>
+              <NoItem message="해당 카테고리의 물품이 없습니다" />
             ) : (
               items.map((item) => {
                 const selected = isSelected(item);
@@ -99,14 +93,23 @@ export default function InventorySelectModal({
             )}
           </div>
 
-          <div className="px-4 py-4 border-t border-neutral-800">
-            <button
-              type="button"
-              onClick={onConfirm}
-              className="w-full py-4 rounded-2xl bg-gold text-background text-base font-bold hover:bg-gold-dark transition-colors"
-            >
-              선택완료
-            </button>
+          <div className="border-t border-neutral-800 px-4 py-4">
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full rounded-2xl border border-neutral-700 py-4 text-base font-semibold text-neutral-100 transition-colors hover:bg-warm/10"
+              >
+                닫기
+              </button>
+              <button
+                type="button"
+                onClick={onConfirm}
+                className="w-full rounded-2xl bg-gold py-4 text-base font-bold text-background transition-colors hover:bg-gold-dark"
+              >
+                선택
+              </button>
+            </div>
           </div>
         </div>
       </div>

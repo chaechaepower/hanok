@@ -35,15 +35,8 @@ export default function BankSelectModal({
         onClick={(event) => event.stopPropagation()}
       >
         <div className="shrink-0 px-5 pt-4">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4">
             <h3 className="text-[17px] font-bold text-white">은행/증권사 선택</h3>
-            <button
-              type="button"
-              onClick={onClose}
-              className="cursor-pointer border-none bg-transparent p-0 text-2xl text-neutral-500"
-            >
-              &times;
-            </button>
           </div>
           <div className="flex border-b border-neutral-800">
             {(['bank', 'stock'] as const).map((tab) => (
@@ -78,6 +71,16 @@ export default function BankSelectModal({
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="shrink-0 px-5 pb-5">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full rounded-xl border border-neutral-700 bg-transparent px-5 py-3 text-sm font-medium text-neutral-300 transition-colors hover:bg-white/5"
+          >
+            닫기
+          </button>
         </div>
       </div>
     </div>

@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { FaImage, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
-import type { Product } from '@/types';
+import { FaChevronLeft, FaChevronRight, FaImage } from 'react-icons/fa';
+
 import { MAIN_CATEGORY_ITEMS } from '@/components/Main/mainCategoryItems';
+import EditDeleteActions from '@/components/common/EditDeleteActions';
 import { getItemConditionLabel } from '@/constants/itemCondition';
+import type { Product } from '@/types';
 
 const formatCreatedAt = (value?: string) => {
   if (!value) return '-';
@@ -34,54 +36,55 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, onEdit, onDelete }: ProductCardProps) {
   const currentStatus = statusClassMap[product.status] || { label: product.status, bg: 'bg-neutral-600' };
-
-  const images = product.images.filter((img) => !!img);
+  const images = product.images.filter(Boolean);
   const tagText = product.tags.map((tag) => `#${tag}`).join(' ');
   const showActionButtons = product.status === 'READY' || product.status === 'SCHEDULED';
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const handlePrev = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handlePrev = (event: React.MouseEvent) => {
+    event.stopPropagation();
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
-  const handleNext = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleNext = (event: React.MouseEvent) => {
+    event.stopPropagation();
     setCurrentIndex((prev) => (prev + 1) % images.length);
   };
 
   return (
-    <div className="flex bg-surface-elevated rounded-2xl p-6 gap-6 mb-4 border border-neutral-800 hover:bg-surface transition-colors items-center justify-center">
-      <div className="relative w-[160px] h-[160px] rounded-xl overflow-hidden shrink-0 bg-white group">
+    <div className="mb-4 flex items-center justify-center gap-6 rounded-2xl border border-neutral-800 bg-surface-elevated p-6 transition-colors hover:bg-surface">
+      <div className="group relative h-[160px] w-[160px] shrink-0 overflow-hidden rounded-xl bg-white">
         <div
-          className={`absolute top-3 left-3 ${currentStatus.bg} text-white px-3 py-1 rounded-full text-xs font-semibold z-10`}
+          className={`absolute left-3 top-3 z-10 rounded-full px-3 py-1 text-xs font-semibold text-white ${currentStatus.bg}`}
         >
           {currentStatus.label}
         </div>
 
         {images.length > 0 ? (
           <>
-            <img src={images[currentIndex]} alt={product.name} className="w-full h-full object-cover" />
+            <img src={images[currentIndex]} alt={product.name} className="h-full w-full object-cover" />
             {images.length > 1 && (
               <>
                 <button
+                  type="button"
                   onClick={handlePrev}
-                  className="absolute left-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none z-10"
+                  className="absolute left-1 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-none bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100"
                 >
                   <FaChevronLeft size={12} />
                 </button>
                 <button
+                  type="button"
                   onClick={handleNext}
-                  className="absolute right-1 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none z-10"
+                  className="absolute right-1 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-none bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100"
                 >
                   <FaChevronRight size={12} />
                 </button>
-                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
-                  {images.map((_, idx) => (
+                <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1">
+                  {images.map((_, index) => (
                     <div
-                      key={idx}
-                      className={`w-1.5 h-1.5 rounded-full ${idx === currentIndex ? 'bg-white' : 'bg-white/40'}`}
+                      key={index}
+                      className={`h-1.5 w-1.5 rounded-full ${index === currentIndex ? 'bg-white' : 'bg-white/40'}`}
                     />
                   ))}
                 </div>
@@ -89,44 +92,38 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
             )}
           </>
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-neutral-800 text-neutral-500 text-[13px]">
-            <FaImage size={28} className="opacity-50 mb-2" />
+          <div className="flex h-full w-full flex-col items-center justify-center bg-neutral-800 text-[13px] text-neutral-500">
+            <FaImage size={28} className="mb-2 opacity-50" />
             이미지 없음
           </div>
         )}
       </div>
 
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex min-w-0 flex-1 flex-col">
         {tagText ? <div className="mb-2 text-[13px] text-neutral-500">{tagText}</div> : null}
 
         <div className="mb-2 flex items-center justify-between gap-4">
           <h3 className="m-0 text-lg font-bold text-neutral-100">{product.name}</h3>
           <div className="flex shrink-0 flex-col items-end gap-1">
             {showActionButtons && (
-              <div className="flex gap-3">
-                <button
-                  onClick={() => onEdit(product.itemId)}
-                  className="bg-transparent border-none text-neutral-300 text-[13px] cursor-pointer hover:text-neutral-100 transition-colors"
-                >
-                  수정
-                </button>
-                <button
-                  onClick={() => onDelete(product.itemId)}
-                  className="bg-transparent border-none text-neutral-300 text-[13px] cursor-pointer hover:text-accent-light transition-colors"
-                >
-                  삭제
-                </button>
-              </div>
+              <EditDeleteActions
+                onEdit={() => onEdit(product.itemId)}
+                onDelete={() => onDelete(product.itemId)}
+                containerClassName="flex gap-3"
+                editClassName="cursor-pointer border-none bg-transparent text-[13px] text-neutral-300 transition-colors hover:text-neutral-100"
+                deleteClassName="cursor-pointer border-none bg-transparent text-[13px] text-neutral-300 transition-colors hover:text-accent-light"
+              />
             )}
           </div>
         </div>
-        <p className="text-neutral-500 text-sm m-0 mb-4 leading-relaxed">{product.description}</p>
 
-        <div className="grid grid-cols-3 border border-neutral-700 rounded-xl bg-neutral-800 mt-auto">
+        <p className="m-0 mb-4 text-sm leading-relaxed text-neutral-500">{product.description}</p>
+
+        <div className="mt-auto grid grid-cols-3 rounded-xl border border-neutral-700 bg-neutral-800">
           <MetricBox label="물품 상태" value={getItemConditionLabel(product.itemCondition)} />
           <MetricBox
             label="카테고리"
-            value={MAIN_CATEGORY_ITEMS.find((c) => c.id === product.category)?.label || product.category}
+            value={MAIN_CATEGORY_ITEMS.find((category) => category.id === product.category)?.label || product.category}
           />
           <MetricBox label="등록일" value={formatCreatedAt(product.createdAt)} isLast />
         </div>
@@ -135,21 +132,13 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
   );
 }
 
-function MetricBox({
-  label,
-  value,
-  isLast = false,
-}: {
-  label: string;
-  value: string;
-  isLast?: boolean;
-}) {
+function MetricBox({ label, value, isLast = false }: { label: string; value: string; isLast?: boolean }) {
   return (
-    <div className={`relative px-4 py-3 flex flex-col justify-center ${isLast ? '' : 'border-r border-neutral-700'}`}>
-      <div className="mb-1 flex items-center gap-1.5 text-neutral-400 text-xs">
+    <div className={`relative flex flex-col justify-center px-4 py-3 ${isLast ? '' : 'border-r border-neutral-700'}`}>
+      <div className="mb-1 flex items-center gap-1.5 text-xs text-neutral-400">
         <span>{label}</span>
       </div>
-      <div className="text-neutral-100 text-[15px] font-semibold break-all">{value}</div>
+      <div className="break-all text-[15px] font-semibold text-neutral-100">{value}</div>
     </div>
   );
 }

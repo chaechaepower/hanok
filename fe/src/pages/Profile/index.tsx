@@ -15,7 +15,7 @@ import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
 import NoticeList from '@/components/Profile/NoticeList';
 import ProfileEditModal, { type ProfileFormState } from '@/components/Profile/ProfileEditModal';
 import ReportModal from '@/components/Profile/ReportModal';
-import ConfirmModal from '@/components/common/ConfirmModal';
+import ConfirmModal from '@/components/common/modal/ConfirmModal';
 import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
 import { usePatchSellerProfile } from '@/api/hooks/usePatchSellerProfile';
 import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
@@ -28,6 +28,7 @@ import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
 import React from 'react';
 import { useToast } from '@/hooks/useToast';
 import { getCategoryLabel } from '@/constants/category';
+import { formatDateTime, formatScheduledDateTime } from '@/utils/formatDateTime';
 
 const SOCIAL_PREFIX = {
   instagram: 'https://www.instagram.com/',
@@ -65,16 +66,7 @@ const BellIcon = () => <FiBell size={20} className="text-gold-light" />;
 const CalendarIcon = () => <FiCalendar size={16} className="text-neutral-600" />;
 const HistoryIcon = () => <FiClock size={18} color="currentColor" />;
 const GiftIcon = () => <FiGift size={32} className="text-gold-light" />;
-
-const formatDate = (iso: string) => {
-  const d = new Date(iso);
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const hour = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day} ${hour}:${min}`;
-};
+const formatDate = formatDateTime;
 
 export default function ProfilePage() {
   const { id } = useParams<{ id: string }>();
@@ -269,12 +261,7 @@ export default function ProfilePage() {
     let content = noticeContent;
     if (selectedStream) {
       const dateStr = selectedStream.scheduledAt
-        ? new Date(selectedStream.scheduledAt).toLocaleDateString('ko-KR', {
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })
+        ? formatScheduledDateTime(selectedStream.scheduledAt)
         : '';
       content += `\n\n[방송 안내] ${selectedStream.title}${dateStr ? ` (${dateStr})` : ''}`;
     }
@@ -568,7 +555,7 @@ export default function ProfilePage() {
                       <div className="flex flex-col gap-2">
                         <span className={ui.badgeClass}>{ui.label}</span>
                         <h4 className="m-0 mt-1 text-neutral-100">{sale.itemName}</h4>
-                        <p className="m-0 text-body-md text-neutral-600">{formatDate(sale.createdAt)}</p>
+                        <p className="m-0 text-body-md text-neutral-600">{formatDateTime(sale.createdAt)}</p>
                       </div>
                     </div>
 
@@ -646,14 +633,7 @@ export default function ProfilePage() {
                           >
                             <span className="text-subtitle-md text-neutral-100">{stream.title}</span>
                             <span className="text-body-sm text-neutral-500">
-                              {stream.scheduledAt
-                                ? new Date(stream.scheduledAt).toLocaleDateString('ko-KR', {
-                                    month: 'long',
-                                    day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })
-                                : ''}
+                              {stream.scheduledAt ? formatScheduledDateTime(stream.scheduledAt) : ''}
                               {` · ${getCategoryLabel(stream.category)}`}
                             </span>
                           </button>

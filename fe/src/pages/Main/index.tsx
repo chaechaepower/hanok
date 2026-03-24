@@ -16,9 +16,9 @@ import {
   getScheduledOrderTime,
   mapNewSellerStreamToLiveCard,
   sortStreams,
-} from '@/components/Main/mainStreamSectionUtils';
-import useInfiniteScrollTrigger from '@/components/Main/useInfiniteScrollTrigger';
+} from '@/utils/mainStreamSection';
 import type { SideBarItem } from '@/types';
+import useInfiniteScrollTrigger from '@/hooks/useInfiniteScrollTrigger';
 
 export default function MainPage() {
   const [selectedCategoryItemId, setSelectedCategoryItemId] = useState<string>('ALL');
@@ -56,9 +56,7 @@ export default function MainPage() {
     sort: 'LATEST',
     size: SCHEDULED_SECTION_SIZE,
   });
-  const {
-    data: newSellerLiveData,
-  } = useGetNewSellerRecommendedStreams({
+  const { data: newSellerLiveData } = useGetNewSellerRecommendedStreams({
     limit: PAGE_SIZE,
   });
 
@@ -71,10 +69,7 @@ export default function MainPage() {
     triggerRef: allLiveTriggerRef,
   });
 
-  const followingBroadcasts = sortStreams(
-    followingLiveData?.pages.flatMap((page) => page.content) ?? [],
-    'LATEST',
-  );
+  const followingBroadcasts = sortStreams(followingLiveData?.pages.flatMap((page) => page.content) ?? [], 'LATEST');
 
   const recommendedBroadcasts = (newSellerLiveData ?? []).map(mapNewSellerStreamToLiveCard);
 
@@ -95,11 +90,7 @@ export default function MainPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-6 pt-8 xl:flex-row">
-      <MainSideBar
-        activeItemId={selectedCategoryItemId}
-        onItemClick={handleCategoryClick}
-        rankingItems={rankingData}
-      />
+      <MainSideBar activeItemId={selectedCategoryItemId} onItemClick={handleCategoryClick} rankingItems={rankingData} />
 
       <div className="flex min-w-0 flex-1 flex-col gap-6">
         {isLoggedIn && <FollowingBanner streams={followingBroadcasts} />}

@@ -1,5 +1,5 @@
 import type { RefObject } from 'react';
-import { FiInfo, FiX } from 'react-icons/fi';
+import { FiInfo } from 'react-icons/fi';
 
 import Button from '@/components/common/Button';
 
@@ -41,12 +41,12 @@ export default function PointManagementModal({
 }: PointManagementModalProps) {
   if (!isOpen) return null;
 
-  const submitLabel = activeTab === 'charge' ? '충전하기' : '환전하기';
-  const amountLabel = activeTab === 'charge' ? '충전 금액' : '환전 요청 금액';
+  const submitLabel = activeTab === 'charge' ? '충전하기' : '출금하기';
+  const amountLabel = activeTab === 'charge' ? '충전 금액' : '출금 금액';
   const helperText =
     activeTab === 'charge'
-      ? '충전한 금액은 즉시 포인트로 발행되어\n경매 입찰에 사용할 수 있습니다.'
-      : '환전 요청 시 경매에 예치 되지 않은 \u2018가용 포인트\u2019 내에서 가능하며, 평일 기준 1~2일 이내에 등록된 계좌로 입금됩니다.';
+      ? '충전할 포인트 금액을 선택하거나 직접 입력해 주세요.\n라이브 경매 참여 전에 미리 충전해두는 것을 권장합니다.'
+      : '출금 신청 후에는 등록된 계좌로 순차 정산되며,\n영업일 기준 1~2일 정도 소요될 수 있습니다.';
   const formattedAmount = amountInput ? formatMoney(Number(amountInput)) : '';
   const selectedPreset = isDirectInputMode
     ? null
@@ -62,18 +62,10 @@ export default function PointManagementModal({
         onClick={(event) => event.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label="가상머니 관리"
+        aria-label="포인트 관리 모달"
       >
-        <div className="flex items-start justify-between">
+        <div>
           <h2 className="text-[24px] font-bold text-neutral-100">가상머니 관리</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="모달 닫기"
-            className="flex h-10 w-10 items-center justify-center rounded-full text-neutral-100 transition hover:bg-white/6"
-          >
-            <FiX className="h-6 w-6" />
-          </button>
         </div>
 
         <div className="mt-8 flex border-b border-neutral-800">
@@ -107,7 +99,7 @@ export default function PointManagementModal({
               value={formattedAmount}
               onChange={(event) => onAmountChange(event.target.value)}
               placeholder="0"
-              className="h-16 w-full rounded-(--radius-panel) border border-neutral-800 bg-transparent px-6 pr-16 text-right text-[28px] font-semibold text-neutral-100 outline-none placeholder:text-neutral-600 focus:border-gold-light transition-colors"
+              className="h-16 w-full rounded-(--radius-panel) border border-neutral-800 bg-transparent px-6 pr-16 text-right text-[28px] font-semibold text-neutral-100 outline-none transition-colors placeholder:text-neutral-600 focus:border-gold-light"
             />
             <span className="pointer-events-none absolute right-6 top-1/2 -translate-y-1/2 text-[18px] font-semibold text-neutral-500">
               원
@@ -165,7 +157,14 @@ export default function PointManagementModal({
           <p className="whitespace-pre-line text-[15px] leading-6 text-gold-light">{helperText}</p>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 flex gap-3">
+          <Button
+            variant="outline"
+            className="h-15 rounded-(--radius-panel) text-[18px] font-semibold"
+            onClick={onClose}
+          >
+            닫기
+          </Button>
           <Button
             variant="white"
             className="h-15 rounded-(--radius-panel) text-[18px] font-semibold"

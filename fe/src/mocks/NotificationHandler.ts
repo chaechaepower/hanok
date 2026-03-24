@@ -20,9 +20,14 @@ export const notificationHandlers = [
 
   http.get('*/v1/notifications', () => {
     return HttpResponse.json({
-      status: 200,
+      status: 'SUCCESS',
       message: 'OK',
-      data: [],
+      data: {
+        items: [],
+        unreadCount: 0,
+        hasNext: false,
+        nextCursor: null,
+      },
     });
   }),
 

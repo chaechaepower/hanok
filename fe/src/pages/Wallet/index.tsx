@@ -11,7 +11,7 @@ import { createWalletCharge } from '@/api/hooks/usePostWalletCharge';
 import { createWalletWithdrawal } from '@/api/hooks/usePostWalletWithdrawal';
 import { useGetWallet } from '@/api/hooks/useGetWallet';
 import HistoryRowSkeleton from '@/components/Wallet/HistoryRowSkeleton';
-import PointManagementModal, { type PointModalType } from '@/components/Wallet/PointManagementModal';
+import PointManagementModal, { type PointModalType } from '@/components/common/modal/PointManagementModal';
 import Button from '@/components/common/Button';
 import { MIN_WALLET_CHARGE_AMOUNT } from '@/constants/wallet';
 import type { TradeReportItem } from '@/types';

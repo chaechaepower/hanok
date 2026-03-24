@@ -9,7 +9,7 @@ import { useLogout as useLogout } from '@/api/hooks/usePostLogout';
 import { usePatchProfileImage } from '@/api/hooks/usePatchProfileImage';
 import { useGetWallet } from '@/api/hooks/useGetWallet';
 import SideBar from '@/components/common/layouts/SideBar';
-import AccountSection from '@/components/Settings/AccountSection';
+import AccountSection from '@/components/Settings/accountSection';
 import FollowedStoresSection from '@/components/Settings/FollowedStoresSection';
 import OrderHistorySection from '@/components/Settings/OrderHistorySection';
 import PaymentSection from '@/components/Settings/PaymentSection';
