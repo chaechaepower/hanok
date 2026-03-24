@@ -6,7 +6,9 @@ import type {
   DeleteStreamResponse,
   EndStreamResponse,
   ItemSyncPayload,
+  ItemSyncAuctionStatus,
   LiveCardData,
+  LiveStreamItemStatus,
   StreamRequest,
   StreamDetailResponse,
   StreamDetailItem,
@@ -17,8 +19,22 @@ import type {
 import { getMockItemById } from './ItemHandler';
 import { getCurrentMockUser, mockLoginUsers } from './mockState';
 
+type RegisteredLiveItem =
+  | (Omit<Extract<StreamDetailItem, { auctionType: 'BOTTOM_UP' }>, 'tags' | 'images'> & {
+      description?: string;
+      tags?: string[];
+      images?: string[];
+      image1: string | null;
+    })
+  | (Omit<Extract<StreamDetailItem, { auctionType: 'UNIQUE_TOP' }>, 'tags' | 'images'> & {
+      description?: string;
+      tags?: string[];
+      images?: string[];
+      image1: string | null;
+    });
+
 type RegisteredLive = Omit<StreamDetailResponse, 'items'> & {
-  items: StreamEnterItem[];
+  items: RegisteredLiveItem[];
   sellerId: number;
   sellerNickname: string;
   sellerProfileImage: string | null;
@@ -78,7 +94,7 @@ const createStreamItems = (
   auctionItems: CreateStreamItemInput[],
   category: string,
   thumbnail: string | null,
-): StreamEnterItem[] =>
+): RegisteredLiveItem[] =>
   auctionItems.map((rawAuctionItem, index) => {
     const auctionItem = normalizeAuctionItem(rawAuctionItem, index);
     const mockItem = getMockItemById(auctionItem.itemId);
@@ -87,33 +103,42 @@ const createStreamItems = (
       return {
         itemId: auctionItem.itemId,
         name: mockItem?.name ?? `Mock item ${auctionItem.itemId}`,
+        description: mockItem?.description ?? '',
+        tags: mockItem?.tags ?? [],
+        images: mockItem?.images ?? (thumbnail ? [thumbnail] : []),
         category: mockItem?.category ?? category,
-        startPrice: auctionItem.bottomUp.startPrice,
         status: 'READY',
-        auctionType: auctionItem.auctionType,
+        auctionType: 'BOTTOM_UP',
         itemCondition: mockItem?.itemCondition ?? 'BRAND_NEW',
         image1: mockItem?.images[0] ?? thumbnail,
         createdAt: mockItem?.createdAt ?? new Date(Date.now() - index * 60000).toISOString(),
-        ...(mockItem?.description ? { description: mockItem.description } : {}),
-        bidUnit: auctionItem.bottomUp.bidUnit,
-        auctionTime: auctionItem.auctionDuration,
+        auctionDuration: auctionItem.auctionDuration,
+        bottomUp: {
+          startPrice: auctionItem.bottomUp.startPrice,
+          bidUnit: auctionItem.bottomUp.bidUnit,
+        },
+        uniqueTop: null,
       };
     }
 
     return {
       itemId: auctionItem.itemId,
       name: mockItem?.name ?? `Mock item ${auctionItem.itemId}`,
+      description: mockItem?.description ?? '',
+      tags: mockItem?.tags ?? [],
+      images: mockItem?.images ?? (thumbnail ? [thumbnail] : []),
       category: mockItem?.category ?? category,
-      startPrice: auctionItem.uniqueTop.minPrice,
       status: 'READY',
-      auctionType: auctionItem.auctionType,
+      auctionType: 'UNIQUE_TOP',
       itemCondition: mockItem?.itemCondition ?? 'BRAND_NEW',
       image1: mockItem?.images[0] ?? thumbnail,
       createdAt: mockItem?.createdAt ?? new Date(Date.now() - index * 60000).toISOString(),
-      ...(mockItem?.description ? { description: mockItem.description } : {}),
-      minPrice: auctionItem.uniqueTop.minPrice,
-      maxPrice: auctionItem.uniqueTop.maxPrice,
-      auctionTime: auctionItem.auctionDuration,
+      auctionDuration: auctionItem.auctionDuration,
+      bottomUp: null,
+      uniqueTop: {
+        minPrice: auctionItem.uniqueTop.minPrice,
+        maxPrice: auctionItem.uniqueTop.maxPrice,
+      },
     };
   });
 
@@ -139,44 +164,159 @@ const getCurrentSellerSnapshot = () => {
 
 export const getRegisteredLiveById = (streamId: number) => registeredLives.find((item) => item.streamId === streamId);
 
-const toStreamDetailItem = (item: StreamEnterItem): StreamDetailItem =>
+const toStreamDetailStatus = (live: RegisteredLive, item: RegisteredLiveItem): StreamDetailItem['status'] =>
+  !live.isLive && item.status === 'READY' ? 'SCHEDULED' : item.status;
+
+const toStreamEnterStatus = (status: RegisteredLiveItem['status']): LiveStreamItemStatus => {
+  switch (status) {
+    case 'INTRODUCING':
+    case 'LIVE':
+    case 'SOLD':
+    case 'UNSOLD':
+      return status;
+    case 'READY':
+    case 'SCHEDULED':
+    case 'PENDING':
+    default:
+      return 'READY';
+  }
+};
+
+const toItemSyncStatus = (status: RegisteredLiveItem['status']): ItemSyncAuctionStatus => {
+  switch (status) {
+    case 'INTRODUCING':
+    case 'LIVE':
+    case 'SOLD':
+    case 'UNSOLD':
+      return status;
+    case 'READY':
+    case 'SCHEDULED':
+    case 'PENDING':
+    default:
+      return 'READY';
+  }
+};
+
+const toStreamDetailItem = (live: RegisteredLive, item: RegisteredLiveItem): StreamDetailItem =>
   item.auctionType === 'UNIQUE_TOP'
     ? {
         itemId: item.itemId,
         name: item.name,
         description: item.description ?? '',
-        tags: getMockItemById(item.itemId)?.tags ?? [],
+        tags: item.tags ?? getMockItemById(item.itemId)?.tags ?? [],
         images: item.images ?? (item.image1 ? [item.image1] : []),
         auctionType: 'UNIQUE_TOP',
-        auctionDuration: item.auctionTime ?? 0,
+        auctionDuration: item.auctionDuration,
         bottomUp: null,
-        uniqueTop: {
-          minPrice: item.minPrice ?? item.startPrice,
-          maxPrice: item.maxPrice ?? item.startPrice,
-        },
+        uniqueTop: item.uniqueTop,
         itemCondition: item.itemCondition,
         category: item.category,
-        status: item.status,
+        status: toStreamDetailStatus(live, item),
         createdAt: item.createdAt,
       }
     : {
         itemId: item.itemId,
         name: item.name,
         description: item.description ?? '',
-        tags: getMockItemById(item.itemId)?.tags ?? [],
+        tags: item.tags ?? getMockItemById(item.itemId)?.tags ?? [],
         images: item.images ?? (item.image1 ? [item.image1] : []),
         auctionType: 'BOTTOM_UP',
-        auctionDuration: item.auctionTime ?? 0,
-        bottomUp: {
-          startPrice: item.startPrice,
-          bidUnit: item.bidUnit ?? 0,
-        },
+        auctionDuration: item.auctionDuration,
+        bottomUp: item.bottomUp,
         uniqueTop: null,
         itemCondition: item.itemCondition,
         category: item.category,
-        status: item.status,
+        status: toStreamDetailStatus(live, item),
         createdAt: item.createdAt,
       };
+
+export const toStreamEnterItem = (item: RegisteredLiveItem): StreamEnterItem =>
+  item.auctionType === 'UNIQUE_TOP'
+    ? {
+        itemId: item.itemId,
+        name: item.name,
+        category: item.category,
+        startPrice: item.uniqueTop.minPrice,
+        minPrice: item.uniqueTop.minPrice,
+        maxPrice: item.uniqueTop.maxPrice,
+        status: toStreamEnterStatus(item.status),
+        auctionType: 'UNIQUE_TOP',
+        itemCondition: item.itemCondition,
+        image1: item.image1,
+        createdAt: item.createdAt,
+        description: item.description ?? '',
+        auctionTime: item.auctionDuration,
+        images: item.images ?? (item.image1 ? [item.image1] : []),
+      }
+    : {
+        itemId: item.itemId,
+        name: item.name,
+        category: item.category,
+        startPrice: item.bottomUp.startPrice,
+        status: toStreamEnterStatus(item.status),
+        auctionType: 'BOTTOM_UP',
+        itemCondition: item.itemCondition,
+        image1: item.image1,
+        createdAt: item.createdAt,
+        description: item.description ?? '',
+        bidUnit: item.bottomUp.bidUnit,
+        auctionTime: item.auctionDuration,
+        images: item.images ?? (item.image1 ? [item.image1] : []),
+      };
+
+const resolveRegisteredLiveItemImages = (item: RegisteredLiveItem, thumbnail: string | null): string[] => {
+  if (item.images && item.images.length > 0) {
+    return item.images;
+  }
+
+  if (item.image1) {
+    return [item.image1];
+  }
+
+  if (thumbnail) {
+    return [thumbnail];
+  }
+
+  return [];
+};
+
+const toItemSyncItem = (item: RegisteredLiveItem, thumbnail: string | null): ItemSyncPayload['items'][number] => {
+  const images = resolveRegisteredLiveItemImages(item, thumbnail);
+
+  if (item.auctionType === 'UNIQUE_TOP') {
+    return {
+      auctionId: item.itemId,
+      itemName: item.name,
+      description: item.description ?? '',
+      images,
+      auctionType: 'UNIQUE_TOP',
+      auctionStatus: toItemSyncStatus(item.status),
+      auctionTime: item.auctionDuration,
+      itemCondition: item.itemCondition,
+      finalPrice: item.status === 'SOLD' ? Math.round(item.uniqueTop.minPrice * 1.5) : null,
+      bidUnit: null,
+      startPrice: null,
+      minPrice: item.uniqueTop.minPrice,
+      maxPrice: item.uniqueTop.maxPrice,
+    };
+  }
+
+  return {
+    auctionId: item.itemId,
+    itemName: item.name,
+    description: item.description ?? '',
+    images,
+    auctionType: 'BOTTOM_UP',
+    auctionStatus: toItemSyncStatus(item.status),
+    auctionTime: item.auctionDuration,
+    itemCondition: item.itemCondition,
+    finalPrice: item.status === 'SOLD' ? Math.round(item.bottomUp.startPrice * 1.5) : null,
+    bidUnit: item.bottomUp.bidUnit,
+    startPrice: item.bottomUp.startPrice,
+    minPrice: null,
+    maxPrice: null,
+  };
+};
 
 export const getInitialItemSyncPayloadForStream = (streamId: number): ItemSyncPayload | null => {
   const live = getRegisteredLiveById(streamId);
@@ -186,39 +326,7 @@ export const getInitialItemSyncPayloadForStream = (streamId: number): ItemSyncPa
   }
 
   return {
-    items: live.items.map((item) =>
-      item.auctionType === 'UNIQUE_TOP'
-        ? {
-            auctionId: item.itemId,
-            itemName: item.name,
-            description: item.description ?? '',
-            images: item.images ?? (item.image1 ? [item.image1] : live.thumbnail ? [live.thumbnail] : []),
-            auctionType: 'UNIQUE_TOP',
-            auctionStatus: item.status,
-            auctionTime: item.auctionTime ?? 0,
-            itemCondition: item.itemCondition,
-            finalPrice: item.status === 'SOLD' ? Math.round((item.minPrice ?? item.startPrice) * 1.5) : null,
-            bidUnit: null,
-            startPrice: null,
-            minPrice: item.minPrice ?? item.startPrice,
-            maxPrice: item.maxPrice ?? item.startPrice,
-          }
-        : {
-            auctionId: item.itemId,
-            itemName: item.name,
-            description: item.description ?? '',
-            images: item.images ?? (item.image1 ? [item.image1] : live.thumbnail ? [live.thumbnail] : []),
-            auctionType: 'BOTTOM_UP',
-            auctionStatus: item.status,
-            auctionTime: item.auctionTime ?? 0,
-            itemCondition: item.itemCondition,
-            finalPrice: item.status === 'SOLD' ? Math.round(item.startPrice * 1.5) : null,
-            bidUnit: item.bidUnit ?? 0,
-            startPrice: item.startPrice,
-            minPrice: null,
-            maxPrice: null,
-          },
-    ),
+    items: live.items.map((item) => toItemSyncItem(item, live.thumbnail)),
   };
 };
 
@@ -255,16 +363,20 @@ const registeredLives: RegisteredLive[] = [
         itemId: 101,
         name: '고려청자 상감운학문 매병',
         category: 'BAGS_FASHION_ACCESSORIES',
-        startPrice: 250000,
         status: 'READY',
         itemCondition: 'BRAND_NEW',
         image1: Logo,
         createdAt: new Date(Date.now() - 0 * 60000).toISOString(),
+        tags: [],
         description:
           '고려시대 12세기 상감청자 매병으로, 운학문(구름과 학) 무늬가 정교하게 시문되어 있습니다. 보존 상태가 매우 우수합니다.',
-        bidUnit: 10000,
         auctionType: 'UNIQUE_TOP',
-        auctionTime: 30,
+        auctionDuration: 30,
+        bottomUp: null,
+        uniqueTop: {
+          minPrice: 250000,
+          maxPrice: 1240000,
+        },
         images: [
           'https://picsum.photos/seed/101a/400/400',
           'https://picsum.photos/seed/101b/400/400',
@@ -275,15 +387,18 @@ const registeredLives: RegisteredLive[] = [
         itemId: 102,
         name: '청자 투각 칠보문 향로',
         category: 'BAGS_FASHION_ACCESSORIES',
-        startPrice: 130000,
         status: 'SOLD',
         itemCondition: 'OPEN_BOX',
         image1: Logo,
         createdAt: new Date(Date.now() - 1 * 60000).toISOString(),
         description:
           '칠보문 투각 기법이 적용된 고려청자 향로입니다. 뚜껑의 투각 세공이 정밀하며, 향 연기가 문양 사이로 퍼지는 구조입니다.',
-        bidUnit: 5000,
-        auctionTime: 30,
+        auctionDuration: 30,
+        bottomUp: null,
+        uniqueTop: {
+          minPrice: 130000,
+          maxPrice: 780000,
+        },
         auctionType: 'UNIQUE_TOP',
         images: [
           'https://picsum.photos/seed/102a/400/400',
@@ -295,14 +410,17 @@ const registeredLives: RegisteredLive[] = [
         itemId: 103,
         name: '백자 달항아리',
         category: 'BAGS_FASHION_ACCESSORIES',
-        startPrice: 180000,
         status: 'SOLD',
         itemCondition: 'REFURBISHED',
         image1: Logo,
         createdAt: new Date(Date.now() - 2 * 60000).toISOString(),
         description: '조선 후기 백자 달항아리로 둥근 형태가 특징입니다. 유약의 자연스러운 흐름이 잘 보존되어 있습니다.',
-        bidUnit: 5000,
-        auctionTime: 60,
+        auctionDuration: 60,
+        bottomUp: null,
+        uniqueTop: {
+          minPrice: 180000,
+          maxPrice: 860000,
+        },
         auctionType: 'UNIQUE_TOP',
         images: [
           'https://picsum.photos/seed/103a/400/400',
@@ -314,15 +432,18 @@ const registeredLives: RegisteredLive[] = [
         itemId: 104,
         name: '분청사기 철화 어문 장군',
         category: 'BAGS_FASHION_ACCESSORIES',
-        startPrice: 95000,
         status: 'SOLD',
         itemCondition: 'USED',
         image1: Logo,
         createdAt: new Date(Date.now() - 3 * 60000).toISOString(),
         description:
           '분청사기에 철화 기법으로 물고기 문양을 그린 장군(대형 항아리)입니다. 소박하면서도 힘찬 붓놀림이 특징입니다.',
-        bidUnit: 3000,
-        auctionTime: 30,
+        auctionDuration: 30,
+        bottomUp: null,
+        uniqueTop: {
+          minPrice: 95000,
+          maxPrice: 520000,
+        },
         auctionType: 'UNIQUE_TOP',
         images: [
           'https://picsum.photos/seed/104a/400/400',
@@ -334,15 +455,18 @@ const registeredLives: RegisteredLive[] = [
         itemId: 105,
         name: '나전칠기 보석함',
         category: 'BAGS_FASHION_ACCESSORIES',
-        startPrice: 320000,
         status: 'SOLD',
         itemCondition: 'BRAND_NEW',
         image1: Logo,
         createdAt: new Date(Date.now() - 4 * 60000).toISOString(),
         description:
           '전통 나전칠기 기법으로 제작된 보석함입니다. 자개 조각이 정밀하게 배치되어 화려한 광택을 자랑합니다.',
-        bidUnit: 10000,
-        auctionTime: 60,
+        auctionDuration: 60,
+        bottomUp: null,
+        uniqueTop: {
+          minPrice: 320000,
+          maxPrice: 1320000,
+        },
         auctionType: 'UNIQUE_TOP',
         images: [
           'https://picsum.photos/seed/105a/400/400',
@@ -354,15 +478,18 @@ const registeredLives: RegisteredLive[] = [
         itemId: 106,
         name: '조선백자 청화 용문 항아리',
         category: 'BAGS_FASHION_ACCESSORIES',
-        startPrice: 200000,
         status: 'SOLD',
         itemCondition: 'OPEN_BOX',
         image1: Logo,
         createdAt: new Date(Date.now() - 5 * 60000).toISOString(),
         description:
           '조선시대 청화백자로 용 문양이 힘차게 그려져 있습니다. 코발트 안료의 발색이 선명하게 남아 있습니다.',
-        bidUnit: 5000,
-        auctionTime: 30,
+        auctionDuration: 30,
+        bottomUp: null,
+        uniqueTop: {
+          minPrice: 200000,
+          maxPrice: 980000,
+        },
         auctionType: 'UNIQUE_TOP',
         images: [
           'https://picsum.photos/seed/106a/400/400',
@@ -374,14 +501,17 @@ const registeredLives: RegisteredLive[] = [
         itemId: 107,
         name: '금동 미륵보살 반가사유상',
         category: 'BAGS_FASHION_ACCESSORIES',
-        startPrice: 500000,
         status: 'UNSOLD',
         itemCondition: 'USED',
         image1: Logo,
         createdAt: new Date(Date.now() - 6 * 60000).toISOString(),
         description: '삼국시대 금동 반가사유상 재현품입니다. 온화한 미소와 섬세한 손가락 표현이 돋보이는 작품입니다.',
-        bidUnit: 20000,
-        auctionTime: 60,
+        auctionDuration: 60,
+        bottomUp: null,
+        uniqueTop: {
+          minPrice: 500000,
+          maxPrice: 2150000,
+        },
         auctionType: 'UNIQUE_TOP',
         images: [
           'https://picsum.photos/seed/107a/400/400',
@@ -448,15 +578,18 @@ const registeredLives: RegisteredLive[] = [
         itemId: 501,
         name: 'Unique test sneakers',
         category: 'SNEAKERS_SHOES',
-        startPrice: 100000,
         status: 'LIVE',
         auctionType: 'UNIQUE_TOP',
         itemCondition: 'BRAND_NEW',
         image1: Logo,
         createdAt: new Date(Date.now() - 900000).toISOString(),
         description: 'Buyer-side unique auction test item.',
-        bidUnit: 5000,
-        auctionTime: 10,
+        auctionDuration: 10,
+        bottomUp: null,
+        uniqueTop: {
+          minPrice: 1000,
+          maxPrice: 10000,
+        },
         images: [
           'https://picsum.photos/seed/unique-test-1/400/400',
           'https://picsum.photos/seed/unique-test-2/400/400',
@@ -482,30 +615,36 @@ const registeredLives: RegisteredLive[] = [
         itemId: 601,
         name: 'Buyer test sneakers',
         category: 'SNEAKERS_SHOES',
-        startPrice: 80000,
         status: 'LIVE',
         auctionType: 'BOTTOM_UP',
         itemCondition: 'BRAND_NEW',
         image1: Logo,
         createdAt: new Date(Date.now() - 300000).toISOString(),
         description: 'Bottom-up auction room for buyer-side timer and bid testing.',
-        bidUnit: 5000,
-        auctionTime: 10,
+        auctionDuration: 10,
+        bottomUp: {
+          startPrice: 80000,
+          bidUnit: 5000,
+        },
+        uniqueTop: null,
         images: ['https://picsum.photos/seed/buyer-test-1/400/400', 'https://picsum.photos/seed/buyer-test-2/400/400'],
       },
       {
         itemId: 602,
         name: 'Buyer test backup lot',
         category: 'SNEAKERS_SHOES',
-        startPrice: 120000,
         status: 'READY',
         auctionType: 'BOTTOM_UP',
         itemCondition: 'OPEN_BOX',
         image1: Logo,
         createdAt: new Date(Date.now() - 240000).toISOString(),
         description: 'Second lot kept ready for manual follow-up testing.',
-        bidUnit: 10000,
-        auctionTime: 15,
+        auctionDuration: 15,
+        bottomUp: {
+          startPrice: 120000,
+          bidUnit: 10000,
+        },
+        uniqueTop: null,
         images: ['https://picsum.photos/seed/buyer-test-3/400/400', 'https://picsum.photos/seed/buyer-test-4/400/400'],
       },
     ],
@@ -593,7 +732,7 @@ export const LiveCreateHandlers = [
         notice: live.notice,
         isLive: live.isLive,
         createdAt: live.createdAt,
-        items: live.items.map(toStreamDetailItem),
+        items: live.items.map((item) => toStreamDetailItem(live, item)),
       } satisfies StreamDetailResponse,
       { status: 200 },
     );
