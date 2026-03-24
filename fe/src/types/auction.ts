@@ -17,6 +17,8 @@ export interface WinModalProps {
   address: ShippingAddressResponse;
   onConfirm: () => Promise<void>;
   onClose?: () => void;
+  layout?: 'modal' | 'panel';
+  disableConfetti?: boolean;
 }
 
 export type ItemStatus = ItemSyncItem['auctionStatus'];

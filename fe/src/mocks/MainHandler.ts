@@ -12,7 +12,7 @@ import type {
   SearchStreamStatus,
 } from '@/types';
 
-import { getRegisteredLiveById, getRegisteredLiveCards } from './LiveCreateHandler';
+import { getRegisteredLiveById, getRegisteredLiveCards, toStreamEnterItem } from './LiveCreateHandler';
 import { getCurrentMockUser, isSellerFollowed } from './mockState';
 
 const SELLERS = [
@@ -243,7 +243,7 @@ export const mainHandlers = [
         notice: registeredLive.notice ?? null,
         isLive: registeredLive.isLive,
         createdAt: registeredLive.createdAt,
-        items: registeredLive.items,
+        items: registeredLive.items.map(toStreamEnterItem),
         seller: {
           sellerId,
           nickname: registeredLive.sellerNickname,
