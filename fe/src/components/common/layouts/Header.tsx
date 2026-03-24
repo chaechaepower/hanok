@@ -100,7 +100,7 @@ export default function Header() {
         <button
           type="button"
           onClick={handleSellerButtonClick}
-          className="flex h-(--nav-btn-height) items-center gap-1.5 whitespace-nowrap rounded-(--nav-btn-radius) bg-primary/15 px-3.5 text-subtitle-sm text-primary-light transition-all hover:bg-primary/25 hover:text-neutral-100"
+          className="flex h-(--nav-btn-height) items-center gap-1.5 whitespace-nowrap rounded-(--nav-btn-radius) bg-surface-elevated px-3.5 text-subtitle-sm text-primary-light transition-all hover:bg-surface hover:text-neutral-100"
         >
           <Home size={14} className="opacity-85" />
           <span>{sellerButtonLabel}</span>
