@@ -391,7 +391,10 @@ export default function LivePage() {
             onSelectAuctionItem={setSelectedAuctionId}
           />
         </div>
-        <div className="relative min-w-0 flex-2 overflow-hidden rounded-2xl bg-background">
+        <div className={`relative min-w-0 flex-2 overflow-hidden rounded-2xl bg-background transition-shadow duration-500 ${
+          liveAuctionItem ? 'shadow-[0_0_24px_rgba(166,61,46,0.4)]' :
+          introducingAuctionItem ? 'shadow-[0_0_24px_rgba(240,230,216,0.25)]' : ''
+        }`}>
           <StreamOverlay viewerCount={viewerCount} isSeller={isSeller} />
           {isSeller && <SellerGuideOverlay />}
           <video
@@ -439,7 +442,7 @@ export default function LivePage() {
           {auctionComment && <AuctionCommentToast key={auctionComment.id} message={auctionComment?.message ?? null} />}
 
           <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
-            {timer && <AuctionTimer key={timer.receivedAtMs} timer={timer} onExpire={handleAuctionTimerExpire} />}
+            {isSeller && timer && <AuctionTimer key={timer.receivedAtMs} timer={timer} onExpire={handleAuctionTimerExpire} />}
           </div>
 
           <SellerStartModal
