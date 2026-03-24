@@ -131,7 +131,6 @@ dependencyManagement {
 tasks.named('test') {
     outputs.dir snippetsDir
     useJUnitPlatform()
-    ignoreFailures = true  // 테스트 실패해도 JaCoCo 리포트 생성
     finalizedBy jacocoTestReport
 }
 
