@@ -35,6 +35,7 @@ export default function MainPage() {
     status: 'LIVE',
     sort: 'LATEST',
     size: 20,
+    enabled: isLoggedIn,
   });
   const {
     data: allLiveData,

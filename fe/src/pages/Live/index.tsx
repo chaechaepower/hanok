@@ -248,7 +248,7 @@ export default function LivePage() {
       disconnect();
       setShowStreamEndModal(false);
       markStreamEnded();
-      navigate('/');
+      navigate('/main');
     } catch (error) {
       console.error('[stream] failed to end stream', error);
     }
@@ -446,14 +446,14 @@ export default function LivePage() {
               initialSeconds={300}
               onTimeout={markStreamEnded}
               onExit={() => {
-                navigate('/');
+                navigate('/main');
               }}
             />
           )}
           {streamState === 'ended' && (
             <StreamEnded
               onClose={() => {
-                navigate('/');
+                navigate('/main');
               }}
             />
           )}

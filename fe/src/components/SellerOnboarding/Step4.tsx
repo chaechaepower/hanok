@@ -51,11 +51,11 @@ export default function Step4({
         accountNum: account?.accountNum ?? '',
         accountName: account?.accountName ?? '',
       });
-      navigate('/');
+      navigate('/main');
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 409) {
         showToast({ message: '이미 판매자로 등록된 사용자입니다.' });
-        navigate('/');
+        navigate('/main');
         return;
       }
       setError('판매자 등록에 실패했습니다. 다시 시도해주세요.');
