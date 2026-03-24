@@ -48,9 +48,11 @@ import io.livekit.server.RoomName;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -181,6 +183,75 @@ public class StreamService {
 
     }
 
+    private void updateAuctionDetail(Auction auction, StreamRegisterRequest.AuctionItemRequest request) {
+        switch (request.auctionType()) {
+            case BOTTOM_UP -> {
+                validateBottomUpRequest(request);
+                auction.getBottomUpAuctionDetail()
+                        .updateSchedule(request.bottomUp().startPrice(), request.bottomUp().bidUnit());
+            }
+            case UNIQUE_TOP -> {
+                validateUniqueTopRequest(request);
+                UniqueBidAuctionDetail detail = auction.getUniqueBidAuctionDetail();
+                detail.updateSchedule(request.uniqueTop().minPrice(), request.uniqueTop().maxPrice());
+                detail.validateSetting();
+            }
+            default -> throw new IllegalArgumentException("지원하지 않는 경매 방식입니다.");
+        }
+    }
+
+    private void syncStreamAuctionItems(
+            Stream stream, Seller seller, List<StreamRegisterRequest.AuctionItemRequest> auctionItems) {
+        Set<Long> seenItemIds = new HashSet<>();
+        for (StreamRegisterRequest.AuctionItemRequest req : auctionItems) {
+            if (!seenItemIds.add(req.itemId())) {
+                throw new GlobalException(StreamErrorCode.STREAM_AUCTION_ITEM_DUPLICATE);
+            }
+        }
+
+        List<Auction> existing = auctionRepository.findByStreamId(stream.getId());
+        Map<Long, Auction> byItemId =
+                existing.stream().collect(Collectors.toMap(a -> a.getItem().getId(), a -> a));
+
+        Set<Long> requestedItemIds =
+                auctionItems.stream().map(StreamRegisterRequest.AuctionItemRequest::itemId).collect(Collectors.toSet());
+
+        for (Auction auction : existing) {
+            if (!requestedItemIds.contains(auction.getItem().getId())) {
+                if (!auction.isReady()) {
+                    throw new GlobalException(StreamErrorCode.STREAM_AUCTION_NOT_MODIFIABLE);
+                }
+                Item item = auction.getItem();
+                auctionRepository.delete(auction);
+                item.ready();
+            }
+        }
+
+        for (StreamRegisterRequest.AuctionItemRequest req : auctionItems) {
+            Item item = itemRepository
+                    .findByIdAndSellerId(req.itemId(), seller.getId())
+                    .orElseThrow(() -> new GlobalException(ItemErrorCode.ITEM_NOT_FOUND));
+
+            Auction existingAuction = byItemId.get(req.itemId());
+            if (existingAuction == null) {
+                item.schedule();
+                createAuctionWithDetail(stream, item, req);
+                continue;
+            }
+            if (!existingAuction.isReady()) {
+                throw new GlobalException(StreamErrorCode.STREAM_AUCTION_NOT_MODIFIABLE);
+            }
+            if (existingAuction.getAuctionType() != req.auctionType()) {
+                auctionRepository.delete(existingAuction);
+                item.schedule();
+                createAuctionWithDetail(stream, item, req);
+            } else {
+                existingAuction.updateScheduleWhenReady(req.auctionType(), req.auctionDuration());
+                updateAuctionDetail(existingAuction, req);
+            }
+        }
+    }
+
     private void validateBottomUpRequest(StreamRegisterRequest.AuctionItemRequest request) {
         if (request.bottomUp() == null) {
             throw new IllegalArgumentException("상향식 경매 상세 정보가 필요합니다.");
@@ -247,6 +318,13 @@ public class StreamService {
                 request.startType(),
                 request.scheduledAt(),
                 request.notice());
+
+        if (request.auctionItems() != null) {
+            if (stream.getStatus() != StreamStatus.SCHEDULED) {
+                throw new GlobalException(StreamErrorCode.STREAM_AUCTION_UPDATE_NOT_ALLOWED);
+            }
+            syncStreamAuctionItems(stream, seller, request.auctionItems());
+        }
 
         if (thumbnail != null && !thumbnail.isEmpty()) {
             if (stream.getThumbnail() != null) {
