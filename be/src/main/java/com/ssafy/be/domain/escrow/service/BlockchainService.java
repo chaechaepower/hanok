@@ -14,6 +14,7 @@ import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.gas.DefaultGasProvider;
 
 import java.math.BigInteger;
@@ -42,10 +43,18 @@ public class BlockchainService {
     public void initContract() {
         Web3j web3j = Web3j.build(new HttpService(rpcUrl));
         this.credentials = Credentials.create(privateKey);
+
+        // EIP-155 체인ID 명시 (Sepolia = 11155111)
+        RawTransactionManager txManager = new RawTransactionManager(
+                web3j,
+                this.credentials,
+                11155111L
+        );
+
         this.contract = HanokReceiptContract.load(
                 contractAddress,
                 web3j,
-                this.credentials,
+                txManager,
                 new DefaultGasProvider()
         );
         log.info("[Blockchain] Contract 초기화 완료 address={}", contractAddress);

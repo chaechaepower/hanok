@@ -18,7 +18,7 @@ import java.util.Collections;
 
 public class HanokReceiptContract extends Contract {
 
-    private static final String BINARY = "0x";  // 배포 시 필요 없음 (이미 배포됨)
+    private static final String BINARY = "0x";
 
     protected HanokReceiptContract(String contractAddress, Web3j web3j,
                                    Credentials credentials, ContractGasProvider gasProvider) {
@@ -35,7 +35,12 @@ public class HanokReceiptContract extends Contract {
         return new HanokReceiptContract(contractAddress, web3j, credentials, gasProvider);
     }
 
-    // mintReceipt(address buyer, uint256 escrowId, uint256 price, string itemName)
+    // TransactionManager 버전 (EIP-155용)
+    public static HanokReceiptContract load(String contractAddress, Web3j web3j,
+                                            TransactionManager transactionManager, ContractGasProvider gasProvider) {
+        return new HanokReceiptContract(contractAddress, web3j, transactionManager, gasProvider);
+    }
+
     public org.web3j.protocol.core.RemoteFunctionCall<TransactionReceipt> mintReceipt(
             String buyer, BigInteger escrowId, BigInteger price, String itemName) {
 
