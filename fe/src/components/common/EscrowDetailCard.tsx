@@ -26,7 +26,7 @@ export default function EscrowDetailCard({
 }: EscrowDetailCardProps) {
   return (
     <div
-      className={`bg-surface-elevated rounded-3xl border border-neutral-800 p-8 ${minHeightClassName} ${className} flex flex-col`}
+      className={`bg-surface-elevated scrollbar-hide rounded-3xl border border-neutral-800 p-8 ${minHeightClassName} ${className} flex flex-col`}
     >
       {onClose && showHeaderCloseButton && (
         <div className="mb-2 flex justify-end">
