@@ -1,17 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getFetchInstance } from '../instance';
-import type { NftReceiptResponse } from '@/types';
-
-type NftApiResponse = {
-  success: boolean;
-  data: NftReceiptResponse;
-};
+import type { ApiResponse, NftReceiptResponse } from '@/types';
 
 export const getNftReceiptPath = (escrowId: string | number) => `/v1/escrows/${escrowId}/nft`;
 
 export const getNftReceipt = async (escrowId: string | number) => {
-  const response = await getFetchInstance().get<NftApiResponse>(getNftReceiptPath(escrowId));
+  const response = await getFetchInstance().get<ApiResponse<NftReceiptResponse>>(getNftReceiptPath(escrowId));
   return response.data;
 };
 

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { useGetNftReceipt } from '@/api/hooks/useGetNftReceipt';
-import { getExplorerUrl, shortenTxHash } from '@/utils/blockchain';
+import { shortenTxHash } from '@/utils/blockchain';
 
 const POLLING_TIMEOUT_MS = 3 * 60 * 1000;
 
@@ -10,6 +11,7 @@ type NftReceiptCardProps = {
 };
 
 export default function NftReceiptCard({ escrowId }: NftReceiptCardProps) {
+  const navigate = useNavigate();
   const [timedOut, setTimedOut] = useState(false);
   const { data: response } = useGetNftReceipt(escrowId);
   const nft = response?.data ?? null;
@@ -48,14 +50,13 @@ export default function NftReceiptCard({ escrowId }: NftReceiptCardProps) {
             TX: {shortenTxHash(liveNft.txHash)}
           </span>
         </div>
-        <a
-          href={getExplorerUrl(liveNft.txHash)}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button"
+          onClick={() => navigate(`/nft-receipt/${escrowId}`)}
           className="rounded-xl bg-green-500/15 px-3 py-1.5 text-xs font-semibold text-green-400 transition hover:bg-green-500/25"
         >
-          블록체인 조회
-        </a>
+          영수증 보기
+        </button>
       </div>
     );
   }
