@@ -39,7 +39,9 @@ export const getMainLiveStreams = async ({
   return response.data;
 };
 
-type UseGetMainParams = Omit<GetMainParams, 'page'>;
+type UseGetMainParams = Omit<GetMainParams, 'page'> & {
+  enabled?: boolean;
+};
 
 export const useGetMain = (params: UseGetMainParams = {}) => {
   const type = params.type ?? 'ALL';
@@ -50,6 +52,7 @@ export const useGetMain = (params: UseGetMainParams = {}) => {
 
   return useInfiniteQuery({
     queryKey: ['liveCards', type, category ?? null, status, sort, size],
+    enabled: params.enabled ?? true,
     initialPageParam: 0,
     queryFn: ({ pageParam }) =>
       getMainLiveStreams({

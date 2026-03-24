@@ -75,7 +75,7 @@ export default function Header() {
       <div className="flex w-[240px] shrink-0 items-center justify-between pl-6">
         <button
           type="button"
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/main')}
           className="flex items-center gap-2.5 transition-opacity hover:opacity-85"
           aria-label="Go to home"
         >

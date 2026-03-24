@@ -31,6 +31,15 @@ export type EscrowDetailResponse = {
   } | null;
 };
 
+export type TxStatus = 'PENDING' | 'COMPLETED' | 'FAILED';
+
+export type NftReceiptResponse = {
+  escrowId: number;
+  txHash: string | null;
+  txStatus: TxStatus | null;
+  mintedAt: string | null;
+};
+
 export type PostTrackingInfoPayload = {
   carrierName: string;
   trackingNumber: string;

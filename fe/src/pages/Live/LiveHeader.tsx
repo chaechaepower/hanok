@@ -61,7 +61,7 @@ export default function LiveHeader({
       <button
         type="button"
         className="flex h-full shrink-0 items-center gap-2 rounded-lg px-3 text-body-md font-bold text-neutral-400 transition hover:bg-warm/5 hover:text-neutral-200"
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/main')}
       >
         <svg
           width="18"

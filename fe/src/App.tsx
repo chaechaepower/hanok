@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom';
+import LandingPage from './pages/Landing';
 import MainPage from './pages/Main';
 import TrakingInputPage from './pages/TrackingInput';
 import ProfilePage from './pages/Profile';
@@ -21,6 +22,9 @@ import AdminOnlyRoute from '@/routes/AdminOnlyRoute';
 function App() {
   return (
     <Routes>
+      {/* 랜딩 페이지 (Header/Footer 없음) */}
+      <Route index element={<LandingPage />} />
+
       {/* 풀스크린 (Header/Footer 없음) */}
       <Route path="live/:id" element={<LivePage />} />
 
@@ -29,8 +33,8 @@ function App() {
         <Route path="admin" element={<AdminPage />} />
       </Route>
 
-      <Route path="/" element={<MainLayout />}>
-        <Route index element={<MainPage />} />
+      <Route element={<MainLayout />}>
+        <Route path="main" element={<MainPage />} />
         <Route path="profile/:id" element={<ProfilePage />} />
         <Route path="seller/register" element={<SellerOnboardingPage />} />
         <Route path="signup" element={<SignUpPage />} />

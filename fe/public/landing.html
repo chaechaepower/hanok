@@ -279,7 +279,7 @@
             },
             (xhr) => {
                 if (xhr.lengthComputable) {
-                    const pct = Math.round(xhr.loaded / xhr.total * 100);
+                    const pct = Math.min(Math.round(xhr.loaded / xhr.total * 100), 100);
                     progressBar.style.strokeDashoffset = CIRCUMFERENCE * (1 - pct / 100);
                     progressPct.textContent = pct + '%';
                 }
@@ -357,7 +357,7 @@
 
                 if (t >= 1) {
                     cameraTween = null;
-                    window.location.href = 'https://j14d105.p.ssafy.io/';
+                    window.top.location.href = '/main';
                 }
             }
 
