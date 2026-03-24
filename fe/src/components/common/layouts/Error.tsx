@@ -89,7 +89,7 @@ export default function ErrorComponent({ error, resetErrorBoundary }: FallbackPr
 
   const handleAction = () => {
     if (retriable) resetErrorBoundary();
-    else navigate('/');
+    else navigate('/main');
   };
 
   return (
