@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -23,6 +24,7 @@ import type { StreamRequest } from '@/types';
 import { sendStreamMessage } from '@/websocket/stompClient';
 
 import LeftPanel from './LeftPanel';
+import LiveFallback from './LiveFallback';
 import LiveHeader from './LiveHeader';
 import RightPanel from './RightPanel';
 import SellerStartModal from './SellerStartModal';
@@ -85,9 +87,16 @@ export default function LivePage() {
   const location = useLocation();
   const { id: streamId } = useParams<{ id: string }>();
   const numericStreamId = Number(streamId);
+  const isValidStreamId = Number.isFinite(numericStreamId) && numericStreamId > 0;
+  const safeStreamId = isValidStreamId ? streamId : undefined;
   const shouldAutoOpenStartModal =
     (location.state as { autoOpenStartModal?: boolean } | null)?.autoOpenStartModal === true;
-  const { data: streamEnter } = useGetStreamEnter(numericStreamId);
+  const {
+    data: streamEnter,
+    error: streamEnterError,
+    isError: isStreamEnterError,
+    isPending: isStreamEnterPending,
+  } = useGetStreamEnter(numericStreamId);
   const [selectedAuctionId, setSelectedAuctionId] = useState<number | null>(null);
   const [showSellerStartModal, setShowSellerStartModal] = useState(false);
   const [showStreamEndModal, setShowStreamEndModal] = useState(false);
@@ -121,7 +130,11 @@ export default function LivePage() {
     markStreamEnded,
     clearWinnerInfo,
     clearUniqueAuctionResult,
-  } = useLiveStream(streamId, activeStreamEnter?.status === 'LIVE');
+  } = useLiveStream(safeStreamId, activeStreamEnter?.status === 'LIVE');
+  const streamEnterErrorStatus =
+    streamEnterError instanceof AxiosError ? (streamEnterError.response?.status ?? null) : null;
+  const isNotFoundLive = !isValidStreamId || (isStreamEnterError && streamEnterErrorStatus === 404);
+  const isStreamEnterUnavailable = isStreamEnterError && streamEnterErrorStatus !== 404;
 
   const readyItems = useMemo(
     () => itemSync?.items.filter((item) => item.auctionStatus === 'READY') ?? [],
@@ -334,6 +347,28 @@ export default function LivePage() {
       console.error('[stream] failed to send unique auction calculating event', error);
     });
   }, [activeAuctionType, activeBidAuctionId, streamId]);
+
+  if (isNotFoundLive) {
+    return (
+      <LiveFallback
+        title="존재하지 않는 라이브입니다"
+        description={`삭제되었거나 잘못된 주소로 접근했습니다.\n메인 화면에서 현재 진행 중인 라이브를 다시 확인해 주세요.`}
+        actionLabel="홈으로"
+        onAction={() => navigate('/main')}
+      />
+    );
+  }
+
+  if (!isStreamEnterPending && isStreamEnterUnavailable) {
+    return (
+      <LiveFallback
+        title="라이브 정보를 불러오지 못했습니다"
+        description={`잠시 후 다시 시도해 주세요\n문제가 계속되면 홈에서 다시 접근하는 편이 안전합니다.`}
+        actionLabel="홈으로"
+        onAction={() => navigate('/main')}
+      />
+    );
+  }
 
   return (
     <div className="flex h-screen w-full flex-col bg-surface p-3">

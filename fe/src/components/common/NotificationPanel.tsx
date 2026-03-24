@@ -10,6 +10,8 @@ interface NotificationPanelProps {
   onClose: () => void;
 }
 
+const ROUTABLE_NOTIFICATION_TYPES = new Set(['STREAM_STARTED', 'STREAM_SCHEDULED']);
+
 function formatRelativeTime(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const minutes = Math.floor(diff / 60000);
@@ -77,9 +79,11 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
     if (!notification.isRead) {
       markAsRead(notification.id);
     }
-    if (notification.actionUrl) {
+
+    if (ROUTABLE_NOTIFICATION_TYPES.has(notification.type) && notification.actionUrl) {
       navigate(notification.actionUrl);
     }
+
     onClose();
   };
 
