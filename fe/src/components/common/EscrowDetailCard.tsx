@@ -24,8 +24,9 @@ export default function EscrowDetailCard({
   minHeightClassName = 'min-h-[600px]',
   showHeaderCloseButton = true,
 }: EscrowDetailCardProps) {
-  const carrierName = detail.delivery?.carrierName?.trim() ?? '';
-  const trackingNumber = detail.delivery?.trackingNumber?.trim() ?? '';
+  const carrierName = typeof detail.delivery?.carrierName === 'string' ? detail.delivery.carrierName.trim() : '';
+  const trackingNumber =
+    typeof detail.delivery?.trackingNumber === 'string' ? detail.delivery.trackingNumber.trim() : '';
   const hasDeliveryInfo = Boolean(carrierName && trackingNumber);
 
   return (
