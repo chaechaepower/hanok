@@ -4,6 +4,7 @@ import { GoTrophy } from 'react-icons/go';
 import { getItemConditionLabel } from '@/constants/itemCondition';
 import type { WinModalProps } from '@/types/auction';
 import { launchConfetti } from '@/utils/confetti';
+import winModalEffectSound from '@/assets/Win_Modal_Effect_sound.mp3';
 
 export default function WinModal({
   isOpen,
@@ -20,9 +21,11 @@ export default function WinModal({
   const itemConditionLabel = getItemConditionLabel(itemCond);
 
   useEffect(() => {
-    if (!isOpen || disableConfetti) {
-      return;
-    }
+    if (!isOpen) return;
+
+    new Audio(winModalEffectSound).play().catch(() => {});
+
+    if (disableConfetti) return;
 
     return launchConfetti(canvasRef.current);
   }, [disableConfetti, isOpen]);
