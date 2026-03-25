@@ -2,11 +2,8 @@ package com.ssafy.be.domain.auction.repository;
 
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
-<<<<<<< be/src/main/java/com/ssafy/be/domain/auction/repository/AuctionRepository.java
 import com.ssafy.be.domain.item.entity.ItemStatus;
-=======
 import jakarta.persistence.LockModeType;
->>>>>>> be/src/main/java/com/ssafy/be/domain/auction/repository/AuctionRepository.java
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
