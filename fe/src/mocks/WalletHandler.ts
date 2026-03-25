@@ -3,8 +3,8 @@ import { http, HttpResponse } from 'msw';
 import { BASE_URL } from '@/api/instance';
 
 const mockWallet = {
-  balance: 1250000,
-  depositedBalance: 250000,
+  balance: 1000000000,
+  depositedBalance: 999999999,
 };
 
 const mockPendingWalletCharges = new Map<string, number>();

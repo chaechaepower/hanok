@@ -23,7 +23,7 @@ export default function ActiveItemCard({ item, isSelected, isSeller, onSelect }:
   const isExpanded = isSeller ? isSelected : expanded;
   const borderClass = isSelected
     ? 'border-gold/55 shadow-primary-glow'
-    : `${CARD_BORDER_CLASS[item.status]} ${item.status === 'LIVE' ? 'shadow-primary-glow' : ''}`;
+    : CARD_BORDER_CLASS[item.status];
 
   const handleCardClick = () => {
     if (isSeller) {

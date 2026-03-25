@@ -13,7 +13,7 @@ import WalletPage from './pages/Wallet';
 import SettingsPage from './pages/Settings';
 import MainLayout from '@/components/common/layouts/MainLayout';
 import SellerOnlyRoute from '@/routes/SellerOnlyRoute';
-import LiveRegisterPage from './components/LiveCreate/LiveRegisterPage';
+import LiveRegisterPage from './pages/LiveRegister';
 import SearchPage from './pages/Search';
 import SellerReportPage from './pages/SellerReport';
 import AdminPage from './pages/Admin';

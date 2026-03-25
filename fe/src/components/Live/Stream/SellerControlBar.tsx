@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { LuMic, LuMicOff, LuVideo, LuVideoOff } from 'react-icons/lu';
-import KeyboardGuide from '@/components/Live/Auction/Seller/KeyboardGuide';
+import KeyboardGuide from '@/components/Live/Auction/shared/KeyboardGuide';
 import SellerActionButtons from '@/components/Live/Stream/SellerActionButtons';
 import type { LiveAuctionType } from '@/types';
 import { useParams } from 'react-router-dom';
@@ -11,6 +11,8 @@ export interface ReadyItem {
   auctionId: number;
   auctionStatus: string;
 }
+
+export type ControlBarVariant = 'overlay' | 'inline';
 
 interface Props {
   introduceAuctionId: number | null;
@@ -25,6 +27,7 @@ interface Props {
   toggleCamera?: () => void;
   isMicOn?: boolean;
   isCameraOn?: boolean;
+  variant?: ControlBarVariant;
 }
 
 export default function SellerControlBar({
@@ -40,6 +43,7 @@ export default function SellerControlBar({
   toggleCamera,
   isMicOn = true,
   isCameraOn = true,
+  variant = 'overlay',
 }: Props) {
   const [guideOpen, setGuideOpen] = useState(false);
   const { id: streamId } = useParams<{ id: string }>();
@@ -121,9 +125,9 @@ export default function SellerControlBar({
   const activeKeys = useKeyboardShortcuts(handleKeyAction);
 
   return (
-    <div className="absolute bottom-3 left-3 right-3 flex items-stretch justify-between">
+    <div className={`${variant === 'overlay' ? 'absolute bottom-3 left-3 right-3' : ''} flex items-stretch justify-between`}>
       {/* 좌하단: 키보드 가이드 */}
-      <KeyboardGuide open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} />
+      <KeyboardGuide variant="seller" open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} placement={variant === 'inline' ? 'top' : 'left'} />
 
       {/* 하단 중앙: 액션 버튼 */}
       <div className="flex flex-1 items-center flex-col gap-2 px-2.5">

@@ -4,13 +4,15 @@ import { LuVolume2, LuVolumeOff } from 'react-icons/lu';
 
 import BidAccessModal from '@/components/Live/Auction/Buyer/BidAccessModal';
 import CustomBidPanel from '@/components/Live/Auction/Buyer/CustomBidPanel';
-import KeyboardGuide from '@/components/Live/Auction/Buyer/KeyboardGuide';
 import QuickBidPanel from '@/components/Live/Auction/Buyer/QuickBidPanel';
 import UniqueBidPanel from '@/components/Live/Auction/Buyer/UniqueBidPanel';
-import AddressFormModal from '@/components/Settings/AddressFormModal';
+import KeyboardGuide from '@/components/Live/Auction/shared/KeyboardGuide';
+import AddressFormModal from '@/components/common/modal/AddressFormModal';
 import type { BidSyncPayload, LiveAuctionType, UniqueBidSyncPayload } from '@/types';
 import { useBidState, CUSTOM_UNIT_OPTIONS } from '@/hooks/useBidState';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+
+export type ControlBarVariant = 'overlay' | 'inline';
 
 interface Props {
   auctionType: LiveAuctionType | null;
@@ -20,6 +22,8 @@ interface Props {
   isRemoteAudioMuted?: boolean;
   onToggleMute?: () => void;
   onToggleChat?: () => void;
+  variant?: ControlBarVariant;
+  showChatToggle?: boolean;
 }
 
 export default function BuyerControlBar({
@@ -30,6 +34,8 @@ export default function BuyerControlBar({
   isRemoteAudioMuted,
   onToggleMute,
   onToggleChat,
+  variant = 'overlay',
+  showChatToggle = true,
 }: Props) {
   const bid = useBidState({ auctionType, bidSync, uniqueBidSync, activeAuctionId });
 
@@ -82,9 +88,9 @@ export default function BuyerControlBar({
 
   return (
     <>
-      <div className="absolute bottom-3 left-3 right-3 flex flex-col gap-2">
+      <div className={`${variant === 'overlay' ? 'absolute bottom-3 left-3 right-3' : ''} flex flex-col gap-2`}>
         <div className="flex items-center justify-between">
-          <KeyboardGuide open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} />
+          <KeyboardGuide variant="buyer" open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} placement={variant === 'inline' ? 'top' : 'left'} />
 
           <div className="mx-4 flex min-h-32.5 flex-1">
             <div
@@ -159,16 +165,19 @@ export default function BuyerControlBar({
             >
               {isRemoteAudioMuted ? <LuVolumeOff size={18} /> : <LuVolume2 size={18} />}
             </button>
-            <button
-              type="button"
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-neutral-400 transition hover:bg-warm/10 hover:text-neutral-200"
-              onClick={onToggleChat}
-            >
-              <IoChatbubbleOutline size={18} />
-            </button>
+            {showChatToggle && (
+              <button
+                type="button"
+                className="flex h-10 w-10 items-center justify-center rounded-xl text-neutral-400 transition hover:bg-warm/10 hover:text-neutral-200"
+                onClick={onToggleChat}
+              >
+                <IoChatbubbleOutline size={18} />
+              </button>
+            )}
           </div>
         </div>
 
+        {variant === 'overlay' && (
         <div className="flex items-center gap-2 px-4">
           <span className="shrink-0 text-warm/50 text-body-sm">투명도</span>
           <div className="relative h-[4px] flex-1">
@@ -191,6 +200,7 @@ export default function BuyerControlBar({
             />
           </div>
         </div>
+        )}
       </div>
 
       <BidAccessModal

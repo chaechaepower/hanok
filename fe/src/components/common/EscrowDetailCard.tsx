@@ -4,6 +4,7 @@ import { FiX } from 'react-icons/fi';
 
 import DeliveryTracker from '@/components/common/DeliveryTracker';
 import type { EscrowDetailResponse } from '@/types';
+import { formatDateTime } from '@/utils/formatDateTime';
 import { formatPrice } from '@/utils/formatPrice';
 
 type EscrowDetailCardProps = {
@@ -15,12 +16,6 @@ type EscrowDetailCardProps = {
   showHeaderCloseButton?: boolean;
 };
 
-const formatDate = (dateStr: string) =>
-  dateStr
-    .replace(/T/, ' ')
-    .replace(/:\d{2}(\.\d+)?Z?$/, '')
-    .replace(/Z$/, '');
-
 export default function EscrowDetailCard({
   detail,
   onClose,
@@ -31,7 +26,7 @@ export default function EscrowDetailCard({
 }: EscrowDetailCardProps) {
   return (
     <div
-      className={`bg-surface-elevated rounded-3xl border border-neutral-800 p-8 ${minHeightClassName} ${className} flex flex-col`}
+      className={`bg-surface-elevated scrollbar-hide rounded-3xl border border-neutral-800 p-8 ${minHeightClassName} ${className} flex flex-col`}
     >
       {onClose && showHeaderCloseButton && (
         <div className="mb-2 flex justify-end">
@@ -61,7 +56,7 @@ export default function EscrowDetailCard({
           <p className="mb-2 break-keep text-xl leading-[1.3] font-bold text-neutral-100">
             {detail.winningInfo.itemName}
           </p>
-          <p className="mb-4 text-[13px] text-neutral-500">{formatDate(detail.winningInfo.wonAt)}</p>
+          <p className="mb-4 text-[13px] text-neutral-500">{formatDateTime(detail.winningInfo.wonAt)}</p>
           <div className="grid grid-cols-[60px_1fr] gap-[8px_12px] text-sm">
             <span className="text-neutral-400">낙찰가</span>
             <span className="text-right font-medium text-neutral-100">

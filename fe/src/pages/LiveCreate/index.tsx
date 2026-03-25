@@ -5,19 +5,13 @@ import { MdLiveTv } from 'react-icons/md';
 import { useDeleteStream } from '@/api/hooks/useDeleteStream';
 import { useGetScheduledStreams } from '@/api/hooks/useGetScheduledStreams';
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
-import ConfirmModal from '@/components/common/ConfirmModal';
+import ConfirmModal from '@/components/common/modal/ConfirmModal';
 import { getCategoryLabel } from '@/constants/category';
 import SideBar from '@/components/common/layouts/SideBar';
-import { sellerSidebarItems } from '@/constants/sidebar';
 import CategorySelectModal from '@/components/LiveCreate/CategorySelectModal';
 import { useToast } from '@/hooks/useToast';
-
-const formatScheduledAt = (isoString: string | null): string => {
-  if (!isoString) return '방송 일정 미정';
-  const d = new Date(isoString);
-  if (Number.isNaN(d.getTime())) return isoString;
-  return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-};
+import { formatScheduledDateTime } from '@/utils/formatDateTime';
+import { sellerSidebarItems } from '@/constants/sidebar';
 
 export default function LiveCreatePage() {
   const navigate = useNavigate();
@@ -109,7 +103,7 @@ export default function LiveCreatePage() {
         </div>
 
         <div className="flex flex-1 flex-col gap-1.5">
-          <p className="text-sm text-neutral-500">{formatScheduledAt(stream.scheduledAt)}</p>
+          <p className="text-sm text-neutral-500">{formatScheduledDateTime(stream.scheduledAt, '')}</p>
           <p className="text-base font-semibold text-neutral-100">{stream.title}</p>
           <p className="text-sm text-neutral-500">{getCategoryLabel(stream.category)}</p>
         </div>

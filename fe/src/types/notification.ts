@@ -1,11 +1,24 @@
+export type NotificationType =
+  | 'STREAM_STARTED'
+  | 'STREAM_SCHEDULED'
+  | 'AUCTION_WON'
+  | 'AUCTION_LOST'
+  | 'ESCROW_REQUESTED'
+  | 'ESCROW_COMPLETED'
+  | 'DELIVERY_REGISTERED'
+  | 'DELIVERY_STARTED'
+  | 'DELIVERY_COMPLETED'
+  | 'NOTICE_CREATE'
+  | string;
+
 export type Notification = {
   id: number;
-  type: string;
+  type: NotificationType;
   title: string;
   body: string;
   isRead: boolean;
   createdAt: string;
-  actionUrl: string;
+  actionUrl: string | null;
 };
 
 export type NotificationPage = {

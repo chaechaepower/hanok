@@ -1,5 +1,7 @@
 import { FiBell, FiCalendar } from 'react-icons/fi';
 
+import EditDeleteActions from '@/components/common/EditDeleteActions';
+import NoItem from '@/components/common/NoItem';
 import type { NoticeItem } from '@/types';
 
 interface NoticeListProps {
@@ -20,6 +22,7 @@ const formatNoticeDate = (iso: string) => {
 
 const splitNoticeContent = (content: string) => {
   const streamMatch = content.match(/\[방송 안내\]\s*([\s\S]+)$/);
+
   return {
     mainContent: streamMatch ? content.slice(0, content.indexOf('[방송 안내]')).trim() : content,
     streamInfo: streamMatch ? streamMatch[1].trim() : null,
@@ -34,7 +37,7 @@ export default function NoticeList({
   onDeleteNotice,
 }: NoticeListProps) {
   if (notices.length === 0) {
-    return <p className="py-16 text-center text-subtitle-lg text-neutral-600">등록된 공지사항이 없습니다</p>;
+    return <NoItem message="등록된 공지사항이 없습니다" textClassName="text-subtitle-lg text-neutral-600" />;
   }
 
   return (
@@ -65,27 +68,21 @@ export default function NoticeList({
                   <span className="text-body-md text-neutral-600">{formatNoticeDate(notice.createdAt)}</span>
                 </div>
               </div>
+
               {isMyProfile && (
-                <div className="flex gap-3">
-                  <button
-                    className="btn-ghost px-2 py-1 text-body-md"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onEditNotice(notice);
-                    }}
-                  >
-                    수정
-                  </button>
-                  <button
-                    className="rounded-md bg-transparent px-2 py-1 text-body-md text-accent-light/70 transition-colors hover:bg-accent/10 hover:text-accent-light"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onDeleteNotice(notice.noticeId);
-                    }}
-                  >
-                    삭제
-                  </button>
-                </div>
+                <EditDeleteActions
+                  onEdit={(event) => {
+                    event.stopPropagation();
+                    onEditNotice(notice);
+                  }}
+                  onDelete={(event) => {
+                    event.stopPropagation();
+                    onDeleteNotice(notice.noticeId);
+                  }}
+                  containerClassName="flex gap-3"
+                  editClassName="btn-ghost px-2 py-1 text-body-md"
+                  deleteClassName="rounded-md bg-transparent px-2 py-1 text-body-md text-accent-light/70 transition-colors hover:bg-accent/10 hover:text-accent-light"
+                />
               )}
             </div>
           </div>

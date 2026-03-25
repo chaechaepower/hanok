@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -8,31 +9,17 @@ import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { useGetStreamEnter } from '@/api/hooks/useGetStreamEnter';
 import { useLiveKit } from '@/hooks/useLiveKit';
 import { useLiveStream } from '@/hooks/useLiveStream';
-import WinModal from '@/components/Live/Auction/Buyer/WinModal';
-import UniqueAuctionResultModal from '@/components/Live/Auction/Buyer/UniqueAuctionResultModal';
-import AuctionTimer from '@/components/Live/Auction/shared/AuctionTimer';
-import AuctionCommentToast from '@/components/Live/Stream/AuctionCommentToast';
-import SellerControlBar from '@/components/Live/Stream/SellerControlBar';
-import BuyerControlBar from '@/components/Live/Stream/BuyerControlBar';
-import StreamDisconnected from '@/components/Live/Stream/Streamdisconnected';
-import StreamEnded from '@/components/Live/Stream/StreamEnded';
-import SellerGuideOverlay from '@/components/Live/Stream/SellerGuideOverlay';
-import StreamOverlay from '@/components/Live/Stream/StreamOverlay';
-import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 import type { StreamRequest } from '@/types';
 import { sendStreamMessage } from '@/websocket/stompClient';
 
-import LeftPanel from './LeftPanel';
-import LiveHeader from './LiveHeader';
-import RightPanel from './RightPanel';
-import SellerStartModal from './SellerStartModal';
-import StreamEndModal from './StreamEndModal';
+import LiveFallback from './LiveFallback';
+import DesktopLayout from './layouts/DesktopLayout';
+import TabletLayout from './layouts/TabletLayout';
+import MobileLayout from './layouts/MobileLayout';
+import type { LiveLayoutProps } from './layouts/types';
 
 const STARTED_STREAM_IDS_STORAGE_KEY = 'startedLiveStreamIds';
-
-const CHAT_PANEL_INITIAL = { flex: 0, opacity: 0 };
-const CHAT_PANEL_ANIMATE = { flex: 1, opacity: 1 };
-const CHAT_PANEL_TRANSITION = { type: 'spring', stiffness: 400, damping: 30 } as const;
 
 const getStartedLiveStreamIds = () => {
   if (typeof window === 'undefined') {
@@ -85,9 +72,16 @@ export default function LivePage() {
   const location = useLocation();
   const { id: streamId } = useParams<{ id: string }>();
   const numericStreamId = Number(streamId);
+  const isValidStreamId = Number.isFinite(numericStreamId) && numericStreamId > 0;
+  const safeStreamId = isValidStreamId ? streamId : undefined;
   const shouldAutoOpenStartModal =
     (location.state as { autoOpenStartModal?: boolean } | null)?.autoOpenStartModal === true;
-  const { data: streamEnter } = useGetStreamEnter(numericStreamId);
+  const {
+    data: streamEnter,
+    error: streamEnterError,
+    isError: isStreamEnterError,
+    isPending: isStreamEnterPending,
+  } = useGetStreamEnter(numericStreamId);
   const [selectedAuctionId, setSelectedAuctionId] = useState<number | null>(null);
   const [showSellerStartModal, setShowSellerStartModal] = useState(false);
   const [showStreamEndModal, setShowStreamEndModal] = useState(false);
@@ -121,7 +115,11 @@ export default function LivePage() {
     markStreamEnded,
     clearWinnerInfo,
     clearUniqueAuctionResult,
-  } = useLiveStream(streamId, activeStreamEnter?.status === 'LIVE');
+  } = useLiveStream(safeStreamId, activeStreamEnter?.status === 'LIVE');
+  const streamEnterErrorStatus =
+    streamEnterError instanceof AxiosError ? (streamEnterError.response?.status ?? null) : null;
+  const isNotFoundLive = !isValidStreamId || (isStreamEnterError && streamEnterErrorStatus === 404);
+  const isStreamEnterUnavailable = isStreamEnterError && streamEnterErrorStatus !== 404;
 
   const readyItems = useMemo(
     () => itemSync?.items.filter((item) => item.auctionStatus === 'READY') ?? [],
@@ -335,153 +333,113 @@ export default function LivePage() {
     });
   }, [activeAuctionType, activeBidAuctionId, streamId]);
 
-  return (
-    <div className="flex h-screen w-full flex-col bg-surface p-3">
-      <LiveHeader
-        streamTitle={streamTitle}
-        isLive={isStreamLive}
-        startedAt={liveStartedAt ?? activeStreamEnter?.createdAt ?? null}
-        showEndButton={isSeller && isStreamLive}
-        isEndDisabled={isAuctionInProgress}
-        isEnding={postEndStream.isPending}
-        onEndStream={handleOpenStreamEndModal}
+  const breakpoint = useBreakpoint();
+
+  if (isNotFoundLive) {
+    return (
+      <LiveFallback
+        title="존재하지 않는 라이브입니다"
+        description={`삭제되었거나 잘못된 주소로 접근했습니다.\n메인 화면에서 현재 진행 중인 라이브를 다시 확인해 주세요.`}
+        actionLabel="홈으로"
+        onAction={() => navigate('/main')}
       />
+    );
+  }
 
-      <div className="flex min-h-0 flex-1 gap-3">
-        <div className="min-w-0 flex-1 overflow-hidden rounded-2xl">
-          <LeftPanel
-            isSeller={isSeller}
-            syncedItems={itemSync?.items ?? null}
-            selectedAuctionId={visibleSelectedAuctionId}
-            onSelectAuctionItem={setSelectedAuctionId}
-          />
-        </div>
-        <div className="relative min-w-0 flex-2 overflow-hidden rounded-2xl bg-background">
-          <StreamOverlay viewerCount={viewerCount} isSeller={isSeller} />
-          {isSeller && <SellerGuideOverlay />}
-          <video
-            ref={bgVideoRef}
-            autoPlay
-            playsInline
-            muted
-            className={`absolute inset-0 h-full w-full object-cover -scale-x-100 blur-2xl brightness-50 saturate-120 ${livekitState === 'connected' ? '' : 'hidden'}`}
-          />
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className={`relative h-full w-full object-contain -scale-x-100 ${livekitState === 'connected' ? '' : 'hidden'}`}
-          />
-          {livekitState !== 'connected' && <StreamPlaceholder />}
-          {isSeller ? (
-            <SellerControlBar
-              introduceAuctionId={introduceAuctionId}
-              startAuctionId={startAuctionId}
-              startAuctionType={startAuctionType}
-              canIntroduce={canIntroduceAuction}
-              canStart={canStartAuction}
-              readyItems={readyItems}
-              selectedAuctionId={selectedAuctionId}
-              onSelectAuctionItem={setSelectedAuctionId}
-              toggleMic={toggleMic}
-              toggleCamera={toggleCamera}
-              isMicOn={isMicOn}
-              isCameraOn={isCameraOn}
-            />
-          ) : (
-            <BuyerControlBar
-              auctionType={activeAuctionType}
-              bidSync={bidSync}
-              uniqueBidSync={uniqueBidSync}
-              activeAuctionId={activeBidAuctionId}
-              isRemoteAudioMuted={isRemoteAudioMuted}
-              onToggleMute={toggleRemoteAudio}
-              onToggleChat={handleToggleChat}
-            />
-          )}
+  if (!isStreamEnterPending && isStreamEnterUnavailable) {
+    return (
+      <LiveFallback
+        title="라이브 정보를 불러오지 못했습니다"
+        description={`잠시 후 다시 시도해 주세요\n문제가 계속되면 홈에서 다시 접근하는 편이 안전합니다.`}
+        actionLabel="홈으로"
+        onAction={() => navigate('/main')}
+      />
+    );
+  }
 
-          {auctionComment && <AuctionCommentToast key={auctionComment.id} message={auctionComment?.message ?? null} />}
+  const layoutProps: LiveLayoutProps = {
+    stream: {
+      streamTitle,
+      isSeller,
+      isStreamLive,
+      streamState,
+      liveStartedAt,
+      activeStreamEnter,
+    },
+    auction: {
+      selectedAuctionId,
+      visibleSelectedAuctionId,
+      setSelectedAuctionId,
+      liveAuctionItem,
+      introducingAuctionItem,
+      activeBidAuctionId,
+      activeAuctionType,
+      isAuctionInProgress,
+      hasPendingAuctionItems,
+      itemSync,
+      bidSync,
+      uniqueBidSync,
+      auctionStatistics,
+      auctionComment,
+      timer,
+      readyItems,
+      introduceAuctionId,
+      startAuctionId,
+      startAuctionType,
+      canIntroduceAuction,
+      canStartAuction,
+      handleAuctionTimerExpire,
+    },
+    livekit: {
+      livekitState,
+      videoRef,
+      bgVideoRef,
+      viewerCount,
+      toggleMic,
+      toggleCamera,
+      toggleRemoteAudio,
+      isMicOn,
+      isCameraOn,
+      isRemoteAudioMuted,
+    },
+    chat: {
+      isChatOpen,
+      handleToggleChat,
+    },
+    modal: {
+      showSellerStartModal,
+      hasStartedThisStream,
+      postStartStreamIsPending: postStartStream.isPending,
+      handleSellerStartModalConfirm: () => void handleSellerStartModalConfirm(),
+      showStreamEndModal,
+      postEndStreamIsPending: postEndStream.isPending,
+      setShowStreamEndModal,
+      handleStreamEndConfirm: () => void handleStreamEndConfirm(),
+      handleOpenStreamEndModal,
+      winnerInfo,
+      uniqueAuctionResult,
+      handleWinConfirm: () => handleWinConfirm(),
+      clearWinnerInfo,
+      handleUniqueAuctionResultClose,
+      markStreamEnded,
+    },
+    navigate,
+  };
 
-          <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
-            {timer && <AuctionTimer key={timer.receivedAtMs} timer={timer} onExpire={handleAuctionTimerExpire} />}
-          </div>
+  const Layout = breakpoint === 'mobile' ? MobileLayout : breakpoint === 'tablet' ? TabletLayout : DesktopLayout;
 
-          <SellerStartModal
-            open={showSellerStartModal && isSeller && !isStreamLive && !hasStartedThisStream}
-            streamTitle={streamTitle}
-            isPending={postStartStream.isPending}
-            onConfirm={() => {
-              void handleSellerStartModalConfirm();
-            }}
-          />
-          <StreamEndModal
-            open={showStreamEndModal}
-            isPending={postEndStream.isPending}
-            hasRemainingItems={hasPendingAuctionItems}
-            onClose={() => setShowStreamEndModal(false)}
-            onConfirm={() => {
-              void handleStreamEndConfirm();
-            }}
-          />
-          {!uniqueAuctionResult && winnerInfo && (
-            <WinModal
-              isOpen
-              itemName={winnerInfo.payload.item.itemName}
-              itemCond={winnerInfo.itemCond || 'Auction item'}
-              finalPrice={winnerInfo.payload.item.finalPrice}
-              address={winnerInfo.payload.shipping}
-              onConfirm={handleWinConfirm}
-              onClose={clearWinnerInfo}
-            />
-          )}
-          {uniqueAuctionResult && (
-            <UniqueAuctionResultModal
-              isOpen
-              itemName={uniqueAuctionResult.itemName}
-              payload={uniqueAuctionResult.payload}
-              winnerInfo={uniqueAuctionResult.winnerInfo}
-              onClose={handleUniqueAuctionResultClose}
-            />
-          )}
-          {streamState === 'disconnected' && (
-            <StreamDisconnected
-              initialSeconds={300}
-              onTimeout={markStreamEnded}
-              onExit={() => {
-                navigate('/main');
-              }}
-            />
-          )}
-          {streamState === 'ended' && (
-            <StreamEnded
-              onClose={() => {
-                navigate('/main');
-              }}
-            />
-          )}
-        </div>
-        <AnimatePresence initial={false}>
-          {isChatOpen && (
-            <motion.div
-              key="right-panel"
-              className="min-w-0 overflow-hidden rounded-2xl"
-              initial={CHAT_PANEL_INITIAL}
-              animate={CHAT_PANEL_ANIMATE}
-              exit={CHAT_PANEL_INITIAL}
-              transition={CHAT_PANEL_TRANSITION}
-            >
-              <RightPanel
-                isSeller={isSeller}
-                auctionType={activeAuctionType}
-                auctionStatistics={auctionStatistics}
-                uniqueBidSync={uniqueBidSync}
-                streamEnter={activeStreamEnter}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={breakpoint}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="h-screen w-full"
+      >
+        <Layout {...layoutProps} />
+      </motion.div>
+    </AnimatePresence>
   );
 }

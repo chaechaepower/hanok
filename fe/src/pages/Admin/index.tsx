@@ -7,13 +7,9 @@ import { BANKS } from '@/constants/sellerRegister';
 import { useToast } from '@/hooks/useToast';
 import Logo from '@/assets/Logo.png';
 import type { WithdrawStatus, WithdrawItem } from '@/types';
+import { formatDateTime } from '@/utils/formatDateTime';
 
 const formatPrice = (price: number) => price.toLocaleString('ko-KR') + '원';
-
-const formatDate = (iso: string) => {
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-};
 
 const getBankName = (bankCode: string) => BANKS.find((bank) => bank.code === bankCode)?.name ?? bankCode;
 
@@ -144,7 +140,7 @@ export default function AdminPage() {
                   <span className={`text-xs font-semibold px-2.5 py-1 rounded-full w-fit ${STATUS_STYLE[item.status]}`}>
                     {STATUS_LABEL[item.status]}
                   </span>
-                  <span className="text-neutral-500 text-xs">{formatDate(item.requestedAt)}</span>
+                  <span className="text-neutral-500 text-xs">{formatDateTime(item.requestedAt)}</span>
                   <div>
                     {item.status === 'PENDING' ? (
                       <button
@@ -155,7 +151,7 @@ export default function AdminPage() {
                         승인
                       </button>
                     ) : item.processedAt ? (
-                      <span className="text-neutral-600 text-xs">{formatDate(item.processedAt)}</span>
+                      <span className="text-neutral-600 text-xs">{formatDateTime(item.processedAt)}</span>
                     ) : null}
                   </div>
                 </div>

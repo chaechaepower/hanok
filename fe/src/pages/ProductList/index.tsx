@@ -3,12 +3,12 @@ import { FaPlus } from 'react-icons/fa';
 import type { Product } from '@/types';
 import ProductCard from '@/components/ProductList/ProductCard';
 import ProductRegistrationModal from '@/components/ProductList/ProductRegistrationModal';
-import ConfirmModal from '@/components/common/ConfirmModal';
+import ConfirmModal from '@/components/common/modal/ConfirmModal';
 import { useDeleteItem } from '@/api/hooks/useDeleteItem';
 import { useGetItems } from '@/api/hooks/useGetItems';
 import SideBar from '@/components/common/layouts/SideBar';
-import { sellerSidebarItems } from '@/constants/sidebar';
 import { useToast } from '@/hooks/useToast';
+import { sellerSidebarItems } from '@/constants/sidebar';
 
 export default function ProductListPage() {
   const [activeMenu, setActiveMenu] = useState('inventory');

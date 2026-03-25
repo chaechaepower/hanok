@@ -21,9 +21,11 @@ export const postCancelEscrow = async ({
 export const usePostCancelEscrow = () => {
   return useMutation({
     mutationFn: (params: { escrowId: string | number; cancelReason: string }) => postCancelEscrow(params),
+    throwOnError: false,
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['escrowsSeller'] });
       queryClient.invalidateQueries({ queryKey: ['escrowDetail', variables.escrowId] });
+      queryClient.invalidateQueries({ queryKey: ['sellerProfile'] });
     },
   });
 };

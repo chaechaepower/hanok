@@ -24,7 +24,7 @@ const variantClass: Record<NonNullable<Props['variant']>, string> = {
   black: `${defaultShape} bg-background text-neutral-100 hover:bg-neutral-900`,
   yellow: `${defaultShape} bg-gold text-background hover:bg-gold-dark`,
   warm: `${defaultShape} bg-warm text-background hover:bg-warm/85`,
-  warmOutline: `${defaultShape} bg-transparent text-warm shadow-[0_0_0_1px_var(--color-warm)_inset] hover:bg-warm/6`,
+  warmOutline: `${defaultShape} bg-warm/10 text-warm shadow-[0_0_0_1px_var(--color-warm)_inset] hover:bg-warm/20`,
   red: `${defaultShape} bg-accent text-white hover:bg-accent-dark`,
   navLogin: `${navShape} text-subtitle-sm bg-primary text-white hover:bg-primary-light`,
   navSignup: `${navShape} text-subtitle-sm bg-transparent text-neutral-300 border border-warm/12 hover:border-warm/25 hover:text-neutral-100`,

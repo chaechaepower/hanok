@@ -54,7 +54,7 @@ export default function SearchBar({
         autoFocus={autoFocus}
         disabled={disabled}
         maxLength={maxLength}
-        className="peer h-full w-full rounded-(--nav-btn-radius) border border-transparent bg-primary/15 pl-4 pr-11 text-body-md text-neutral-100 placeholder:text-neutral-600 outline-none transition-all duration-250 focus:border-primary/40 focus:bg-primary/25 focus:shadow-primary-glow disabled:cursor-not-allowed disabled:opacity-60"
+        className="peer h-full w-full rounded-(--nav-btn-radius) border border-transparent bg-surface-elevated pl-4 pr-11 text-body-md text-neutral-100 placeholder:text-neutral-600 outline-none transition-all duration-250 focus:border-primary/40 focus:bg-surface focus:shadow-primary-glow disabled:cursor-not-allowed disabled:opacity-60"
       />
       <button
         type="submit"
