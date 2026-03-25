@@ -11,6 +11,7 @@ interface Props {
   isEndDisabled?: boolean;
   isEnding?: boolean;
   onEndStream?: () => void;
+  compact?: boolean;
 }
 
 function formatElapsed(seconds: number): string {
@@ -52,12 +53,13 @@ export default function LiveHeader({
   isEndDisabled = false,
   isEnding = false,
   onEndStream,
+  compact = false,
 }: Props) {
   const navigate = useNavigate();
   const elapsed = useElapsedTimer(isLive, startedAt);
 
   return (
-    <div className="mb-2 flex h-11 shrink-0 items-center">
+    <div className={`mb-2 flex shrink-0 items-center ${compact ? 'h-9' : 'h-11'}`}>
       <button
         type="button"
         className="flex h-full shrink-0 items-center gap-2 rounded-lg px-3 text-body-md font-bold text-neutral-400 transition hover:bg-warm/5 hover:text-neutral-200"
@@ -79,21 +81,21 @@ export default function LiveHeader({
       </button>
 
       <div className="min-w-0 flex-1 text-center">
-        <p className="truncate text-lg font-bold text-neutral-100">{streamTitle}</p>
+        <p className={`truncate font-bold text-neutral-100 ${compact ? 'text-sm' : 'text-lg'}`}>{streamTitle}</p>
       </div>
 
       <div className="flex h-full shrink-0 items-center gap-4 px-2">
         {isLive ? (
-          <span className="font-mono-num text-base tabular-nums text-neutral-400">{formatElapsed(elapsed)}</span>
+          <span className={`font-mono-num tabular-nums text-neutral-400 ${compact ? 'text-xs' : 'text-base'}`}>{formatElapsed(elapsed)}</span>
         ) : (
-          <span className="text-base text-neutral-600">방송 대기중</span>
+          <span className={`text-neutral-600 ${compact ? 'text-xs' : 'text-base'}`}>방송 대기중</span>
         )}
         {showEndButton && (
           <button
             type="button"
             onClick={onEndStream}
             disabled={isEndDisabled || isEnding}
-            className="flex h-full items-center gap-1.5 rounded-lg border border-accent/35 bg-accent/12 px-3 text-sm font-bold text-accent-light transition hover:bg-accent/18 disabled:cursor-not-allowed disabled:border-neutral-800 disabled:bg-neutral-900 disabled:text-neutral-600"
+            className={`flex h-full items-center gap-1.5 rounded-lg border border-accent/35 bg-accent/12 font-bold text-accent-light transition hover:bg-accent/18 disabled:cursor-not-allowed disabled:border-neutral-800 disabled:bg-neutral-900 disabled:text-neutral-600 ${compact ? 'px-2 text-xs' : 'px-3 text-sm'}`}
           >
             <MdOutlinePowerSettingsNew size={16} />
             {isEnding ? '종료 중...' : '방송 종료'}

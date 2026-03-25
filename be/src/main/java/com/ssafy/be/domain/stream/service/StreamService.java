@@ -385,7 +385,7 @@ public class StreamService {
                 stream.getScheduledAt(),
                 stream.getStartType(),
                 stream.getNotice(),
-                stream.getStatus() == StreamStatus.LIVE,
+                stream.getStatus() == StreamStatus.LIVE || stream.getStatus() == StreamStatus.PAUSED,
                 stream.getCreatedAt(),
                 items);
     }
@@ -453,7 +453,7 @@ public class StreamService {
         if (request.sort() == StreamSortType.VIEWER_COUNT) {
             List<Stream> allStreams =
                     switch (request.status()) {
-                        case LIVE -> streamRepository.findAllLiveStreams(category);
+                        case LIVE -> streamRepository.findAllActiveStreams(category);
                         case SCHEDULED -> streamRepository.findAllScheduledStreams(category);
                         case ENDED -> List.of();
                         case PAUSED -> List.of();
@@ -506,7 +506,7 @@ public class StreamService {
 
             List<Stream> allStreams =
                     switch (request.status()) {
-                        case LIVE -> streamRepository.findAllLiveStreams(category);
+                        case LIVE -> streamRepository.findAllActiveStreams(category);
                         case SCHEDULED -> streamRepository.findAllScheduledStreams(category);
                         case ENDED -> List.of();
                         case PAUSED -> List.of();
@@ -548,7 +548,7 @@ public class StreamService {
                     PageRequest.of(request.page(), request.size(), Sort.by("createdAt").descending());
             Page<Stream> streams =
                     switch (request.status()) {
-                        case LIVE -> streamRepository.findLiveStreams(category, pageable);
+                        case LIVE -> streamRepository.findActiveStreams(category, pageable);
                         case SCHEDULED -> streamRepository.findScheduledStreams(category, pageable);
                         case ENDED -> Page.empty(pageable);
                         case PAUSED -> Page.empty(pageable);
@@ -577,7 +577,7 @@ public class StreamService {
     public ScheduledStreamListResponse getScheduledStreamList(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Slice<Stream> slice = streamRepository.findByStatusInAndSellerUserId(
-                List.of(StreamStatus.LIVE, StreamStatus.SCHEDULED),
+                List.of(StreamStatus.LIVE, StreamStatus.SCHEDULED, StreamStatus.PAUSED),
                 userId,
                 pageable
         );

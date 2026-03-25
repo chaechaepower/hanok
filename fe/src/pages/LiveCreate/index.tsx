@@ -18,9 +18,13 @@ export default function LiveCreatePage() {
   const [activeMenu, setActiveMenu] = useState('live');
   const { data, isLoading } = useGetScheduledStreams();
   const streams = [...(data?.streams ?? [])].sort((a, b) => {
-    if (a.state === 'LIVE' && b.state !== 'LIVE') return -1;
-    if (a.state !== 'LIVE' && b.state === 'LIVE') return 1;
-    return 0;
+    const getPriority = (state: typeof a.state) => {
+      if (state === 'LIVE') return 0;
+      if (state === 'PAUSED') return 1;
+      return 2;
+    };
+
+    return getPriority(a.state) - getPriority(b.state);
   });
   const deleteMutation = useDeleteStream();
   const startStreamMutation = usePostStartStream();
@@ -95,6 +99,11 @@ export default function LiveCreatePage() {
               LIVE
             </span>
           )}
+          {stream.state === 'PAUSED' && (
+            <span className="absolute left-2 top-2 rounded-md bg-ember/20 px-2 py-0.5 text-xs font-bold text-ember-light">
+              일시정지
+            </span>
+          )}
           {stream.state === 'SCHEDULED' && (
             <span className="absolute left-2 top-2 rounded-md bg-gold/20 px-2 py-0.5 text-xs font-bold text-gold-light">
               예약
@@ -109,11 +118,15 @@ export default function LiveCreatePage() {
         </div>
 
         <div className="flex shrink-0 items-center gap-4 pr-2">
-          {stream.state === 'LIVE' ? (
+          {stream.state === 'LIVE' || stream.state === 'PAUSED' ? (
             <button
               type="button"
               onClick={() => navigate(`/live/${stream.streamId}`)}
-              className="flex items-center gap-1.5 rounded-lg border border-accent/35 bg-accent/12 px-3 py-1.5 text-xs font-bold text-accent-light transition-colors hover:bg-accent/25"
+              className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+                stream.state === 'LIVE'
+                  ? 'border border-accent/35 bg-accent/12 text-accent-light hover:bg-accent/25'
+                  : 'border border-ember/35 bg-ember/12 text-ember-light hover:bg-ember/22'
+              }`}
             >
               <MdLiveTv size={14} />
               입장

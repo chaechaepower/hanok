@@ -4,7 +4,7 @@ import { getFetchInstance } from '../instance';
 import type { LiveCardData, PageResponse } from '@/types';
 
 export type MainStreamType = 'ALL' | 'FOLLOWING';
-export type MainStreamStatus = 'LIVE' | 'SCHEDULED';
+export type MainStreamStatus = 'LIVE' | 'PAUSED' | 'SCHEDULED';
 export type MainStreamSort = 'LATEST' | 'VIEWER_COUNT';
 
 type GetMainParams = {

@@ -7,7 +7,7 @@ const mockBuyerEscrows = [
     escrowId: 100,
     image: 'https://picsum.photos/seed/camera/140/140',
     itemName: 'Vintage Camera',
-    amount: 250000,
+    amount: 250000000,
     escrowStatus: 'DEPOSITED',
     createdAt: '2026-03-15T08:15:30Z',
   },
@@ -15,7 +15,7 @@ const mockBuyerEscrows = [
     escrowId: 101,
     image: 'https://picsum.photos/seed/shoes/140/140',
     itemName: 'Vintage Sneakers',
-    amount: 75000,
+    amount: 750000000,
     escrowStatus: 'SHIPPED',
     createdAt: '2026-03-01T23:00:00Z',
   },
@@ -27,6 +27,14 @@ const mockBuyerEscrows = [
     escrowStatus: 'COMPLETED',
     createdAt: '2026-02-20T19:30:00Z',
   },
+  ...Array.from({ length: 97 }, (_, i) => ({
+    escrowId: 103 + i,
+    image: `https://picsum.photos/seed/item${i}/140/140`,
+    itemName: `Test Item ${i + 1}`,
+    amount: 100000000,
+    escrowStatus: 'COMPLETED',
+    createdAt: '2026-02-15T10:00:00Z',
+  })),
 ];
 
 const mockSellerEscrows = [

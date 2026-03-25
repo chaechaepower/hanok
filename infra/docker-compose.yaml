@@ -105,7 +105,7 @@ services:
     container_name: hanok-redis-exporter
     restart: unless-stopped
     environment:
-      REDIS_ADDR: redis://redis:6379
+      REDIS_ADDR: redis://hanok-redis:6379
     networks:
       - hanok-network
     depends_on:

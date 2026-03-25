@@ -24,6 +24,10 @@ export default function EscrowDetailCard({
   minHeightClassName = 'min-h-[600px]',
   showHeaderCloseButton = true,
 }: EscrowDetailCardProps) {
+  const carrierName = detail.delivery?.carrierName?.trim() ?? '';
+  const trackingNumber = detail.delivery?.trackingNumber?.trim() ?? '';
+  const hasDeliveryInfo = Boolean(carrierName && trackingNumber);
+
   return (
     <div
       className={`bg-surface-elevated scrollbar-hide rounded-3xl border border-neutral-800 p-8 ${minHeightClassName} ${className} flex flex-col`}
@@ -90,10 +94,10 @@ export default function EscrowDetailCard({
           <div className="mb-4 flex items-center justify-between rounded-xl border border-neutral-800 bg-surface p-[16px_24px] text-sm text-neutral-200">
             <span className="text-neutral-400">배송 정보</span>
             <span className="font-semibold text-neutral-100">
-              {detail.delivery.carrierName} | {detail.delivery.trackingNumber}
+              {hasDeliveryInfo ? `${carrierName} | ${trackingNumber}` : '배송 정보가 등록되지 않았습니다'}
             </span>
           </div>
-          <DeliveryTracker carrierName={detail.delivery.carrierName} trackingNumber={detail.delivery.trackingNumber} />
+          {hasDeliveryInfo ? <DeliveryTracker carrierName={carrierName} trackingNumber={trackingNumber} /> : null}
         </>
       )}
 

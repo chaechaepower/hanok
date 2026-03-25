@@ -9,10 +9,10 @@ import NoItem from '@/components/common/NoItem';
 import { useToast } from '@/hooks/useToast';
 import type { EscrowStatusFilter } from '@/utils/getEscrowStateUI';
 
-import OrderHistoryListItem from './orderHistory/OrderHistoryListItem';
-import OrderHistorySummary from './orderHistory/OrderHistorySummary';
-import OrderHistoryToolbar from './orderHistory/OrderHistoryToolbar';
-import { getFilteredAndSortedEscrows, getOrderHistorySummary, type SortOption } from '../../utils/orderHistory';
+import OrderHistoryListItem from './OrderHistoryListItem';
+import OrderHistorySummary from './OrderHistorySummary';
+import OrderHistoryToolbar from './OrderHistoryToolbar';
+import { getFilteredAndSortedEscrows, getOrderHistorySummary, type SortOption } from '../../../utils/orderHistory';
 
 export default function OrderHistorySection() {
   const { data: escrowsResponse } = useGetEscrowsBuyer();

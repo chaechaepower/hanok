@@ -74,24 +74,21 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
             </div>
           </button>
 
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <div className="flex min-w-0 flex-1 items-center justify-between gap-2">
             <button
               type="button"
               onClick={() => sellerId > 0 && !isSeller && navigate(`/profile/${sellerId}`)}
               disabled={sellerId <= 0 || isSeller}
-              className="w-fit text-left disabled:cursor-default"
+              className="min-w-0 text-left disabled:cursor-default"
             >
-              <span className="flex items-center gap-1.5">
-                <span className="truncate text-base font-bold text-neutral-100 transition hover:text-gold-light">{sellerNickname}</span>
-                <span className="shrink-0 rounded bg-gold/15 px-1.5 py-0.5 text-label font-bold text-gold">판매자</span>
-              </span>
+              <span className="block truncate text-base font-bold text-neutral-100 transition hover:text-gold-light">{sellerNickname}</span>
             </button>
             {sellerId > 0 && !isSeller && (
               <button
                 type="button"
                 onClick={handleFollowToggle}
                 disabled={isFollowPending}
-                className={`mt-1 w-fit rounded-full px-3 py-1 text-label font-bold transition ${
+                className={`shrink-0 rounded-full px-3 py-1 text-label font-bold transition ${
                   isFollowing
                     ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-200'
                     : 'bg-gold/15 text-gold hover:bg-gold/25'

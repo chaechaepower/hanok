@@ -45,7 +45,7 @@ management:
         include: health, info, prometheus
   endpoint:
     prometheus:
-      enabled: true
+      access: unrestricted
   prometheus:
     metrics:
       export:

@@ -5,22 +5,27 @@ import com.ssafy.be.domain.notification.dto.response.NotificationResponse;
 import com.ssafy.be.domain.notification.exception.NotificationErrorCode;
 import com.ssafy.be.domain.notification.model.Notification;
 import com.ssafy.be.domain.notification.repository.NotificationRepository;
+import com.ssafy.be.domain.user.entity.User;
+import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
 import com.ssafy.be.global.sse.enums.SseEventType;
 import com.ssafy.be.global.sse.service.SseEmitterService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final SseEmitterService sseEmitterService;
+    private final UserRepository userRepository;
 
     // 알림 목록 페이징
     public NotificationPageResponse getNotifications(Long userId, String cursor, int limit) {
@@ -78,6 +83,14 @@ public class NotificationService {
 
     // 알림 발송
     public void sendNotification(Long userId, String type, String title, String body, String actionUrl) {
+        // 개인 알림 설정 확인: false이면 알림 저장 및 전송 모두 건너뜀
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null || Boolean.FALSE.equals(user.getNotificationSetting())) {
+            log.debug("알림 전송 스킵: userId={}, notificationSetting={}",
+                    userId, user == null ? "유저 없음" : user.getNotificationSetting());
+            return;
+        }
+
         // 하단의 private 메서드를 호출해 도메인 객체(record)를 생성
         Notification newNoti = createNewNotification(userId, type, title, body, actionUrl);
 

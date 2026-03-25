@@ -51,7 +51,7 @@ export default function OrderHistoryToolbar({ statusFilter, sortBy, onChangeStat
         value={sortBy}
         selectedLabel={selectedSortLabel}
         onChange={(value) => onChangeSortBy(value as SortOption)}
-        buttonClassName="w-[110px] bg-primary/15 px-2 py-2 hover:bg-primary/25"
+        buttonClassName="w-[120px] bg-primary/15 px-2 py-2 hover:bg-primary/25"
         labelClassName="text-body-md font-semibold text-primary-light"
         iconClassName="text-caption text-point/70 transition-transform"
         menuClassName="w-[110px] bg-primary/15 shadow-primary-glow backdrop-blur-md"

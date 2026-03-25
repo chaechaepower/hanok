@@ -12,7 +12,7 @@ interface NotificationPanelProps {
   onClose: () => void;
 }
 
-const ROUTABLE_NOTIFICATION_TYPES = new Set(['STREAM_STARTED', 'STREAM_SCHEDULED']);
+const ROUTABLE_NOTIFICATION_TYPES = new Set(['STREAM_START']);
 
 export default function NotificationPanel({ onClose }: NotificationPanelProps) {
   const navigate = useNavigate();
@@ -80,7 +80,7 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
           {notifications.length > 0 && (
             <button
               type="button"
-              onClick={() => markAllAsRead()}
+              onClick={() => markAllAsRead(undefined, { onSuccess: () => onClose() })}
               className="text-xs text-neutral-400 transition hover:text-white"
             >
               모두 읽음

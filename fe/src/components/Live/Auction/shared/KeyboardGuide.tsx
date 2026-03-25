@@ -21,6 +21,7 @@ interface Props {
   open: boolean;
   onToggle: (open: boolean) => void;
   activeKeys?: Set<string>;
+  placement?: 'left' | 'top';
 }
 
 type ActionRow = {

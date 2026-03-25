@@ -363,7 +363,7 @@ export type ScheduledStream = {
   category: string;
   thumbnail: string | null;
   scheduledAt: string | null;
-  state: 'LIVE' | 'SCHEDULED';
+  state: 'LIVE' | 'SCHEDULED' | 'PAUSED';
 };
 
 export type ScheduledStreamsResponse = {
