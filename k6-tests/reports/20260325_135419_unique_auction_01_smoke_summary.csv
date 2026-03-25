@@ -1,0 +1,2 @@
+test_name,vus_max,p95_ms,p99_ms,avg_ms,tps,error_rate,ws_error_rate,chat_sent,chat_received,chat_success_rate,stomp_error,breaking_point_vus
+unique_auction_01_smoke,5,115.05,N/A,112.43,8.43,100.00,0.00,0,0,0.00,0,

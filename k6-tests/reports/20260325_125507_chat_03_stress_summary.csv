@@ -1,0 +1,2 @@
+test_name,vus_max,p95_ms,p99_ms,avg_ms,tps,error_rate,ws_error_rate,chat_sent,chat_received,chat_success_rate,stomp_error,breaking_point_vus
+chat_03_stress,750,166.97,N/A,148.06,0.02,0.00,100.00,236847,7674889,99.92,8,93

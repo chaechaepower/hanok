@@ -1,0 +1,2 @@
+test_name,vus_max,p95_ms,p99_ms,avg_ms,tps,error_rate,ws_error_rate,bid_sent,bid_ack,stats_received,already_bid,bid_success_rate,stomp_error,breaking_point_vus
+unique_auction_02_stepup,1000,119.35,N/A,113.55,3.06,0.00,0.00,20372,978,53204,19394,100.00,0,

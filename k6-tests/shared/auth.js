@@ -1,15 +1,21 @@
-// shared/auth.js
 import http from 'k6/http';
-import { SharedArray } from 'k6/data';
 
-// ✅ BASE_URL은 http://... 형태로 환경변수로만 받아오고, 코드에서 직접 붙임
+// 환경변수 또는 기본 URL 설정
 const BASE = (__ENV.BASE_URL || 'http://j14d105.p.ssafy.io:8080/api/v1').replace(/\/+$/, '');
 
-export const TEST_USERS = new SharedArray('users', function () {
-  return JSON.parse(open('../users.json'));
-});
+// 🌟 JSON 파일 없이, 스크립트 실행 시점에 1000명 유저 정보 자동 생성!
+export const TEST_USERS = [];
+for (let i = 1; i <= 1000; i++) {
+  TEST_USERS.push({
+    email: `uniquetest${i}@k6.com`,
+    // 🚨 주의: DB에 넣었던 해시값('$2b$10$YGVv...')의 '진짜 평문 비밀번호'를 아래에 꼭 적어주세요!
+    password: 'password123!', 
+  });
+}
 
 export function loginAll() {
+  console.log(`🚀 ${TEST_USERS.length}명의 유저 로그인 시도 중...`);
+  
   return TEST_USERS.map((user) => {
     const res = http.post(
       `${BASE}/auth/login`,
@@ -23,8 +29,7 @@ export function loginAll() {
     );
 
     if (res.status !== 200) {
-      console.error(`[Setup] 로그인 실패: ${user.email} → ${res.status}`);
-      console.log('응답 바디:', res.body);
+      console.error(`[Setup] 로그인 실패: ${user.email} → HTTP ${res.status}`);
       return null;
     }
 
@@ -32,39 +37,15 @@ export function loginAll() {
       const body = JSON.parse(res.body);
       const token = body.data?.accessToken;
       if (!token) {
-        console.log('로그인 응답에는 accessToken이 없음:', body);
+        console.error('로그인 응답에 accessToken이 없습니다:', body);
         return null;
       }
       return `Bearer ${token}`;
     } catch (e) {
-      console.log('로그인 응답 파싱 실패:', e);
+      console.error('로그인 응답 JSON 파싱 실패:', e);
       return null;
     }
-  }).filter(Boolean); // null 제거
-}
-
-export function reLogin(user) {
-  const res = http.post(
-    `${BASE}/auth/login`,
-    JSON.stringify({ email: user.email, password: user.password }),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      tags: { api: 'auth_login_refresh' },
-    }
-  );
-
-  if (res.status === 200) {
-    try {
-      const body = JSON.parse(res.body);
-      const token = body.data?.accessToken;
-      return token ? `Bearer ${token}` : null;
-    } catch (e) {
-      return null;
-    }
-  }
-  return null;
+  }).filter(Boolean); // 실패해서 null이 된 값들은 배열에서 제거
 }
 
 export function authHeader(token) {
