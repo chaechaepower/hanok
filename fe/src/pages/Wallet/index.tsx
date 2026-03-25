@@ -226,9 +226,9 @@ export default function WalletPage() {
 
           <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
             <article className="relative overflow-hidden rounded-(--radius-panel) bg-surface-elevated px-8 py-6 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
-              <div className="relative z-10 flex max-w-67.5 flex-col gap-5">
+              <div className="relative z-10 flex flex-col gap-5">
                 <div className="space-y-3">
-                  <p className="text-lg font-semibold text-white">보유 머니</p>
+                  <p className="text-2xl font-semibold text-white">보유 머니</p>
                   <div className="space-y-2">
                     {isLoading ? (
                       <>
@@ -266,12 +266,12 @@ export default function WalletPage() {
                 </div>
               </div>
 
-              <img src={coins} alt="coins" className="absolute right-4 bottom-6 w-50 md:block" />
+              <img src={coins} alt="coins" className="absolute right-4 top-4 w-50 md:block" />
             </article>
 
             <article className="flex flex-col justify-between rounded-(--radius-panel) bg-surface-elevated px-8 py-6 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
               <div className="space-y-3">
-                <p className="text-lg font-semibold text-white">경매 예치 머니</p>
+                <p className="text-2xl font-semibold text-white">경매 예치 머니</p>
                 <div className="space-y-2">
                   {isLoading ? (
                     <>

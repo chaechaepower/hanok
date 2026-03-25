@@ -9,32 +9,17 @@ import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { useGetStreamEnter } from '@/api/hooks/useGetStreamEnter';
 import { useLiveKit } from '@/hooks/useLiveKit';
 import { useLiveStream } from '@/hooks/useLiveStream';
-import WinModal from '@/components/Live/Auction/Buyer/WinModal';
-import UniqueAuctionResultModal from '@/components/Live/Auction/Buyer/UniqueAuctionResultModal';
-import AuctionTimer from '@/components/Live/Auction/shared/AuctionTimer';
-import AuctionCommentToast from '@/components/Live/Stream/AuctionCommentToast';
-import SellerControlBar from '@/components/Live/Stream/SellerControlBar';
-import BuyerControlBar from '@/components/Live/Stream/BuyerControlBar';
-import StreamDisconnected from '@/components/Live/Stream/Streamdisconnected';
-import StreamEnded from '@/components/Live/Stream/StreamEnded';
-import SellerGuideOverlay from '@/components/Live/Stream/SellerGuideOverlay';
-import StreamOverlay from '@/components/Live/Stream/StreamOverlay';
-import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
+import { useBreakpoint } from '@/hooks/useBreakpoint';
 import type { StreamRequest } from '@/types';
 import { sendStreamMessage } from '@/websocket/stompClient';
 
-import LeftPanel from './LeftPanel';
 import LiveFallback from './LiveFallback';
-import LiveHeader from './LiveHeader';
-import RightPanel from './RightPanel';
-import SellerStartModal from './SellerStartModal';
-import StreamEndModal from './StreamEndModal';
+import DesktopLayout from './layouts/DesktopLayout';
+import TabletLayout from './layouts/TabletLayout';
+import MobileLayout from './layouts/MobileLayout';
+import type { LiveLayoutProps } from './layouts/types';
 
 const STARTED_STREAM_IDS_STORAGE_KEY = 'startedLiveStreamIds';
-
-const CHAT_PANEL_INITIAL = { flex: 0, opacity: 0 };
-const CHAT_PANEL_ANIMATE = { flex: 1, opacity: 1 };
-const CHAT_PANEL_TRANSITION = { type: 'spring', stiffness: 400, damping: 30 } as const;
 
 const getStartedLiveStreamIds = () => {
   if (typeof window === 'undefined') {
@@ -348,6 +333,8 @@ export default function LivePage() {
     });
   }, [activeAuctionType, activeBidAuctionId, streamId]);
 
+  const breakpoint = useBreakpoint();
+
   if (isNotFoundLive) {
     return (
       <LiveFallback
@@ -370,153 +357,89 @@ export default function LivePage() {
     );
   }
 
+  const layoutProps: LiveLayoutProps = {
+    stream: {
+      streamTitle,
+      isSeller,
+      isStreamLive,
+      streamState,
+      liveStartedAt,
+      activeStreamEnter,
+    },
+    auction: {
+      selectedAuctionId,
+      visibleSelectedAuctionId,
+      setSelectedAuctionId,
+      liveAuctionItem,
+      introducingAuctionItem,
+      activeBidAuctionId,
+      activeAuctionType,
+      isAuctionInProgress,
+      hasPendingAuctionItems,
+      itemSync,
+      bidSync,
+      uniqueBidSync,
+      auctionStatistics,
+      auctionComment,
+      timer,
+      readyItems,
+      introduceAuctionId,
+      startAuctionId,
+      startAuctionType,
+      canIntroduceAuction,
+      canStartAuction,
+      handleAuctionTimerExpire,
+    },
+    livekit: {
+      livekitState,
+      videoRef,
+      bgVideoRef,
+      viewerCount,
+      toggleMic,
+      toggleCamera,
+      toggleRemoteAudio,
+      isMicOn,
+      isCameraOn,
+      isRemoteAudioMuted,
+    },
+    chat: {
+      isChatOpen,
+      handleToggleChat,
+    },
+    modal: {
+      showSellerStartModal,
+      hasStartedThisStream,
+      postStartStreamIsPending: postStartStream.isPending,
+      handleSellerStartModalConfirm: () => void handleSellerStartModalConfirm(),
+      showStreamEndModal,
+      postEndStreamIsPending: postEndStream.isPending,
+      setShowStreamEndModal,
+      handleStreamEndConfirm: () => void handleStreamEndConfirm(),
+      handleOpenStreamEndModal,
+      winnerInfo,
+      uniqueAuctionResult,
+      handleWinConfirm: () => handleWinConfirm(),
+      clearWinnerInfo,
+      handleUniqueAuctionResultClose,
+      markStreamEnded,
+    },
+    navigate,
+  };
+
+  const Layout = breakpoint === 'mobile' ? MobileLayout : breakpoint === 'tablet' ? TabletLayout : DesktopLayout;
+
   return (
-    <div className="flex h-screen w-full flex-col bg-surface p-3">
-      <LiveHeader
-        streamTitle={streamTitle}
-        isLive={isStreamLive}
-        startedAt={liveStartedAt ?? activeStreamEnter?.createdAt ?? null}
-        showEndButton={isSeller && isStreamLive}
-        isEndDisabled={isAuctionInProgress}
-        isEnding={postEndStream.isPending}
-        onEndStream={handleOpenStreamEndModal}
-      />
-
-      <div className="flex min-h-0 flex-1 gap-3">
-        <div className="min-w-0 flex-1 overflow-hidden rounded-2xl">
-          <LeftPanel
-            isSeller={isSeller}
-            syncedItems={itemSync?.items ?? null}
-            selectedAuctionId={visibleSelectedAuctionId}
-            onSelectAuctionItem={setSelectedAuctionId}
-          />
-        </div>
-        <div className="relative min-w-0 flex-2 overflow-hidden rounded-2xl bg-background">
-          <StreamOverlay viewerCount={viewerCount} isSeller={isSeller} />
-          {isSeller && <SellerGuideOverlay />}
-          <video
-            ref={bgVideoRef}
-            autoPlay
-            playsInline
-            muted
-            className={`absolute inset-0 h-full w-full object-cover -scale-x-100 blur-2xl brightness-50 saturate-120 ${livekitState === 'connected' ? '' : 'hidden'}`}
-          />
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            className={`relative h-full w-full object-contain -scale-x-100 ${livekitState === 'connected' ? '' : 'hidden'}`}
-          />
-          {livekitState !== 'connected' && <StreamPlaceholder />}
-          {isSeller ? (
-            <SellerControlBar
-              introduceAuctionId={introduceAuctionId}
-              startAuctionId={startAuctionId}
-              startAuctionType={startAuctionType}
-              canIntroduce={canIntroduceAuction}
-              canStart={canStartAuction}
-              readyItems={readyItems}
-              selectedAuctionId={selectedAuctionId}
-              onSelectAuctionItem={setSelectedAuctionId}
-              toggleMic={toggleMic}
-              toggleCamera={toggleCamera}
-              isMicOn={isMicOn}
-              isCameraOn={isCameraOn}
-            />
-          ) : (
-            <BuyerControlBar
-              auctionType={activeAuctionType}
-              bidSync={bidSync}
-              uniqueBidSync={uniqueBidSync}
-              activeAuctionId={activeBidAuctionId}
-              isRemoteAudioMuted={isRemoteAudioMuted}
-              onToggleMute={toggleRemoteAudio}
-              onToggleChat={handleToggleChat}
-            />
-          )}
-
-          {auctionComment && <AuctionCommentToast key={auctionComment.id} message={auctionComment?.message ?? null} />}
-
-          <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
-            {timer && <AuctionTimer key={timer.receivedAtMs} timer={timer} onExpire={handleAuctionTimerExpire} />}
-          </div>
-
-          <SellerStartModal
-            open={showSellerStartModal && isSeller && !isStreamLive && !hasStartedThisStream}
-            streamTitle={streamTitle}
-            isPending={postStartStream.isPending}
-            onConfirm={() => {
-              void handleSellerStartModalConfirm();
-            }}
-          />
-          <StreamEndModal
-            open={showStreamEndModal}
-            isPending={postEndStream.isPending}
-            hasRemainingItems={hasPendingAuctionItems}
-            onClose={() => setShowStreamEndModal(false)}
-            onConfirm={() => {
-              void handleStreamEndConfirm();
-            }}
-          />
-          {!uniqueAuctionResult && winnerInfo && (
-            <WinModal
-              isOpen
-              itemName={winnerInfo.payload.item.itemName}
-              itemCond={winnerInfo.itemCond || 'Auction item'}
-              finalPrice={winnerInfo.payload.item.finalPrice}
-              address={winnerInfo.payload.shipping}
-              onConfirm={handleWinConfirm}
-              onClose={clearWinnerInfo}
-            />
-          )}
-          {uniqueAuctionResult && (
-            <UniqueAuctionResultModal
-              isOpen
-              itemName={uniqueAuctionResult.itemName}
-              payload={uniqueAuctionResult.payload}
-              winnerInfo={uniqueAuctionResult.winnerInfo}
-              onClose={handleUniqueAuctionResultClose}
-            />
-          )}
-          {streamState === 'disconnected' && (
-            <StreamDisconnected
-              initialSeconds={300}
-              onTimeout={markStreamEnded}
-              onExit={() => {
-                navigate('/main');
-              }}
-            />
-          )}
-          {streamState === 'ended' && (
-            <StreamEnded
-              onClose={() => {
-                navigate('/main');
-              }}
-            />
-          )}
-        </div>
-        <AnimatePresence initial={false}>
-          {isChatOpen && (
-            <motion.div
-              key="right-panel"
-              className="min-w-0 overflow-hidden rounded-2xl"
-              initial={CHAT_PANEL_INITIAL}
-              animate={CHAT_PANEL_ANIMATE}
-              exit={CHAT_PANEL_INITIAL}
-              transition={CHAT_PANEL_TRANSITION}
-            >
-              <RightPanel
-                isSeller={isSeller}
-                auctionType={activeAuctionType}
-                auctionStatistics={auctionStatistics}
-                uniqueBidSync={uniqueBidSync}
-                streamEnter={activeStreamEnter}
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={breakpoint}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        className="h-screen w-full"
+      >
+        <Layout {...layoutProps} />
+      </motion.div>
+    </AnimatePresence>
   );
 }

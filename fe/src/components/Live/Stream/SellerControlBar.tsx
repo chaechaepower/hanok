@@ -12,6 +12,8 @@ export interface ReadyItem {
   auctionStatus: string;
 }
 
+export type ControlBarVariant = 'overlay' | 'inline';
+
 interface Props {
   introduceAuctionId: number | null;
   startAuctionId: number | null;
@@ -25,6 +27,7 @@ interface Props {
   toggleCamera?: () => void;
   isMicOn?: boolean;
   isCameraOn?: boolean;
+  variant?: ControlBarVariant;
 }
 
 export default function SellerControlBar({
@@ -40,6 +43,7 @@ export default function SellerControlBar({
   toggleCamera,
   isMicOn = true,
   isCameraOn = true,
+  variant = 'overlay',
 }: Props) {
   const [guideOpen, setGuideOpen] = useState(false);
   const { id: streamId } = useParams<{ id: string }>();
@@ -121,9 +125,9 @@ export default function SellerControlBar({
   const activeKeys = useKeyboardShortcuts(handleKeyAction);
 
   return (
-    <div className="absolute bottom-3 left-3 right-3 flex items-stretch justify-between">
+    <div className={`${variant === 'overlay' ? 'absolute bottom-3 left-3 right-3' : ''} flex items-stretch justify-between`}>
       {/* 좌하단: 키보드 가이드 */}
-      <KeyboardGuide variant="seller" open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} />
+      <KeyboardGuide variant="seller" open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} placement={variant === 'inline' ? 'top' : 'left'} />
 
       {/* 하단 중앙: 액션 버튼 */}
       <div className="flex flex-1 items-center flex-col gap-2 px-2.5">

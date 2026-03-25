@@ -10,8 +10,8 @@ export const PRICE_CLASS: Record<ItemStatus, string> = {
 
 export const CARD_BORDER_CLASS: Record<ItemStatus, string> = {
   READY: 'border-white/6',
-  INTRODUCING: 'border-white/6',
-  LIVE: 'border-gold/50',
+  INTRODUCING: 'border-warm/50',
+  LIVE: 'border-accent/60',
   SOLD: 'border-white/6',
   UNSOLD: 'border-white/6',
 };

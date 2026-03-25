@@ -120,12 +120,12 @@ const isUniqueAlreadyBidError = (payload?: StompErrorPayload) => payload?.code =
 const TIMER_SNAPSHOT_TOLERANCE_MS = 1000;
 const UNIQUE_WINNER_RESOLVE_DELAY_MS = 250;
 
-type WinnerInfoState = {
+export type WinnerInfoState = {
   payload: BidWinnerPayload;
   itemCond: ItemSyncItem['itemCondition'] | '';
 };
 
-type UniqueAuctionResultState = {
+export type UniqueAuctionResultState = {
   itemName: string;
   payload: UniqueAuctionEndPayload;
   winnerInfo: WinnerInfoState | null;

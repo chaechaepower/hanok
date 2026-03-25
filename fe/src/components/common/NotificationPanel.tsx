@@ -80,7 +80,7 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
           {notifications.length > 0 && (
             <button
               type="button"
-              onClick={() => markAllAsRead()}
+              onClick={() => markAllAsRead(undefined, { onSuccess: () => onClose() })}
               className="text-xs text-neutral-400 transition hover:text-white"
             >
               모두 읽음
