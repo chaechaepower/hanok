@@ -6,6 +6,9 @@ import type { WinModalProps } from '@/types/auction';
 import { launchConfetti } from '@/utils/confetti';
 import winModalEffectSound from '@/assets/Win_Modal_Effect_sound.mp3';
 
+const preloadedWinAudio = new Audio(winModalEffectSound);
+preloadedWinAudio.load();
+
 export default function WinModal({
   isOpen,
   itemName,
@@ -20,10 +23,18 @@ export default function WinModal({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const itemConditionLabel = getItemConditionLabel(itemCond);
 
-  useEffect(() => {
-    if (!isOpen) return;
+  const prevOpenRef = useRef(false);
 
-    new Audio(winModalEffectSound).play().catch(() => {});
+  useEffect(() => {
+    if (!isOpen) {
+      prevOpenRef.current = false;
+      return;
+    }
+
+    if (!prevOpenRef.current) {
+      prevOpenRef.current = true;
+      (preloadedWinAudio.cloneNode(true) as HTMLAudioElement).play().catch(() => {});
+    }
 
     if (disableConfetti) return;
 

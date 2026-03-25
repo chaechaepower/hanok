@@ -9,6 +9,9 @@ import { sendStreamMessage } from '@/websocket/stompClient';
 import { useToast } from '@/hooks/useToast';
 import bidEffectSound from '@/assets/bid_effect_sound.mp3';
 
+const preloadedBidAudio = new Audio(bidEffectSound);
+preloadedBidAudio.load();
+
 export type BidTab = 'quick' | 'custom';
 export type AuctionEndPhase = 'ended' | 'waiting' | null;
 
@@ -124,12 +127,13 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
       if (!applyUniqueBidCorrection(uniqueInputAmount)) return;
     }
 
+    (preloadedBidAudio.cloneNode(true) as HTMLAudioElement).play().catch(() => {});
+
     void sendStreamMessage(streamId, {
       eventType: isUniqueAuction ? 'UNIQUE_BID_PLACE' : 'BID_PLACED',
       payload: { auctionId: activeAuctionId, amount: effectiveBidAmount },
     })
       .then(() => {
-        new Audio(bidEffectSound).play().catch(() => {});
         queryClient.invalidateQueries({ queryKey: ['wallet'] });
       })
       .catch((error) => { console.error('[stream] failed to send bid', error); });
