@@ -68,4 +68,17 @@ public interface StreamRepository extends JpaRepository<Stream, Long> {
             + "ORDER BY s.startedAt DESC")
     List<Stream> findLiveStreamsByNewSellers(@Param("since") LocalDateTime since);
 
+    // LIVE + PAUSED 목록 조회 (Page 반환 - 일반 목록용)
+    @Query(
+            "SELECT s FROM Stream s JOIN FETCH s.seller sel JOIN FETCH sel.user "
+                    + "WHERE s.status IN ('LIVE', 'PAUSED') "
+                    + "AND (:category IS NULL OR s.category = :category)")
+    Page<Stream> findActiveStreams(@Param("category") Category category, Pageable pageable);
+
+    // LIVE + PAUSED 목록 조회 (List 반환 - 시청자순 정렬용)
+    @Query(
+            "SELECT s FROM Stream s JOIN FETCH s.seller sel JOIN FETCH sel.user "
+                    + "WHERE s.status IN ('LIVE', 'PAUSED') "
+                    + "AND (:category IS NULL OR s.category = :category)")
+    List<Stream> findAllActiveStreams(@Param("category") Category category);
 }
