@@ -30,7 +30,7 @@ public class TextNormalizer {
             // 1. 소문자 처리
             c = Character.toLowerCase(c);
 
-            // 2. 모양 비슷한 숫자/알파벳 -> 한글 자음으로 1차 변환 (e -> ㅌ, 8 -> ㅂ 등)
+            // 2. 모양 비슷한 숫자/알파벳/특수문자 -> 한글 자음으로 1차 변환 (e -> ㅌ, 8 -> ㅂ, @ -> ㅇ 등)
             c = convertLeetSpeak(c);
 
             // 3. 아직도 남아있는 영어 알파벳이 있다면, 실수로 영타를 친 것으로 간주하고 QWERTY 변환 (q -> ㅂ)
@@ -61,6 +61,7 @@ public class TextNormalizer {
             char current = text.charAt(i);
             int choIdx = CHO.indexOf(current);
 
+            // 1. 초성이 발견되고 다음 글자가 있는 경우 (조립 시도)
             if (choIdx != -1 && i + 1 < text.length()) {
                 char next = text.charAt(i + 1);
                 int jungIdx = JUNG.indexOf(next);
@@ -80,6 +81,12 @@ public class TextNormalizer {
                     i += jump; // 흡수한 글자 수만큼 당당하게 점프!
                     continue;
                 }
+            }
+
+            // 우회용 찌꺼기("시1발"의 '1' 등)로 간주하여 제거
+            if (JUNG.indexOf(current) != -1) {
+                i++; // 결과 문자열에 담지 않고 인덱스만 1칸 전진하여 버림
+                continue;
             }
 
             // 조립할 수 없는 글자는 1칸만 전진
@@ -125,7 +132,7 @@ public class TextNormalizer {
     // switch expression
     private static char convertLeetSpeak(char c) {
         return switch (c) {
-            case '0', 'o', 'O' -> 'ㅇ';
+            case '0', 'o', 'O', '@' -> 'ㅇ'; // [수정된 부분] '@' 기호를 'ㅇ'으로 변환
             case '1', 'l', 'I', 'i' -> 'ㅣ';
             case 'e', 'E', '3' -> 'ㅌ';
             case 'b', 'B', '8' -> 'ㅂ';
