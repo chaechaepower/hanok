@@ -124,4 +124,12 @@ public class Auction {
         Long sellerId = stream.getSeller().getUser().getId();
         return Objects.equals(sellerId, userId);
     }
+
+    public void updateScheduleWhenReady(AuctionType auctionType, Integer auctionDuration) {
+        if (!isReady()) {
+            throw new IllegalStateException("READY 상태의 경매만 수정할 수 있습니다.");
+        }
+        this.auctionType = auctionType;
+        this.auctionDuration = auctionDuration;
+    }
 }

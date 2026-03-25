@@ -11,7 +11,8 @@ public record BidWinnerResponse(
     @Builder
     public record ItemDto(
             String itemName,
-            Long finalPrice
+            Long finalPrice,
+            Long myBidPrice
     ){}
 
     @Builder

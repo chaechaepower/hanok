@@ -60,5 +60,10 @@ public class UniqueBidAuctionDetail {
         return auction.getAuctionDuration();
     }
 
+    public void updateSchedule(Long minPrice, Long maxPrice) {
+        this.minPrice = minPrice;
+        this.maxPrice = maxPrice;
+    }
+
 }
 

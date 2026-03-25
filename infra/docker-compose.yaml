@@ -35,12 +35,17 @@ x-backend-common: &backend-template
 
 services:
   nginx:
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     image: nginx:latest
     container_name: hanok-nginx
     ports:
       - "80:80"
       - "443:443"
     volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - /var/lib/docker/volumes/jenkins-stack_jenkins_home/_data/workspace/hanok/infra/nginx/conf.d:/etc/nginx/conf.d
       - /var/www/hanok:/var/www/hanok
       - /etc/letsencrypt:/etc/letsencrypt
@@ -91,6 +96,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # =============================================
+  # Redis Exporter (Prometheus)
+  # =============================================
+  redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: hanok-redis-exporter
+    restart: unless-stopped
+    environment:
+      REDIS_ADDR: redis://redis:6379
+    networks:
+      - hanok-network
+    depends_on:
+      redis:
+        condition: service_healthy
 
   # =============================================
   # Backend (prod)

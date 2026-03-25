@@ -1,11 +1,16 @@
 package com.ssafy.be.domain.seller.service;
 
+import com.ssafy.be.domain.auction.entity.Auction;
+import com.ssafy.be.domain.auction.repository.AuctionRepository;
+import com.ssafy.be.domain.bottomupauction.repository.AuctionBidRepository;
 import com.ssafy.be.domain.escrow.dto.response.EscrowListResponse;
 import com.ssafy.be.domain.escrow.repository.EscrowRepository;
 import com.ssafy.be.domain.follow.repository.FollowRepository;
+import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.entity.ItemStatus;
 import com.ssafy.be.domain.item.repository.ItemRepository;
+import com.ssafy.be.domain.uniqueaction.repository.UniqueBidRepository;
 import com.ssafy.be.domain.seller.client.BiznoClient;
 import com.ssafy.be.domain.seller.dto.request.SellerProfileUpdateRequest;
 import com.ssafy.be.domain.seller.dto.request.SellerRegisterRequest;
@@ -26,13 +31,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.client.RestClient;
 import com.ssafy.be.domain.escrow.entity.EscrowStatus;
 
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -44,14 +50,15 @@ public class SellerService {
     private final UserRepository userRepository;
     private final FollowRepository followRepository;
     private final ItemRepository itemRepository;
+    private final AuctionRepository auctionRepository;
+    private final AuctionBidRepository auctionBidRepository;
+    private final UniqueBidRepository uniqueBidRepository;
     private final StreamRepository streamRepository;
     private final EscrowRepository escrowRepository;
     private final BiznoClient biznoClient;
 
     @Value("${bizno.api.key}")
     private String biznoApiKey;
-
-    private final RestClient restClient = RestClient.create();
 
     @Transactional
     public SellerRegisterResponse register(Long userId, SellerRegisterRequest request) {
@@ -285,13 +292,8 @@ public class SellerService {
                         row[1] != null ? ((Number) row[1]).longValue() : 0L
                 )).toList();
 
-        // 4. 인기 랭킹 Top 3 (오류 수정 반영된 쿼리 사용)
-        List<Object[]> topItems = itemRepository.findTopHotItemsBySellerId(sellerId);
-        List<SellerReportResponse.TopHotItemDto> hotItemDtos = topItems.stream()
-                .map(row -> new SellerReportResponse.TopHotItemDto(
-                        ((Number) row[0]).longValue(), (String) row[1], (String) row[2],
-                        ((Number) row[3]).longValue(), row[4] != null ? ((Number) row[4]).longValue() : 0L
-                )).toList();
+        // 4. 인기 랭킹 Top 3: SOLD 물품의 경매 방식별 입찰 수(Redis) 기준
+        List<SellerReportResponse.TopHotItemDto> hotItemDtos = buildTopHotItems(sellerId);
 
         // 5. 거래 성사율 통계
         long completedTrades = escrowRepository.countBySellerIdAndEscrowStatus(sellerId, EscrowStatus.COMPLETED);
@@ -371,6 +373,44 @@ public class SellerService {
                     );
                 })
                 .toList();
+    }
+
+    private List<SellerReportResponse.TopHotItemDto> buildTopHotItems(Long sellerId) {
+        List<Auction> soldAuctions = auctionRepository.findAllBySellerIdAndItemStatus(sellerId, ItemStatus.SOLD);
+
+        record Scored(Auction auction, long bidCount, long finalPrice) {}
+
+        return soldAuctions.stream()
+                .map(a -> new Scored(
+                        a,
+                        resolveBidCount(a),
+                        Optional.ofNullable(a.getFinalPrice()).orElse(0L)))
+                .sorted(Comparator
+                        .comparingLong(Scored::bidCount).reversed()
+                        .thenComparingLong(Scored::finalPrice).reversed()
+                        .thenComparing(
+                                s -> s.auction().getItem().getSoldAt(),
+                                Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(s -> s.auction().getItem().getId(), Comparator.reverseOrder()))
+                .limit(3)
+                .map(s -> {
+                    var item = s.auction().getItem();
+                    return new SellerReportResponse.TopHotItemDto(
+                            item.getId(),
+                            item.getName(),
+                            item.getImage1(),
+                            s.bidCount(),
+                            s.finalPrice());
+                })
+                .toList();
+    }
+
+    private long resolveBidCount(Auction auction) {
+        Long auctionId = auction.getId();
+        if (auction.getAuctionType() == AuctionType.BOTTOM_UP) {
+            return auctionBidRepository.countBids(auctionId);
+        }
+        return uniqueBidRepository.countParticipants(auctionId);
     }
 
 }

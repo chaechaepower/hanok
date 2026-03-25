@@ -1,0 +1,255 @@
+Initialized native services in: C:\Users\SSAFY\.gradle\native
+Initialized jansi services in: C:\Users\SSAFY\.gradle\native
+Found daemon DaemonInfo{pid=15796, address=[311b1de7-ac90-495b-aede-03a00b0f832f port:1367, addresses:[/127.0.0.1]], state=Idle, lastBusy=1774329263287, context=DefaultDaemonContext[uid=606776c4-6e06-49a6-860a-65df4a7115dc,javaHome=C:\Users\SSAFY\.jdks\ms-21.0.9,javaVersion=21,javaVendor=Microsoft,daemonRegistryDir=C:\Users\SSAFY\.gradle\daemon,pid=15796,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=384m,-XX:+HeapDumpOnOutOfMemoryError,-Xms256m,-Xmx512m,-Dfile.encoding=UTF-8,-Duser.country=KR,-Duser.language=ko,-Duser.variant]} however its context does not match the desired criteria.
+JVM is incompatible.
+Wanted: DaemonRequestContext{jvmCriteria=C:\Program Files\Java\jdk-21 (no JDK specified, using current Java home), daemonOpts=[-XX:MaxMetaspaceSize=384m, -XX:+HeapDumpOnOutOfMemoryError, -Xms256m, -Xmx512m, -Dfile.encoding=UTF-8, -Duser.country=KR, -Duser.language=ko, -Duser.variant], applyInstrumentationAgent=true, nativeServicesMode=ENABLED, priority=NORMAL}
+Actual: DefaultDaemonContext[uid=606776c4-6e06-49a6-860a-65df4a7115dc,javaHome=C:\Users\SSAFY\.jdks\ms-21.0.9,javaVersion=21,javaVendor=Microsoft,daemonRegistryDir=C:\Users\SSAFY\.gradle\daemon,pid=15796,idleTimeout=10800000,priority=NORMAL,applyInstrumentationAgent=true,nativeServicesMode=ENABLED,daemonOpts=-XX:MaxMetaspaceSize=384m,-XX:+HeapDumpOnOutOfMemoryError,-Xms256m,-Xmx512m,-Dfile.encoding=UTF-8,-Duser.country=KR,-Duser.language=ko,-Duser.variant]
+
+  Looking for a different daemon...
+Removing 2 daemon stop events from registry
+Previous Daemon (26824) stopped at Tue Mar 24 13:44:29 KST 2026 other compatible daemons were started and after being idle for 0 minutes and not recently used
+Previous Daemon (28832) stopped at Tue Mar 24 14:12:01 KST 2026 after being idle for 27 minutes and not recently used and to reclaim system virtual memory
+Previous Daemon (34040) stopped at Tue Mar 24 14:12:03 KST 2026 after being idle for 79 minutes and not recently used and to reclaim system virtual memory
+Starting a Gradle Daemon, 1 incompatible and 3 stopped Daemons could not be reused, use --status for details
+Starting process 'Gradle build daemon'. Working directory: C:\Users\SSAFY\.gradle\daemon\8.14.4 Command: C:\Program Files\Java\jdk-21\bin\java.exe --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-opens=java.base/java.nio.charset=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.xml/javax.xml.namespace=ALL-UNNAMED -XX:MaxMetaspaceSize=384m -XX:+HeapDumpOnOutOfMemoryError -Xms256m -Xmx512m -Dfile.encoding=UTF-8 -Duser.country=KR -Duser.language=ko -Duser.variant -cp C:\Users\SSAFY\.gradle\wrapper\dists\gradle-8.14.4-bin\92wwslzcyst3phie3o264zltu\gradle-8.14.4\lib\gradle-daemon-main-8.14.4.jar -javaagent:C:\Users\SSAFY\.gradle\wrapper\dists\gradle-8.14.4-bin\92wwslzcyst3phie3o264zltu\gradle-8.14.4\lib\agents\gradle-instrumentation-agent-8.14.4.jar org.gradle.launcher.daemon.bootstrap.GradleDaemon 8.14.4
+Successfully started process 'Gradle build daemon'
+An attempt to start the daemon took 1.092 secs.
+The client will now receive all logging from the daemon (pid: 36836). The daemon log file: C:\Users\SSAFY\.gradle\daemon\8.14.4\daemon-36836.out.log
+Starting build in new daemon [memory: 512 MiB]
+Using 20 worker leases.
+Received JVM installation metadata from 'C:\Program Files\Java\jdk-21': {JAVA_HOME=C:\Program Files\Java\jdk-21, JAVA_VERSION=21.0.9, JAVA_VENDOR=Oracle Corporation, RUNTIME_NAME=Java(TM) SE Runtime Environment, RUNTIME_VERSION=21.0.9+7-LTS-338, VM_NAME=Java HotSpot(TM) 64-Bit Server VM, VM_VERSION=21.0.9+7-LTS-338, VM_VENDOR=Oracle Corporation, OS_ARCH=amd64}
+Watching the file system is configured to be enabled if available
+Now considering [C:\Users\SSAFY\Desktop\end\S14P21D105\be] as hierarchies to watch
+File system watching is active
+Starting Build
+Settings evaluated using settings file 'C:\Users\SSAFY\Desktop\end\S14P21D105\be\settings.gradle'.
+Projects loaded. Root project using build file 'C:\Users\SSAFY\Desktop\end\S14P21D105\be\build.gradle'.
+Included projects: [root project 'be']
+
+> Configure project :
+Evaluating root project 'be' using build file 'C:\Users\SSAFY\Desktop\end\S14P21D105\be\build.gradle'.
+Resolved plugin [id: 'java']
+Resolved plugin [id: 'org.springframework.boot', version: '3.4.13']
+Resolved plugin [id: 'io.spring.dependency-management', version: '1.1.7']
+Resolved plugin [id: 'org.asciidoctor.jvm.convert', version: '4.0.5']
+Resolved plugin [id: 'com.diffplug.spotless', version: '6.25.0']
+Resolved plugin [id: 'org.sonarqube', version: '4.4.1.3373']
+Resolved plugin [id: 'jacoco']
+Applying dependency management to configuration 'annotationProcessor' in project 'be'
+Applying dependency management to configuration 'apiElements' in project 'be'
+Applying dependency management to configuration 'archives' in project 'be'
+Applying dependency management to configuration 'bootArchives' in project 'be'
+Applying dependency management to configuration 'compileClasspath' in project 'be'
+Applying dependency management to configuration 'compileOnly' in project 'be'
+Applying dependency management to configuration 'default' in project 'be'
+Applying dependency management to configuration 'developmentOnly' in project 'be'
+Applying dependency management to configuration 'implementation' in project 'be'
+Applying dependency management to configuration 'mainSourceElements' in project 'be'
+Applying dependency management to configuration 'productionRuntimeClasspath' in project 'be'
+Applying dependency management to configuration 'runtimeClasspath' in project 'be'
+Applying dependency management to configuration 'runtimeElements' in project 'be'
+Applying dependency management to configuration 'runtimeOnly' in project 'be'
+Applying dependency management to configuration 'testAndDevelopmentOnly' in project 'be'
+Applying dependency management to configuration 'testAnnotationProcessor' in project 'be'
+Applying dependency management to configuration 'testCompileClasspath' in project 'be'
+Applying dependency management to configuration 'testCompileOnly' in project 'be'
+Applying dependency management to configuration 'testImplementation' in project 'be'
+Applying dependency management to configuration 'testResultsElementsForTest' in project 'be'
+Applying dependency management to configuration 'testRuntimeClasspath' in project 'be'
+Applying dependency management to configuration 'testRuntimeOnly' in project 'be'
+Applying dependency management to configuration '__$$asciidoctorj$$___d' in project 'be'
+Applying dependency management to configuration '__$$asciidoctorj$$___r' in project 'be'
+The 'sonarqube' task depends on compile tasks. This behavior is now deprecated and will be removed in version 5.x. To avoid implicit compilation, set property 'sonar.gradle.skipCompile' to 'true' and make sure your project is compiled, before analysis has started.
+The 'sonar' task depends on compile tasks. This behavior is now deprecated and will be removed in version 5.x. To avoid implicit compilation, set property 'sonar.gradle.skipCompile' to 'true' and make sure your project is compiled, before analysis has started.
+Applying dependency management to configuration 'jacocoAgent' in project 'be'
+Applying dependency management to configuration 'jacocoAnt' in project 'be'
+Applying dependency management to configuration 'coverageDataElementsForTest' in project 'be'
+All projects evaluated.
+Task name matched 'sonarqube'
+Selected primary task 'sonarqube' from project :
+Starting process 'command 'C:\Users\SSAFY\.jdks\ms-21.0.9\bin\java.exe''. Working directory: C:\Users\SSAFY\.gradle\.tmp\tmp-jvm15244750520092820111probe Command: C:\Users\SSAFY\.jdks\ms-21.0.9\bin\java.exe -Xmx32m -Xms32m -cp . JavaProbe
+Successfully started process 'command 'C:\Users\SSAFY\.jdks\ms-21.0.9\bin\java.exe''
+Received JVM installation metadata from 'C:\Users\SSAFY\.jdks\ms-21.0.9': {JAVA_HOME=C:\Users\SSAFY\.jdks\ms-21.0.9, JAVA_VERSION=21.0.9, JAVA_VENDOR=Microsoft, RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=21.0.9+10-LTS, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=21.0.9+10-LTS, VM_VENDOR=Microsoft, OS_ARCH=amd64}
+Resolving global dependency management for project 'be'
+Excluding []
+Excluding []
+Excluding []
+Excluding []
+Excluding []
+Tasks to be executed: [task ':compileJava', task ':processResources', task ':classes', task ':compileTestJava', task ':sonarqube']
+Tasks that were excluded: []
+Resolve mutations for :compileJava (Thread[#292,Execution worker,5,main]) started.
+:compileJava (Thread[#292,Execution worker,5,main]) started.
+
+> Task :compileJava UP-TO-DATE
+Custom actions are attached to task ':compileJava'.
+Caching disabled for task ':compileJava' because:
+  Build cache is disabled
+Skipping task ':compileJava' as it is up-to-date.
+No compile result for :compileJava
+Resolve mutations for :processResources (Thread[#292,Execution worker,5,main]) started.
+:processResources (Thread[#292,Execution worker,5,main]) started.
+
+> Task :processResources UP-TO-DATE
+Caching disabled for task ':processResources' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':processResources' as it is up-to-date.
+Resolve mutations for :classes (Thread[#292,Execution worker,5,main]) started.
+:classes (Thread[#292,Execution worker,5,main]) started.
+
+> Task :classes UP-TO-DATE
+Skipping task ':classes' as it has no actions.
+Resolve mutations for :compileTestJava (Thread[#292,Execution worker,5,main]) started.
+:compileTestJava (Thread[#292,Execution worker,5,main]) started.
+
+> Task :compileTestJava UP-TO-DATE
+Custom actions are attached to task ':compileTestJava'.
+Caching disabled for task ':compileTestJava' because:
+  Build cache is disabled
+Skipping task ':compileTestJava' as it is up-to-date.
+No compile result for :compileTestJava
+Resolve mutations for :sonarqube (Thread[#292,Execution worker,5,main]) started.
+:sonarqube (Thread[#295,Execution worker Thread 4,5,main]) started.
+
+> Task :sonarqube
+Caching disabled for task ':sonarqube' because:
+  Build cache is disabled
+Task ':sonarqube' is not up-to-date because:
+  Task has not declared any outputs despite executing actions.
+Task 'sonarqube' is deprecated. Use 'sonar' instead.
+User cache: C:\Users\SSAFY\.sonar\cache
+Default locale: "ko_KR", source code encoding: "UTF-8"
+Load global settings
+Load global settings (done) | time=96ms
+Server id: 303924D4-AZzQFciSkoxIjLks2j9b
+Loading required plugins
+Load plugins index
+Load plugins index (done) | time=41ms
+Load/download plugins
+Load/download plugins (done) | time=11ms
+Process project properties
+Process project properties (done) | time=27ms
+Project key: hanok
+Base dir: C:\Users\SSAFY\Desktop\end\S14P21D105\be
+Working dir: C:\Users\SSAFY\Desktop\end\S14P21D105\be\build\sonar
+Load project settings for component key: 'hanok'
+Load project settings for component key: 'hanok' (done) | time=23ms
+Load quality profiles
+Load quality profiles (done) | time=59ms
+Load active rules
+Load active rules (done) | time=229ms
+Load analysis cache
+Load analysis cache | time=35ms
+Preprocessing files...
+
+1 language detected in 336 preprocessed files (done) | time=562ms
+336 files indexed (done) | time=33ms
+
+> Task :sonarqube
+0 files ignored because of scm ignore settings
+Loading plugins for detected languages
+Load/download plugins
+Load/download plugins (done) | time=11ms
+Load project repositories
+Load project repositories (done) | time=93ms
+Indexing files...
+Project configuration:
+Quality profile for java: Sonar way
+------------- Run sensors on module hanok
+Load metrics repository
+Load metrics repository (done) | time=38ms
+Sensor JavaSensor [java]
+Configured Java source version (sonar.java.source): 21, preview features enabled (sonar.java.enablePreview): false
+Server-side caching is enabled. The Java analyzer will not try to leverage data from a previous analysis.
+Using ECJ batch to parse 302 Main java source files with batch size 26 KB.
+Starting batch processing.
+The Java analyzer cannot skip unchanged files in this context. A full analysis is performed for all files.
+100% analyzed
+Batch processing: Done.
+Did not optimize analysis for any files, performed a full analysis for all 302 files.
+Unresolved imports/types have been detected during analysis. Enable DEBUG mode to see them.
+Use of preview features have been detected during analysis. Enable DEBUG mode to see them.
+Using ECJ batch to parse 34 Test java source files with batch size 26 KB.
+Starting batch processing.
+100% analyzed
+Batch processing: Done.
+Did not optimize analysis for any files, performed a full analysis for all 34 files.
+Use of preview features have been detected during analysis. Enable DEBUG mode to see them.
+No "Generated" source files to scan.
+Sensor JavaSensor [java] (done) | time=14983ms
+Sensor JaCoCo XML Report Importer [jacoco]
+Importing 1 report(s). Turn your logs in debug mode in order to see the exhaustive list.
+Sensor JaCoCo XML Report Importer [jacoco] (done) | time=234ms
+Sensor IaC hadolint report Sensor [iac]
+Sensor IaC hadolint report Sensor [iac] (done) | time=2ms
+Sensor Java Config Sensor [iac]
+There are no files to be analyzed for the Java language
+Sensor Java Config Sensor [iac] (done) | time=23ms
+Sensor IaC Docker Sensor [iac]
+There are no files to be analyzed for the Docker language
+Sensor IaC Docker Sensor [iac] (done) | time=5ms
+Sensor SurefireSensor [java]
+parsing [C:\Users\SSAFY\Desktop\end\S14P21D105\be\build\test-results\test]
+Sensor SurefireSensor [java] (done) | time=262ms
+Sensor Removed properties sensor [java]
+Sensor Removed properties sensor [java] (done) | time=0ms
+Sensor TextAndSecretsSensor [text]
+Available processors: 20
+Using 20 threads for analysis.
+Start fetching files for the text and secrets analysis
+Using Git CLI to retrieve dirty files
+Retrieving language associated files and files included via "sonar.text.inclusions" that are tracked by git
+Starting the text and secrets analysis
+
+336 source files to be analyzed for the text and secrets analysis
+336/336 source files have been analyzed for the text and secrets analysis
+SCM Publisher 0/9 source files have been analyzed (done) | time=472ms
+CPD Executor CPD calculation finished (done) | time=106ms
+
+> Task :sonarqube
+Sensor TextAndSecretsSensor [text] (done) | time=790ms
+------------- Run sensors on project
+Sensor JavaProjectSensor [java]
+Sensor JavaProjectSensor [java] (done) | time=2ms
+Sensor Zero Coverage Sensor
+Sensor Zero Coverage Sensor (done) | time=8ms
+Sensor Java CPD Block Indexer
+Sensor Java CPD Block Indexer (done) | time=151ms
+------------- Gather SCA dependencies on project
+Dependency analysis skipped
+SCM Publisher SCM provider for this project is: git
+SCM Publisher 9 source files to be analyzed
+Missing blame information for the following files:
+  * src/test/java/com/ssafy/be/domain/chat/handler/MacroChatHandlerTest.java
+  * src/test/java/com/ssafy/be/domain/notification/controller/NotificationIntegrationTest.java
+  * src/test/java/com/ssafy/be/search/service/SearchServiceTest.java
+  * src/test/java/com/ssafy/be/domain/chat/handler/ChatMessageHandlerTest.java
+  * src/test/java/com/ssafy/be/domain/uniqueauction/handler/UniqueBidHandlerTest.java
+  * src/main/java/com/ssafy/be/domain/uniqueaction/service/UniqueBidAuctionService.java
+  * src/test/java/com/ssafy/be/domain/chat/filter/BadWordFilterTest.java
+  * src/test/java/com/ssafy/be/domain/uniqueauction/service/UniqueBidAuctionServiceTest.java
+  * src/main/java/com/ssafy/be/domain/auction/repository/AuctionRepository.java
+This may lead to missing/broken features in SonarQube
+CPD Executor 167 files had no CPD blocks
+CPD Executor Calculating CPD for 135 files
+SCM revision ID '9a2c741d2fbeeada1d1560f96d1c1e39677636d1'
+Analysis report generated in 454ms, dir size=1.7 MB
+Analysis report compressed in 1055ms, zip size=902.7 kB
+Analysis report uploaded in 169ms
+ANALYSIS SUCCESSFUL, you can find the results at: http://j14d105.p.ssafy.io:9000/dashboard?id=hanok
+Note that you will be able to access the updated dashboard once the server has processed the submitted analysis report
+More about the report processing at http://j14d105.p.ssafy.io:9000/api/ce/task?id=1a8e37c4-a8a0-40c1-a4e0-cf6b72424df7
+Analysis total time: 22.410 s
+
+[Incubating] Problems report is available at: file:///C:/Users/SSAFY/Desktop/end/S14P21D105/be/build/reports/problems/problems-report.html
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14.4/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD SUCCESSFUL in 33s
+4 actionable tasks: 1 executed, 3 up-to-date
+Watched directory hierarchies: [C:\Users\SSAFY\Desktop\end\S14P21D105\be]

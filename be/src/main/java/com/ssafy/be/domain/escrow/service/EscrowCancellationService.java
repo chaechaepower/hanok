@@ -39,7 +39,7 @@ public class EscrowCancellationService {
                 ESCROW_CANCELLED.name(),
                 ESCROW_CANCELLED.getTitle(),
                 ESCROW_CANCELLED.renderBody(escrow.getAuction().getItem().getName()),
-                "/escrows/" + escrow.getId()
+                null
         );
 
         // 판매자
@@ -48,7 +48,7 @@ public class EscrowCancellationService {
                 ESCROW_CANCELLED.name(),
                 ESCROW_CANCELLED.getTitle(),
                 ESCROW_CANCELLED.renderBody(escrow.getAuction().getItem().getName()),
-                "/escrows/" + escrow.getId()
+                null
         );
     }
 

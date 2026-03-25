@@ -14,6 +14,7 @@ import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.gas.DefaultGasProvider;
 
 import java.math.BigInteger;
@@ -42,10 +43,18 @@ public class BlockchainService {
     public void initContract() {
         Web3j web3j = Web3j.build(new HttpService(rpcUrl));
         this.credentials = Credentials.create(privateKey);
+
+        // EIP-155 체인ID 명시 (Sepolia = 11155111)
+        RawTransactionManager txManager = new RawTransactionManager(
+                web3j,
+                this.credentials,
+                11155111L
+        );
+
         this.contract = HanokReceiptContract.load(
                 contractAddress,
                 web3j,
-                this.credentials,
+                txManager,
                 new DefaultGasProvider()
         );
         log.info("[Blockchain] Contract 초기화 완료 address={}", contractAddress);
@@ -53,7 +62,7 @@ public class BlockchainService {
 
     @Async
     public void issueNFTReceiptAsync(Long escrowId) {
-        Escrow escrow = escrowRepository.findById(escrowId)
+        Escrow escrow = escrowRepository.findByIdWithAuctionAndItem(escrowId)
                 .orElseThrow(() -> new GlobalException(EscorwErrorCode.ESCROW_NOT_FOUND));
 
         try {
@@ -85,5 +94,39 @@ public class BlockchainService {
     // 테스트용 Contract 주입
     public void setContract(HanokReceiptContract contract) {
         this.contract = contract;
+    }
+
+    public Long getTokenId(String txHash) {
+        try {
+            var receipt = Web3j.build(new HttpService(rpcUrl))
+                    .ethGetTransactionReceipt(txHash)
+                    .send()
+                    .getTransactionReceipt()
+                    .orElseThrow();
+
+            // mintReceipt 이벤트 로그에서 tokenId 추출
+            // Transfer 이벤트: topics[3] = tokenId
+            if (!receipt.getLogs().isEmpty()) {
+                String tokenIdHex = receipt.getLogs().get(0).getTopics().get(3);
+                return new BigInteger(tokenIdHex.substring(2), 16).longValue();
+            }
+        } catch (Exception e) {
+            log.warn("[Blockchain] tokenId 조회 실패 txHash={}", txHash);
+        }
+        return null;
+    }
+
+    public Long getBlockNumber(String txHash) {
+        try {
+            var tx = Web3j.build(new HttpService(rpcUrl))
+                    .ethGetTransactionByHash(txHash)
+                    .send()
+                    .getTransaction()
+                    .orElseThrow();
+            return tx.getBlockNumber().longValue();
+        } catch (Exception e) {
+            log.warn("[Blockchain] blockNumber 조회 실패 txHash={}", txHash);
+        }
+        return null;
     }
 }

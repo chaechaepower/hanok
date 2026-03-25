@@ -1,9 +1,13 @@
     package com.ssafy.be.domain.uniqueaction.service;
 
     import com.ssafy.be.domain.auction.dto.response.AuctionCommentResponse;
+    import com.ssafy.be.domain.auction.dto.response.BidWinnerResponse;
     import com.ssafy.be.domain.auction.entity.Auction;
     import com.ssafy.be.domain.auction.entity.AuctionStatus;
+    import com.ssafy.be.domain.bottomupauction.model.Bid;
+    import com.ssafy.be.domain.escrow.service.EscrowService;
     import com.ssafy.be.domain.item.entity.AuctionType;
+    import com.ssafy.be.domain.uniqueaction.dto.response.UniqueAuctionResultResponse;
     import com.ssafy.be.domain.uniqueaction.dto.response.UniqueBidItemSyncResponse;
     import com.ssafy.be.domain.uniqueaction.entity.UniqueBidAuctionDetail;
     import com.ssafy.be.domain.auction.repository.AuctionRepository;
@@ -31,15 +35,19 @@
     import org.springframework.stereotype.Service;
     import org.springframework.transaction.annotation.Transactional;
 
+    import java.time.LocalDateTime;
+    import java.util.ArrayList;
     import java.util.List;
     import java.util.Objects;
     import java.util.Optional;
     import java.util.stream.Stream;
 
     import static com.ssafy.be.domain.auction.enums.Comment.AUCTION_START;
+    import static com.ssafy.be.domain.auction.enums.Comment.UNSOLD;
+    import static com.ssafy.be.domain.item.entity.ItemStatus.SOLD;
     import static com.ssafy.be.global.websocket.enums.DestType.BROADCAST;
-    import static com.ssafy.be.global.websocket.enums.StreamEventType.AUCTION_COMMENT;
-    import static com.ssafy.be.global.websocket.enums.StreamEventType.UNIQUE_AUCTION_START;
+    import static com.ssafy.be.global.websocket.enums.DestType.PRIVATE;
+    import static com.ssafy.be.global.websocket.enums.StreamEventType.*;
 
     @Service
     @RequiredArgsConstructor
@@ -49,6 +57,7 @@
         private final UniqueBidRepository uniqueBidRepository;
         private final UserRepository userRepository;
         private final ShippingAddressRepository shippingAddressRepository;
+        private final EscrowService escrowService;
 
         @Transactional
         public List<StreamPublishTask> startAuction(Long streamId, UniqueBidStartRequest request, Long userId) {
@@ -114,10 +123,13 @@
         }
 
         @Transactional
-        public UniqueAuctionResult aggregate(UniqueBidCalculateRequest request) {
+        public List<StreamPublishTask> aggregate(UniqueBidCalculateRequest request) {
 
             Long auctionId = request.auctionId();
-            Auction auction = findAuctionById(auctionId);
+            // 🔒 비관적 락으로 조회: 동시 aggregate() 중복 호출 시 race condition 방지
+            Auction auction = auctionRepository.findByIdWithLock(auctionId)
+                    .orElseThrow(() -> new StompException(UniqueBidAuctionErrorCode.NOT_FOUND));
+            Long streamId = auction.getStream().getId();
 
             if (!auction.isLive())
                 throw new StompException(UniqueBidAuctionErrorCode.INVALID_STATUS);
@@ -128,42 +140,68 @@
             // 유일 최고가
             Optional<Long> winnerPrice = uniqueBidRepository.findHighestUniqueBid(auctionId);
 
-            // TODO : top 개수 및 기준 변경 필요
             List<DuplicatePriceInfo> topDuplicates = uniqueBidRepository.findTopPriceDuplicate(auctionId, 3);
+
+            List<StreamPublishTask> publishTasks = new ArrayList<>();
 
             // 유찰
             if (winnerPrice.isEmpty()) {
                 auction.unsold();
                 refundAll(auctionId);
                 uniqueBidRepository.deleteAll(auctionId);
-                return buildUnsoldResult(topDuplicates);
+                UniqueAuctionResult result = buildUnsoldResult(topDuplicates);
+                publishTasks.add(buildStreamPublishTask(BROADCAST, streamId, null, UNIQUE_AUCTION_END, buildResultResponse(result, null)));
+                publishTasks.add(buildStreamPublishTask(BROADCAST, streamId, null, AUCTION_COMMENT, buildAuctionCommentResponse(UNSOLD.getValue())));
+
+                return publishTasks;
             }
 
             // 낙찰
             Long winnerId = uniqueBidRepository
                     .findUserIdByAmount(auctionId, winnerPrice.get())
                     .orElseThrow();
-
             // 옥션 상태 변경 (최종가 기록)
             auction.sold(winnerPrice.get());
+            auction.getItem().sold(LocalDateTime.now());
+
+
 
             // 낙찰자 찾기
             User winner = userRepository.findById(winnerId)
                     .orElseThrow(() -> new StompException(UserErrorCode.USER_NOT_FOUND));
 
             // 낙찰자 에스크로
-            winner.depositEscrowBalance(winnerPrice.get());
+            Bid topBid = Bid.builder().userId(winner.getId()).amount(winnerPrice.get()).nickname(winner.getNickname()).build();
 
-            // 나머지 환불
-            refundAllExcept(auctionId, winnerId);
-            uniqueBidRepository.deleteAll(auctionId);
 
             ShippingAddress shipping = shippingAddressRepository
                     .findByUserIdAndIsDefaultTrue(winnerId)
                     .orElseThrow(() -> new StompException(
                             ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
 
-            return buildWonResult(winnerId, winnerPrice.get(), topDuplicates, shipping);
+            //에스크로 시작
+            escrowService.startEscrow(topBid, auction, shipping);
+
+            // 나머지 환불
+            refundAllExcept(auctionId, winnerId);
+            uniqueBidRepository.deleteAll(auctionId);
+
+            UniqueAuctionResult result = buildWonResult(winnerId, winnerPrice.get(), topDuplicates, shipping);
+
+
+
+            // 알림 태스크 구성
+            // 1. 전체 유저에게 결과 공지
+            publishTasks.add(buildStreamPublishTask(BROADCAST, streamId, null, UNIQUE_AUCTION_END, buildResultResponse(result, null)));
+            // 2. 우승자에게 특별 알림 (프라이빗으로 myBidPrice 포함하여 UNIQUE_AUCTION_END 발송)
+            publishTasks.add(buildStreamPublishTask(PRIVATE, streamId, winnerId, UNIQUE_AUCTION_END, buildResultResponse(result, winnerPrice.get())));
+            // 3. 우승자에게 낙찰 상세 정보
+            publishTasks.add(buildStreamPublishTask(PRIVATE, streamId, winnerId, BID_WINNER, buildWinnerResponse(result)));
+
+            // 4. 경매 중계 메시지
+            String message = String.format(SOLD.getValue(), winner.getNickname(), winnerPrice.get());
+            publishTasks.add(buildStreamPublishTask(BROADCAST, streamId, null, AUCTION_COMMENT, buildAuctionCommentResponse(message)));
+            return publishTasks;
         }
 
         @Transactional(readOnly = true)
@@ -175,20 +213,6 @@
             return buildSyncResponse(auction, auction.getUniqueBidAuctionDetail(), userId);
         }
 
-        @Transactional(readOnly = true)
-        public UniqueBidItemSyncResponse syncItem(Long streamId) {
-            List<Auction> auctions = auctionRepository.findByStreamId(streamId)
-                    .stream()
-                    .filter(auction -> auction.getAuctionType() == AuctionType.UNIQUE_TOP)
-                    .toList();
-
-            List<UniqueBidItemSyncResponse.ItemInfo> items = auctions.stream()
-                    .map(this::buildItemSyncInfo)
-                    .toList();
-            return UniqueBidItemSyncResponse.builder()
-                    .items(items)
-                    .build();
-        }
 
         public Long getStreamIdByAuctionId(Long auctionId) {
             return findAuctionById(auctionId).getStream().getId();
@@ -273,6 +297,7 @@
                     .build();
         }
 
+
         @Transactional(readOnly = true)
         public long getParticipantCount(Long auctionId) {
             return uniqueBidRepository.countParticipants(auctionId);
@@ -312,4 +337,34 @@
                     .itemCondition(auction.getItem().getItemCondition())
                     .build();
         }
+
+        private UniqueAuctionResultResponse buildResultResponse(UniqueAuctionResult result, Long myBidPrice) {
+            return UniqueAuctionResultResponse.builder()
+                    .isWon(result.isWon())
+                    .winnerPrice(result.isWon() ? result.winnerPrice() : null)
+                    .myBidPrice(myBidPrice) // 추가됨
+                    .topDuplicates(result.topDuplicates())
+                    .build();
+        }
+
+        private BidWinnerResponse buildWinnerResponse(UniqueAuctionResult result) {
+            ShippingAddress s = result.shippingAddress();
+            return BidWinnerResponse.builder()
+                    .item(BidWinnerResponse.ItemDto.builder()
+                            .itemName("유일가 경매 낙찰")
+                            .finalPrice(result.winnerPrice())
+                            .myBidPrice(result.winnerPrice()) // 추가됨
+                            .build())
+                    .shipping(BidWinnerResponse.ShippingDto.builder()
+                            .recipientName(s.getRecipientName())
+                            .addressName(s.getAddressName())
+                            .postalCode(s.getPostalCode())
+                            .address(s.getAddress())
+                            .addressDetail(s.getAddressDetail())
+                            .phone(s.getPhone())
+                            .build())
+                    .build();
+        }
+
+
     }

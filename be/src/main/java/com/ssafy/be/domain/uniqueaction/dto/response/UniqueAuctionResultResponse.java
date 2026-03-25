@@ -9,5 +9,6 @@ public record UniqueAuctionResultResponse(
         boolean isWon,
         Long winnerId,
         Long winnerPrice,
+        Long myBidPrice,
         List<DuplicatePriceInfo> topDuplicates
 ) {}

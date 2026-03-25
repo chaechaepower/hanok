@@ -11,7 +11,6 @@ import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.shippingaddress.repository.ShippingAddressRepository;
 import com.ssafy.be.domain.stream.entity.Stream;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
-import com.ssafy.be.domain.uniqueaction.dto.model.UniqueAuctionResult;
 import com.ssafy.be.domain.uniqueaction.dto.request.UniqueBidCalculateRequest;
 import com.ssafy.be.domain.uniqueaction.dto.request.UniqueBidPlaceRequest;
 import com.ssafy.be.domain.uniqueaction.dto.request.UniqueBidStartRequest;
@@ -23,6 +22,7 @@ import com.ssafy.be.domain.uniqueaction.service.UniqueBidAuctionService;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.extension.IntegrationTestExtension;
+import com.ssafy.be.global.websocket.enums.DestType;
 import com.ssafy.be.global.websocket.dto.StreamPublishTask;
 import com.ssafy.be.global.websocket.exception.StompException;
 import com.ssafy.be.support.annotation.IntegrationTest;
@@ -220,11 +220,11 @@ class UniqueBidAuctionServiceTest {
             IT_LOG.info("    [요청] 입찰 건 없는 상태로 집계 시작");
             UniqueBidCalculateRequest request = UniqueBidCalculateRequest.builder().auctionId(auction.getId()).build();
 
-            UniqueAuctionResult result = uniqueBidAuctionService.aggregate(request);
+            List<StreamPublishTask> publishTasks = uniqueBidAuctionService.aggregate(request);
 
             Auction endedAuction = auctionRepository.findById(auction.getId()).orElseThrow();
             assertThat(endedAuction.getAuctionStatus()).isEqualTo(AuctionStatus.UNSOLD);
-            assertThat(result.isWon()).isFalse();
+            assertThat(publishTasks).isNotEmpty();
             
             IT_LOG.info("    [검증] ✔ UNSOLD 처리 완료 확인");
         }
@@ -245,15 +245,53 @@ class UniqueBidAuctionServiceTest {
 
             IT_LOG.info("    [요청] 눈치게임 집계 시작");
             UniqueBidCalculateRequest request = UniqueBidCalculateRequest.builder().auctionId(auction.getId()).build();
-            UniqueAuctionResult result = uniqueBidAuctionService.aggregate(request);
+            List<StreamPublishTask> publishTasks = uniqueBidAuctionService.aggregate(request);
 
             Auction endedAuction = auctionRepository.findById(auction.getId()).orElseThrow();
             assertThat(endedAuction.getAuctionStatus()).isEqualTo(AuctionStatus.SOLD);
             assertThat(endedAuction.getFinalPrice()).isEqualTo(45000L);
-            assertThat(result.isWon()).isTrue();
-            assertThat(result.winnerId()).isEqualTo(bidder2.getId());
+            assertThat(publishTasks).isNotEmpty();
+            assertThat(publishTasks).anyMatch(
+                    t -> DestType.PRIVATE.equals(t.getDestType()) && bidder2.getId().equals(t.getUserId()));
             
             IT_LOG.info("    [검증] ✔ 50000원 중복 탈락 처리 및 45000원 유일 입찰자(B2) 최종 승리 확인!");
+        }
+    }
+
+    // ═══ Section 4 : 잔액 부족 입찰 테스트 ══════════════════════
+    @Nested
+    @Order(4)
+    @DisplayName("Section 4 │ 잔액 부족 예외 처리")
+    @ExtendWith(IntegrationTestExtension.class)
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+    class InsufficientBalanceTest {
+
+        @BeforeEach
+        void auctionLive() {
+            auction = auctionRepository.findById(auction.getId()).get();
+            auction.startAuction("now");
+            auction = auctionRepository.save(auction);
+        }
+
+        @Test
+        @Order(1)
+        @DisplayName("I-6. 잔액 0원인 입찰자가 유효 금액 입찰 시 예외 발생")
+        void placeBid_InsufficientBalance() {
+            // balance=0 → user.depositBidBalance() 내부 잔액 부족 예외 유발
+            User brokeUser = userRepository.save(
+                    TestFixture.createUser("brokeUser_" + System.currentTimeMillis()).toBuilder()
+                            .balance(0L)
+                            .depositedBidBalance(0L)
+                            .build());
+
+            IT_LOG.info("    [요청] 잔액 0원인 유저가 45000원 입찰 시도");
+            UniqueBidPlaceRequest request = UniqueBidPlaceRequest.builder()
+                    .auctionId(auction.getId()).amount(45000L).build();
+
+            assertThrows(Exception.class, () ->
+                    uniqueBidAuctionService.placeBid(request, brokeUser.getId()));
+
+            IT_LOG.info("    [검증] ✔ 잔액 부족 시 예외 전파 확인");
         }
     }
 }

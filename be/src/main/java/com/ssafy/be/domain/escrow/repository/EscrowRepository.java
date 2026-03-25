@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface EscrowRepository extends JpaRepository<Escrow, Long> {
@@ -77,5 +78,13 @@ public interface EscrowRepository extends JpaRepository<Escrow, Long> {
     );
 
     List<Escrow> findByTxStatus(TxStatus txStatus);
+
+    @Query("""
+        select e from Escrow e
+        join fetch e.auction a
+        join fetch a.item
+        where e.id = :id
+        """)
+    Optional<Escrow> findByIdWithAuctionAndItem(@Param("id") Long id);
 }
 

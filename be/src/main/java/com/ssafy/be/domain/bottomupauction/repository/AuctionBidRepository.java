@@ -72,4 +72,10 @@ public class AuctionBidRepository {
 
         return Optional.of(jsonConverter.convert(result.iterator().next(), Bid.class));
     }
+
+    public long countBids(Long auctionId) {
+        String key = AuctionRedisKeys.getBidKey(auctionId);
+        Long size = redisOperator.getZSetSize(key);
+        return size != null ? size : 0L;
+    }
 }

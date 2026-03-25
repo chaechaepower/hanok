@@ -17,7 +17,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final StompAuthChannelInterceptor stompAuthChannelInterceptor;
 
-
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/broadcast", "/private");
@@ -34,13 +33,21 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
         registration
-                .setMessageSizeLimit(64 * 1024)       // 메시지 최대 크기
-                .setSendBufferSizeLimit(512 * 1024)   // 송신 버퍼 크기
-                .setSendTimeLimit(20_000);             // 송신 타임아웃 시간
+                .setMessageSizeLimit(64 * 1024)
+                .setSendBufferSizeLimit(512 * 1024)
+                .setSendTimeLimit(20_000);
     }
 
+    // ✅ 인터셉터와 스레드 풀 사이즈를 여기서 한 번에 설정합니다.
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
         registration.interceptors(stompAuthChannelInterceptor);
+
+        registration.taskExecutor()
+                .corePoolSize(25)
+                .maxPoolSize(500)
+                .queueCapacity(200)
+                .keepAliveSeconds(60);
     }
+
 }

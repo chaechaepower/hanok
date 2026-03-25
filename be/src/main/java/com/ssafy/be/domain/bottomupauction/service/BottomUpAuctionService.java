@@ -18,7 +18,6 @@ import com.ssafy.be.domain.bottomupauction.exception.AuctionErrorCode;
 import com.ssafy.be.domain.bottomupauction.model.Bid;
 import com.ssafy.be.domain.bottomupauction.repository.AuctionBidRepository;
 import com.ssafy.be.domain.escrow.service.EscrowService;
-import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
@@ -56,6 +55,7 @@ import static com.ssafy.be.global.websocket.enums.StreamEventType.*;
 public class BottomUpAuctionService {
     private static final long SNIPING_THRESHOLD_SECONDS = 5L;
     private final AuctionBidFacade auctionBidFacade;
+    private final AuctionBidService auctionBidService;
     private final AuctionRepository auctionRepository;
     private final AuctionBidRepository auctionBidRepository;
     private final AuctionTimerRepository auctionTimerRepository;
@@ -114,7 +114,7 @@ public class BottomUpAuctionService {
     }
 
     @Transactional // TODO: 트랜잭션 범위 줄이기
-    public List<StreamPublishTask> placeBid(BidPlaceRequest request, Long streamId, Long userId) {
+    public List<StreamPublishTask> placeBidWithLock(BidPlaceRequest request, Long streamId, Long userId) {
         Auction auction = auctionRepository.findById(request.auctionId())
                 .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
 
@@ -185,18 +185,84 @@ public class BottomUpAuctionService {
         return List.of(bidPlacePublishTask, statisticsPublishTask, auctionCommentPublishTask);
     }
 
+    @Transactional // 테스트용
+    public List<StreamPublishTask> placeBidWithoutLock(BidPlaceRequest request, Long streamId, Long userId) {
+        Auction auction = auctionRepository.findById(request.auctionId())
+                .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
+
+        BottomUpAuctionDetail detail = auction.getBottomUpAuctionDetail();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new StompException(UserErrorCode.USER_NOT_FOUND));
+
+        // 1. 현재 진행중인 경매인지 검증
+        validateLiveAuction(auction);
+
+        // 2. 판매자 본인 물건 입찰 방지 검증
+        validateNotSelfBid(auction, userId);
+
+        // 3. 사용자 잔액 >= 입찰가 검증
+        validateSufficientBalance(request.amount(), user);
+
+        // 4. 락 걸어서 입찰가 검증 및 저장
+        BidPlaceResponse.BidInfoDto bidInfoDto = auctionBidService.saveBid(request, auction, user);
+
+        // 5. 스나이핑 방지 - 잔여 시간이 5초 이내면 5초로 연장
+        boolean isSniping = preventSniping(auction.getId());
+
+        // 6. 응답
+        // 6-1. BID_PLACE로 입찰 정보 브로드캐스트
+        StreamPublishTask bidPlacePublishTask = buildStreamPublishTask(
+                BROADCAST,
+                streamId,
+                null,
+                BID_PLACED,
+                buildBidPlaceResponse(
+                        bidInfoDto,
+                        isSniping ? buildSnipingTimerDto(TimeUtils.nowAsString()) : null));
+
+        // 6-2. AUCTION_STATISTICS로 실시간 통계 정보 브로드캐스트
+        List<Bid> bids = auctionBidRepository.findAll(auction.getId());
+
+        List<AuctionStatisticsResponse.RecentBidDto> recentBids = bids.stream()
+                .limit(15)
+                .map(this::buildRecentBidDto)
+                .toList();
+
+        AuctionStatisticsResponse auctionStatisticsResponse = buildAuctionStatisticsResponse(
+                auction.getItem().getName(),
+                bids.stream().mapToLong(Bid::amount).sum(),
+                bids.size(),
+                detail.getStartPrice(),
+                bids.isEmpty() ? detail.getStartPrice() : bids.getFirst().amount(),
+                recentBids);
+
+        StreamPublishTask statisticsPublishTask = buildStreamPublishTask(
+                BROADCAST,
+                streamId,
+                null,
+                AUCTION_STATISTICS,
+                auctionStatisticsResponse);
+
+        // 6-3. AUCTION_COMMENT로 경매 중계 메시지 브로드캐스트
+        String formattedMessage = String.format(BID_PLACE.getValue(), user.getNickname(), request.amount());
+
+        StreamPublishTask auctionCommentPublishTask = buildStreamPublishTask(
+                BROADCAST,
+                streamId,
+                null,
+                AUCTION_COMMENT,
+                buildAuctionCommentResponse(formattedMessage));
+
+        return List.of(bidPlacePublishTask, statisticsPublishTask, auctionCommentPublishTask);
+    }
+
     @Transactional
     public List<StreamPublishTask> endAuction(Long auctionId) {
         Auction auction = auctionRepository.findById(auctionId)
                 .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
 
         Bid topBid = auctionBidRepository.findTopBid(auctionId).orElse(null);
-
-        // 배송지 먼저 등록되있는지 검증 -> 배송지 없으면 낙찰 불가
-        ShippingAddress shippingAddress = shippingAddressRepository
-                .findByUserIdAndIsDefaultTrue(topBid.userId())
-                .orElseThrow(() -> new StompException(
-                        ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
 
         // AUCTION_END로 경매 종료 broadcast
         StreamPublishTask endPublishTask = buildStreamPublishTask(
@@ -216,14 +282,17 @@ public class BottomUpAuctionService {
 
         // 유찰
         if (topBid == null) {
-            auction.unsold(); // 경매 상태 -> 유찰됨
-            auction.getItem().ready(); // 물건 상태 -> 준비중(다시 팔 수 있게)
+            auction.unsold();
             return List.of(endPublishTask, auctionCommentPublishTask);
         }
 
+        // 배송지 먼저 등록되있는지 검증 -> 배송지 없으면 낙찰 불가
+        ShippingAddress shippingAddress = shippingAddressRepository.findByUserIdAndIsDefaultTrue(topBid.userId())
+                .orElseThrow(() -> new StompException(ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
+
         // 낙찰
-        auction.sold(topBid.amount()); // 경매 상태 -> 낙찰됨
-        auction.getItem().pending(); // 물건 상태 -> 판매중
+        auction.sold(topBid.amount());
+        auction.getItem().sold(LocalDateTime.now());
 
         // 에스크로 시작
         escrowService.startEscrow(topBid, auction, shippingAddress);
@@ -276,22 +345,6 @@ public class BottomUpAuctionService {
                 buildBidSyncTimerInfo((int) remainingSeconds, serverNow, auction.getStartedAt()));
     }
 
-    @Transactional(readOnly = true)
-    public ItemSyncResponse syncItem(Long streamId) {
-        // 1. 해당 스트림의 모든 경매 아이템 조회
-        List<Auction> auctions = auctionRepository.findByStreamId(streamId);
-
-        // 2. 상향식 경매만 응답 생성
-        List<ItemSyncResponse.ItemInfo> items = auctions.stream()
-                .filter(auction -> auction.getAuctionType() == AuctionType.BOTTOM_UP)
-                .filter(auction -> auction.getBottomUpAuctionDetail() != null)
-                .map(this::buildItemSyncInfo)
-                .toList();
-
-        return ItemSyncResponse.builder()
-                .items(items)
-                .build();
-    }
 
     private boolean preventSniping(Long auctionId) {
         long remaining = auctionTimerRepository.findRemainingSecondsByAuctionId(auctionId);
@@ -466,29 +519,5 @@ public class BottomUpAuctionService {
                 bid.nickname(),
                 bid.amount(),
                 bid.bidAt());
-    }
-
-    private ItemSyncResponse.ItemInfo buildItemSyncInfo(Auction auction) {
-        List<String> images = Stream.of(
-                        auction.getItem().getImage1(),
-                        auction.getItem().getImage2(),
-                        auction.getItem().getImage3())
-                .filter(Objects::nonNull)
-                .toList();
-
-        return ItemSyncResponse.ItemInfo.builder()
-                .auctionId(auction.getId())
-                .itemName(auction.getItem().getName())
-                .description(auction.getItem().getDescription())
-                .images(images)
-                .startPrice(auction.getBottomUpAuctionDetail().getStartPrice())
-                .auctionType(auction.getAuctionType())
-                .auctionTime(auction.getAuctionDuration())
-                .bidUnit(auction.getBottomUpAuctionDetail().getBidUnit())
-                .auctionStatus(auction.getAuctionStatus())
-                .finalPrice(auction.getAuctionStatus() == AuctionStatus.SOLD ? auction.getFinalPrice()
-                        : null)
-                .itemCondition(auction.getItem().getItemCondition())
-                .build();
     }
 }
