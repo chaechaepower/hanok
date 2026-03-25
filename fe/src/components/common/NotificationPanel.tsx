@@ -12,7 +12,7 @@ interface NotificationPanelProps {
   onClose: () => void;
 }
 
-const ROUTABLE_NOTIFICATION_TYPES = new Set(['STREAM_STARTED', 'STREAM_SCHEDULED']);
+const ROUTABLE_NOTIFICATION_TYPES = new Set(['STREAM_START']);
 
 export default function NotificationPanel({ onClose }: NotificationPanelProps) {
   const navigate = useNavigate();
