@@ -84,7 +84,7 @@ export default function OrderHistorySection() {
           onClick={handleCloseModal}
         >
           <div
-            className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto"
+            className="max-h-[90vh] w-full max-w-[520px] overflow-y-auto scrollbar-hide"
             onClick={(event) => event.stopPropagation()}
           >
             {isDetailLoading || !selectedItemDetail ? (

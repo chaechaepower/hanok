@@ -666,7 +666,7 @@ export function useLiveStream(
 
       unsubscribeStream();
     };
-  }, [showToast, streamId]);
+  }, [setStreamState, showToast, streamId]);
 
   // ---------------------------------------------------------------------------
   // Race-condition-safe ITEM_SYNC on stream live transition.
