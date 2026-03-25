@@ -231,6 +231,7 @@ export const mainHandlers = [
     if (registeredLive) {
       const sellerId = registeredLive.sellerId;
       const isHost = sellerId === (currentUser?.userId ?? null);
+      const status = registeredLive.streamStatus ?? (registeredLive.isLive ? 'LIVE' : 'SCHEDULED');
 
       return HttpResponse.json({
         streamId: registeredLive.streamId,
@@ -239,9 +240,9 @@ export const mainHandlers = [
         thumbnail: registeredLive.thumbnail,
         scheduledAt: registeredLive.scheduledAt,
         startType: registeredLive.startType,
-        status: registeredLive.isLive ? 'LIVE' : 'SCHEDULED',
+        status,
         notice: registeredLive.notice ?? null,
-        isLive: registeredLive.isLive,
+        isLive: status === 'LIVE' || status === 'PAUSED',
         createdAt: registeredLive.createdAt,
         items: registeredLive.items.map(toStreamEnterItem),
         seller: {

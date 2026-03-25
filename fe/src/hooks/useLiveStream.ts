@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { SetStateAction } from 'react';
 
 import type {
   AuctionStatisticsPayload,
@@ -178,7 +179,11 @@ export type UseLiveStreamReturn = {
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useLiveStream(streamId: string | undefined, isLiveFromServer: boolean): UseLiveStreamReturn {
+export function useLiveStream(
+  streamId: string | undefined,
+  isLiveFromServer: boolean,
+  initialStreamStatus?: string | null,
+): UseLiveStreamReturn {
   const { showToast } = useToast();
 
   const [liveStateOverride, setLiveStateOverride] = useState<boolean | null>(null);
@@ -187,7 +192,13 @@ export function useLiveStream(streamId: string | undefined, isLiveFromServer: bo
   const [bidSync, setBidSync] = useState<BidSyncPayload | null>(null);
   const [uniqueBidSync, setUniqueBidSync] = useState<UniqueBidSyncPayload | null>(null);
   const [itemSync, setItemSync] = useState<ItemSyncPayload | null>(null);
-  const [streamState, setStreamState] = useState<StreamState>('live');
+  const [runtimeStreamState, setRuntimeStreamState] = useState<{
+    streamId: string | undefined;
+    value: StreamState | null;
+  }>({
+    streamId,
+    value: null,
+  });
   const [auctionStatistics, setAuctionStatistics] = useState<AuctionStatisticsPayload | null>(null);
   const [auctionComment, setAuctionComment] = useState<{ id: number; message: string } | null>(null);
   const [winnerInfo, setWinnerInfo] = useState<WinnerInfoState | null>(null);
@@ -204,6 +215,27 @@ export function useLiveStream(streamId: string | undefined, isLiveFromServer: bo
   const requestItemSyncRef = useRef<(() => Promise<void>) | null>(null);
 
   const isStreamLive = liveStateOverride ?? isLiveFromServer;
+  const serverStreamState: StreamState = initialStreamStatus === 'PAUSED' ? 'disconnected' : 'live';
+  const streamState =
+    runtimeStreamState.streamId === streamId && runtimeStreamState.value !== null
+      ? runtimeStreamState.value
+      : serverStreamState;
+
+  const setStreamState = useCallback(
+    (value: SetStateAction<StreamState>) => {
+      setRuntimeStreamState((prev) => {
+        const prevValue =
+          prev.streamId === streamId && prev.value !== null ? prev.value : serverStreamState;
+        const nextValue = typeof value === 'function' ? value(prevValue) : value;
+
+        return {
+          streamId,
+          value: nextValue,
+        };
+      });
+    },
+    [serverStreamState, streamId],
+  );
 
   // Derived values
   const introducingAuctionItem = itemSync?.items.find((item) => item.auctionStatus === 'INTRODUCING') ?? null;
@@ -658,7 +690,7 @@ export function useLiveStream(streamId: string | undefined, isLiveFromServer: bo
 
   const markStreamEnded = useCallback(() => {
     setStreamState('ended');
-  }, []);
+  }, [setStreamState]);
 
   const clearWinnerInfo = useCallback(() => {
     setWinnerInfo(null);

@@ -38,6 +38,7 @@ type RegisteredLive = Omit<StreamDetailResponse, 'items'> & {
   sellerId: number;
   sellerNickname: string;
   sellerProfileImage: string | null;
+  streamStatus?: 'LIVE' | 'PAUSED' | 'SCHEDULED';
 };
 
 type CreateStreamItemInput = StreamRequest['auctionItems'][number] | number;
@@ -163,6 +164,12 @@ const getCurrentSellerSnapshot = () => {
 };
 
 export const getRegisteredLiveById = (streamId: number) => registeredLives.find((item) => item.streamId === streamId);
+
+const getRegisteredLiveState = (live: RegisteredLive) => live.streamStatus ?? (live.isLive ? 'LIVE' : 'SCHEDULED');
+const isRegisteredLiveActive = (live: RegisteredLive) => {
+  const state = getRegisteredLiveState(live);
+  return state === 'LIVE' || state === 'PAUSED';
+};
 
 const toStreamDetailStatus = (live: RegisteredLive, item: RegisteredLiveItem): StreamDetailItem['status'] =>
   !live.isLive && item.status === 'READY' ? 'SCHEDULED' : item.status;
@@ -336,10 +343,10 @@ export const getRegisteredLiveCards = (): LiveCardData[] =>
     title: live.title,
     category: live.category,
     thumbnailUri: live.thumbnail,
-    streamStatus: live.isLive ? 'LIVE' : 'SCHEDULED',
+    streamStatus: getRegisteredLiveState(live),
     viewerCount: 0,
-    scheduledAt: live.isLive ? null : live.scheduledAt,
-    startedAt: live.isLive ? live.createdAt : null,
+    scheduledAt: isRegisteredLiveActive(live) ? null : live.scheduledAt,
+    startedAt: isRegisteredLiveActive(live) ? live.createdAt : null,
     seller: {
       sellerId: live.sellerId,
       nickname: live.sellerNickname,
@@ -701,7 +708,7 @@ export const LiveCreateHandlers = [
         category: live.category,
         thumbnail: live.thumbnail,
         scheduledAt: live.scheduledAt,
-        state: live.isLive ? ('LIVE' as const) : ('SCHEDULED' as const),
+        state: getRegisteredLiveState(live),
       }));
 
     const start = page * size;

@@ -66,6 +66,8 @@ const unmarkStartedLiveStream = (streamId: number) => {
   persistStartedLiveStreamIds(next);
 };
 
+const isActiveStreamStatus = (status?: string | null) => status === 'LIVE' || status === 'PAUSED';
+
 export default function LivePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -115,7 +117,7 @@ export default function LivePage() {
     markStreamEnded,
     clearWinnerInfo,
     clearUniqueAuctionResult,
-  } = useLiveStream(safeStreamId, activeStreamEnter?.status === 'LIVE');
+  } = useLiveStream(safeStreamId, isActiveStreamStatus(activeStreamEnter?.status), activeStreamEnter?.status);
   const streamEnterErrorStatus =
     streamEnterError instanceof AxiosError ? (streamEnterError.response?.status ?? null) : null;
   const isNotFoundLive = !isValidStreamId || (isStreamEnterError && streamEnterErrorStatus === 404);

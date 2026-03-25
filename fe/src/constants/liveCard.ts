@@ -17,12 +17,12 @@ export const STREAM_STATUS_META_MAP: Record<
     canEnter: false,
   },
   PAUSED: {
-    label: '일시 정지',
+    label: '일시정지',
     badgeClassName: 'bg-ember/20 text-ember-light',
     canEnter: true,
   },
   ENDED: {
-    label: '종료됨',
+    label: '종료',
     badgeClassName: 'bg-white/12 text-white/70',
     canEnter: false,
   },
