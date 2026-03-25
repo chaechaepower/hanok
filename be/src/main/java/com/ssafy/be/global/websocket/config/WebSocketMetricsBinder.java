@@ -1,12 +1,15 @@
 package com.ssafy.be.global.websocket.config;
+import io.micrometer.core.instrument.FunctionCounter;
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
-import io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.ThreadPoolExecutor;
 
 @Component
 public class WebSocketMetricsBinder {
@@ -27,11 +30,21 @@ public class WebSocketMetricsBinder {
     public void bindMetrics() {
         inboundExecutor.initialize();
 
-        Tags tags = Tags.of("type", "inbound", "pool", "clientInbound");
-        new ExecutorServiceMetrics(
-                inboundExecutor.getThreadPoolExecutor(),
-                "websocket.inbound.channel",
-                tags
-        ).bindTo(meterRegistry);
+        ThreadPoolExecutor tpe = inboundExecutor.getThreadPoolExecutor();
+
+        // ✅ executor.* 와 겹치지 않는 완전히 다른 이름으로 직접 Gauge 등록
+        Tags tags = Tags.of(
+                "application", "hanok-backend",
+                "namespace", "production"
+        );
+
+        Gauge.builder("ws.inbound.pool.size", tpe, ThreadPoolExecutor::getPoolSize)
+                .tags(tags).register(meterRegistry);
+        Gauge.builder("ws.inbound.active.threads", tpe, ThreadPoolExecutor::getActiveCount)
+                .tags(tags).register(meterRegistry);
+        Gauge.builder("ws.inbound.queued.tasks", tpe, e -> e.getQueue().size())
+                .tags(tags).register(meterRegistry);
+        FunctionCounter.builder("ws.inbound.completed.tasks", tpe, ThreadPoolExecutor::getCompletedTaskCount)
+                .tags(tags).register(meterRegistry);
     }
 }
