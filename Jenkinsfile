@@ -93,7 +93,7 @@ LKEOF
                         fi
                         
                         # 기본 인프라 컨테이너 실행
-                        docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis livekit prometheus grafana loki promtail influxdb
+                        docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis redis-exporter livekit prometheus grafana loki promtail nginx
                         
                         # 배포 타겟 결정
                         ACTIVE_TARGET=$(grep -oP 'server \\K[^:]+' infra/nginx/conf.d/upstream.conf || echo "backend-green")
@@ -112,7 +112,7 @@ LKEOF
                         
                         docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} pull ${TARGET}
                         docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d --no-deps ${TARGET}
-                        docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis livekit prometheus grafana loki promtail nginx influxdb
+                        docker-compose -f ${COMPOSE_FILE} --env-file ${ENV_FILE} up -d mysql redis redis-exporter livekit prometheus grafana loki promtail influxdb
                         
                         # 헬스체크
                         HEALTH="000"
