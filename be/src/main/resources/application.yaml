@@ -11,14 +11,13 @@ spring:
       secretmanager:
         enabled: false
 
-
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${DB_HOST:}:${DB_PORT:}/${DB_NAME:}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: ${DB_USERNAME:}
     password: ${DB_PASSWORD:}
     hikari:
-      maximum-pool-size: 50  # 기본값 10 -> 50으로 증가
+      maximum-pool-size: 50
       minimum-idle: 10
       connection-timeout: 30000
 
@@ -26,13 +25,13 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+    #  password: ${REDIS_PASSWORD:}
+    #  ssl:
+    #    enabled: ${REDIS_SSL_ENABLED:false}
+    web:
+      pageable:
+        serialization-mode: via-dto
 
-      web:
-        pageable:
-          serialization-mode: via-dto
-  #      password: ${REDIS_PASSWORD:}
-  #      ssl:
-  #        enabled: ${REDIS_SSL_ENABLED:false}
   jpa:
     open-in-view: false
 
@@ -68,8 +67,8 @@ portone:
   base-url: ${PORTONE_BASE_URL:}
   store-id: ${PORTONE_STORE_ID:}
   secret:
-      key: ${PORTONE_SECRET_KEY:}
-      webhook: ${PORTONE_SECRET_WEBHOOK:} # 추후 운영 서버 도메인으로 웹훅 재등록 필요
+    key: ${PORTONE_SECRET_KEY:}
+    webhook: ${PORTONE_SECRET_WEBHOOK:}
 
 livekit:
   url: ws://hanok-livekit:7880

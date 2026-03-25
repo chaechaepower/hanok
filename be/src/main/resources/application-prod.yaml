@@ -28,11 +28,12 @@ logging:
 
 server:
   tomcat:
-    mbean-enabled: true
+    mbeanregistry:
+      enabled: true
+    max-connections: 1000
   threads:
-    max: 500       # 기본값 200 -> 500으로 증가
-    min-spare: 50  # 유지할 최소 스레드
-    max-connections: 1000 # 톰캣이 유지할 수 있는 최대 커넥션 수
+    max: 500
+    min-spare: 50
 
 management:
   endpoints:
@@ -41,7 +42,7 @@ management:
         include: health, info, prometheus
   endpoint:
     prometheus:
-      enabled: true
+      access: unrestricted
   prometheus:
     metrics:
       export:
@@ -50,5 +51,3 @@ management:
     tags:
       application: hanok-backend
       namespace: production
-    lettuce:
-      enabled: true

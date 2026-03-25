@@ -1,5 +1,4 @@
-package com.ssafy.be.global.websocket.config; // 패키지는 상황에 맞게 조절하세요
-
+package com.ssafy.be.global.websocket.config;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.binder.jvm.ExecutorServiceMetrics;
