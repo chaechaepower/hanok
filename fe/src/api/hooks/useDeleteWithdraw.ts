@@ -15,5 +15,6 @@ export const deleteWithdraw = async (payload: WithdrawPayload) => {
 export const useDeleteWithdraw = () => {
   return useMutation({
     mutationFn: deleteWithdraw,
+    throwOnError: false,
   });
 };

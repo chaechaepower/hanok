@@ -103,7 +103,7 @@ export default function AccountSection() {
           showToast({ message: '회원 탈퇴가 요청되었습니다.' });
         },
         onError: () => {
-          setWithdrawError('탈퇴 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+          showToast({ message: '탈퇴가 불가능한 서비스입니다. 경매에 참여해주세용!' });
         },
       },
     );

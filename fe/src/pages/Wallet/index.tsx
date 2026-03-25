@@ -254,14 +254,13 @@ export default function WalletPage() {
                     </Button>
                   </div>
                   <div className="w-full">
-                    <Button
-                      variant="warmOutline"
-                      className="gap-2 font-semibold"
+                    <button
+                      className="flex items-center justify-center whitespace-nowrap w-full rounded-(--radius-section) transition-colors disabled:opacity-50 disabled:cursor-not-allowed gap-2 font-semibold bg-warm/10 hover:bg-warm/20 h-[36px] text-[16px] md:h-[42px] md:text-[14px] min-[960px]:h-[60px] min-[960px]:text-[22px]"
                       onClick={() => openPointModal('withdraw')}
                     >
                       <FiCreditCard className="h-4 w-4" />
                       출금하기
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </div>

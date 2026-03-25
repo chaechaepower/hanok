@@ -184,7 +184,7 @@ export const settingsHandlers = [
         message: 'User withdrawn successfully.',
         data: { status: 'withdrawn' },
       },
-      { status: 200 },
+      { status: 404 },
     ),
   ),
 
