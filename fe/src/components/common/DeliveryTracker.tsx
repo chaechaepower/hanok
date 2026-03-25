@@ -17,7 +17,7 @@ export default function DeliveryTracker({ carrierName, trackingNumber }: PostTra
   const levelLabels = ['인수', '이동중', '배달중', '도착'];
 
   return (
-    <div className="bg-surface rounded-xl border border-neutral-800 mb-4 overflow-hidden">
+    <div className="bg-surface rounded-xl border scrollbar-hide border-neutral-800 mb-4 overflow-hidden">
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}

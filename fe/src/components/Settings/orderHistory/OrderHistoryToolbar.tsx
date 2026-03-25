@@ -54,7 +54,7 @@ export default function OrderHistoryToolbar({ statusFilter, sortBy, onChangeStat
         buttonClassName="w-[120px] bg-primary/15 px-2 py-2 hover:bg-primary/25"
         labelClassName="text-body-md font-semibold text-primary-light"
         iconClassName="text-caption text-point/70 transition-transform"
-        menuClassName="w-[110px] bg-primary/15 shadow-primary-glow backdrop-blur-md"
+        menuClassName="w-[120px] bg-primary/15 shadow-primary-glow backdrop-blur-md"
         optionClassName="flex w-full items-center justify-center whitespace-nowrap rounded-lg px-2 py-2 text-center text-body-md transition"
         selectedOptionClassName="bg-primary font-semibold text-neutral-100"
         unselectedOptionClassName="text-neutral-300 hover:bg-warm/10"
