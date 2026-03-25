@@ -88,22 +88,17 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
           )}
         </div>
 
-        <div className="scrollbar-hide max-h-80 overflow-y-auto">
+        <div className="custom-scrollbar max-h-80 overflow-y-auto">
           {notifications.length === 0 ? (
             <NoItem message="알림이 없습니다" className="px-4 py-8" textClassName="text-sm text-neutral-500" />
           ) : (
             notifications.map((notification, index) => (
-              <div
-                key={notification.id}
-                ref={index === notifications.length - 1 ? lastItemRef : undefined}
-              >
+              <div key={notification.id} ref={index === notifications.length - 1 ? lastItemRef : undefined}>
                 <NotificationItem notification={notification} onClick={() => handleClick(notification)} />
               </div>
             ))
           )}
-          {isFetchingNextPage && (
-            <p className="px-4 py-3 text-center text-xs text-neutral-500">불러오는 중...</p>
-          )}
+          {isFetchingNextPage && <p className="px-4 py-3 text-center text-xs text-neutral-500">불러오는 중...</p>}
         </div>
       </div>
     </>
