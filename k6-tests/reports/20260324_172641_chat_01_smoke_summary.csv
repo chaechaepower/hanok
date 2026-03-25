@@ -1,2 +1,0 @@
-test_name,vus_max,p95_ms,p99_ms,avg_ms,tps,error_rate,ws_error_rate,chat_sent,chat_received,chat_success_rate,stomp_error
-chat_01_smoke,N/A,147.41,N/A,147.41,3.63,0.00,0.00,0,0,0.00,0
