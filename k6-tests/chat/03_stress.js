@@ -1,0 +1,116 @@
+import ws from 'k6/ws';
+import { sleep } from 'k6';
+import { Counter, Rate, Trend } from 'k6/metrics';
+import exec from 'k6/execution';
+import { generateSummary } from '../shared/summary.js';
+import { loginAll } from '../shared/auth.js';
+
+const WS_BASE = (__ENV.WS_BASE_URL || 'ws://j14d105.p.ssafy.io:8080/ws-connect').replace(/\/+$/, '');
+const STREAM_ID = __ENV.STREAM_ID || 1;
+
+// ✅ StepUp 테스트를 통해 알아낸 베이스라인 (환경 변수로 주입 가능, 기본값 400)
+const BASELINE_VUS = __ENV.BASELINE || 500;
+
+// 메트릭
+const wsErrors          = new Rate('ws_errors');
+const chatSuccessRate   = new Rate('chat_success_rate');
+const chatSentCount     = new Counter('chat_sent_count');
+const chatReceivedCount = new Counter('chat_received_count');
+const stompErrorCount   = new Counter('stomp_error_count');
+
+// ✅ 에러가 터지는 순간의 VU 수를 기록할 Trend 메트릭 생성
+const breakingPointVUs  = new Trend('breaking_point_vus');
+
+export const options = {
+  tags: {
+    domain: 'chat',
+    scenario: 'stress',
+  },
+  scenarios: {
+    stress: {
+      executor: 'ramping-vus',
+      startVUs: 0,
+      stages: [
+        { duration: '5m', target: BASELINE_VUS },                             // 1단계: 베이스라인까지 서서히 부하 증가
+        { duration: '5m', target: Math.floor(BASELINE_VUS * 1.5) },           // 2단계: 한계점의 1.5배까지 극한 스트레스 가중
+        { duration: '3m', target: 0 },                                        // 3단계: 트래픽 급감 시 서버 회복(Recovery) 테스트
+        { duration: '3m', target: 10 },                                       // 4단계: 최소 유저만 남겨두고 안정성 확인
+      ],
+    },
+  },
+  thresholds: {
+    ws_errors: ['rate<0.05'], // 에러율 5% 미만 허용
+  },
+};
+
+export function setup() {
+  const tokens = loginAll();
+  console.log(`✅ 로그인 완료: ${tokens.length}개 토큰 발급`);
+  return { tokens };
+}
+
+export default function (data) {
+  if (!data.tokens || data.tokens.length === 0) return;
+  const token = data.tokens[(__VU - 1) % data.tokens.length];
+
+  const wsParams = {
+    headers: { Authorization: token },
+    tags: { api: 'ws_connect' }
+  };
+
+  ws.connect(WS_BASE, wsParams, function (socket) {
+    // 1. WebSocket 연결 오픈 시 STOMP CONNECT 전송
+    socket.on('open', () => {
+      socket.send(`CONNECT\naccept-version:1.1,1.0\nhost:j14d105.p.ssafy.io\nheart-beat:10000,10000\nAuthorization:${token}\n\n\0`);
+    });
+
+    // 2. 메시지 이벤트 처리
+    socket.on('message', (raw) => {
+      // CONNECTED 응답을 받으면 구독 및 1초 간격 메시지 폭격 시작
+      if (raw.startsWith('CONNECTED')) {
+        socket.send(`SUBSCRIBE\nid:sub-0\ndestination:/broadcast/streams/${STREAM_ID}\n\n\0`);
+
+        // 🔥 Stress 테스트는 StepUp보다 빠른 1초(1000ms) 간격으로 메시지를 쏩니다
+        socket.setInterval(() => {
+          const chatPayload = { eventType: 'CHAT_MESSAGE', payload: { content: `Stress 테스트 중 [VU:${__VU}]` } };
+          socket.send(`SEND\ndestination:/app/streams/${STREAM_ID}\ncontent-type:application/json\n\n${JSON.stringify(chatPayload)}\0`);
+          chatSentCount.add(1, { api: 'chat_send' });
+        }, 1000);
+      }
+
+      // 정상적인 채팅 브로드캐스트 수신
+      if (raw.startsWith('MESSAGE')) {
+        chatReceivedCount.add(1, { api: 'chat_receive' });
+        chatSuccessRate.add(true, { api: 'chat_business_ok' });
+      }
+
+      // STOMP 프레임 에러 발생 시 처리
+      if (raw.startsWith('ERROR')) {
+        stompErrorCount.add(1, { api: 'stomp_error' });
+        wsErrors.add(1, { api: 'stomp_error_frame' });
+        chatSuccessRate.add(false, { reason: 'stomp_error' });
+
+        // ✅ 에러 발생 시 현재 활성 VU 기록
+        breakingPointVUs.add(exec.instance.vusActive);
+      }
+    });
+
+    // 소켓 연결 자체의 에러 처리
+    socket.on('error', () => {
+      wsErrors.add(1, { api: 'ws_connect_error' });
+      chatSuccessRate.add(false, { reason: 'socket_error' });
+
+      // ✅ 소켓 에러 발생 시 현재 활성 VU 기록
+      breakingPointVUs.add(exec.instance.vusActive);
+    });
+
+    // 3. 유저 한 명당 세션을 30초 동안 유지 후 종료 (부하 누적 목적)
+    socket.setTimeout(() => socket.close(), 30000);
+  });
+
+  sleep(1);
+}
+
+export function handleSummary(data) {
+  return generateSummary(data, 'chat_03_stress');
+}
