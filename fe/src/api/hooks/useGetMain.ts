@@ -49,6 +49,7 @@ export const useGetMain = (params: UseGetMainParams = {}) => {
   const status = params.status ?? 'LIVE';
   const sort = params.sort ?? 'LATEST';
   const size = params.size ?? 10;
+  const normalizePage = (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
 
   return useInfiniteQuery({
     queryKey: ['liveCards', type, category ?? null, status, sort, size],
@@ -61,9 +62,16 @@ export const useGetMain = (params: UseGetMainParams = {}) => {
         status,
         sort,
         size,
-        page: typeof pageParam === 'number' ? pageParam : 0,
+        page: normalizePage(pageParam),
       }),
-    getNextPageParam: (lastPage) => (!lastPage.last ? lastPage.number + 1 : undefined),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.last) {
+        return undefined;
+      }
+
+      const currentPage = normalizePage(lastPage.number);
+      return currentPage + 1;
+    },
     staleTime: 1000 * 60,
     placeholderData: keepPreviousData,
   });

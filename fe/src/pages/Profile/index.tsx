@@ -260,9 +260,7 @@ export default function ProfilePage() {
   const buildNoticeContent = () => {
     let content = noticeContent;
     if (selectedStream) {
-      const dateStr = selectedStream.scheduledAt
-        ? formatScheduledDateTime(selectedStream.scheduledAt)
-        : '';
+      const dateStr = selectedStream.scheduledAt ? formatScheduledDateTime(selectedStream.scheduledAt) : '';
       content += `\n\n[방송 안내] ${selectedStream.title}${dateStr ? ` (${dateStr})` : ''}`;
     }
     return content;
@@ -305,7 +303,7 @@ export default function ProfilePage() {
 
   return (
     <div className="w-full box-border max-w-[1200px] mx-auto py-10 px-5 flex flex-col gap-8">
-      <div className="w-full box-border border border-gold-light/30 rounded-2xl py-12 px-12 bg-surface">
+      <div className="w-full rounded-(--radius-panel) py-12 px-12 bg-surface">
         <div className="flex items-center justify-between gap-12">
           {/* 좌측: 프로필 이미지 + 정보 */}
           <div className="flex items-center gap-8 flex-1 min-w-0">
@@ -408,8 +406,8 @@ export default function ProfilePage() {
 
             {isOwner && data?.stats !== undefined && (
               <div className="flex flex-col gap-3">
-                <div className="grid grid-cols-3 gap-[1px] bg-neutral-800 border border-white/5 rounded-xl">
-                  <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated">
+                <div className="grid grid-cols-3 gap-[1px] bg-neutral-800 border border-white/5 rounded-(--radius-panel)">
+                  <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated rounded-(--radius-panel)">
                     <span className="text-subtitle-sm text-neutral-500">팔로워</span>
                     <span className="text-price-lg text-white">
                       {reputation?.followerCount ?? data.stats.followerCount ?? '-'}
@@ -462,7 +460,7 @@ export default function ProfilePage() {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated">
+                  <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated rounded-(--radius-panel)">
                     <span className="text-subtitle-sm text-neutral-500">평균 배송</span>
                     <span className="text-price-lg text-white">
                       {reputation?.avgShipDays != null
@@ -478,7 +476,7 @@ export default function ProfilePage() {
 
             {!isMyProfile && (
               <button
-                className={`w-full py-3 rounded-xl bg-neutral-100 text-background text-subtitle-sm border-none cursor-pointer hover:bg-neutral-200 transition-colors ${isFollowPending ? 'opacity-70' : 'opacity-100'}`}
+                className={`w-full py-3 rounded-(--radius-panel) bg-neutral-100 text-background text-subtitle-sm border-none cursor-pointer hover:bg-neutral-200 transition-colors ${isFollowPending ? 'opacity-70' : 'opacity-100'}`}
                 onClick={handleFollowToggle}
                 disabled={isFollowPending}
               >
@@ -489,7 +487,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <div className="w-full box-border border border-gold-light/30 rounded-2xl py-11 px-14 bg-surface min-h-[calc(100vh-320px)]">
+      <div className="w-full rounded-(--radius-panel) py-11 px-14 bg-surface min-h-[calc(100vh-320px)]">
         <div className="flex items-center gap-6 border-b border-white/5 mb-8">
           <button
             className={`flex items-center gap-2 bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-subtitle-lg cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${

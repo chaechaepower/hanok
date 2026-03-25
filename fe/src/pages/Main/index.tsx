@@ -92,7 +92,7 @@ export default function MainPage() {
     <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 px-6 pt-8 xl:flex-row">
       <MainSideBar activeItemId={selectedCategoryItemId} onItemClick={handleCategoryClick} rankingItems={rankingData} />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-6">
+      <div className="flex min-w-0 flex-1 flex-col gap-12">
         {isLoggedIn && <FollowingBanner streams={followingBroadcasts} />}
 
         <NewSellerLiveSection streams={recommendedBroadcasts} />
