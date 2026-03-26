@@ -137,3 +137,78 @@ export function generateUniqueAuctionSummary(data, testName) {
 
   return buildFileOutputs(data, testName, summary, csvHeader, csvLine);
 }
+
+export function generateStressSummary(data, testName) {
+  const m  = data.metrics;
+  const b  = extractBaseMetrics(m);
+
+  // SSE 구독
+  const sseSuccess      = ((m['sse_connect_success']?.values?.rate  ?? 0) * 100).toFixed(2);
+  const sseConnP95      = m['sse_connect_duration_ms']?.values?.['p(95)']?.toFixed(0) ?? 'N/A';
+  const sseEventTotal   = m['sse_event_received']?.values?.count    ?? 0;
+  const sseEventPerConn = m['sse_event_per_connection']?.values?.avg?.toFixed(2) ?? 'N/A';
+  const sseFailVUs      = m['sse_fail_vus']?.values?.min            ?? null;
+
+  // 공지 push
+  const notifySuccess   = ((m['notify_trigger_success']?.values?.rate ?? 0) * 100).toFixed(2);
+  const notifyAvg       = m['notify_trigger_duration_ms']?.values?.avg?.toFixed(0)      ?? 'N/A';
+  const notifyP95       = m['notify_trigger_duration_ms']?.values?.['p(95)']?.toFixed(0) ?? 'N/A';
+  const notifyMax       = m['notify_trigger_duration_ms']?.values?.max?.toFixed(0)       ?? 'N/A';
+  const notifyFailVUs   = m['notify_fail_vus']?.values?.min         ?? null;
+
+  // VU 구간별 notify
+  const notifyLowP95    = m['notify_duration_low_vus']?.values?.['p(95)']?.toFixed(0)  ?? 'N/A';
+  const notifyMidP95    = m['notify_duration_mid_vus']?.values?.['p(95)']?.toFixed(0)  ?? 'N/A';
+  const notifyHighP95   = m['notify_duration_high_vus']?.values?.['p(95)']?.toFixed(0) ?? 'N/A';
+
+  // Breaking Point
+  const sseBreaking    = sseFailVUs    ? `🚨 ${sseFailVUs}명`    : '없음 (안전)';
+  const notifyBreaking = notifyFailVUs ? `🚨 ${notifyFailVUs}명` : '없음 (안전)';
+
+  const summary = `
+========================================
+  테스트: ${testName}
+
+  최대 VUser:          ${b.vus}
+  HTTP p95 Latency:    ${b.p95} ms
+  HTTP 평균 Latency:   ${b.avgLatency} ms
+  HTTP TPS:            ${b.tps} req/s
+  HTTP 에러율:         ${b.errorRate}%
+
+  [SSE 구독 결과]
+  연결 성공률:         ${sseSuccess}%
+  연결 시간 p95:       ${sseConnP95} ms
+  총 이벤트 수신:      ${sseEventTotal}개
+  연결당 평균 이벤트:  ${sseEventPerConn}개
+  🚨 SSE Breaking Point: ${sseBreaking}
+
+  [공지 Push 결과]
+  공지 성공률:         ${notifySuccess}%
+  Push 시간 avg:       ${notifyAvg} ms
+  Push 시간 p95:       ${notifyP95} ms
+  Push 시간 max:       ${notifyMax} ms
+  🚨 공지 Breaking Point: ${notifyBreaking}
+
+  [VU 구간별 Push 지연 — 병목 위치 분석]
+  LOW  (VU < 500):     p95 = ${notifyLowP95} ms
+  MID  (VU 500~999):   p95 = ${notifyMidP95} ms
+  HIGH (VU >= 1000):   p95 = ${notifyHighP95} ms
+
+  판단 기준:
+  LOW~MID 급증 → followRepository.findBySeller() DB 쿼리 병목
+  MID~HIGH 급증 → sseEmitter.send() × N 반복 병목
+  전 구간 높음  → SseEmitter 자체 구조 한계 (Spring MVC 동기)
+========================================
+`;
+
+  const csvHeader = 'test_name,vus_max,p95_ms,avg_ms,tps,error_rate,' +
+    'sse_success,sse_conn_p95,sse_event_total,sse_event_per_conn,sse_breaking,' +
+    'notify_success,notify_avg,notify_p95,notify_max,notify_breaking,' +
+    'notify_low_p95,notify_mid_p95,notify_high_p95';
+  const csvLine = `${testName},${b.vus},${b.p95},${b.avgLatency},${b.tps},${b.errorRate},` +
+    `${sseSuccess},${sseConnP95},${sseEventTotal},${sseEventPerConn},${sseFailVUs ?? ''},` +
+    `${notifySuccess},${notifyAvg},${notifyP95},${notifyMax},${notifyFailVUs ?? ''},` +
+    `${notifyLowP95},${notifyMidP95},${notifyHighP95}`;
+
+  return buildFileOutputs(data, testName, summary, csvHeader, csvLine);
+}

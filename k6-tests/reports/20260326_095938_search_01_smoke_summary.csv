@@ -1,0 +1,2 @@
+test_name,fulltext,vus_max,p95_ms,avg_ms,tps,error_rate,search_p95,search_avg,search_min,search_max,hit_rate,err_rate,total,hits,empties,errs,breaking_point
+search_01_smoke,unknown,5,122.41,97.67,7.23,0.00,42.56,28.42,19.40,120.59,0.00,0.00,295,0,295,0,

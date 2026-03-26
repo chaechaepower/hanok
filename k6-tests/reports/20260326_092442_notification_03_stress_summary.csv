@@ -1,0 +1,2 @@
+test_name,vus_max,p95_ms,avg_ms,tps,error_rate,sse_success,sse_conn_p95,sse_event_total,sse_event_per_conn,sse_breaking,notify_success,notify_avg,notify_p95,notify_max,notify_breaking,notify_low_p95,notify_mid_p95,notify_high_p95
+notification_03_stress,1501,31051.46,28519.74,30.50,0.00,100.00,31054,23477,1.00,869,100.00,32,50,71,,49,35,39

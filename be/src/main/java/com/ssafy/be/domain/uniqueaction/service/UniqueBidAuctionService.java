@@ -38,6 +38,7 @@
     import java.time.LocalDateTime;
     import java.util.ArrayList;
     import java.util.List;
+    import java.util.Map;
     import java.util.Objects;
     import java.util.Optional;
     import java.util.stream.Stream;
@@ -142,17 +143,26 @@
 
             List<DuplicatePriceInfo> topDuplicates = uniqueBidRepository.findTopPriceDuplicate(auctionId, 3);
 
+            // 입찰 데이터 선조회 (환불 + private 알림 발송에 재사용, deleteAll은 트랜잭션 커밋 후 핸들러에서 호출)
+            Map<Object, Object> allBids = uniqueBidRepository.getAllBids(auctionId);
+
             List<StreamPublishTask> publishTasks = new ArrayList<>();
 
-            // 유찰
+            // 유찰: winnerPrice=null로 각 입찰자에게 private 전송
             if (winnerPrice.isEmpty()) {
                 auction.unsold();
                 refundAll(auctionId);
-                uniqueBidRepository.deleteAll(auctionId);
                 UniqueAuctionResult result = buildUnsoldResult(topDuplicates);
-                publishTasks.add(buildStreamPublishTask(BROADCAST, streamId, null, UNIQUE_AUCTION_END, buildResultResponse(result, null)));
-                publishTasks.add(buildStreamPublishTask(BROADCAST, streamId, null, AUCTION_COMMENT, buildAuctionCommentResponse(UNSOLD.getValue())));
 
+                for (Map.Entry<Object, Object> entry : allBids.entrySet()) {
+                    Long bidUserId = Long.parseLong(entry.getKey().toString());
+                    Long bidAmount = Long.parseLong(entry.getValue().toString());
+                    publishTasks.add(buildStreamPublishTask(PRIVATE, streamId, bidUserId, UNIQUE_AUCTION_END,
+                            buildResultResponse(result, bidAmount)));
+                }
+
+                publishTasks.add(buildStreamPublishTask(BROADCAST, streamId, null, AUCTION_COMMENT,
+                        buildAuctionCommentResponse(UNSOLD.getValue())));
                 return publishTasks;
             }
 
@@ -160,47 +170,40 @@
             Long winnerId = uniqueBidRepository
                     .findUserIdByAmount(auctionId, winnerPrice.get())
                     .orElseThrow();
-            // 옥션 상태 변경 (최종가 기록)
             auction.sold(winnerPrice.get());
             auction.getItem().sold(LocalDateTime.now());
 
-
-
-            // 낙찰자 찾기
             User winner = userRepository.findById(winnerId)
                     .orElseThrow(() -> new StompException(UserErrorCode.USER_NOT_FOUND));
 
-            // 낙찰자 에스크로
             Bid topBid = Bid.builder().userId(winner.getId()).amount(winnerPrice.get()).nickname(winner.getNickname()).build();
-
 
             ShippingAddress shipping = shippingAddressRepository
                     .findByUserIdAndIsDefaultTrue(winnerId)
                     .orElseThrow(() -> new StompException(
                             ShippingAddressErrorCode.DEFAULT_SHIPPING_ADDRESS_NOT_FOUND));
 
-            //에스크로 시작
             escrowService.startEscrow(topBid, auction, shipping);
-
-            // 나머지 환불
             refundAllExcept(auctionId, winnerId);
-            uniqueBidRepository.deleteAll(auctionId);
 
             UniqueAuctionResult result = buildWonResult(winnerId, winnerPrice.get(), topDuplicates, shipping);
 
+            // 각 입찰자에게 private로 결과 전송 (myBidPrice 포함)
+            // 프론트엔드: winnerPrice == myBidPrice → 내가 낙찰, 아니면 경매 낙찰·나는 유찰
+            for (Map.Entry<Object, Object> entry : allBids.entrySet()) {
+                Long bidUserId = Long.parseLong(entry.getKey().toString());
+                Long bidAmount = Long.parseLong(entry.getValue().toString());
+                publishTasks.add(buildStreamPublishTask(PRIVATE, streamId, bidUserId, UNIQUE_AUCTION_END,
+                        buildResultResponse(result, bidAmount)));
+            }
 
-
-            // 알림 태스크 구성
-            // 1. 전체 유저에게 결과 공지
-            publishTasks.add(buildStreamPublishTask(BROADCAST, streamId, null, UNIQUE_AUCTION_END, buildResultResponse(result, null)));
-            // 2. 우승자에게 특별 알림 (프라이빗으로 myBidPrice 포함하여 UNIQUE_AUCTION_END 발송)
-            publishTasks.add(buildStreamPublishTask(PRIVATE, streamId, winnerId, UNIQUE_AUCTION_END, buildResultResponse(result, winnerPrice.get())));
-            // 3. 우승자에게 낙찰 상세 정보
+            // 낙찰자에게 배송지 포함 상세 정보
             publishTasks.add(buildStreamPublishTask(PRIVATE, streamId, winnerId, BID_WINNER, buildWinnerResponse(result)));
 
-            // 4. 경매 중계 메시지
+            // 전체 경매 중계 메시지
             String message = String.format(SOLD.getValue(), winner.getNickname(), winnerPrice.get());
-            publishTasks.add(buildStreamPublishTask(BROADCAST, streamId, null, AUCTION_COMMENT, buildAuctionCommentResponse(message)));
+            publishTasks.add(buildStreamPublishTask(BROADCAST, streamId, null, AUCTION_COMMENT,
+                    buildAuctionCommentResponse(message)));
             return publishTasks;
         }
 
@@ -301,6 +304,11 @@
         @Transactional(readOnly = true)
         public long getParticipantCount(Long auctionId) {
             return uniqueBidRepository.countParticipants(auctionId);
+        }
+
+        // 트랜잭션 커밋 이후 핸들러에서 호출 (race condition 방지)
+        public void deleteAllBids(Long auctionId) {
+            uniqueBidRepository.deleteAll(auctionId);
         }
 
         public <T> StreamPublishTask buildStreamPublishTask(DestType destType, Long streamId, Long userId, StreamEventType eventType, T payload) {

@@ -1,0 +1,2 @@
+test_name,vus_max,p95_ms,p99_ms,avg_ms,tps,error_rate,ws_error_rate,ws_connect_p95,stomp_connect_p95,bid_to_ack_avg,bid_to_ack_p95,bid_to_stats_p95,e2e_p95,bid_sent,bid_ack,stats_received,already_bid,bid_success_rate,stomp_error,breaking_point_vus
+unique_auction_03_load,1000,130.73,N/A,119.07,7.07,0.00,0.00,2381,7040,3043,5857,4624,8930,1000,994,42639,0,100.00,0,
