@@ -10,6 +10,7 @@ import com.ssafy.be.domain.stream.entity.StreamStatus;
 import com.ssafy.be.domain.stream.service.StreamViewerService; // ✅ import 추가
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -23,6 +24,7 @@ public class SearchService {
     private final StreamSearchRepositoryCustom searchRepository;
     private final StreamViewerService streamViewerService;
 
+    @Transactional(readOnly = true)
     public List<StreamSearchResult> search(String keyword) {
         String trimmed = keyword.trim();
 

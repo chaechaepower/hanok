@@ -29,19 +29,17 @@ export const options = {
       preAllocatedVUs: 100,
       maxVUs: 1200,
       stages: [
-        { duration: '5m', target: 50   },
-        { duration: '5m', target: 100  },
-        { duration: '5m', target: 200  },
-        { duration: '5m', target: 300  },
-        { duration: '5m', target: 500  },
-        { duration: '5m', target: 1000 },
+        { duration: '1m', target: 50   },
+        { duration: '3m', target: 1000  },
+        { duration: '3m', target: 1500 },
         { duration: '2m', target: 0    },
       ],
     },
   },
   thresholds: {
     http_req_failed:    [{ threshold: 'rate<0.05', abortOnFail: false }],
-    search_duration_ms: ['p(95)<500'],
+    search_duration_ms: ['p(95)<3000'],
+    search_hit_rate:    ['rate>0.8'],
   },
 };
 

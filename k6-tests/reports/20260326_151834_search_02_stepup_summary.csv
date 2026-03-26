@@ -1,0 +1,2 @@
+test_name,fulltext,vus_max,p95_ms,avg_ms,tps,error_rate,search_p95,search_avg,search_min,search_max,hit_rate,err_rate,total,hits,empties,errs,breaking_point
+search_02_stepup,true,100,57949.43,6950.63,0.14,6.98,0.00,0.00,0.00,0.00,0.00,0.00,0,0,0,0,

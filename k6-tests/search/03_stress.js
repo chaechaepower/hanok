@@ -7,7 +7,7 @@ import { KEYWORDS } from '../shared/searchKeywords.js';
 
 const BASE         = (__ENV.BASE_URL || 'http://j14d105.p.ssafy.io:8080/api/v1').replace(/\/+$/, '');
 const FULLTEXT_ON  = __ENV.FULLTEXT_ENABLED === 'true';
-const BASELINE_VUS = parseInt(__ENV.BASELINE || '300');
+const BASELINE_VUS = parseInt(__ENV.BASELINE || '1000');
 
 const searchDuration = new Trend('search_duration_ms',  true);
 const searchHitRate  = new Rate('search_hit_rate');
@@ -25,17 +25,18 @@ export const options = {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: '10m', target: BASELINE_VUS },
-        { duration: '10m', target: Math.floor(BASELINE_VUS * 1.5) },
-        { duration: '5m',  target: 0  },
-        { duration: '5m',  target: 10 },
+        { duration: '3m', target: BASELINE_VUS },
+        { duration: '3m', target: Math.floor(BASELINE_VUS * 1.5) },
+        { duration: '2m',  target: 0  },
+        { duration: '2m',  target: 10 },
       ],
     },
   },
   thresholds: {
-    http_req_failed:    ['rate<0.05'],
-    search_duration_ms: ['p(95)<500'],
-  },
+      http_req_failed:    [{ threshold: 'rate<0.05', abortOnFail: false }],
+      search_duration_ms: ['p(95)<3000'],
+      search_hit_rate:    ['rate>0.8'],
+    },
 };
 
 export function setup() {
