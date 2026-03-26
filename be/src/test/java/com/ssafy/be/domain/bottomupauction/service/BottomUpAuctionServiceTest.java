@@ -1,4 +1,4 @@
-package com.ssafy.be.domain.bottomupauction;
+package com.ssafy.be.domain.bottomupauction.service;
 
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
 import com.ssafy.be.domain.bottomupauction.dto.request.AuctionStartRequest;
@@ -15,7 +15,6 @@ import com.ssafy.be.domain.bottomupauction.repository.BottomUpAuctionDetailRepos
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.auction.repository.AuctionTimerRepository;
 import com.ssafy.be.domain.auction.service.AuctionService;
-import com.ssafy.be.domain.bottomupauction.service.BottomUpAuctionService;
 import com.ssafy.be.domain.auction.util.AuctionRedisKeys;
 import com.ssafy.be.domain.escrow.service.EscrowService;
 import com.ssafy.be.domain.item.entity.Item;
@@ -52,7 +51,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @IntegrationTest
