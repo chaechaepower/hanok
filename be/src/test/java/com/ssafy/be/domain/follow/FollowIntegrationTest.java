@@ -3,7 +3,7 @@ package com.ssafy.be.domain.follow;
 import com.ssafy.be.domain.follow.entity.Follow;
 import com.ssafy.be.domain.follow.repository.FollowRepository;
 import com.ssafy.be.domain.seller.entity.Seller;
-import com.ssafy.be.domain.seller.entity.SellerType;
+import com.ssafy.be.support.util.TestFixture;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
@@ -72,11 +72,8 @@ class FollowIntegrationTest {
         // Mock 데이터 통계
         buyer = userRepository.save(User.createUser("buyer@test.com", "pw", "구매자", "010-1111-1111"));
         sellerUser = userRepository.save(User.createUser("seller@test.com", "pw", "판매자", "010-2222-2222"));
-        seller = sellerRepository.save(Seller.builder()
+        seller = sellerRepository.save(TestFixture.createSeller(sellerUser).toBuilder()
                 .intro("안녕하세요 판매자입니다.")
-                .type(SellerType.INDIVIDUAL)
-                .penaltyCount(0)
-                .user(sellerUser)
                 .build());
 
         // Spring Context Authorization Injection (addFilters=false 대응)
@@ -200,8 +197,9 @@ class FollowIntegrationTest {
         @DisplayName("I-1. 자기 본인을 팔로우 시 400 Bad Request")
         void selfFollow_BadRequest() throws Exception {
             // buyer 자신도 판매자로 동시 가입되어 있다고 가정
-            Seller buyerSeller = sellerRepository.save(Seller.builder()
-                    .intro("나도 판매자").type(SellerType.INDIVIDUAL).penaltyCount(0).user(buyer).build());
+            Seller buyerSeller = sellerRepository.save(TestFixture.createSeller(buyer).toBuilder()
+                    .intro("나도 판매자")
+                    .build());
 
             IT_LOG.info("    [요청] 본인 셀러 계정({}) 팔로우 시도", buyerSeller.getId());
 

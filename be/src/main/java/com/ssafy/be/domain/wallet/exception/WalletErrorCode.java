@@ -17,6 +17,7 @@ public enum WalletErrorCode implements ErrorCode {
     WALLET_WITHDRAW_AMOUNT_TOO_LOW(HttpStatus.BAD_REQUEST, "WALLET_006", "최소 출금 금액 미만입니다."),
     WALLET_WITHDRAW_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "WALLET_007", "가상머니 출금 요청이 없습니다."),
     WALLET_WITHDRAW_ALREADY_PROCESSED(HttpStatus.CONFLICT, "WALLET_008", "이미 처리된 출금 요청입니다."),
+    WALLET_WITHDRAW_CONCURRENT_CONFLICT(HttpStatus.CONFLICT, "WALLET_009", "출금을 처리하지 못했습니다. 잠시 후 다시 시도해주세요."),
     ;
 
     private final HttpStatus httpStatus;

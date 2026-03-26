@@ -10,4 +10,8 @@ import java.util.List;
 @Repository
 public interface WithdrawRequestRepository extends JpaRepository<WithdrawRequest, Long> {
     List<WithdrawRequest> findByWithdrawStatus(WithdrawStatus status);
+
+    long countByUserId(Long userId);
+
+    List<WithdrawRequest> findAllByUserId(Long userId);
 }

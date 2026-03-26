@@ -1,7 +1,10 @@
 package com.ssafy.be.domain.user.repository;
 
 import com.ssafy.be.domain.user.entity.User;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
 
@@ -18,4 +21,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 로그인 시 사용 (다음 티켓에서 활용)
     // SELECT * FROM user WHERE email = ? 쿼리 자동 생성
     Optional<User> findByEmail(String email);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from User u where u.id = :id")
+    Optional<User> findByIdWithPessimisticLock(Long id);
+
+    @Lock(LockModeType.OPTIMISTIC)
+    @Query("select u from User u where u.id = :id")
+    Optional<User> findByIdWithOptimisticLock(Long id);
 }
+

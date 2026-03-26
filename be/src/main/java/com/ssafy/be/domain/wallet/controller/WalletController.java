@@ -54,7 +54,7 @@ public class WalletController implements WalletApi {
             @RequestBody WithdrawRequestCreateRequest request,
             @AuthenticationPrincipal String principal
     ) {
-        walletWithdrawService.requestWithdraw(request, getUserId(principal));
+        walletWithdrawService.requestWithdrawOptimistic(request, getUserId(principal));
         return ResponseEntity.ok(ApiResponse.success());
     }
 

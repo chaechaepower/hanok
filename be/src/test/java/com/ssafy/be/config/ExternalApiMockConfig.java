@@ -30,6 +30,7 @@ public class ExternalApiMockConfig {
     }
 
     @Bean
+    @Primary
     GcsClient gcsClient() {
         return mock(GcsClient.class);
     }

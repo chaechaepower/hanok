@@ -118,8 +118,6 @@ public class BottomUpAuctionService {
         Auction auction = auctionRepository.findById(request.auctionId())
                 .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
 
-        BottomUpAuctionDetail detail = auction.getBottomUpAuctionDetail();
-
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new StompException(UserErrorCode.USER_NOT_FOUND));
 
@@ -150,20 +148,7 @@ public class BottomUpAuctionService {
                         isSniping ? buildSnipingTimerDto(TimeUtils.nowAsString()) : null));
 
         // 6-2. AUCTION_STATISTICS로 실시간 통계 정보 브로드캐스트
-        List<Bid> bids = auctionBidRepository.findAll(auction.getId());
-
-        List<AuctionStatisticsResponse.RecentBidDto> recentBids = bids.stream()
-                .limit(15)
-                .map(this::buildRecentBidDto)
-                .toList();
-
-        AuctionStatisticsResponse auctionStatisticsResponse = buildAuctionStatisticsResponse(
-                auction.getItem().getName(),
-                bids.stream().mapToLong(Bid::amount).sum(),
-                bids.size(),
-                detail.getStartPrice(),
-                bids.isEmpty() ? detail.getStartPrice() : bids.getFirst().amount(),
-                recentBids);
+        AuctionStatisticsResponse auctionStatisticsResponse = buildLiveAuctionStatistics(auction);
 
         StreamPublishTask statisticsPublishTask = buildStreamPublishTask(
                 BROADCAST,
@@ -189,8 +174,6 @@ public class BottomUpAuctionService {
     public List<StreamPublishTask> placeBidWithoutLock(BidPlaceRequest request, Long streamId, Long userId) {
         Auction auction = auctionRepository.findById(request.auctionId())
                 .orElseThrow(() -> new StompException(AuctionErrorCode.AUCTION_NOT_FOUND));
-
-        BottomUpAuctionDetail detail = auction.getBottomUpAuctionDetail();
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new StompException(UserErrorCode.USER_NOT_FOUND));
@@ -222,20 +205,7 @@ public class BottomUpAuctionService {
                         isSniping ? buildSnipingTimerDto(TimeUtils.nowAsString()) : null));
 
         // 6-2. AUCTION_STATISTICS로 실시간 통계 정보 브로드캐스트
-        List<Bid> bids = auctionBidRepository.findAll(auction.getId());
-
-        List<AuctionStatisticsResponse.RecentBidDto> recentBids = bids.stream()
-                .limit(15)
-                .map(this::buildRecentBidDto)
-                .toList();
-
-        AuctionStatisticsResponse auctionStatisticsResponse = buildAuctionStatisticsResponse(
-                auction.getItem().getName(),
-                bids.stream().mapToLong(Bid::amount).sum(),
-                bids.size(),
-                detail.getStartPrice(),
-                bids.isEmpty() ? detail.getStartPrice() : bids.getFirst().amount(),
-                recentBids);
+        AuctionStatisticsResponse auctionStatisticsResponse = buildLiveAuctionStatistics(auction);
 
         StreamPublishTask statisticsPublishTask = buildStreamPublishTask(
                 BROADCAST,
@@ -345,6 +315,30 @@ public class BottomUpAuctionService {
                 buildBidSyncTimerInfo((int) remainingSeconds, serverNow, auction.getStartedAt()));
     }
 
+    @Transactional(readOnly = true)
+    public AuctionStatisticsResponse syncAuctionStatistics(Long streamId) {
+        Auction auction = auctionRepository.findByStreamIdAndAuctionStatus(streamId, LIVE)
+                .orElseThrow(() -> new StompException(AuctionErrorCode.LIVE_AUCTION_NOT_FOUND));
+
+        return buildLiveAuctionStatistics(auction);
+    }
+
+    private AuctionStatisticsResponse buildLiveAuctionStatistics(Auction auction) {
+        BottomUpAuctionDetail detail = auction.getBottomUpAuctionDetail();
+        List<Bid> bids = auctionBidRepository.findAll(auction.getId());
+
+        List<AuctionStatisticsResponse.RecentBidDto> recentBids = bids.stream()
+                .limit(15)
+                .map(this::buildRecentBidDto)
+                .toList();
+
+        return buildAuctionStatisticsResponse(
+                auction.getItem().getName(),
+                bids.size(),
+                detail.getStartPrice(),
+                bids.isEmpty() ? detail.getStartPrice() : bids.getFirst().amount(),
+                recentBids);
+    }
 
     private boolean preventSniping(Long auctionId) {
         long remaining = auctionTimerRepository.findRemainingSecondsByAuctionId(auctionId);
@@ -502,7 +496,7 @@ public class BottomUpAuctionService {
     }
 
     private AuctionStatisticsResponse buildAuctionStatisticsResponse(
-            String itemName, Long totalPrice, int bidCount, Long startPrice, Long currentPrice,
+            String itemName, int bidCount, Long startPrice, Long currentPrice,
             List<AuctionStatisticsResponse.RecentBidDto> recentBidDtos) {
         return AuctionStatisticsResponse.builder()
                 .itemName(itemName)

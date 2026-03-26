@@ -3,7 +3,7 @@ package com.ssafy.be.domain.follow;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.be.domain.follow.repository.FollowRepository;
 import com.ssafy.be.domain.seller.entity.Seller;
-import com.ssafy.be.domain.seller.entity.SellerType;
+import com.ssafy.be.support.util.TestFixture;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.user.dto.request.AccountRegisterRequest;
 import com.ssafy.be.domain.user.entity.User;
@@ -54,11 +54,8 @@ class UserProfileIntegrationTest {
         buyer = userRepository.save(User.createUser("buyer@test.com", "pw", "구매자", "010-1111-1111"));
         sellerUser = userRepository.save(User.createUser("seller@test.com", "pw", "판매자", "010-2222-2222"));
 
-        seller = sellerRepository.save(Seller.builder()
+        seller = sellerRepository.save(TestFixture.createSeller(sellerUser).toBuilder()
                 .intro("안녕하세요 판매자입니다.")
-                .type(SellerType.INDIVIDUAL)
-                .penaltyCount(0)
-                .user(sellerUser)
                 .build());
 
         log.info("🚀 [테스트 준비] 데이터 생성 완료 (Buyer ID: {}, Seller User ID: {})", buyer.getId(), sellerUser.getId());

@@ -60,7 +60,7 @@ public class Seller {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Builder
+    @Builder(toBuilder = true)
     private Seller(String intro,
                    Integer penaltyCount,
                    SellerType type,
@@ -112,5 +112,14 @@ public class Seller {
         
         // 소수점 둘째자리까지 반올림
         return Math.round(rating * 100.0) / 100.0;
+    }
+
+    public void updateAvgShipDays(long newShipDays) {
+        if (this.avgShipDays == null) {
+            this.avgShipDays = (double) newShipDays;
+        } else {
+            // 누적 평균 계산 (기존 평균과 새 값의 단순 평균)
+            this.avgShipDays = (this.avgShipDays + newShipDays) / 2.0;
+        }
     }
 }

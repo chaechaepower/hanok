@@ -1,15 +1,13 @@
-package com.ssafy.be.domain.bottomupauction;
+package com.ssafy.be.domain.bottomupauction.service;
 
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.bottomupauction.dto.request.BidPlaceRequest;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.auction.repository.AuctionTimerRepository;
-import com.ssafy.be.domain.bottomupauction.service.BottomUpAuctionService;
 import com.ssafy.be.domain.bottomupauction.model.Bid;
 import com.ssafy.be.domain.bottomupauction.repository.AuctionBidRepository;
 import com.ssafy.be.domain.bottomupauction.repository.BottomUpAuctionDetailRepository;
 import com.ssafy.be.domain.auction.util.AuctionRedisKeys;
-import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.repository.ItemRepository;
 import com.ssafy.be.domain.seller.entity.Seller;
@@ -99,7 +97,7 @@ public class AuctionBidLockTest {
                         .map(user -> user.toBuilder().balance(BIDDER_BALANCE).depositedBidBalance(0L).build())
                         .toList());
         sellerUser = userRepository.save(TestFixture.createUser("판매자"));
-        seller = sellerRepository.save(TestFixture.createSeller(sellerUser));
+        seller = sellerRepository.save(TestFixture.createBusinessSeller(sellerUser));
         stream = streamRepository.save(TestFixture.createStream("테스트 라이브 방송", seller));
         item = itemRepository.save(TestFixture.createItem("테스트 상품"));
         liveAuction = auctionRepository.save(TestFixture.createAuction(BOTTOM_UP, LIVE, stream, item));
@@ -134,8 +132,47 @@ public class AuctionBidLockTest {
     class BidLockTest {
 
         @Test
+        @Order(2)
+        @DisplayName("I-1. 락 미적용 시, 중복 입찰이 다수 발생하게 된다.")
+        void multipleSucceed_noLock() throws InterruptedException {
+            // given
+            IT_LOG.info("    [요청] 1000명의 동시 입찰 요청 발생 (Lock 미적용 순수 저장 로직 호출)");
+
+            long bidAmount = liveAuction.getBottomUpAuctionDetail().getStartPrice()
+                    + liveAuction.getBottomUpAuctionDetail().getBidUnit(); // 시작가 + 입찰 단위
+
+            BidPlaceRequest bidPlaceRequest = BidPlaceRequest.builder()
+                    .auctionId(liveAuction.getId()).amount(bidAmount).build();
+
+            // when
+            long startTime = System.currentTimeMillis();
+
+            int successCount = ConcurrentTestUtil.executeConcurrentBids(
+                    bidPlaceRequest,
+                    stream.getId(),
+                    bidders,
+                    (request, streamId, userId) -> bottomUpAuctionService.placeBidWithoutLock(request, streamId, userId)
+            );
+
+            long executionTime = System.currentTimeMillis() - startTime;
+
+            // then
+            List<Bid> bids = auctionBidRepository.findAll(liveAuction.getId());
+            long sumDeposited = sumDepositedBidBalance(bidders);
+
+            IT_LOG.info("    [검증] 실행 시간: {}ms, 예외 없이 완료된 스레드: {}, Redis 입찰 건수: {}, 입찰자 예치금 합: {}",
+                    executionTime, successCount, bids.size(), sumDeposited);
+
+            assertThat(successCount).isGreaterThan(1);
+            assertThat(bids.size()).isNotEqualTo(1);
+            assertThat(bids.getFirst().amount()).isEqualTo(bidAmount);
+
+            IT_LOG.info("    [검증] ✔ 락을 생략할 경우 여실히 드러나는 다중 입찰 오동작 증명! (예치금 합 참고: {})", sumDeposited);
+        }
+
+        @Test
         @Order(1)
-        @DisplayName("I-1. 락 적용 시, 1000명이 같은 가격으로 동시 입찰하면 단 1명만 성공해야 한다.")
+        @DisplayName("I-2. 락 적용 시, 1000명이 같은 가격으로 동시 입찰하면 단 1명만 성공해야 한다.")
         void onlyOneSucceeds_withLock() throws InterruptedException {
             // given
             IT_LOG.info("    [요청] 1000명의 동시 입찰 요청 발생 (Lock 적용)");
@@ -173,45 +210,6 @@ public class AuctionBidLockTest {
             assertThat(sumDeposited).isEqualTo(bidAmount);
 
             IT_LOG.info("    [검증] ✔ 분산 락 덕분에 확실한 동시성 방어 및 순차적 처리 성공!");
-        }
-
-        @Test
-        @Order(2)
-        @DisplayName("I-2. 락 미적용 시, 중복 입찰이 다수 발생하게 된다.")
-        void multipleSucceed_noLock() throws InterruptedException {
-            // given
-            IT_LOG.info("    [요청] 1000명의 동시 입찰 요청 발생 (Lock 미적용 순수 저장 로직 호출)");
-
-            long bidAmount = liveAuction.getBottomUpAuctionDetail().getStartPrice()
-                    + liveAuction.getBottomUpAuctionDetail().getBidUnit(); // 시작가 + 입찰 단위
-
-            BidPlaceRequest bidPlaceRequest = BidPlaceRequest.builder()
-                    .auctionId(liveAuction.getId()).amount(bidAmount).build();
-
-            // when
-            long startTime = System.currentTimeMillis();
-
-            int successCount = ConcurrentTestUtil.executeConcurrentBids(
-                    bidPlaceRequest,
-                    stream.getId(),
-                    bidders,
-                    (request, streamId, userId) -> bottomUpAuctionService.placeBidWithoutLock(request, streamId, userId)
-            );
-
-            long executionTime = System.currentTimeMillis() - startTime;
-
-            // then
-            List<Bid> bids = auctionBidRepository.findAll(liveAuction.getId());
-            long sumDeposited = sumDepositedBidBalance(bidders);
-
-            IT_LOG.info("    [검증] 실행 시간: {}ms, 예외 없이 완료된 스레드: {}, Redis 입찰 건수: {}, 입찰자 예치금 합: {}",
-                    executionTime, successCount, bids.size(), sumDeposited);
-
-            assertThat(successCount).isGreaterThan(1);
-            assertThat(bids.size()).isNotEqualTo(1);
-            assertThat(bids.getFirst().amount()).isEqualTo(bidAmount);
-
-            IT_LOG.info("    [검증] ✔ 락을 생략할 경우 여실히 드러나는 다중 입찰 오동작 증명! (예치금 합 참고: {})", sumDeposited);
         }
     }
 

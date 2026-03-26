@@ -36,7 +36,7 @@ public class WalletChargeRepository {
 
     public void updatePaymentStatus(String paymentId, PaymentStatus status) {
         String key = WalletRedisKeys.getWalletChargeRedisKey(paymentId);
-        redisOperator.updateHashField(key, "paymentStatus", status.name());
+        redisOperator.updateHashField(key, "status", status.name());
     }
 
     public void deleteByPaymentId(String paymentId) {

@@ -39,7 +39,7 @@ public interface StreamApi {
 
     // ===================== 공통 =====================
 
-    @Operation(summary = "방송 입장", description = "판매자/시청자 공통 - 방송 상세 정보 + LiveKit 토큰 반환")
+    @Operation(summary = "방송 입장", description = "판매자/시청자 공통 - 방송 상세 정보 + LiveKit 토큰 반환. status가 PAUSED일 때만 remainingSeconds(재연결 대기 TTL 초) 포함, 그 외 null")
     ResponseEntity<StreamEnterResponse> enterStream(String userId, Long streamId);
 
     @Operation(summary = "방송 목록 조회", description = "LIVE/SCHEDULED 상태 필터, 카테고리/정렬 지원")

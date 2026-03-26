@@ -7,7 +7,7 @@ import com.ssafy.be.domain.notice.dto.request.NoticeCreateRequest;
 import com.ssafy.be.domain.notice.dto.request.NoticeUpdateRequest;
 import com.ssafy.be.domain.notice.repository.SellerNoticeRepository;
 import com.ssafy.be.domain.seller.entity.Seller;
-import com.ssafy.be.domain.seller.entity.SellerType;
+import com.ssafy.be.support.util.TestFixture;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
@@ -79,11 +79,8 @@ class SellerNoticeIntegrationTest {
         ));
         myUserId = myUser.getId();
 
-        Seller mySeller = sellerRepository.save(Seller.builder()
+        Seller mySeller = sellerRepository.save(TestFixture.createBusinessSeller(myUser).toBuilder()
                 .intro("안녕하세요! 테스트 사업자 셀러입니다.")
-                .penaltyCount(0)
-                .type(SellerType.BUSINESS)
-                .user(myUser)
                 .build());
         mySellerId = mySeller.getId();
 
@@ -96,11 +93,8 @@ class SellerNoticeIntegrationTest {
         ));
         hackerUserId = hackerUser.getId();
 
-        Seller hackerSeller = sellerRepository.save(Seller.builder()
+        Seller hackerSeller = sellerRepository.save(TestFixture.createSeller(hackerUser).toBuilder()
                 .intro("나는 해커다.")
-                .penaltyCount(0)
-                .type(SellerType.INDIVIDUAL)
-                .user(hackerUser)
                 .build());
         hackerSellerId = hackerSeller.getId();
 

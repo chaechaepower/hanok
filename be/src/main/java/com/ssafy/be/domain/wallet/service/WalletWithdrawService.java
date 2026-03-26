@@ -28,7 +28,7 @@ public class WalletWithdrawService {
     private final UserRepository userRepository;
 
     @Transactional
-    public void requestWithdraw(WithdrawRequestCreateRequest request, Long userId) {
+    public void requestWithdrawWithoutLock(WithdrawRequestCreateRequest request, Long userId) {
         // 1. amount 값 검증
         if (request.amount() < MIN_WITHDRAW_AMOUNT) {
             throw new GlobalException(WalletErrorCode.WALLET_WITHDRAW_AMOUNT_TOO_LOW);
@@ -43,6 +43,62 @@ public class WalletWithdrawService {
         }
 
         user.requestWithdraw(request.amount());
+
+        // 3. withdrawRequest 생성
+        WithdrawRequest withdrawRequest = WithdrawRequest.builder()
+                .amount(request.amount())
+                .withdrawStatus(PENDING)
+                .user(user)
+                .build();
+
+        withdrawRequestRepository.save(withdrawRequest);
+    }
+
+    @Transactional
+    public void requestWithdrawPessimistic(WithdrawRequestCreateRequest request, Long userId) {
+        // 1. amount 값 검증
+        if (request.amount() < MIN_WITHDRAW_AMOUNT) {
+            throw new GlobalException(WalletErrorCode.WALLET_WITHDRAW_AMOUNT_TOO_LOW);
+        }
+
+        // 2. 잔액 검증 후 가감
+        User user = userRepository.findByIdWithPessimisticLock(userId)
+                .orElseThrow(() -> new GlobalException(UserErrorCode.USER_NOT_FOUND));
+
+        if (!user.hasSufficientBalance(request.amount())) {
+            throw new GlobalException(WalletErrorCode.WALLET_INSUFFICIENT_BALANCE);
+        }
+
+        user.requestWithdraw(request.amount());
+
+        // 3. withdrawRequest 생성
+        WithdrawRequest withdrawRequest = WithdrawRequest.builder()
+                .amount(request.amount())
+                .withdrawStatus(PENDING)
+                .user(user)
+                .build();
+
+        withdrawRequestRepository.save(withdrawRequest);
+    }
+
+    @Transactional
+    public void requestWithdrawOptimistic(WithdrawRequestCreateRequest request, Long userId) {
+        // 1. amount 값 검증
+        if (request.amount() < MIN_WITHDRAW_AMOUNT) {
+            throw new GlobalException(WalletErrorCode.WALLET_WITHDRAW_AMOUNT_TOO_LOW);
+        }
+
+        // 2. 잔액 검증 후 가감
+        User user = userRepository.findByIdWithOptimisticLock(userId)
+                .orElseThrow(() -> new GlobalException(UserErrorCode.USER_NOT_FOUND));
+
+        if (!user.hasSufficientBalance(request.amount())) {
+            throw new GlobalException(WalletErrorCode.WALLET_INSUFFICIENT_BALANCE);
+        }
+
+        user.requestWithdraw(request.amount());
+
+        userRepository.saveAndFlush(user);
 
         // 3. withdrawRequest 생성
         WithdrawRequest withdrawRequest = WithdrawRequest.builder()

@@ -36,7 +36,7 @@ public class ShippingAddress {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Builder
+    @Builder(toBuilder = true)
     private ShippingAddress(String addressName,
                            Integer postalCode,
                            String address,

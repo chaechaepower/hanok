@@ -75,6 +75,9 @@ public class User {
     @Column(name = "notification_setting", nullable = false)
     private Boolean notificationSetting; // 알림 설정 (기본값 true)
 
+    @Version
+    private Long version;
+
     @OneToMany(mappedBy = "user")
     @Builder.Default
     List<TradeReport> tradeReports = new ArrayList<>();

@@ -29,6 +29,7 @@ import com.ssafy.be.domain.stream.entity.StreamStatus;
 import com.ssafy.be.domain.stream.entity.StreamViewType;
 import com.ssafy.be.domain.stream.exception.StreamErrorCode;
 import com.ssafy.be.domain.stream.repository.MacroRedisRepository;
+import com.ssafy.be.domain.stream.repository.StreamReconnectRedisRepository;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
 import com.ssafy.be.domain.uniqueaction.entity.UniqueBidAuctionDetail;
 import com.ssafy.be.domain.uniqueaction.repository.UniqueBidAuctionDetailRepository;
@@ -84,6 +85,7 @@ public class StreamService {
     private final FollowRepository followRepository;
     private final UserRepository userRepository;
     private final MacroRedisRepository macroRedisRepository;
+    private final StreamReconnectRedisRepository streamReconnectRedisRepository;
     private final StreamPublisher streamPublisher; // 추가
 
     // TODO: Item 엔티티에서 경매 데이터 분리 시 다른 서비스 메서드도 리팩토링 필요
@@ -664,11 +666,20 @@ public class StreamService {
                 .map(user -> followRepository.existsByUserAndSeller(user, seller))
                 .orElse(false);
 
+        Long remainingSeconds = null;
+        if (stream.getStatus() == StreamStatus.PAUSED) {
+            long ttl = streamReconnectRedisRepository.getRemainingSeconds(streamId);
+            if (ttl >= 0) {
+                remainingSeconds = ttl;
+            }
+        }
+
         return new StreamEnterResponse(
                 stream.getId(),
                 stream.getTitle(),
                 stream.getCategory(),
                 stream.getStatus(),
+                remainingSeconds,
                 stream.getNotice(),
                 new StreamEnterResponse.SellerInfo(
                         seller.getId(),

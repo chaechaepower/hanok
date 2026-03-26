@@ -1,4 +1,4 @@
-package com.ssafy.be.domain.bottomupauction;
+package com.ssafy.be.domain.bottomupauction.service;
 
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
 import com.ssafy.be.domain.bottomupauction.dto.request.AuctionStartRequest;
@@ -15,7 +15,6 @@ import com.ssafy.be.domain.bottomupauction.repository.BottomUpAuctionDetailRepos
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
 import com.ssafy.be.domain.auction.repository.AuctionTimerRepository;
 import com.ssafy.be.domain.auction.service.AuctionService;
-import com.ssafy.be.domain.bottomupauction.service.BottomUpAuctionService;
 import com.ssafy.be.domain.auction.util.AuctionRedisKeys;
 import com.ssafy.be.domain.escrow.service.EscrowService;
 import com.ssafy.be.domain.item.entity.Item;
@@ -52,7 +51,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @IntegrationTest
@@ -118,7 +116,7 @@ class BottomUpAuctionServiceTest {
     void setUp() {
         clearInvocations(escrowService);
         sellerUser = userRepository.save(TestFixture.createUser("판매자"));
-        seller = sellerRepository.save(TestFixture.createSeller(sellerUser));
+        seller = sellerRepository.save(TestFixture.createBusinessSeller(sellerUser));
         stream = streamRepository.save(TestFixture.createStream("테스트 라이브 방송", seller));
         item = itemRepository.save(TestFixture.createItem("테스트 상품"));
     }
@@ -203,7 +201,7 @@ class BottomUpAuctionServiceTest {
             IT_LOG.info("    [요청] 타 스트림 ID로 경매 시작 시도 (호스트 불일치)");
             // given
             User otherSellerUser = userRepository.save(TestFixture.createUser("다른 판매자"));
-            Seller otherSeller = sellerRepository.save(TestFixture.createSeller(otherSellerUser));
+            Seller otherSeller = sellerRepository.save(TestFixture.createBusinessSeller(otherSellerUser));
             Stream otherStream = streamRepository.save(TestFixture.createStream("다른 방송", otherSeller));
 
             Auction introducingAuction = saveBottomUpAuction(INTRODUCING);

@@ -9,6 +9,7 @@ public record StreamEnterResponse(
         String title,
         Category category,
         StreamStatus status,
+        Long remainingSeconds,
         String notice,
         SellerInfo seller,
         List<TopBidder> topBidders,
