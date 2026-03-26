@@ -116,7 +116,7 @@ class BottomUpAuctionServiceTest {
     void setUp() {
         clearInvocations(escrowService);
         sellerUser = userRepository.save(TestFixture.createUser("판매자"));
-        seller = sellerRepository.save(TestFixture.createSeller(sellerUser));
+        seller = sellerRepository.save(TestFixture.createBusinessSeller(sellerUser));
         stream = streamRepository.save(TestFixture.createStream("테스트 라이브 방송", seller));
         item = itemRepository.save(TestFixture.createItem("테스트 상품"));
     }
@@ -201,7 +201,7 @@ class BottomUpAuctionServiceTest {
             IT_LOG.info("    [요청] 타 스트림 ID로 경매 시작 시도 (호스트 불일치)");
             // given
             User otherSellerUser = userRepository.save(TestFixture.createUser("다른 판매자"));
-            Seller otherSeller = sellerRepository.save(TestFixture.createSeller(otherSellerUser));
+            Seller otherSeller = sellerRepository.save(TestFixture.createBusinessSeller(otherSellerUser));
             Stream otherStream = streamRepository.save(TestFixture.createStream("다른 방송", otherSeller));
 
             Auction introducingAuction = saveBottomUpAuction(INTRODUCING);

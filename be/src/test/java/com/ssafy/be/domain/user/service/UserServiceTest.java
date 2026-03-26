@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.be.domain.notification.dto.request.NotificationSettingRequest;
 import com.ssafy.be.domain.notification.dto.response.NotificationSettingResponse;
 import com.ssafy.be.domain.seller.entity.Seller;
-import com.ssafy.be.domain.seller.entity.SellerType;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.user.dto.request.AccountRegisterRequest;
 import com.ssafy.be.domain.user.dto.request.IdentityVerificationRequestDto;
@@ -24,6 +23,7 @@ import com.ssafy.be.global.infra.gcs.GcsClient;
 import com.ssafy.be.global.infra.portone.PortoneClient;
 import com.ssafy.be.global.infra.redis.RedisService;
 import com.ssafy.be.global.security.util.JwtUtil;
+import com.ssafy.be.support.util.TestFixture;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import org.junit.jupiter.api.*;
@@ -165,8 +165,7 @@ class UserServiceTest {
         @Test @Order(1)
         @DisplayName("A-1. 로그인 성공 및 토큰 발급")
         void login_Success() {
-            User user = User.createUser("test@test.com", "epw", "t", "010");
-            ReflectionTestUtils.setField(user, "id", 1L);
+            User user = User.createUser("test@test.com", "epw", "t", "010").toBuilder().id(1L).build();
             given(userRepository.findByEmail("test@test.com")).willReturn(Optional.of(user));
             given(passwordEncoder.matches(anyString(), anyString())).willReturn(true);
             given(jwtUtil.generateToken(any(), any(), any())).willReturn("at");
@@ -439,9 +438,7 @@ class UserServiceTest {
         }
 
         private User userWithId(long id) {
-            User user = User.createUser("u@u.com", "pw", "닉", "010");
-            ReflectionTestUtils.setField(user, "id", id);
-            return user;
+            return User.createUser("u@u.com", "pw", "닉", "010").toBuilder().id(id).build();
         }
 
         @Test
@@ -461,21 +458,17 @@ class UserServiceTest {
         @Order(2)
         @DisplayName("PA-2. getMyProfile — sellerId·예치 합산·프로필 이미지")
         void getMyProfile_success() {
-            User user = userWithId(1L);
-            ReflectionTestUtils.setField(user, "balance", 100L);
-            ReflectionTestUtils.setField(user, "depositedBidBalance", 10L);
-            ReflectionTestUtils.setField(user, "depositedEscrowBalance", 20L);
-            ReflectionTestUtils.setField(user, "depositedWithdrawBalance", 5L);
-            ReflectionTestUtils.setField(user, "bankCode", "088");
-            ReflectionTestUtils.setField(user, "accountName", "예금주");
-            ReflectionTestUtils.setField(user, "accountNum", "123");
-            given(userRepository.findById(1L)).willReturn(Optional.of(user));
-            Seller seller = Seller.builder()
-                    .intro("i")
-                    .penaltyCount(0)
-                    .type(SellerType.INDIVIDUAL)
-                    .user(user)
+            User user = userWithId(1L).toBuilder()
+                    .balance(100L)
+                    .depositedBidBalance(10L)
+                    .depositedEscrowBalance(20L)
+                    .depositedWithdrawBalance(5L)
+                    .bankCode("088")
+                    .accountName("예금주")
+                    .accountNum("123")
                     .build();
+            given(userRepository.findById(1L)).willReturn(Optional.of(user));
+            Seller seller = TestFixture.createSeller(user);
             ReflectionTestUtils.setField(seller, "id", 50L);
             given(sellerRepository.findByUserId(1L)).willReturn(Optional.of(seller));
 
@@ -492,8 +485,7 @@ class UserServiceTest {
         @Order(3)
         @DisplayName("PA-3. getMyProfile — profileImage null이면 GCS 기본 URL")
         void getMyProfile_whenNoImage_usesDefault() {
-            User user = userWithId(1L);
-            ReflectionTestUtils.setField(user, "profileImage", null);
+            User user = userWithId(1L).toBuilder().profileImage(null).build();
             given(userRepository.findById(1L)).willReturn(Optional.of(user));
             given(sellerRepository.findByUserId(1L)).willReturn(Optional.empty());
             given(gcsClient.getDefaultProfileImageUrl()).willReturn("https://default/img.png");
@@ -576,9 +568,7 @@ class UserServiceTest {
         @Order(2)
         @DisplayName("PI-2. 기존 이미지 없으면 delete 미호출")
         void uploadProfileImage_whenNoOldImage_skipsDelete() throws IOException {
-            User user = User.createUser("a@a.com", "p", "n", "010");
-            ReflectionTestUtils.setField(user, "id", 1L);
-            ReflectionTestUtils.setField(user, "profileImage", null);
+            User user = User.createUser("a@a.com", "p", "n", "010").toBuilder().id(1L).profileImage(null).build();
             given(userRepository.findById(1L)).willReturn(Optional.of(user));
             MultipartFile file = mock(MultipartFile.class);
             given(gcsClient.uploadProfileImage(file, 1L)).willReturn("https://new");
@@ -595,8 +585,7 @@ class UserServiceTest {
         @Order(3)
         @DisplayName("PI-3. 기존 이미지 있으면 삭제 후 업로드")
         void uploadProfileImage_whenOldExists_deletesFirst() throws IOException {
-            User user = User.createUser("a@a.com", "p", "n", "010");
-            ReflectionTestUtils.setField(user, "id", 1L);
+            User user = User.createUser("a@a.com", "p", "n", "010").toBuilder().id(1L).build();
             user.updateProfileImage("https://old");
             given(userRepository.findById(1L)).willReturn(Optional.of(user));
             MultipartFile file = mock(MultipartFile.class);

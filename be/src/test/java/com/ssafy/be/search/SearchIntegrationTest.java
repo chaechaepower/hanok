@@ -85,7 +85,7 @@ class SearchIntegrationTest {
     @BeforeEach
     void setUp() {
         sellerUser = userRepository.save(TestFixture.createUser("판매자"));
-        seller     = sellerRepository.save(TestFixture.createSeller(sellerUser));
+        seller     = sellerRepository.save(TestFixture.createBusinessSeller(sellerUser));
         stream     = streamRepository.save(TestFixture.createStream("나이키 특가 방송", seller));
     }
 

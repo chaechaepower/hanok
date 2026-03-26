@@ -5,12 +5,12 @@ import com.ssafy.be.domain.follow.entity.Follow;
 import com.ssafy.be.domain.follow.exception.FollowErrorCode;
 import com.ssafy.be.domain.follow.repository.FollowRepository;
 import com.ssafy.be.domain.seller.entity.Seller;
-import com.ssafy.be.domain.seller.entity.SellerType;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
 import com.ssafy.be.global.extension.TestReportExtension;
+import com.ssafy.be.support.util.TestFixture;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -66,17 +66,12 @@ class FollowServiceTest {
 
     @BeforeEach
     void setUp() {
-        me = User.createUser("buyer@test.com", "pw", "구매자", "010-1111-1111");
-        ReflectionTestUtils.setField(me, "id", 1L);
+        me = User.createUser("buyer@test.com", "pw", "구매자", "010-1111-1111").toBuilder().id(1L).build();
 
-        sellerUser = User.createUser("seller@test.com", "pw", "판매자", "010-2222-2222");
-        ReflectionTestUtils.setField(sellerUser, "id", 2L);
+        sellerUser = User.createUser("seller@test.com", "pw", "판매자", "010-2222-2222").toBuilder().id(2L).build();
 
-        targetSeller = Seller.builder()
+        targetSeller = TestFixture.createSeller(sellerUser).toBuilder()
                 .intro("판매자 소개")
-                 .type(SellerType.INDIVIDUAL)
-                .penaltyCount(0)
-                .user(sellerUser)
                 .build();
         ReflectionTestUtils.setField(targetSeller, "id", 10L);
     }
@@ -163,10 +158,8 @@ class FollowServiceTest {
         void selfFollow_ThrowsException() {
             TEST_LOG.info("    [요청] me(1L) 가 본인 seller 계정 팔로우 시도");
 
-            Seller mySellerProfile = Seller.builder()
+            Seller mySellerProfile = TestFixture.createSeller(me).toBuilder()
                     .intro("나도 판매자")
-                    .penaltyCount(0)
-                    .user(me)
                     .build();
             ReflectionTestUtils.setField(mySellerProfile, "id", 11L);
 

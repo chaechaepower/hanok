@@ -25,8 +25,36 @@ import java.util.UUID;
 import static com.ssafy.be.domain.item.entity.AuctionType.BOTTOM_UP;
 import static com.ssafy.be.domain.item.entity.Category.CLOTHING;
 import static com.ssafy.be.domain.seller.entity.SellerType.BUSINESS;
+import static com.ssafy.be.domain.seller.entity.SellerType.INDIVIDUAL;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.spy;
 
 public class TestFixture {
+
+    /** 빌더/필드에 {@code id} 없이 단위 테스트에서 {@code getId()}만 고정할 때 (리플렉션 없음). */
+    public static Stream spyStreamWithId(Stream stream, long id) {
+        Stream s = spy(stream);
+        lenient().doReturn(id).when(s).getId();
+        return s;
+    }
+
+    public static Seller spySellerWithId(Seller seller, long id) {
+        Seller s = spy(seller);
+        lenient().doReturn(id).when(s).getId();
+        return s;
+    }
+
+    public static Item spyItemWithId(Item item, long id) {
+        Item s = spy(item);
+        lenient().doReturn(id).when(s).getId();
+        return s;
+    }
+
+    public static Auction spyAuctionWithId(Auction auction, long id) {
+        Auction s = spy(auction);
+        lenient().doReturn(id).when(s).getId();
+        return s;
+    }
 
     /** 하향/상향식 테스트용 기본 시작가 */
     public static final long TEST_BOTTOM_UP_START_PRICE = 10000L;
@@ -62,7 +90,21 @@ public class TestFixture {
                 .build();
     }
 
+    /**
+     * 단위 테스트 기본 Seller. {@code intro=i}, {@code INDIVIDUAL}, penalty 0.
+     * 타입·소개·avgShipDays 등은 {@code .toBuilder()…}로 덮어쓰기.
+     */
     public static Seller createSeller(User user) {
+        return Seller.builder()
+                .intro("i")
+                .penaltyCount(0)
+                .type(INDIVIDUAL)
+                .user(user)
+                .build();
+    }
+
+    /** DB 저장형 통합 테스트용 사업자 프로필 */
+    public static Seller createBusinessSeller(User user) {
         return Seller.builder()
                 .intro("테스트 판매자입니다.")
                 .penaltyCount(0)

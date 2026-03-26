@@ -98,7 +98,7 @@ class ItemServiceTest {
         doNothing().when(gcsClient).deleteImage(any());
 
         user = userRepository.save(TestFixture.createUser("물품 판매자"));
-        seller = sellerRepository.save(TestFixture.createSeller(user));
+        seller = sellerRepository.save(TestFixture.createBusinessSeller(user));
     }
 
     @AfterEach

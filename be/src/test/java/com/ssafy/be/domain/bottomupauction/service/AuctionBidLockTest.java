@@ -97,7 +97,7 @@ public class AuctionBidLockTest {
                         .map(user -> user.toBuilder().balance(BIDDER_BALANCE).depositedBidBalance(0L).build())
                         .toList());
         sellerUser = userRepository.save(TestFixture.createUser("판매자"));
-        seller = sellerRepository.save(TestFixture.createSeller(sellerUser));
+        seller = sellerRepository.save(TestFixture.createBusinessSeller(sellerUser));
         stream = streamRepository.save(TestFixture.createStream("테스트 라이브 방송", seller));
         item = itemRepository.save(TestFixture.createItem("테스트 상품"));
         liveAuction = auctionRepository.save(TestFixture.createAuction(BOTTOM_UP, LIVE, stream, item));

@@ -84,7 +84,7 @@ class UniqueBidAuctionServiceTest {
     @BeforeEach
     void setUp() {
         sellerUser = userRepository.save(TestFixture.createUser("판매자"));
-        seller = sellerRepository.save(TestFixture.createSeller(sellerUser));
+        seller = sellerRepository.save(TestFixture.createBusinessSeller(sellerUser));
         stream = streamRepository.save(TestFixture.createStream("테스트 라이브 방송", seller));
         item = itemRepository.save(TestFixture.createItem("테스트 상품"));
 

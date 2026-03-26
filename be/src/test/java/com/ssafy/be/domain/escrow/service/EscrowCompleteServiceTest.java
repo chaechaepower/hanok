@@ -123,7 +123,7 @@ class EscrowCompleteServiceTest {
     private DepositedCtx saveDepositedEscrow() {
         long winning = TestFixture.TEST_ESCROW_WINNING_PRICE;
         User sellerUser = userRepository.save(TestFixture.createUser("판매자"));
-        Seller seller = sellerRepository.save(TestFixture.createSeller(sellerUser));
+        Seller seller = sellerRepository.save(TestFixture.createBusinessSeller(sellerUser));
         User buyer = userRepository.save(TestFixture.createBuyerWithBidDepositForEscrow("구매자", winning));
         Stream stream = streamRepository.save(TestFixture.createStream("에스크로 라이브", seller));
         Item item = itemRepository.save(TestFixture.createEscrowAuctionItem("낙찰 상품", seller));

@@ -12,6 +12,7 @@ import com.ssafy.be.domain.seller.entity.SellerType;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.domain.stream.dto.response.SellerRankingResponse;
+import com.ssafy.be.support.util.TestFixture;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.exception.UserErrorCode;
 import com.ssafy.be.domain.user.repository.UserRepository;
@@ -117,7 +118,7 @@ class SellerServiceTest {
         @DisplayName("SR-3. 정상 판매자 등록 성공")
         void register_ValidRequest_Success() {
             User user = User.createUser("t@t.com", "p", "경매왕", "010");
-            Seller seller = Seller.builder().user(user).build();
+            Seller seller = TestFixture.createSeller(user);
             given(sellerRepository.existsByUserId(1L)).willReturn(false);
             given(userRepository.findById(1L)).willReturn(Optional.of(user));
             given(sellerRepository.save(any(Seller.class))).willReturn(seller);
@@ -145,7 +146,7 @@ class SellerServiceTest {
         @DisplayName("RN-1. 팔로워 수 기준 상위 셀러 조회")
         void getTopSellers_success() {
             User user = User.createUser("t@t.com", "p", "스니커즈마켓", "010");
-            Seller seller = Seller.builder().user(user).build();
+            Seller seller = TestFixture.createSeller(user);
             ReflectionTestUtils.setField(seller, "id", 1L);
             List<Object[]> mockRows = new ArrayList<>();
             mockRows.add(new Object[]{1L, 1024L});
@@ -192,12 +193,7 @@ class SellerServiceTest {
         @Order(1)
         @DisplayName("ST-1. 등록된 판매자면 isSeller=true 및 sellerId")
         void getSellerStatus_whenRegistered() {
-            Seller seller = Seller.builder()
-                    .intro("i")
-                    .penaltyCount(0)
-                    .type(SellerType.INDIVIDUAL)
-                    .user(User.createUser("a@a.com", "p", "n", "010"))
-                    .build();
+            Seller seller = TestFixture.createSeller(User.createUser("a@a.com", "p", "n", "010"));
             ReflectionTestUtils.setField(seller, "id", 42L);
             given(sellerRepository.findByUserId(1L)).willReturn(Optional.of(seller));
 
@@ -237,13 +233,10 @@ class SellerServiceTest {
         }
 
         private Seller sellerOwnedBy(long userId) {
-            User user = User.createUser("o@o.com", "p", "닉", "010");
-            ReflectionTestUtils.setField(user, "id", userId);
-            Seller seller = Seller.builder()
-                    .intro("구소개")
-                    .penaltyCount(0)
+            User user = User.createUser("o@o.com", "p", "닉", "010").toBuilder().id(userId).build();
+            Seller seller = TestFixture.createSeller(user).toBuilder()
                     .type(SellerType.BUSINESS)
-                    .user(user)
+                    .intro("구소개")
                     .build();
             ReflectionTestUtils.setField(seller, "id", 100L);
             return seller;
@@ -370,16 +363,13 @@ class SellerServiceTest {
             TEST_LOG.info("└──────────────────────────────────────────────────────────");
         }
 
-        private Seller sellerWithUserId(long userId) {
-            User user = User.createUser("r@r.com", "p", "판매자", "010");
-            ReflectionTestUtils.setField(user, "id", userId);
-            return Seller.builder()
-                    .intro("i")
-                    .penaltyCount(0)
-                    .type(SellerType.INDIVIDUAL)
-                    .user(user)
+        private Seller sellerForReputation(long sellerId, long ownerUserId) {
+            User user = User.createUser("r@r.com", "p", "판매자", "010").toBuilder().id(ownerUserId).build();
+            Seller seller = TestFixture.createSeller(user).toBuilder()
                     .avgShipDays(3.5)
                     .build();
+            ReflectionTestUtils.setField(seller, "id", sellerId);
+            return seller;
         }
 
         @Test
@@ -399,8 +389,7 @@ class SellerServiceTest {
         @Order(2)
         @DisplayName("RP-2. 비소유자는 followerCount만")
         void getReputation_whenNotOwner_public() {
-            Seller seller = sellerWithUserId(10L);
-            ReflectionTestUtils.setField(seller, "id", 1L);
+            Seller seller = sellerForReputation(1L, 10L);
             given(sellerRepository.findById(1L)).willReturn(Optional.of(seller));
             given(followRepository.countBySellerId(1L)).willReturn(50L);
 
@@ -416,8 +405,7 @@ class SellerServiceTest {
         @Order(3)
         @DisplayName("RP-3. 소유자는 거래·성사율·배송일 포함")
         void getReputation_whenOwner_detail() {
-            Seller seller = sellerWithUserId(10L);
-            ReflectionTestUtils.setField(seller, "id", 1L);
+            Seller seller = sellerForReputation(1L, 10L);
             given(sellerRepository.findById(1L)).willReturn(Optional.of(seller));
             given(followRepository.countBySellerId(1L)).willReturn(7L);
             given(escrowRepository.countBySellerIdAndEscrowStatus(1L, EscrowStatus.COMPLETED)).willReturn(8L);
