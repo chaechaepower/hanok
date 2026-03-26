@@ -655,6 +655,17 @@ const sendPrivateBidSync = (streamId: string, userId: number | null) => {
   );
 };
 
+const sendPrivateAuctionStatisticsSync = (streamId: string, userId: number | null) => {
+  sendToPrivateDestination(
+    `/user/private/streams/${streamId}`,
+    {
+      eventType: 'AUCTION_STATISTICS_SYNC',
+      payload: streamAuctionStatisticsStates.get(streamId) ?? null,
+    },
+    userId,
+  );
+};
+
 const createUniqueBidSyncPayload = (streamId: string, nowMs: number, targetUserId: number | null) => {
   const timerState = streamTimerStates.get(streamId);
   const uniqueBidSyncState = streamUniqueBidSyncStates.get(streamId);
@@ -1281,6 +1292,12 @@ const handleBidSync = (destination: string, requesterUserId: number | null) => {
   sendPrivateBidSync(streamId, requesterUserId);
 };
 
+const handleAuctionStatisticsSync = (destination: string, requesterUserId: number | null) => {
+  const streamId = getStreamIdFromDestination(destination);
+  ensureSeededBidAuctionState(streamId);
+  sendPrivateAuctionStatisticsSync(streamId, requesterUserId);
+};
+
 const handleUniqueBidSync = (destination: string, requesterUserId: number | null) => {
   const streamId = getStreamIdFromDestination(destination);
   ensureSeededUniqueAuctionState(streamId, requesterUserId);
@@ -1405,6 +1422,10 @@ const handleSendFrame = (clientId: string, frame: StompFrame) => {
 
     if (body.eventType === 'BID_SYNC') {
       handleBidSync(frame.headers.destination, requesterUserId);
+    }
+
+    if (body.eventType === 'AUCTION_STATISTICS_SYNC') {
+      handleAuctionStatisticsSync(frame.headers.destination, requesterUserId);
     }
 
     if (body.eventType === 'UNIQUE_BID_SYNC') {

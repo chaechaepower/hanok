@@ -453,6 +453,10 @@ export type PrivateStreamEvent =
       payload?: BidWinnerPayload;
     }
   | {
+      eventType: 'AUCTION_STATISTICS_SYNC';
+      payload?: AuctionStatisticsPayload | null;
+    }
+  | {
       eventType: 'UNIQUE_AUCTION_END';
       payload?: UniqueAuctionEndPayload;
     }
