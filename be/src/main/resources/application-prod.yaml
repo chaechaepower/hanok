@@ -1,14 +1,15 @@
 spring:
-  datasource:
-    hikari:
-      maximum-pool-size: 50    # 10 → 50
-      minimum-idle: 10
-      connection-timeout: 3000  # 3초 대기 후 에러
-      idle-timeout: 60000
-      max-lifetime: 1800000
   config:
     activate:
       on-profile: prod
+
+  datasource:
+    hikari:
+      maximum-pool-size: 150
+      minimum-idle: 10
+      connection-timeout: 3000
+      idle-timeout: 60000
+      max-lifetime: 1800000
 
   cloud:
     gcp:
