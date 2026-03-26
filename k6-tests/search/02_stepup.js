@@ -70,7 +70,7 @@ export default function (data) {
     errCount.add(1);
     searchErrRate.add(true);
     breakingPointVUs.add(exec.instance.vusActive);
-    console.error(`🚨 500 에러 (FULLTEXT 없음): VU=${exec.instance.vusActive}`);
+    console.error(`🚨 500 에러 (서버 과부하): VU=${exec.instance.vusActive}, status=${res.status}`);
     return;
   }
 
