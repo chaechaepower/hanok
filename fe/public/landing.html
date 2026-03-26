@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>한옥 경매</title>
     <link rel="preload" href="landging_model.glb" as="fetch" crossorigin>
-    <link rel="preload" href="Logo.png" as="image">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { overflow: hidden; background: #0e0c0a; }
@@ -49,15 +48,6 @@
             font-family: system-ui, sans-serif;
         }
 
-        /* 로딩 로고 */
-        .loading-logo {
-            margin-bottom: 32px;
-        }
-        .loading-logo img {
-            height: 80px;
-            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
-        }
-
         /* UI 오버레이 */
         #ui-overlay {
             position: fixed; inset: 0; z-index: 10;
@@ -66,29 +56,6 @@
         }
         #ui-overlay.visible { opacity: 1; }
 
-        /* 로고 - 좌상단 */
-        .logo {
-            position: absolute; top: 30px; left: 40px;
-            z-index: 20;
-            transition: opacity 0.5s ease;
-        }
-        .logo.fade-out { opacity: 0; }
-        .logo img {
-            height: 100px;
-            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
-        }
-
-        /* 반응형 */
-        @media (max-width: 768px) {
-            .logo { top: 20px; left: 20px; }
-            .logo img { height: 70px; }
-            .loading-logo img { height: 60px; }
-        }
-        @media (max-width: 480px) {
-            .logo { top: 16px; left: 16px; }
-            .logo img { height: 55px; }
-            .loading-logo img { height: 50px; }
-        }
     </style>
 </head>
 
@@ -103,9 +70,7 @@
     </div>
 
     <!-- UI 오버레이 -->
-    <div id="ui-overlay">
-        <div class="logo" id="logo"><img src="Logo.png" alt="한옥"></div>
-    </div>
+    <div id="ui-overlay"></div>
 
     <!-- 페이드아웃 오버레이 -->
     <div id="fade-overlay" style="position:fixed;inset:0;z-index:999;background:#0e0c0a;opacity:0;pointer-events:none;transition:opacity 0.3s ease;"></div>
@@ -131,7 +96,6 @@
         const container = document.getElementById('canvas-container');
         const loadingOverlay = document.getElementById('loading-overlay');
         const uiOverlay = document.getElementById('ui-overlay');
-        const logo = document.getElementById('logo');
         const progressBar = document.getElementById('progress-bar');
         const progressPct = document.getElementById('progress-pct');
         const CIRCUMFERENCE = 2 * Math.PI * 24; // r=24
@@ -352,7 +316,6 @@
                 camera.position.copy(currentCamPos);
                 camera.lookAt(currentCamTarget);
 
-                if (t >= 0.1) logo.classList.add('fade-out');
                 if (t >= 0.8) document.getElementById('fade-overlay').style.opacity = '1';
 
                 if (t >= 1) {
