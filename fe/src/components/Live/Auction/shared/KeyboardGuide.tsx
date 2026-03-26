@@ -3,9 +3,9 @@ import { IoChevronBack, IoChevronDown, IoChevronForward, IoChevronUp } from 'rea
 import { LuKeyboard } from 'react-icons/lu';
 
 const CLOSED_WIDTH = 60;
-const OPEN_WIDTH = 380;
+const OPEN_WIDTH = 320;
 
-const KEY_BASE = 'flex items-center justify-center rounded-lg transition-colors duration-100';
+const KEY_BASE = 'flex items-center justify-center rounded-md transition-colors duration-100';
 const KEY_INACTIVE = 'bg-neutral-800 text-neutral-300';
 const KEY_ACTIVE = 'bg-gold text-background';
 const KEY_DISABLED = 'bg-neutral-900 text-neutral-600';
@@ -84,29 +84,29 @@ export default function KeyboardGuide({ variant, open, onToggle, activeKeys = ne
       initial={false}
       animate={{ width: open ? OPEN_WIDTH : CLOSED_WIDTH }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="flex h-32.5 items-stretch overflow-hidden rounded-2xl bg-surface/80"
+      className="flex h-28 items-center overflow-hidden rounded-2xl bg-surface/80"
     >
-      <div className="flex shrink-0 flex-col justify-center px-2.5">
+      <div className="flex w-full shrink-0 flex-col items-center justify-center" style={{ maxWidth: CLOSED_WIDTH }}>
         <button
           className="flex h-10 w-10 items-center justify-center rounded-xl text-neutral-400 transition hover:bg-warm/10 hover:text-neutral-200"
           onClick={() => onToggle(!open)}
         >
-          <LuKeyboard size={18} />
+          <LuKeyboard size={20} />
         </button>
       </div>
 
-      <div className="flex flex-1 items-stretch gap-4 py-3 pr-1">
-        <div className="flex flex-col items-center gap-1">
-          <div className="flex gap-1">
-            <div className="w-9" />
-            <div className={`h-9 w-9 ${KEY_BASE} ${isActive('ArrowUp') ? KEY_ACTIVE : KEY_INACTIVE}`}>
-              <IoChevronUp size={14} />
+      <div className="flex flex-1 items-stretch gap-3 py-2.5 pr-1">
+        <div className="flex flex-col items-center gap-0.5">
+          <div className="flex gap-0.5">
+            <div className="w-7" />
+            <div className={`h-7 w-7 ${KEY_BASE} ${isActive('ArrowUp') ? KEY_ACTIVE : KEY_INACTIVE}`}>
+              <IoChevronUp size={11} />
             </div>
-            <div className="w-9" />
+            <div className="w-7" />
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-0.5">
             <div
-              className={`h-9 w-9 ${KEY_BASE} ${
+              className={`h-7 w-7 ${KEY_BASE} ${
                 config.leftRightDisabled
                   ? KEY_DISABLED
                   : isActive('ArrowLeft')
@@ -114,13 +114,13 @@ export default function KeyboardGuide({ variant, open, onToggle, activeKeys = ne
                     : KEY_INACTIVE
               }`}
             >
-              <IoChevronBack size={12} />
+              <IoChevronBack size={10} />
             </div>
-            <div className={`h-9 w-9 ${KEY_BASE} ${isActive('ArrowDown') ? KEY_ACTIVE : KEY_INACTIVE}`}>
-              <IoChevronDown size={14} />
+            <div className={`h-7 w-7 ${KEY_BASE} ${isActive('ArrowDown') ? KEY_ACTIVE : KEY_INACTIVE}`}>
+              <IoChevronDown size={11} />
             </div>
             <div
-              className={`h-9 w-9 ${KEY_BASE} ${
+              className={`h-7 w-7 ${KEY_BASE} ${
                 config.leftRightDisabled
                   ? KEY_DISABLED
                   : isActive('ArrowRight')
@@ -128,11 +128,11 @@ export default function KeyboardGuide({ variant, open, onToggle, activeKeys = ne
                     : KEY_INACTIVE
               }`}
             >
-              <IoChevronForward size={12} />
+              <IoChevronForward size={10} />
             </div>
           </div>
           <div
-            className={`mt-0.5 w-full rounded-lg py-1.5 text-center text-caption font-bold tracking-widest transition-colors duration-100 ${
+            className={`mt-0.5 w-full rounded-md py-1 text-center text-[10px] font-bold tracking-widest transition-colors duration-100 ${
               isActive(config.bottomKey.keyName)
                 ? 'bg-gold text-background'
                 : config.bottomKey.accent
@@ -144,13 +144,13 @@ export default function KeyboardGuide({ variant, open, onToggle, activeKeys = ne
           </div>
         </div>
 
-        <div className="flex flex-col justify-center gap-3 text-label text-neutral-400">
+        <div className="flex flex-col justify-center gap-2 text-[11px] text-neutral-400">
           {config.rows.map((row) => (
-            <div key={row.text} className="flex items-center gap-2">
+            <div key={row.text} className="flex items-center gap-1.5">
               {row.badges.map((badge) => (
                 <span
                   key={`${row.text}-${badge.keyName}`}
-                  className={`h-7 ${badge.label.length > 2 ? 'px-2' : 'w-7'} text-caption font-bold ${BADGE_BASE} ${
+                  className={`h-5.5 ${badge.label.length > 2 ? 'px-1.5' : 'w-5.5'} text-[10px] font-bold ${BADGE_BASE} ${
                     isActive(badge.keyName) ? BADGE_ACTIVE : BADGE_INACTIVE
                   }`}
                 >
@@ -164,10 +164,10 @@ export default function KeyboardGuide({ variant, open, onToggle, activeKeys = ne
       </div>
 
       <button
-        className="flex w-8 shrink-0 items-center justify-center text-neutral-500 transition hover:bg-warm/5 hover:text-neutral-300"
+        className="flex w-6 shrink-0 items-center justify-center text-neutral-500 transition hover:bg-warm/5 hover:text-neutral-300"
         onClick={() => onToggle(false)}
       >
-        <IoChevronBack size={14} />
+        <IoChevronBack size={12} />
       </button>
     </motion.div>
   );

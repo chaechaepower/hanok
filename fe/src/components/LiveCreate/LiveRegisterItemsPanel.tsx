@@ -45,7 +45,7 @@ export default function LiveRegisterItemsPanel({
   return (
     <aside className="scrollbar-hide min-w-0 flex-1 overflow-y-auto rounded-2xl bg-background px-4 py-6">
       <div className="mb-4 flex items-center justify-between">
-        <span className="text-sm font-bold text-neutral-400">경매 물품 목록</span>
+        <span className="text-sm font-bold text-white">경매 물품 목록</span>
         <span className="text-[13px] font-bold text-neutral-600">{tutorialVisibleItems.length}</span>
       </div>
 
@@ -227,9 +227,9 @@ export default function LiveRegisterItemsPanel({
       <button
         type="button"
         onClick={onOpenInventory}
-        className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-neutral-800 bg-transparent px-4 py-3 text-sm font-bold text-neutral-600 transition-all hover:border-neutral-700 hover:bg-neutral-900 hover:text-neutral-300"
+        className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-gold/30 bg-gold/[0.06] px-4 py-3 text-sm font-bold text-gold/60 transition-all hover:border-gold/50 hover:bg-gold/[0.12] hover:text-gold"
       >
-        인벤토리에서 물품 선택
+        물품 선택
       </button>
     </aside>
   );

@@ -40,8 +40,6 @@ export default function BuyerControlBar({
   const bid = useBidState({ auctionType, bidSync, uniqueBidSync, activeAuctionId });
 
   const [guideOpen, setGuideOpen] = useState(false);
-  const [panelOpacity, setPanelOpacity] = useState(90);
-  const panelOpacityProgress = ((panelOpacity - 10) / 80) * 100;
 
   const handleKeyAction = useCallback(
     (event: KeyboardEvent) => {
@@ -92,10 +90,9 @@ export default function BuyerControlBar({
         <div className="flex items-center justify-between">
           <KeyboardGuide variant="buyer" open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} placement={variant === 'inline' ? 'top' : 'left'} />
 
-          <div className="mx-4 flex min-h-32.5 flex-1">
+          <div className="mx-4 flex min-h-28 flex-1">
             <div
-              className="flex min-h-32.5 flex-1 flex-col gap-2 rounded-2xl bg-surface/80 px-4 py-3"
-              style={{ opacity: panelOpacity / 100 }}
+              className="flex min-h-28 flex-1 flex-col gap-2 rounded-2xl bg-surface/80 px-4 py-3"
             >
               {bid.visibleAuctionEndPhase !== null ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-2">
@@ -157,7 +154,7 @@ export default function BuyerControlBar({
             </div>
           </div>
 
-          <div className="flex min-h-32.5 flex-col justify-center gap-3 rounded-2xl bg-surface/80 px-2.5">
+          <div className="flex min-h-28 flex-col justify-center gap-3 rounded-2xl bg-surface/80 px-2.5">
             <button
               type="button"
               className="flex h-10 w-10 items-center justify-center rounded-xl text-neutral-400 transition hover:bg-warm/10 hover:text-neutral-200"
@@ -177,30 +174,6 @@ export default function BuyerControlBar({
           </div>
         </div>
 
-        {variant === 'overlay' && (
-        <div className="flex items-center gap-2 px-4">
-          <span className="shrink-0 text-warm/50 text-body-sm">투명도</span>
-          <div className="relative h-[4px] flex-1">
-            <div className="absolute inset-0 rounded-full bg-warm/20" />
-            <div
-              className="absolute inset-y-0 left-0 rounded-full bg-warm/30"
-              style={{ width: `${panelOpacityProgress}%` }}
-            />
-            <div
-              className="pointer-events-none absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-warm/50 bg-warm/60 shadow-[0_0_10px_rgba(212,174,107,0.35)]"
-              style={{ left: `${panelOpacityProgress}%` }}
-            />
-            <input
-              type="range"
-              min={10}
-              max={90}
-              value={panelOpacity}
-              onChange={(event) => setPanelOpacity(Number(event.target.value))}
-              className="absolute left-0 right-0 -top-2 h-3 w-full cursor-pointer opacity-0"
-            />
-          </div>
-        </div>
-        )}
       </div>
 
       <BidAccessModal
