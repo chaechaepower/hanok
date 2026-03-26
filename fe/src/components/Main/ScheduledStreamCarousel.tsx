@@ -93,7 +93,7 @@ export default function ScheduledStreamCarousel({ streams }: ScheduledStreamCaro
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="pl-14 text-[15px] font-semibold text-gold-light">
+                    <p className="text-[15px] font-semibold text-gold-light">
                       {formatScheduledDateTime(stream.scheduledAt, '일정 미정')}
                     </p>
                     <h3 className="mt-2 line-clamp-2 text-h2 font-semibold leading-[1.2] tracking-[-0.02em] text-warm">
