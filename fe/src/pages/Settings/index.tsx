@@ -79,17 +79,6 @@ export default function SettingsPage() {
     });
   };
 
-  if (isMeLoading || isNotiLoading || isWalletLoading) {
-    return (
-      <div className="flex min-h-[400px] flex-col items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-neutral-700 border-t-gold-light" />
-        <p className="mt-3 text-neutral-400">정보를 불러오는 중입니다</p>
-      </div>
-    );
-  }
-
-  const user = meData;
-  const defaultAddress = addressesData?.find((a) => a.isDefault) ?? addressesData?.[0] ?? null;
   const hasAddress = (addressesData?.length ?? 0) > 0;
   const hasAccount = !!(accountData?.bankName && accountData?.accountNum);
 
@@ -102,6 +91,18 @@ export default function SettingsPage() {
       needsBadge[item.id] ? { ...item, badge: <SetupDot /> } : item,
     );
   }, [hasAddress, hasAccount]);
+
+  if (isMeLoading || isNotiLoading || isWalletLoading) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-neutral-700 border-t-gold-light" />
+        <p className="mt-3 text-neutral-400">정보를 불러오는 중입니다</p>
+      </div>
+    );
+  }
+
+  const user = meData;
+  const defaultAddress = addressesData?.find((a) => a.isDefault) ?? addressesData?.[0] ?? null;
 
   return (
     <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-8 box-border py-10">

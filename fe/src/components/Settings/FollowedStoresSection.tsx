@@ -56,7 +56,7 @@ export default function FollowedStoresSection() {
         </div>
       ) : (
         <div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
             {followedList.map(({ followId, seller }) => (
               <div
                 key={followId}
