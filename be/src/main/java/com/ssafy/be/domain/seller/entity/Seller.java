@@ -60,7 +60,7 @@ public class Seller {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Builder
+    @Builder(toBuilder = true)
     private Seller(String intro,
                    Integer penaltyCount,
                    SellerType type,

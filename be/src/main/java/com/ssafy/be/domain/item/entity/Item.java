@@ -57,7 +57,7 @@ public class Item {
     @JoinColumn(name = "seller_id")
     private Seller seller;
 
-    @Builder
+    @Builder(toBuilder = true)
     private Item(String name,
                  String description,
                  Category category,

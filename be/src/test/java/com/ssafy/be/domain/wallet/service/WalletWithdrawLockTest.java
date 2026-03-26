@@ -62,6 +62,7 @@ public class WalletWithdrawLockTest {
 
     @BeforeEach
     void setUp() {
+        // given (각 케이스 공통): 가용 잔액만 보유한 유저
         user = userRepository.save(
                 TestFixture.createUser("출금 요청 유저").toBuilder()
                         .balance(INITIAL_BALANCE)
@@ -127,16 +128,13 @@ public class WalletWithdrawLockTest {
         void consistencyMaintained_withPessimisticLock() throws InterruptedException {
             // given
             WithdrawRequestCreateRequest request = new WithdrawRequestCreateRequest(WITHDRAW_AMOUNT);
-
             IT_LOG.info("    [요청] 동일 유저 1명에 대해 {}회 동시 출금 요청 (비관적 락 requestWithdrawPessimistic)", NUMBER_OF_THREADS);
 
             // when
             long startTime = System.currentTimeMillis();
-
             int successCount = ConcurrentTestUtil.executeConcurrentWithdrawRequests(
                     NUMBER_OF_THREADS,
                     () -> walletWithdrawService.requestWithdrawPessimistic(request, user.getId()));
-
             long executionTime = System.currentTimeMillis() - startTime;
 
             // then
@@ -163,16 +161,13 @@ public class WalletWithdrawLockTest {
         void consistencyMaintained_withOptimisticLock() throws InterruptedException {
             // given
             WithdrawRequestCreateRequest request = new WithdrawRequestCreateRequest(WITHDRAW_AMOUNT);
-
             IT_LOG.info("    [요청] 동일 유저 1명에 대해 {}회 동시 출금 요청 (낙관적 락 + Facade 재시도 processWithdrawRequest)", NUMBER_OF_THREADS);
 
             // when
             long startTime = System.currentTimeMillis();
-
             int successCount = ConcurrentTestUtil.executeConcurrentWithdrawRequests(
                     NUMBER_OF_THREADS,
                     () -> optimisticLockWithdrawRequestFacade.processWithdrawRequest(request, user.getId()));
-
             long executionTime = System.currentTimeMillis() - startTime;
 
             // then

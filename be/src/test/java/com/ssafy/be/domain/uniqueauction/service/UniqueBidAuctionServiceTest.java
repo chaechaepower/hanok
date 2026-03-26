@@ -3,7 +3,6 @@ package com.ssafy.be.domain.uniqueauction.service;
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
-import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.repository.ItemRepository;
 import com.ssafy.be.domain.seller.entity.Seller;
@@ -84,20 +83,13 @@ class UniqueBidAuctionServiceTest {
     @BeforeEach
     void setUp() {
         sellerUser = userRepository.save(TestFixture.createUser("판매자"));
-        seller = sellerRepository.save(TestFixture.createSeller(sellerUser));
+        seller = sellerRepository.save(TestFixture.createBusinessSeller(sellerUser));
         stream = streamRepository.save(TestFixture.createStream("테스트 라이브 방송", seller));
         item = itemRepository.save(TestFixture.createItem("테스트 상품"));
 
         // 기본 옥션 하나 생성해두기
         auction = auctionRepository.save(
-                Auction.builder()
-                        .auctionType(AuctionType.UNIQUE_TOP)
-                        .auctionDuration(TestFixture.TEST_AUCTION_DURATION_SEC)
-                        .auctionStatus(AuctionStatus.INTRODUCING)
-                        .stream(stream)
-                        .item(item)
-                        .build()
-        );
+                TestFixture.createUniqueTopAuction(AuctionStatus.INTRODUCING, stream, item));
 
         uniqueBidAuctionDetailRepository.save(
                 UniqueBidAuctionDetail.builder()

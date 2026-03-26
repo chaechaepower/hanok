@@ -95,7 +95,7 @@ class AuctionServiceTest {
     @BeforeEach
     void setUp() {
         sellerUser = userRepository.save(TestFixture.createUser("판매자"));
-        seller = sellerRepository.save(TestFixture.createSeller(sellerUser));
+        seller = sellerRepository.save(TestFixture.createBusinessSeller(sellerUser));
         stream = streamRepository.save(TestFixture.createStream("테스트 라이브 방송", seller));
         item = itemRepository.save(TestFixture.createItem("테스트 상품"));
     }
@@ -152,7 +152,7 @@ class AuctionServiceTest {
             IT_LOG.info("    [요청] 호스트가 아닌 사용자로 물품 소개 시도");
             // given
             User otherUser = userRepository.save(TestFixture.createUser("다른 판매자"));
-            sellerRepository.save(TestFixture.createSeller(otherUser));
+            sellerRepository.save(TestFixture.createBusinessSeller(otherUser));
 
             Auction readyAuction = saveBottomUpAuction(READY);
             ItemIntroduceRequest request = ItemIntroduceRequest.builder().auctionId(readyAuction.getId()).build();
@@ -258,13 +258,7 @@ class AuctionServiceTest {
 
     private Auction saveUniqueTopAuction(AuctionStatus status, Stream streamRef, Item itemRef) {
         Auction auction = auctionRepository.save(
-                Auction.builder()
-                        .auctionType(AuctionType.UNIQUE_TOP)
-                        .auctionDuration(TestFixture.TEST_AUCTION_DURATION_SEC)
-                        .auctionStatus(status)
-                        .stream(streamRef)
-                        .item(itemRef)
-                        .build());
+                TestFixture.createUniqueTopAuction(status, streamRef, itemRef));
 
         uniqueBidAuctionDetailRepository.save(
                 UniqueBidAuctionDetail.builder()
