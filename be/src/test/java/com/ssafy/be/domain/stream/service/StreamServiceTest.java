@@ -424,11 +424,8 @@ class StreamServiceTest {
                     .status(ItemStatus.READY)
                     .itemCondition(ItemCondition.BRAND_NEW)
                     .build(), 1L);
-            Auction auction = TestFixture.spyAuctionWithId(Auction.builder()
-                    .auctionType(AuctionType.BOTTOM_UP)
-                    .auctionStatus(AuctionStatus.READY)
-                    .item(item)
-                    .build(), 50L);
+            Auction auction = TestFixture.spyAuctionWithId(
+                    TestFixture.createAuction(AuctionType.BOTTOM_UP, AuctionStatus.READY, null, item), 50L);
             Stream stream = TestFixture.spyStreamWithId(Stream.builder().build(), 100L);
 
             given(streamRepository.findById(100L)).willReturn(Optional.of(stream));
@@ -513,18 +510,9 @@ class StreamServiceTest {
                     .startPrice(1000L)
                     .bidUnit(100L)
                     .build();
-            Auction auction1 = Auction.builder()
-                    .item(item1)
-                    .auctionType(AuctionType.BOTTOM_UP)
-                    .auctionStatus(AuctionStatus.READY)
-                    .bottomUpAuctionDetail(bottomUpFor1)
-                    .build();
-
-            Auction auction2 = Auction.builder()
-                    .item(item2)
-                    .auctionType(AuctionType.BOTTOM_UP)
-                    .auctionStatus(AuctionStatus.READY)
-                    .build();
+            Auction auction1 = TestFixture.createBottomUpAuctionEntity(
+                    item1, AuctionStatus.READY, null, bottomUpFor1);
+            Auction auction2 = TestFixture.createBottomUpAuctionEntity(item2, AuctionStatus.READY, null, null);
 
             given(sellerRepository.findByUserId(1L)).willReturn(Optional.of(seller));
             given(streamRepository.findByIdAndSellerId(100L, 8L)).willReturn(Optional.of(stream));

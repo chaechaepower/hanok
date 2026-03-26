@@ -3,7 +3,6 @@ package com.ssafy.be.domain.uniqueauction.service;
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
 import com.ssafy.be.domain.auction.repository.AuctionRepository;
-import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.repository.ItemRepository;
 import com.ssafy.be.domain.seller.entity.Seller;
@@ -90,14 +89,7 @@ class UniqueBidAuctionServiceTest {
 
         // 기본 옥션 하나 생성해두기
         auction = auctionRepository.save(
-                Auction.builder()
-                        .auctionType(AuctionType.UNIQUE_TOP)
-                        .auctionDuration(TestFixture.TEST_AUCTION_DURATION_SEC)
-                        .auctionStatus(AuctionStatus.INTRODUCING)
-                        .stream(stream)
-                        .item(item)
-                        .build()
-        );
+                TestFixture.createUniqueTopAuction(AuctionStatus.INTRODUCING, stream, item));
 
         uniqueBidAuctionDetailRepository.save(
                 UniqueBidAuctionDetail.builder()

@@ -6,6 +6,10 @@ import com.ssafy.be.domain.bottomupauction.entity.BottomUpAuctionDetail;
 import com.ssafy.be.domain.bottomupauction.model.Bid;
 import com.ssafy.be.domain.escrow.dto.request.EscrowCancelRequest;
 import com.ssafy.be.domain.escrow.dto.request.ShipmentRegisterRequest;
+import com.ssafy.be.domain.escrow.entity.Escrow;
+import com.ssafy.be.domain.escrow.entity.EscrowStatus;
+import com.ssafy.be.domain.tradereport.entity.TradeReport;
+import com.ssafy.be.domain.tradereport.entity.TradeType;
 import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.item.entity.Item;
 import com.ssafy.be.domain.item.entity.ItemCondition;
@@ -14,6 +18,8 @@ import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.shippingaddress.entity.ShippingAddress;
 import com.ssafy.be.domain.stream.entity.Stream;
 import com.ssafy.be.domain.user.entity.User;
+import com.ssafy.be.domain.wallet.entity.WithdrawRequest;
+import com.ssafy.be.domain.wallet.entity.WithdrawStatus;
 import com.ssafy.be.domain.wallet.model.PaymentStatus;
 import com.ssafy.be.domain.wallet.model.WalletCharge;
 
@@ -87,6 +93,15 @@ public class TestFixture {
                 .userId(userId)
                 .amount(10000L)
                 .status(status)
+                .build();
+    }
+
+    /** 출금 요청 엔티티 — 금액·상태·유저만 지정(영속화는 호출부에서 save). */
+    public static WithdrawRequest createWithdrawRequest(long amount, WithdrawStatus status, User user) {
+        return WithdrawRequest.builder()
+                .amount(amount)
+                .withdrawStatus(status)
+                .user(user)
                 .build();
     }
 
@@ -183,6 +198,44 @@ public class TestFixture {
                 .build();
     }
 
+    /** 통합 테스트용 에스크로 — 상태 DEPOSITED 고정. 다른 상태는 전용 팩토리 추가. */
+    public static Escrow createDepositedEscrow(
+            long winningPrice,
+            long feeAmount,
+            Auction auction,
+            User buyer,
+            Seller seller,
+            ShippingAddress shippingAddress) {
+        return Escrow.builder()
+                .winningPrice(winningPrice)
+                .feeAmount(feeAmount)
+                .escrowStatus(EscrowStatus.DEPOSITED)
+                .auction(auction)
+                .buyer(buyer)
+                .seller(seller)
+                .shippingAddress(shippingAddress)
+                .build();
+    }
+
+    /** 거래 내역 — escrow 없음(충전·출금 등). */
+    public static TradeReport createTradeReport(long amount, TradeType tradeType, User user) {
+        return TradeReport.builder()
+                .amount(amount)
+                .tradeType(tradeType)
+                .user(user)
+                .build();
+    }
+
+    /** 거래 내역 — 정산 등 escrow 연동. */
+    public static TradeReport createTradeReport(long amount, TradeType tradeType, User user, Escrow escrow) {
+        return TradeReport.builder()
+                .amount(amount)
+                .tradeType(tradeType)
+                .user(user)
+                .escrow(escrow)
+                .build();
+    }
+
     public static Auction createAuction(AuctionType type, AuctionStatus status, Stream stream, Item item) {
         return Auction.builder()
                 .auctionType(type)
@@ -191,6 +244,25 @@ public class TestFixture {
                 .stream(stream)
                 .item(item)
                 .build();
+    }
+
+    /** 상향식 경매 엔티티. {@code stream}·{@code bottomUpDetail}은 null 가능(단위 테스트 스텁 등). */
+    public static Auction createBottomUpAuctionEntity(
+            Item item, AuctionStatus status, Stream stream, BottomUpAuctionDetail bottomUpDetail) {
+        var b = Auction.builder()
+                .auctionType(BOTTOM_UP)
+                .auctionStatus(status)
+                .auctionDuration(TEST_AUCTION_DURATION_SEC)
+                .stream(stream)
+                .item(item);
+        if (bottomUpDetail != null) {
+            b.bottomUpAuctionDetail(bottomUpDetail);
+        }
+        return b.build();
+    }
+
+    public static Auction createUniqueTopAuction(AuctionStatus status, Stream stream, Item item) {
+        return createAuction(AuctionType.UNIQUE_TOP, status, stream, item);
     }
 
     public static BottomUpAuctionDetail createBottomUpAuctionDetail(Auction auction) {

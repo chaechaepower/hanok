@@ -258,13 +258,7 @@ class AuctionServiceTest {
 
     private Auction saveUniqueTopAuction(AuctionStatus status, Stream streamRef, Item itemRef) {
         Auction auction = auctionRepository.save(
-                Auction.builder()
-                        .auctionType(AuctionType.UNIQUE_TOP)
-                        .auctionDuration(TestFixture.TEST_AUCTION_DURATION_SEC)
-                        .auctionStatus(status)
-                        .stream(streamRef)
-                        .item(itemRef)
-                        .build());
+                TestFixture.createUniqueTopAuction(status, streamRef, itemRef));
 
         uniqueBidAuctionDetailRepository.save(
                 UniqueBidAuctionDetail.builder()
