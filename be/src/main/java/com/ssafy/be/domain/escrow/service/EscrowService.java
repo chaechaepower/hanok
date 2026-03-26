@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static com.ssafy.be.domain.escrow.entity.EscrowStatus.DEPOSITED;
@@ -150,6 +151,16 @@ public class EscrowService {
         escrow.getBuyer().cancelDepositedEscrowBalance(escrow.getWinningPrice());
         escrow.getAuction().getItem().ready();
 
+        // 패널티 거래 내역 생성
+        TradeReport penaltyReport = TradeReport.builder()
+                .amount(0L)
+                .tradeType(TradeType.PENALTY)
+                .user(escrow.getSeller().getUser())
+                .escrow(escrow)
+                .build();
+
+        tradeReportRepository.save(penaltyReport);
+
         // 운송장번호 등록 72시간 타임아웃 스케줄러 예약 취소
         escrowShipmentScheduler.cancelScheduledEscrow(escrowId);
 
@@ -189,6 +200,9 @@ public class EscrowService {
 
         // 에스크로 상태 -> 거래 완료
         escrow.getAuction().getItem().sold(LocalDateTime.now()); // 물건 상태 -> 판매 완료
+
+        long shipDays = ChronoUnit.DAYS.between(escrow.getCreatedAt(), LocalDateTime.now());
+        escrow.getSeller().updateAvgShipDays(shipDays);
 
         // 거래 확정 24시간 타임아웃 스케줄러 예약 취소
         escrowCompleteScheduler.cancelScheduledEscrow(escrowId);

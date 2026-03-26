@@ -8,7 +8,8 @@ import lombok.RequiredArgsConstructor;
 public enum TradeType {
     CHARGE("충전"),
     WITHDRAW("출금"),
-    SETTLEMENT("정산");
+    SETTLEMENT("정산"),
+    PENALTY("패널티");
 
     private final String value;
 }
