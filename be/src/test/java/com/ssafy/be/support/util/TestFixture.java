@@ -85,7 +85,6 @@ public class TestFixture {
                 .build();
     }
 
-    /** 에스크로·상향 경매 연동 테스트용: 판매자 연결, READY, 이미지 포함 */
     public static Item createEscrowAuctionItem(String name, Seller seller) {
         return Item.builder()
                 .name(name != null ? name : "에스크로 테스트 상품")
@@ -94,6 +93,17 @@ public class TestFixture {
                 .status(ItemStatus.READY)
                 .itemCondition(ItemCondition.BRAND_NEW)
                 .image1("https://test.example/item.jpg")
+                .seller(seller)
+                .build();
+    }
+
+    public static Item createItemSold(Seller seller) {
+        return Item.builder()
+                .name("판매완료")
+                .description("d")
+                .category(CLOTHING)
+                .status(ItemStatus.SOLD)
+                .itemCondition(ItemCondition.BRAND_NEW)
                 .seller(seller)
                 .build();
     }

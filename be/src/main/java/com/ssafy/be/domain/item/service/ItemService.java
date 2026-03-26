@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -188,7 +189,7 @@ public class ItemService {
         if (new3 != null) {
             kept.add(new3);
         }
-        for (String previous : List.of(old1, old2, old3)) {
+        for (String previous : Arrays.asList(old1, old2, old3)) {
             if (previous != null && !previous.isBlank() && !kept.contains(previous)) {
                 gcsClient.deleteImage(previous);
             }
