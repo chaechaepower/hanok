@@ -1,5 +1,4 @@
 import { useRef, useEffect } from 'react';
-import { FaVideo, FaVideoSlash } from 'react-icons/fa';
 import { MdLiveTv } from 'react-icons/md';
 
 import SellerControlBar from '@/components/Live/Stream/SellerControlBar';
@@ -28,9 +27,6 @@ export default function LiveRegisterPreviewPanel({
   onReopenTutorial,
   onPreviewIntroduce,
   onPreviewStart,
-  introduceButtonRef,
-  startButtonRef,
-  getTargetClassName,
 }: Props) {
   const bgVideoRef = useRef<HTMLVideoElement>(null);
   const { isMicOn, level, toggleMic } = useMicLevel();

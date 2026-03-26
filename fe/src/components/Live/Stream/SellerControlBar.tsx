@@ -49,7 +49,6 @@ export default function SellerControlBar({
   variant = 'overlay',
   onIntroduce,
   onStart,
-  micLevel,
 }: Props) {
   const [guideOpen, setGuideOpen] = useState(false);
   const { id: streamId } = useParams<{ id: string }>();

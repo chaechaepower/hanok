@@ -63,17 +63,46 @@ export default function useMicLevel() {
   }, [isMicOn, startMic, stopMic]);
 
   useEffect(() => {
-    if (!initializedRef.current) {
-      initializedRef.current = true;
-      void startMic();
-    }
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    let cancelled = false;
+    const init = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
+
+        streamRef.current = stream;
+        const audioCtx = new AudioContext();
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.8;
+        source.connect(analyser);
+        audioCtxRef.current = audioCtx;
+        analyserRef.current = analyser;
+        setIsMicOn(true);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        const tick = () => {
+          analyser.getByteFrequencyData(dataArray);
+          const sum = dataArray.reduce((a, b) => a + b, 0);
+          const avg = sum / dataArray.length;
+          setLevel(Math.min(avg / 80, 1));
+          rafRef.current = requestAnimationFrame(tick);
+        };
+        tick();
+      } catch { /* mic permission denied */ }
+    };
+    void init();
 
     return () => {
+      cancelled = true;
       cancelAnimationFrame(rafRef.current);
       streamRef.current?.getTracks().forEach((t) => t.stop());
       audioCtxRef.current?.close();
     };
-  }, [startMic]);
+  }, []);
 
   return { isMicOn, level, toggleMic };
 }
