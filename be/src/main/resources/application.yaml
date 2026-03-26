@@ -35,6 +35,11 @@ spring:
   jpa:
     open-in-view: false
 
+    properties:
+      hibernate:
+        session_factory:
+          statement_inspector: com.ssafy.be.global.metrics.query.QueryCountInspector
+
   jackson:
     time-zone: Asia/Seoul
     serialization:
