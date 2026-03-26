@@ -23,7 +23,7 @@ export default function FollowingBanner({ streams }: FollowingBannerProps) {
           src={bannerFrame}
           alt=""
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 inset-y-[10px] z-0 h-[calc(100%-20px)] w-full object-fill opacity-80"
+          className="pointer-events-none absolute inset-x-0 inset-y-[10px] m-auto z-0 h-[calc(100%-20px)] w-[calc(100%-24px)] object-fill opacity-80"
         />
 
         <div className="relative z-10 flex min-h-[420px] items-center justify-center px-8 py-8 text-center">
@@ -42,7 +42,7 @@ export default function FollowingBanner({ streams }: FollowingBannerProps) {
       <img
         src={featuredStream.thumbnailUri ?? Logo}
         alt={featuredStream.title}
-        className="absolute inset-x-0 inset-y-[10px] z-0 h-[calc(100%-20px)] w-full object-cover"
+        className="absolute inset-x-0 inset-y-[10px] m-auto z-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 z-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.5)_0%,rgba(0,0,0,0.1)_30%,rgba(0,0,0,0)_100%)]" />
       <div className="absolute inset-0 z-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.08),transparent_34%),radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.05),transparent_30%)]" />
@@ -51,7 +51,7 @@ export default function FollowingBanner({ streams }: FollowingBannerProps) {
         src={bannerFrame}
         alt=""
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 inset-y-[10px] z-30 h-[calc(100%-20px)] w-full object-fill opacity-80"
+        className="pointer-events-none absolute inset-x-0 m-auto inset-y-[10px] z-30 h-[calc(100%-20px)] w-[calc(100%-24px)] object-fill opacity-80"
       />
 
       <div className="relative z-20 min-h-[420px] px-2 py-2">
