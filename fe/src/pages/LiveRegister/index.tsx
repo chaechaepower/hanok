@@ -663,7 +663,7 @@ export default function LiveRegisterPage() {
         const tutorialVisibleItems = shouldShowExampleItem ? [LIVE_REGISTER_TUTORIAL_EXAMPLE_ITEM] : selectedItems;
 
         return (
-          <div className="relative flex h-screen w-full flex-col overflow-hidden bg-surface p-3">
+          <div className="relative flex h-[calc(100vh-6.5rem)] w-full flex-col overflow-hidden bg-surface p-3">
             <div className="flex items-center justify-between pb-2">
               <div className="flex items-center gap-3">
                 <button
