@@ -34,9 +34,9 @@ export default function LiveRegisterSettingsPanel({
         <span className="text-sm font-bold text-neutral-100">방송 기본 설정</span>
       </div>
 
-      <div className="scrollbar-hide flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-bold uppercase tracking-wider text-neutral-500">썸네일 업로드</label>
+      <div className="scrollbar-hide flex flex-1 flex-col gap-3 overflow-y-auto px-3 py-3">
+        <div className="flex flex-col gap-1.5 rounded-xl border border-neutral-800 bg-white/[0.02] p-3">
+          <label className="text-xs font-bold uppercase tracking-wider text-neutral-500">썸네일 업로드</label>
           <button
             type="button"
             onClick={() => thumbnailInputRef.current?.click()}
@@ -54,8 +54,8 @@ export default function LiveRegisterSettingsPanel({
           <input ref={thumbnailInputRef} type="file" accept="image/*" className="hidden" onChange={onThumbnailChange} />
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-bold uppercase tracking-wider text-neutral-500">방송 제목</label>
+        <div className="flex flex-col gap-1.5 rounded-xl border border-gold/10 bg-gold/[0.03] p-3">
+          <label className="text-xs font-bold uppercase tracking-wider text-gold/60">방송 제목</label>
           <input
             type="text"
             value={title}
@@ -65,8 +65,8 @@ export default function LiveRegisterSettingsPanel({
           />
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-bold uppercase tracking-wider text-neutral-500">
+        <div className="flex flex-col gap-1.5 rounded-xl border border-accent/10 bg-accent/[0.03] p-3">
+          <label className="text-xs font-bold uppercase tracking-wider text-accent/60">
             상단 고정 공지사항 (선택)
           </label>
           <input
@@ -78,10 +78,8 @@ export default function LiveRegisterSettingsPanel({
           />
         </div>
 
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-bold uppercase tracking-wider text-neutral-500">카테고리 매크로</label>
-          </div>
+        <div className="flex flex-col gap-2 rounded-xl border border-ember/10 bg-ember/[0.03] p-3">
+          <label className="text-xs font-bold uppercase tracking-wider text-ember/60">카테고리 매크로</label>
 
           <div className="flex flex-col gap-2">
             {macroFields.map((macro) => {
