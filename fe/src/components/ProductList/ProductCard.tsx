@@ -103,7 +103,7 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
         {tagText ? <div className="mb-2 text-[13px] text-neutral-500">{tagText}</div> : null}
 
         <div className="mb-2 flex items-center justify-between gap-4">
-          <h3 className="m-0 text-lg font-bold text-neutral-100">{product.name}</h3>
+          <h3 className="m-0 min-w-0 truncate text-lg font-bold text-neutral-100">{product.name}</h3>
           <div className="flex shrink-0 flex-col items-end gap-1">
             {showActionButtons && (
               <EditDeleteActions
