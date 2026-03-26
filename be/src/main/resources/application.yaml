@@ -2,6 +2,11 @@ spring:
   application:
     name: be
 
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
   cloud:
     gcp:
       storage:
