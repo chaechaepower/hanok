@@ -65,15 +65,23 @@ public class GcsClient {
         storage.delete(BlobId.of(bucketName, fileName));
     }
 
-    private String upload(MultipartFile file, String fileName) throws IOException {
+     String upload(MultipartFile file, String fileName) throws IOException {
         return uploadBytes(file.getBytes(), file.getContentType(), fileName);
+    }
+
+    public String upload(byte[] data, String fileName) {
+        BlobInfo blobInfo = BlobInfo.newBuilder(bucketName, fileName).build();
+        storage.create(blobInfo, data);
+        return buildPublicUrl(fileName);
     }
 
     private String uploadBytes(byte[] data, String contentType, String fileName) {
         String resolvedType =
                 StringUtils.hasText(contentType) ? contentType : MediaType.APPLICATION_OCTET_STREAM_VALUE;
+
         BlobInfo blobInfo =
                 BlobInfo.newBuilder(bucketName, fileName).setContentType(resolvedType).build();
+
         storage.create(blobInfo, data);
         return buildPublicUrl(fileName);
     }

@@ -92,34 +92,50 @@ public class StreamService {
     private final StreamReconnectRedisRepository streamReconnectRedisRepository;
     private final StreamPublisher streamPublisher; // 추가
     private final ImageGenClient imageGenClient;
-    private final StreamThumbnailPromptRenderer streamThumbnailPromptRenderer;
+    private final StreamThumbnailPromptRenderer thumbnailPromptRenderer;
 
     @Transactional
     public StreamRegisterResponse register(Long userId, StreamRegisterRequest request, MultipartFile thumbnail) {
-        // 판매자 조회
+        // 1. 판매자 조회
         Seller seller = sellerRepository.findByUserId(userId)
                 .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
 
-        // 방송 저장
-        Stream savedStream = streamRepository.save(buildStream(request, seller));
+        // 2. 방송 저장
+        Stream stream = Stream.builder()
+                .title(request.title())
+                .category(request.category())
+                .startType(request.startType())
+                .scheduledAt(request.scheduledAt())
+                .notice(request.notice())
+                .status(StreamStatus.SCHEDULED)
+                .seller(seller)
+                .build();
 
-        // 썸네일 등록
-        if (thumbnail != null && !thumbnail.isEmpty()) {
-            try {
-                String url = gcsClient.uploadStreamThumbnail(thumbnail, seller.getId(), savedStream.getId());
-                savedStream.updateThumbnail(url);
-            } catch (IOException e) {
-                throw new GlobalException(StreamErrorCode.THUMBNAIL_UPLOAD_FAILED);
-            }
-        } else {
-            String imageGenPrompt = streamThumbnailPromptRenderer.render(request, seller);
+        streamRepository.save(stream);
+
+        // 3. 썸네일 등록
+        byte[] thumbnailByte = null;
+
+        if (thumbnail == null || thumbnail.isEmpty()) {
+            // 썸네일 없으면 AI 생성
+            String imageGenPrompt = thumbnailPromptRenderer.render(request, seller);
             ImageGenerationResult result = imageGenClient.generateImage(imageGenPrompt);
-            String thumbnailUrl = gcsClient.uploadStreamThumbnailBytes(result.bytes(), result.mimeType(), seller.getId(), savedStream.getId());
-            savedStream.updateThumbnail(thumbnailUrl);
+            thumbnailByte = result.bytes();
+        } else {
+            // 썸네일 있으면 byte[] 추출
+            try {
+                thumbnailByte = thumbnail.getBytes();
+            } catch (IOException e) {
+                throw new IllegalArgumentException("파일을 읽는 중 오류가 발생했습니다.", e);
+            }
         }
 
-        // 물품 상태 변경 및 경매 생성
-        if (request.auctionItems() != null && !request.auctionItems().isEmpty()) {
+        String thumbnailUrl = gcsClient.upload(thumbnailByte, "streams/" + stream.getId() + "/thumbnail");
+        stream.updateThumbnail(thumbnailUrl);
+
+
+        // 4. 물품 상태 변경 및 경매 생성
+        if (!request.auctionItems().isEmpty()) {
             request.auctionItems().forEach(auctionItemReq -> {
 
                 // 물품 상태를 라이브 예약 상태로 변경
@@ -129,22 +145,12 @@ public class StreamService {
                 item.schedule();
 
                 // 경매 엔티티 저장
-                createAuctionWithDetail(savedStream, item, auctionItemReq);
+                createAuctionWithDetail(stream, item, auctionItemReq);
             });
         }
 
-        return new StreamRegisterResponse(savedStream.getId());
-    }
-
-    private Stream buildStream(StreamRegisterRequest request, Seller seller) {
-        return Stream.builder()
-                .title(request.title())
-                .category(request.category())
-                .startType(request.startType())
-                .scheduledAt(request.scheduledAt())
-                .notice(request.notice())
-                .status(StreamStatus.SCHEDULED)
-                .seller(seller)
+        return StreamRegisterResponse.builder()
+                .streamId(stream.getId())
                 .build();
     }
 
