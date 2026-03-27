@@ -15,7 +15,7 @@ import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
 import com.ssafy.be.global.exception.GlobalException;
-import com.ssafy.be.global.infra.gcs.GcsClient;
+import com.ssafy.be.global.infra.storage.gcs.GcsClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

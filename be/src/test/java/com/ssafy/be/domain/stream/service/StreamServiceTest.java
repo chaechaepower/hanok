@@ -26,7 +26,9 @@ import com.ssafy.be.domain.stream.dto.response.*;
 import com.ssafy.be.domain.stream.entity.Stream;
 import com.ssafy.be.domain.stream.entity.StreamSortType;
 import com.ssafy.be.domain.stream.entity.StreamStatus;
+import com.ssafy.be.domain.stream.entity.StartType;
 import com.ssafy.be.domain.stream.entity.StreamViewType;
+import com.ssafy.be.global.infra.ai.prompt.StreamThumbnailPromptRenderer;
 import com.ssafy.be.domain.stream.repository.MacroRedisRepository;
 import com.ssafy.be.domain.stream.exception.StreamErrorCode;
 import com.ssafy.be.domain.stream.repository.StreamReconnectRedisRepository;
@@ -34,7 +36,9 @@ import com.ssafy.be.domain.stream.repository.StreamRepository;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
-import com.ssafy.be.global.infra.gcs.GcsClient;
+import com.ssafy.be.global.infra.ai.imagegen.ImageGenClient;
+import com.ssafy.be.global.infra.ai.imagegen.ImageGenerationResult;
+import com.ssafy.be.global.infra.storage.gcs.GcsClient;
 import com.ssafy.be.global.infra.livekit.LiveKitProperties;
 import com.ssafy.be.global.websocket.enums.StreamEventType;
 import com.ssafy.be.global.websocket.publisher.StreamPublisher;
@@ -55,6 +59,7 @@ import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
@@ -91,6 +96,8 @@ class StreamServiceTest {
     @Mock private FollowRepository followRepository;
     @Mock private UserRepository userRepository;
     @Mock private StreamPublisher streamPublisher;
+    @Mock private ImageGenClient imageGenClient;
+    @Mock private StreamThumbnailPromptRenderer streamThumbnailPromptGenerator;
     @Mock private com.ssafy.be.domain.bottomupauction.repository.AuctionBidRepository auctionBidRepository;
     @Mock private com.ssafy.be.domain.bottomupauction.repository.BottomUpAuctionDetailRepository bottomUpAuctionDetailRepository;
     @Mock private com.ssafy.be.domain.uniqueaction.repository.UniqueBidAuctionDetailRepository uniqueBidAuctionDetailRepository;
@@ -132,13 +139,24 @@ class StreamServiceTest {
         void register_Success() {
             Seller seller = TestFixture.createSeller(User.createUser("reg@r.com", "p", "s", "010"));
             given(sellerRepository.findByUserId(1L)).willReturn(Optional.of(seller));
-            StreamRegisterRequest request = new StreamRegisterRequest("제목", null, null, null, "공지", List.of());
+            StreamRegisterRequest request =
+                    new StreamRegisterRequest("제목", Category.ETC, StartType.INSTANT, null, "공지", List.of());
             Stream stream = TestFixture.spyStreamWithId(Stream.builder().title("제목").seller(seller).build(), 100L);
             given(streamRepository.save(any())).willReturn(stream);
+            given(streamThumbnailPromptGenerator.render(any(), eq(seller))).willReturn("ai thumbnail prompt");
+            given(imageGenClient.generateImage(any()))
+                    .willReturn(new ImageGenerationResult(new byte[] {1, 2, 3}, MediaType.IMAGE_PNG_VALUE));
+            given(gcsClient.uploadStreamThumbnailBytes(any(), any(), any(), any()))
+                    .willReturn("https://storage.example/thumb.png");
 
             StreamRegisterResponse response = streamService.register(1L, request, null);
 
             assertThat(response.streamId()).isEqualTo(100L);
+            verify(streamThumbnailPromptGenerator).render(any(), eq(seller));
+            verify(imageGenClient).generateImage("ai thumbnail prompt");
+            verify(gcsClient)
+                    .uploadStreamThumbnailBytes(any(), eq(MediaType.IMAGE_PNG_VALUE), any(), eq(100L));
+            verify(stream).updateThumbnail("https://storage.example/thumb.png");
             TEST_LOG.info("    [검증] ✔ 방송 등록 및 ID(100) 반환 확인");
         }
 
@@ -204,7 +222,8 @@ class StreamServiceTest {
         @DisplayName("L-5. 등록 시 판매자 없으면 SELLER_NOT_FOUND")
         void register_whenSellerMissing_throws() {
             given(sellerRepository.findByUserId(1L)).willReturn(Optional.empty());
-            StreamRegisterRequest request = new StreamRegisterRequest("제목", null, null, null, "공지", List.of());
+            StreamRegisterRequest request =
+                    new StreamRegisterRequest("제목", Category.ETC, StartType.INSTANT, null, "공지", List.of());
 
             assertThatThrownBy(() -> streamService.register(1L, request, null))
                     .isInstanceOf(GlobalException.class)

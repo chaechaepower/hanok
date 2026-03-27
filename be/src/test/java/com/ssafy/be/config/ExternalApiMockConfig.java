@@ -2,7 +2,7 @@ package com.ssafy.be.config;
 
 import com.google.cloud.storage.Storage;
 import com.ssafy.be.domain.seller.client.BiznoClient;
-import com.ssafy.be.global.infra.gcs.GcsClient;
+import com.ssafy.be.global.infra.storage.gcs.GcsClient;
 import com.ssafy.be.global.infra.portone.PortoneClient;
 import com.ssafy.be.global.sse.service.SseEmitterService;
 import org.springframework.boot.test.context.TestConfiguration;

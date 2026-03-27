@@ -18,7 +18,7 @@ import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
 import com.ssafy.be.global.extension.IntegrationTestExtension;
-import com.ssafy.be.global.infra.gcs.GcsClient;
+import com.ssafy.be.global.infra.storage.gcs.GcsClient;
 import com.ssafy.be.support.annotation.IntegrationTest;
 import com.ssafy.be.support.util.TestFixture;
 import org.junit.jupiter.api.*;

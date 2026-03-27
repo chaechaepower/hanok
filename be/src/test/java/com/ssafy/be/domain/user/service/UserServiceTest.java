@@ -19,7 +19,7 @@ import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.exception.UserErrorCode;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
-import com.ssafy.be.global.infra.gcs.GcsClient;
+import com.ssafy.be.global.infra.storage.gcs.GcsClient;
 import com.ssafy.be.global.infra.portone.PortoneClient;
 import com.ssafy.be.global.infra.redis.RedisService;
 import com.ssafy.be.global.security.util.JwtUtil;

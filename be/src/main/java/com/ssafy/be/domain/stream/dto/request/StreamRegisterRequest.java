@@ -35,4 +35,8 @@ public record StreamRegisterRequest(
             @NotNull @Min(0) Long minPrice,
             @NotNull @Min(0) Long maxPrice
     ) {}
+
+    public String describe() {
+        return String.format("제목: %s, 카테고리: %s, 방송 공지: %s", title(), category().getValue(), notice());
+    }
 }

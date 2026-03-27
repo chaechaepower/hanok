@@ -29,6 +29,7 @@ import com.ssafy.be.domain.stream.entity.StreamSortType;
 import com.ssafy.be.domain.stream.entity.StreamStatus;
 import com.ssafy.be.domain.stream.entity.StreamViewType;
 import com.ssafy.be.domain.stream.exception.StreamErrorCode;
+import com.ssafy.be.global.infra.ai.prompt.StreamThumbnailPromptRenderer;
 import com.ssafy.be.domain.stream.repository.MacroRedisRepository;
 import com.ssafy.be.domain.stream.repository.StreamReconnectRedisRepository;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
@@ -37,7 +38,9 @@ import com.ssafy.be.domain.uniqueaction.repository.UniqueBidAuctionDetailReposit
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
-import com.ssafy.be.global.infra.gcs.GcsClient;
+import com.ssafy.be.global.infra.ai.imagegen.ImageGenClient;
+import com.ssafy.be.global.infra.ai.imagegen.ImageGenerationResult;
+import com.ssafy.be.global.infra.storage.gcs.GcsClient;
 import com.ssafy.be.global.infra.livekit.LiveKitProperties;
 import com.ssafy.be.global.websocket.enums.StreamEventType;
 import com.ssafy.be.global.websocket.publisher.StreamPublisher;
@@ -88,29 +91,51 @@ public class StreamService {
     private final MacroRedisRepository macroRedisRepository;
     private final StreamReconnectRedisRepository streamReconnectRedisRepository;
     private final StreamPublisher streamPublisher; // 추가
+    private final ImageGenClient imageGenClient;
+    private final StreamThumbnailPromptRenderer thumbnailPromptRenderer;
 
-    // TODO: Item 엔티티에서 경매 데이터 분리 시 다른 서비스 메서드도 리팩토링 필요
     @Transactional
     public StreamRegisterResponse register(Long userId, StreamRegisterRequest request, MultipartFile thumbnail) {
-        // 판매자 조회
+        // 1. 판매자 조회
         Seller seller = sellerRepository.findByUserId(userId)
                 .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
 
-        // 방송 저장
-        Stream savedStream = streamRepository.save(buildStream(request, seller));
+        // 2. 방송 저장
+        Stream stream = Stream.builder()
+                .title(request.title())
+                .category(request.category())
+                .startType(request.startType())
+                .scheduledAt(request.scheduledAt())
+                .notice(request.notice())
+                .status(StreamStatus.SCHEDULED)
+                .seller(seller)
+                .build();
 
-        // 썸네일 등록
-        if (thumbnail != null && !thumbnail.isEmpty()) {
+        streamRepository.save(stream);
+
+        // 3. 썸네일 등록
+        byte[] thumbnailByte = null;
+
+        if (thumbnail == null || thumbnail.isEmpty()) {
+            // 썸네일 없으면 AI 생성
+            String imageGenPrompt = thumbnailPromptRenderer.render(request, seller);
+            ImageGenerationResult result = imageGenClient.generateImage(imageGenPrompt);
+            thumbnailByte = result.bytes();
+        } else {
+            // 썸네일 있으면 byte[] 추출
             try {
-                String url = gcsClient.uploadStreamThumbnail(thumbnail, seller.getId(), savedStream.getId());
-                savedStream.updateThumbnail(url);
+                thumbnailByte = thumbnail.getBytes();
             } catch (IOException e) {
-                throw new GlobalException(StreamErrorCode.THUMBNAIL_UPLOAD_FAILED);
+                throw new IllegalArgumentException("파일을 읽는 중 오류가 발생했습니다.", e);
             }
         }
 
-        // 물품 상태 변경 및 경매 생성
-        if (request.auctionItems() != null && !request.auctionItems().isEmpty()) {
+        String thumbnailUrl = gcsClient.upload(thumbnailByte, "streams/" + stream.getId() + "/thumbnail");
+        stream.updateThumbnail(thumbnailUrl);
+
+
+        // 4. 물품 상태 변경 및 경매 생성
+        if (!request.auctionItems().isEmpty()) {
             request.auctionItems().forEach(auctionItemReq -> {
 
                 // 물품 상태를 라이브 예약 상태로 변경
@@ -120,22 +145,12 @@ public class StreamService {
                 item.schedule();
 
                 // 경매 엔티티 저장
-                createAuctionWithDetail(savedStream, item, auctionItemReq);
+                createAuctionWithDetail(stream, item, auctionItemReq);
             });
         }
 
-        return new StreamRegisterResponse(savedStream.getId());
-    }
-
-    private Stream buildStream(StreamRegisterRequest request, Seller seller) {
-        return Stream.builder()
-                .title(request.title())
-                .category(request.category())
-                .startType(request.startType())
-                .scheduledAt(request.scheduledAt())
-                .notice(request.notice())
-                .status(StreamStatus.SCHEDULED)
-                .seller(seller)
+        return StreamRegisterResponse.builder()
+                .streamId(stream.getId())
                 .build();
     }
 
