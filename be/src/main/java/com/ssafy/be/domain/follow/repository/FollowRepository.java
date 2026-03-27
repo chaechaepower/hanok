@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface FollowRepository extends JpaRepository<Follow, Long> {
 
@@ -43,4 +44,7 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
             + "GROUP BY f.seller.id "
             + "ORDER BY cnt DESC")
     List<Object[]> findTopSellerIdsByFollowerCount(Pageable pageable);
+
+    @Query("SELECT f.seller.id FROM Follow f WHERE f.user.id = :userId")
+    Set<Long> findFollowedSellerIdsByUserId(@Param("userId") Long userId);
 }
