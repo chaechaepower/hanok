@@ -213,7 +213,7 @@ public class RedisOperator {
     }
 
     public Set<String> getSetMembers(String key) {
-        Set<Object> members = redisTemplate.opsForSet().members(key);
+        Set<String> members = redisTemplate.opsForSet().members(key);
         if (members == null) return Set.of();
         return members.stream().map(Object::toString).collect(Collectors.toSet());
     }
