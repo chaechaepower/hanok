@@ -96,6 +96,11 @@ const isPrivateItemSyncEvent = (
   event: PrivateStreamEvent,
 ): event is Extract<PrivateStreamEvent, { eventType: 'ITEM_SYNC' }> => event.eventType === 'ITEM_SYNC';
 
+const isPrivateAuctionStatisticsSyncEvent = (
+  event: PrivateStreamEvent,
+): event is Extract<PrivateStreamEvent, { eventType: 'AUCTION_STATISTICS_SYNC' }> =>
+  event.eventType === 'AUCTION_STATISTICS_SYNC';
+
 const isUniqueBidAckEvent = (
   event: PrivateStreamEvent,
 ): event is Extract<PrivateStreamEvent, { eventType: 'UNIQUE_BID_ACK' }> => event.eventType === 'UNIQUE_BID_ACK';
@@ -272,7 +277,7 @@ export function useLiveStream(
   }, [introducingAuctionItem, liveAuctionItem]);
 
   // ---------------------------------------------------------------------------
-  // BID_SYNC effect: re-request bid state only after the auction is live
+  // Active auction sync effect: re-request live auction state after reconnect / re-entry
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
@@ -283,10 +288,24 @@ export function useLiveStream(
       return;
     }
 
-    void sendStreamMessage(streamId, {
-      eventType: activeAuctionType === 'UNIQUE_TOP' ? 'UNIQUE_BID_SYNC' : 'BID_SYNC',
-      payload: null,
-    }).catch((error) => {
+    const syncPromise =
+      activeAuctionType === 'UNIQUE_TOP'
+        ? sendStreamMessage(streamId, {
+            eventType: 'UNIQUE_BID_SYNC',
+            payload: null,
+          })
+        : Promise.all([
+            sendStreamMessage(streamId, {
+              eventType: 'BID_SYNC',
+              payload: null,
+            }),
+            sendStreamMessage(streamId, {
+              eventType: 'AUCTION_STATISTICS_SYNC',
+              payload: null,
+            }),
+          ]);
+
+    void syncPromise.catch((error) => {
       console.error('[stream] failed to sync active auction state', error);
     });
   }, [liveAuctionItem, streamId]);
@@ -313,15 +332,27 @@ export function useLiveStream(
         return;
       }
 
-      await sendStreamMessage(streamId, {
-        eventType: item.auctionType === 'UNIQUE_TOP' ? 'UNIQUE_BID_SYNC' : 'BID_SYNC',
-        payload: null,
-      });
+      if (item.auctionType === 'UNIQUE_TOP') {
+        await sendStreamMessage(streamId, {
+          eventType: 'UNIQUE_BID_SYNC',
+          payload: null,
+        });
+        return;
+      }
+
+      await Promise.all([requestBidSync(), requestAuctionStatisticsSync()]);
     };
 
     const requestBidSync = async () => {
       await sendStreamMessage(streamId, {
         eventType: 'BID_SYNC',
+        payload: null,
+      });
+    };
+
+    const requestAuctionStatisticsSync = async () => {
+      await sendStreamMessage(streamId, {
+        eventType: 'AUCTION_STATISTICS_SYNC',
         payload: null,
       });
     };
@@ -556,6 +587,11 @@ export function useLiveStream(
     const handlePrivateEvent = (event: PrivateStreamEvent) => {
       if (isPrivateBidSyncEvent(event)) {
         applyBidSync(event.payload);
+        return;
+      }
+
+      if (isPrivateAuctionStatisticsSyncEvent(event)) {
+        setAuctionStatistics(event.payload ?? null);
         return;
       }
 

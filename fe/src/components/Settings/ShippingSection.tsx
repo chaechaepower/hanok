@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FaMapMarkerAlt } from 'react-icons/fa';
+import { FiMapPin, FiPlus } from 'react-icons/fi';
 
 import { useDeleteAddress } from '@/api/hooks/useDeleteAddress';
 import { useGetAddresses } from '@/api/hooks/useGetAddresses';
@@ -58,26 +58,39 @@ export default function ShippingSection() {
 
   return (
     <>
-      <div className="mb-2 flex items-start justify-between">
-        <div className="flex flex-col gap-1">
-          <h2 className="m-0 text-2xl font-bold text-white">배송지 관리</h2>
-          <p className="m-0 text-[15px] text-neutral-400">
-            주문에 사용할 배송지를 관리할 수 있습니다
-            {addresses.length > 0 ? (
-              <span className="ml-2 font-semibold text-gold-light">등록된 배송지 {addresses.length}개</span>
-            ) : null}
-          </p>
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-baseline gap-3">
+          <h2 className="m-0 text-[22px] font-bold text-white">배송지 관리</h2>
+          {addresses.length > 0 && (
+            <span className="text-[14px] text-neutral-500">
+              총 <span className="font-bold text-gold-light">{addresses.length}</span>개
+            </span>
+          )}
         </div>
-        <button type="button" onClick={openAddModal} className="btn btn-gold flex-shrink-0">
-          + 새 배송지 추가
+        <button
+          type="button"
+          onClick={openAddModal}
+          className="flex items-center gap-1.5 rounded-lg bg-gold-light/10 border border-gold-light/20 px-4 py-2 text-[13px] font-bold text-gold-light cursor-pointer hover:bg-gold-light/15 hover:border-gold-light/30 transition-colors"
+        >
+          <FiPlus size={15} />
+          새 배송지
         </button>
       </div>
 
       {addresses.length === 0 ? (
-        <div className="flex w-full flex-col items-center gap-4 rounded-2xl bg-surface-elevated p-12">
-          <FaMapMarkerAlt size={40} className="text-neutral-700" />
-          <p className="m-0 text-[15px] text-neutral-500">등록된 배송지가 없습니다</p>
-        </div>
+        <button
+          type="button"
+          onClick={openAddModal}
+          className="flex w-full flex-col items-center gap-3 rounded-2xl border border-dashed border-gold-light/20 bg-white/[0.02] py-16 cursor-pointer hover:border-gold-light/40 hover:bg-white/[0.04] transition-colors"
+        >
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gold-light/10">
+            <FiMapPin size={24} className="text-gold-light" />
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <p className="m-0 text-[15px] font-bold text-neutral-300">배송지를 등록해보세요</p>
+            <p className="m-0 text-[13px] text-neutral-500">경매 낙찰 시 빠르게 배송 정보를 입력할 수 있어요</p>
+          </div>
+        </button>
       ) : (
         <div className="flex flex-col gap-3">
           {[...addresses]

@@ -104,10 +104,14 @@ export default function ProfilePage() {
     if (isMyProfile) fileInputRef.current?.click();
   };
 
-  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleProfileImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    patchProfileImage(file, {
+
+    const { optimizeImage } = await import('@/utils/imageOptimizer');
+    const optimized = await optimizeImage(file);
+
+    patchProfileImage(optimized, {
       onSuccess: () => {
         showToast({ message: '프로필 이미지가 변경되었습니다.' });
       },
@@ -302,12 +306,15 @@ export default function ProfilePage() {
   const { nickname, intro, profileImage, instagramUrl, youtubeUrl, tiktokUrl } = data;
 
   return (
-    <div className="w-full box-border max-w-[1200px] mx-auto py-10 px-5 flex flex-col gap-8">
-      <div className="w-full rounded-(--radius-panel) py-12 px-12 bg-surface">
-        <div className="flex items-center justify-between gap-12">
-          {/* 좌측: 프로필 이미지 + 정보 */}
-          <div className="flex items-center gap-8 flex-1 min-w-0">
-            <div className={`relative group ${isMyProfile ? 'cursor-pointer' : ''}`} onClick={handleProfileImageClick}>
+    <div className="w-full box-border max-w-[1200px] mx-auto py-10 px-5 flex flex-col gap-6">
+      {/* 프로필 헤더 */}
+      <div className="relative overflow-hidden w-full rounded-(--radius-panel) bg-surface">
+        <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(232,179,106,0.12)_0%,transparent_40%,transparent_60%,rgba(138,110,82,0.08)_100%)]" />
+
+        <div className="relative flex flex-col gap-8 py-10 px-12">
+          {/* 상단: 아바타 + 정보 + 액션 */}
+          <div className="flex items-start gap-8">
+            <div className={`relative group shrink-0 ${isMyProfile ? 'cursor-pointer' : ''}`} onClick={handleProfileImageClick}>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -315,183 +322,145 @@ export default function ProfilePage() {
                 className="hidden"
                 onChange={handleProfileImageChange}
               />
-              {profileImage ? (
-                <>
-                  <img
-                    src={profileImage}
-                    alt={nickname}
-                    className="w-[120px] h-[120px] min-w-[120px] min-h-[120px] flex-shrink-0 rounded-full object-contain object-center bg-surface"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                      (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                      (e.target as HTMLImageElement).nextElementSibling?.classList.add('flex');
-                    }}
-                  />
-                  <div className="hidden w-[120px] h-[120px] min-w-[120px] min-h-[120px] flex-shrink-0 rounded-full bg-surface text-gold-light text-[44px] items-center justify-center font-bold">
+              <div className="rounded-full p-[2px] bg-gradient-to-br from-gold-light to-primary">
+                {profileImage ? (
+                  <>
+                    <img
+                      src={profileImage}
+                      alt={nickname}
+                      className="w-[96px] h-[96px] rounded-full object-cover border-[3px] border-surface"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                        (e.target as HTMLImageElement).nextElementSibling?.classList.add('flex');
+                      }}
+                    />
+                    <div className="hidden w-[96px] h-[96px] rounded-full bg-surface border-[3px] border-surface text-gold-light text-[36px] items-center justify-center font-bold">
+                      {nickname.charAt(0)}
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-[96px] h-[96px] rounded-full bg-surface border-[3px] border-surface text-gold-light text-[36px] flex items-center justify-center font-bold">
                     {nickname.charAt(0)}
                   </div>
-                </>
-              ) : (
-                <div className="w-[120px] h-[120px] min-w-[120px] min-h-[120px] flex-shrink-0 rounded-full bg-surface text-gold-light text-[44px] flex items-center justify-center font-bold">
-                  {nickname.charAt(0)}
-                </div>
-              )}
+                )}
+              </div>
               {isMyProfile && (
-                <div className="absolute inset-0 w-[120px] h-[120px] rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <FiCamera size={24} className="text-white" />
+                <div className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <FiCamera size={22} className="text-white" />
                 </div>
               )}
             </div>
 
-            <div className="flex flex-col gap-3 min-w-0">
-              <h2 className="m-0 text-neutral-100">{nickname}</h2>
-              <p className="m-0 text-body-lg text-neutral-300 leading-relaxed">{intro}</p>
-
-              <div className="flex gap-2 mt-1">
-                {instagramUrl && (
-                  <a
-                    href={instagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-white/5"
-                  >
-                    <InstagramIcon />
-                    <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-neutral-800 px-2.5 py-1 text-xs text-neutral-200 opacity-0 shadow-lg transition duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-                      인스타그램
-                    </span>
-                  </a>
+            <div className="flex flex-col gap-2 flex-1 min-w-0 pt-1">
+              <div className="flex items-center gap-3">
+                <h2 className="m-0 text-[22px] text-white">{nickname}</h2>
+                {isMyProfile && (
+                  <button onClick={handleOpenProfileEdit} className="rounded-lg bg-white/[0.06] border-none px-3 py-1.5 text-[12px] text-neutral-300 cursor-pointer hover:bg-white/[0.1] hover:text-white transition-colors">
+                    수정
+                  </button>
                 )}
-                {youtubeUrl && (
-                  <a
-                    href={youtubeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-white/5"
-                  >
-                    <YoutubeIcon />
-                    <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-neutral-800 px-2.5 py-1 text-xs text-neutral-200 opacity-0 shadow-lg transition duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-                      유튜브
-                    </span>
-                  </a>
-                )}
-                {tiktokUrl && (
-                  <a
-                    href={tiktokUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-white/5"
-                  >
-                    <TiktokIcon />
-                    <span className="pointer-events-none absolute left-1/2 top-full z-10 mt-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-neutral-800 px-2.5 py-1 text-xs text-neutral-200 opacity-0 shadow-lg transition duration-150 group-hover:opacity-100 group-focus-within:opacity-100">
-                      틱톡
-                    </span>
-                  </a>
+                {!isMyProfile && (
+                  <button onClick={() => setIsReportModalOpen(true)} className="rounded-lg bg-white/[0.06] border-none px-3 py-1.5 text-[12px] text-neutral-500 cursor-pointer hover:bg-white/[0.1] hover:text-neutral-300 transition-colors">
+                    신고
+                  </button>
                 )}
               </div>
-            </div>
-          </div>
+              {intro && <p className="m-0 text-[14px] text-neutral-400 leading-relaxed">{intro}</p>}
 
-          {/* 우측: 수정/신고 + 통계 + 팔로우 */}
-          <div className="flex flex-col items-center gap-2 shrink-0 -mt-4">
-            {isMyProfile && (
-              <button onClick={handleOpenProfileEdit} className="btn-ghost self-end px-3 py-1 text-body-sm">
-                수정
-              </button>
-            )}
-            {!isMyProfile && (
-              <button onClick={() => setIsReportModalOpen(true)} className="btn-ghost self-end px-3 py-1 text-body-sm">
-                신고
-              </button>
-            )}
-
-            {isOwner && data?.stats !== undefined && (
-              <div className="flex flex-col gap-3">
-                <div className="grid grid-cols-3 gap-[1px] bg-neutral-800 border border-white/5 rounded-(--radius-panel)">
-                  <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated rounded-(--radius-panel)">
-                    <span className="text-subtitle-sm text-neutral-500">팔로워</span>
-                    <span className="text-price-lg text-white">
-                      {reputation?.followerCount ?? data.stats.followerCount ?? '-'}
-                    </span>
-                  </div>
-                  <div className="relative flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated group">
-                    <span className="text-subtitle-sm text-neutral-500 flex items-center gap-1">
-                      평점
-                      <svg
-                        className="w-3.5 h-3.5 text-neutral-600 cursor-help"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </span>
-                    <span className="text-price-lg text-white">
-                      {reputation?.completionRate != null
-                        ? ((reputation.completionRate / 100) * 5).toFixed(1)
-                        : (data.stats.rating ?? '-')}
-                    </span>
-                    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-72 p-3 bg-neutral-900 border border-white/10 rounded-lg shadow-xl text-xs text-neutral-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                      <p className="font-semibold text-white mb-1.5">평점 산정 기준</p>
-                      <ul className="space-y-1 list-disc list-inside">
-                        <li>완료된 거래와 거래 취소 건수로 산정</li>
-                        <li>성공률(%) × 5점 만점으로 계산</li>
-                        <li>거래가 없으면 기본 만점(5.0점)</li>
-                      </ul>
-                      {reputation?.totalTrades != null && (
-                        <div className="mt-2 pt-2 border-t border-white/10 space-y-0.5">
-                          <p>
-                            총 거래: <span className="text-white">{reputation.totalTrades}건</span>
-                          </p>
-                          <p>
-                            거래 취소: <span className="text-white">{reputation.cancelCount ?? 0}건</span>
-                          </p>
-                          <p>
-                            거래 성공률:{' '}
-                            <span className="text-white">
-                              {reputation.completionRate != null ? `${reputation.completionRate}%` : '-'}
-                            </span>
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-center gap-2 py-5 px-8 bg-surface-elevated rounded-(--radius-panel)">
-                    <span className="text-subtitle-sm text-neutral-500">평균 배송</span>
-                    <span className="text-price-lg text-white">
-                      {reputation?.avgShipDays != null
-                        ? `${reputation.avgShipDays}일`
-                        : data.stats.avgShipDays != null
-                          ? `${data.stats.avgShipDays}일`
-                          : '-'}
-                    </span>
-                  </div>
+              {(instagramUrl || youtubeUrl || tiktokUrl) && (
+                <div className="flex gap-1.5 mt-1">
+                  {instagramUrl && (
+                    <a href={instagramUrl} target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.04] transition-colors hover:bg-white/[0.08]">
+                      <InstagramIcon />
+                    </a>
+                  )}
+                  {youtubeUrl && (
+                    <a href={youtubeUrl} target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.04] transition-colors hover:bg-white/[0.08]">
+                      <YoutubeIcon />
+                    </a>
+                  )}
+                  {tiktokUrl && (
+                    <a href={tiktokUrl} target="_blank" rel="noopener noreferrer" className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/[0.04] transition-colors hover:bg-white/[0.08]">
+                      <TiktokIcon />
+                    </a>
+                  )}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
+            {/* 팔로우 버튼 */}
             {!isMyProfile && (
               <button
-                className={`w-full py-3 rounded-(--radius-panel) bg-neutral-100 text-background text-subtitle-sm border-none cursor-pointer hover:bg-neutral-200 transition-colors ${isFollowPending ? 'opacity-70' : 'opacity-100'}`}
+                className={`shrink-0 px-8 py-2.5 rounded-xl border-none cursor-pointer text-[14px] transition-colors ${
+                  isFollowing
+                    ? 'bg-white/[0.06] text-neutral-300 hover:bg-white/[0.1]'
+                    : 'bg-gold-light text-background hover:bg-gold'
+                } ${isFollowPending ? 'opacity-70' : ''}`}
                 onClick={handleFollowToggle}
                 disabled={isFollowPending}
               >
-                {isFollowing ? '언팔로우' : '팔로우'}
+                {isFollowing ? '팔로잉' : '팔로우'}
               </button>
             )}
           </div>
+
+          {/* 하단: 통계 카드 */}
+          {isOwner && data?.stats !== undefined && (
+            <div className="grid grid-cols-3 gap-3">
+              <div className="flex flex-col items-center gap-1.5 rounded-xl bg-white/[0.04] py-5">
+                <span className="text-[14px] text-primary-light">팔로워</span>
+                <span className="text-price-lg text-white">{reputation?.followerCount ?? data.stats.followerCount ?? '-'}</span>
+              </div>
+              <div className="relative flex flex-col items-center gap-1.5 rounded-xl bg-white/[0.04] py-5 group">
+                <span className="text-[14px] text-primary-light flex items-center gap-1">
+                  평점
+                  <svg className="w-3.5 h-3.5 text-neutral-500 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </span>
+                <span className="text-price-lg text-white">
+                  {reputation?.completionRate != null
+                    ? ((reputation.completionRate / 100) * 5).toFixed(1)
+                    : (data.stats.rating ?? '-')}
+                </span>
+                <div className="absolute bottom-full mb-2 left-0 w-72 p-3 bg-neutral-900 border border-white/10 rounded-lg shadow-xl text-xs text-neutral-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                  <p className="font-semibold text-white mb-1.5">평점 산정 기준</p>
+                  <ul className="space-y-1 list-disc list-inside">
+                    <li>완료된 거래와 거래 취소 건수로 산정</li>
+                    <li>성공률(%) × 5점 만점으로 계산</li>
+                    <li>거래가 없으면 기본 만점(5.0점)</li>
+                  </ul>
+                  {reputation?.totalTrades != null && (
+                    <div className="mt-2 pt-2 border-t border-white/10 space-y-0.5">
+                      <p>총 거래: <span className="text-white">{reputation.totalTrades}건</span></p>
+                      <p>거래 취소: <span className="text-white">{reputation.cancelCount ?? 0}건</span></p>
+                      <p>거래 성공률: <span className="text-white">{reputation.completionRate != null ? `${reputation.completionRate}%` : '-'}</span></p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col items-center gap-1.5 rounded-xl bg-white/[0.04] py-5">
+                <span className="text-[14px] text-primary-light">평균 배송</span>
+                <span className="text-price-lg text-white">
+                  {reputation?.avgShipDays != null
+                    ? `${reputation.avgShipDays}일`
+                    : data.stats.avgShipDays != null
+                      ? `${data.stats.avgShipDays}일`
+                      : '-'}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
+      {/* 탭 콘텐츠 */}
       <div className="w-full rounded-(--radius-panel) py-11 px-14 bg-surface min-h-[calc(100vh-320px)]">
         <div className="flex items-center gap-6 border-b border-white/5 mb-8">
           <button
-            className={`flex items-center gap-2 bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-subtitle-lg cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${
-              activeTab === 'posts' ? 'text-gold-light border-gold-light' : 'text-neutral-600 border-transparent'
+            className={`flex items-center gap-2 bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-[16px] cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${
+              activeTab === 'posts' ? 'text-gold-light border-gold-light' : 'text-neutral-500 border-transparent hover:text-neutral-300'
             }`}
             onClick={() => setActiveTab('posts')}
           >
@@ -499,8 +468,8 @@ export default function ProfilePage() {
           </button>
 
           <button
-            className={`flex items-center gap-2 bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-subtitle-lg cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${
-              activeTab === 'sales' ? 'text-gold-light border-gold-light' : 'text-neutral-600 border-transparent'
+            className={`flex items-center gap-2 bg-transparent border-0 border-solid border-b-2 px-2 pb-4 text-[16px] cursor-pointer transition-colors duration-200 -mb-[1px] relative z-10 ${
+              activeTab === 'sales' ? 'text-gold-light border-gold-light' : 'text-neutral-500 border-transparent hover:text-neutral-300'
             }`}
             onClick={() => setActiveTab('sales')}
           >

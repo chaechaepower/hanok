@@ -163,7 +163,7 @@ function AddressFormModalContent({
     <>
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70" onClick={onClose}>
         <div
-          className="max-h-[90vh] w-[500px] overflow-y-auto custom-scrollbar rounded-2xl border border-white/5 bg-background p-8 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+          className="max-h-[90vh] w-[500px] overflow-y-auto custom-scrollbar rounded-2xl border border-white/[0.08] bg-surface p-8 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
           onClick={(event) => event.stopPropagation()}
         >
           <div className="mb-5">

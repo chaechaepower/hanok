@@ -3,7 +3,7 @@ import type { LiveCardData, NewSellerRecommendedStream } from '@/types';
 
 export const PAGE_SIZE = 10;
 export const SCHEDULED_SECTION_SIZE = 12;
-export const GRID_CLASS_NAME = 'grid grid-cols-1 gap-6 gap-y-10 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5';
+export const GRID_CLASS_NAME = 'grid grid-cols-1 gap-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5';
 
 export const SORT_OPTIONS: Array<{ value: MainStreamSort; label: string }> = [
   { value: 'LATEST', label: '최신순' },

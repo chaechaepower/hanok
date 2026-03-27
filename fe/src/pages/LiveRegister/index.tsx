@@ -375,15 +375,18 @@ export default function LiveRegisterPage() {
     initializedMacroKeyRef.current = editMacroKey;
   }, [categoryId, defaultMacros, isEditMode, macroData, macroLoading, streamData, streamId]);
 
-  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
       return;
     }
 
-    const url = URL.createObjectURL(file);
+    const { optimizeImage } = await import('@/utils/imageOptimizer');
+    const optimized = await optimizeImage(file);
+
+    const url = URL.createObjectURL(optimized);
     setThumbnailUrl(url);
-    setThumbnailFile(file);
+    setThumbnailFile(optimized);
   };
 
   const toggleItem = (item: Product) => {

@@ -19,6 +19,7 @@ import LiveHeader from '../LiveHeader';
 import RightPanel from '../RightPanel';
 import SellerStartModal from '../SellerStartModal';
 import StreamEndModal from '../StreamEndModal';
+import { getPausedInitialSeconds } from './getPausedInitialSeconds';
 import type { LiveLayoutProps } from './types';
 
 const CHAT_PANEL_INITIAL = { flex: 0, opacity: 0 };
@@ -38,6 +39,8 @@ export default function DesktopLayout({ stream, auction, livekit, chat, modal, n
     isCameraOn,
     isRemoteAudioMuted,
   } = livekit;
+  const pausedInitialSeconds = getPausedInitialSeconds(stream.activeStreamEnter);
+
   return (
     <div className="flex h-screen w-full flex-col bg-surface p-3">
       <LiveHeader
@@ -172,7 +175,7 @@ export default function DesktopLayout({ stream, auction, livekit, chat, modal, n
             ))}
           {stream.streamState === 'disconnected' && (
             <StreamDisconnected
-              initialSeconds={300}
+              initialSeconds={pausedInitialSeconds}
               onTimeout={modal.markStreamEnded}
               onExit={() => navigate('/main')}
             />

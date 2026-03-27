@@ -53,7 +53,7 @@ function ProductRegistrationModalContent({ onClose, onSuccess, initialData }: Pr
     };
   }, [newImagePreviews]);
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) {
       return;
     }
@@ -66,7 +66,10 @@ function ProductRegistrationModalContent({ onClose, onSuccess, initialData }: Pr
       return;
     }
 
-    setImages((prev) => [...prev, ...newFiles]);
+    const { optimizeImages } = await import('@/utils/imageOptimizer');
+    const optimized = await optimizeImages(newFiles);
+
+    setImages((prev) => [...prev, ...optimized]);
     setError('');
     event.target.value = '';
   };

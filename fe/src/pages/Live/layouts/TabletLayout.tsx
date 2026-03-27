@@ -21,6 +21,7 @@ import LeftPanel from '../LeftPanel';
 import LiveHeader from '../LiveHeader';
 import SellerStartModal from '../SellerStartModal';
 import StreamEndModal from '../StreamEndModal';
+import { getPausedInitialSeconds } from './getPausedInitialSeconds';
 import type { LiveLayoutProps } from './types';
 
 type TabletTab = 'items' | 'chat' | 'auction';
@@ -40,6 +41,7 @@ export default function TabletLayout({ stream, auction, livekit, modal, navigate
   } = livekit;
   const [activeTab, setActiveTab] = useState<TabletTab>('chat');
   const { messages, sendMessage, sendMacro, connectionState } = useStompChat(stream.activeStreamEnter?.category ?? '');
+  const pausedInitialSeconds = getPausedInitialSeconds(stream.activeStreamEnter);
 
   const currentUserId = (() => {
     const stored = localStorage.getItem('userId');
@@ -157,7 +159,7 @@ export default function TabletLayout({ stream, auction, livekit, modal, navigate
               ))}
             {stream.streamState === 'disconnected' && (
               <StreamDisconnected
-                initialSeconds={300}
+                initialSeconds={pausedInitialSeconds}
                 onTimeout={modal.markStreamEnded}
                 onExit={() => navigate('/main')}
               />

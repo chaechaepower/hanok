@@ -21,6 +21,7 @@ import LeftPanel from '../LeftPanel';
 import LiveHeader from '../LiveHeader';
 import SellerStartModal from '../SellerStartModal';
 import StreamEndModal from '../StreamEndModal';
+import { getPausedInitialSeconds } from './getPausedInitialSeconds';
 import type { LiveLayoutProps } from './types';
 
 const SWIPE_THRESHOLD = 50;
@@ -41,6 +42,7 @@ export default function MobileLayout({ stream, auction, livekit, modal, navigate
   const [isPanelVisible, setIsPanelVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<'items' | 'chat' | 'auction'>('chat');
   const { messages, sendMessage, sendMacro, connectionState } = useStompChat(stream.activeStreamEnter?.category ?? '');
+  const pausedInitialSeconds = getPausedInitialSeconds(stream.activeStreamEnter);
 
   const currentUserId = (() => {
     const stored = localStorage.getItem('userId');
@@ -209,7 +211,7 @@ export default function MobileLayout({ stream, auction, livekit, modal, navigate
             ))}
           {stream.streamState === 'disconnected' && (
             <StreamDisconnected
-              initialSeconds={300}
+              initialSeconds={pausedInitialSeconds}
               onTimeout={modal.markStreamEnded}
               onExit={() => navigate('/main')}
             />

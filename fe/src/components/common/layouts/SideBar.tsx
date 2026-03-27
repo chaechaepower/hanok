@@ -72,6 +72,7 @@ export default function SideBar({
                   >
                     {item.label}
                   </span>
+                  {item.badge && <span className="relative z-10 ml-auto">{item.badge}</span>}
                 </button>
                 {isActive && (
                   <motion.span

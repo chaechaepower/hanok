@@ -30,6 +30,7 @@ export type StreamEnterResponse = {
   identity: string;
   isFollowing: boolean;
   isHost: boolean;
+  remainingSeconds: number | null;
 };
 
 export type SearchStreamStatus = 'LIVE' | 'SCHEDULED' | 'PAUSED' | 'ENDED';
@@ -450,6 +451,10 @@ export type PrivateStreamEvent =
   | {
       eventType: 'BID_WINNER';
       payload?: BidWinnerPayload;
+    }
+  | {
+      eventType: 'AUCTION_STATISTICS_SYNC';
+      payload?: AuctionStatisticsPayload | null;
     }
   | {
       eventType: 'UNIQUE_AUCTION_END';

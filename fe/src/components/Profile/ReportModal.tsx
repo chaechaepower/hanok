@@ -12,9 +12,13 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
   const [detail, setDetail] = useState('');
   const [images, setImages] = useState<File[]>([]);
   const { showToast } = useToast();
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setImages((prev) => [...prev, ...files].slice(0, 3));
+
+    const { optimizeImages } = await import('@/utils/imageOptimizer');
+    const optimized = await optimizeImages(files);
+
+    setImages((prev) => [...prev, ...optimized].slice(0, 3));
     e.target.value = '';
   };
   const handleRemoveImage = (index: number) => {
@@ -37,7 +41,7 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
       onClick={onClose}
     >
       <div
-        className="bg-surface border border-neutral-800 rounded-2xl w-[500px] max-h-[90vh] overflow-y-auto p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
+        className="bg-surface border border-neutral-800 rounded-2xl w-[500px] max-h-[90vh] overflow-y-auto custom-scrollbar p-8 flex flex-col gap-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">

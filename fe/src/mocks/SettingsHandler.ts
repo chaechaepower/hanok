@@ -24,6 +24,30 @@ const mockAccountData = {
   accountName: 'Hong Gil Dong',
 };
 
+let mockAddressNextId = 2;
+const mockAddresses = [
+  {
+    id: 1,
+    addressName: '우리 집',
+    postalCode: 43123,
+    address: '서울 강남구 강남대로 17',
+    addressDetail: '101동 1001호',
+    phone: '010-1234-5678',
+    recipientName: '홍길동',
+    isDefault: true,
+  },
+  {
+    id: 2,
+    addressName: '회사',
+    postalCode: 12312,
+    address: '서울 서초구 테헤란로 123',
+    addressDetail: '5층',
+    phone: '010-1234-5678',
+    recipientName: '홍길동',
+    isDefault: false,
+  },
+];
+
 const mockNotification = {
   notificationSetting: true,
 };
@@ -251,44 +275,55 @@ export const settingsHandlers = [
   }),
 
   http.get(`${BASE_URL}/v1/users/me/addresses`, () =>
-    HttpResponse.json(
-      [
-        {
-          id: 1,
-          addressName: 'Home',
-          postalCode: 43123,
-          address: 'Seoul Gangnam-daero 17',
-          addressDetail: '101-1001',
-          phone: '010-0000-5678',
-          recipientName: 'Mock User',
-          isDefault: true,
-        },
-        {
-          id: 2,
-          addressName: 'Office',
-          postalCode: 12312,
-          address: 'Seoul Teheran-ro 123',
-          addressDetail: '5F',
-          phone: '010-0000-5678',
-          recipientName: 'Mock User',
-          isDefault: false,
-        },
-      ],
-      { status: 200 },
-    ),
+    HttpResponse.json(mockAddresses, { status: 200 }),
   ),
 
-  http.post(`${BASE_URL}/v1/users/me/addresses`, () =>
-    HttpResponse.json({ message: 'Address added successfully.' }, { status: 200 }),
-  ),
+  http.post(`${BASE_URL}/v1/users/me/addresses`, async ({ request }) => {
+    const body = (await request.json()) as {
+      addressName: string;
+      postalCode: number;
+      address: string;
+      addressDetail: string;
+      phone: string;
+      recipientName: string;
+      isDefault?: boolean;
+    };
+    if (body.isDefault) {
+      mockAddresses.forEach((a) => { a.isDefault = false; });
+    }
+    const newAddress = { id: ++mockAddressNextId, ...body, isDefault: body.isDefault ?? false };
+    mockAddresses.push(newAddress);
+    return HttpResponse.json(newAddress, { status: 201 });
+  }),
 
-  http.patch(`${BASE_URL}/v1/users/me/addresses/:id`, () =>
-    HttpResponse.json({ message: 'Address updated successfully.' }, { status: 200 }),
-  ),
+  http.patch(`${BASE_URL}/v1/users/me/addresses/:id`, async ({ params, request }) => {
+    const id = Number(params.id);
+    const body = (await request.json()) as {
+      addressName?: string;
+      postalCode?: number;
+      address?: string;
+      addressDetail?: string;
+      phone?: string;
+      recipientName?: string;
+      isDefault?: boolean;
+    };
+    const target = mockAddresses.find((a) => a.id === id);
+    if (!target) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
 
-  http.delete(`${BASE_URL}/v1/users/me/addresses/:id`, () =>
-    HttpResponse.json({ message: 'Address deleted successfully.' }, { status: 200 }),
-  ),
+    if (body.isDefault) {
+      mockAddresses.forEach((a) => { a.isDefault = false; });
+    }
+    Object.assign(target, body);
+    return HttpResponse.json(target, { status: 200 });
+  }),
+
+  http.delete(`${BASE_URL}/v1/users/me/addresses/:id`, ({ params }) => {
+    const id = Number(params.id);
+    const idx = mockAddresses.findIndex((a) => a.id === id);
+    if (idx === -1) return HttpResponse.json({ message: 'Not found' }, { status: 404 });
+    mockAddresses.splice(idx, 1);
+    return new HttpResponse(null, { status: 204 });
+  }),
 
   http.patch(`${BASE_URL}/v1/users/me/password`, async () =>
     HttpResponse.json({ status: 'SUCCESS', message: 'Password updated successfully.', data: {} }, { status: 200 }),

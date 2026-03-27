@@ -40,6 +40,7 @@ export type SideBarItem = {
   label: string;
   icon?: ReactNode;
   path?: string;
+  badge?: ReactNode;
 };
 
 export type CustomSelectOption = {
