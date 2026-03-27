@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type RefObject } from 'react';
 import { LuMic, LuMicOff, LuVideo, LuVideoOff } from 'react-icons/lu';
 import KeyboardGuide from '@/components/Live/Auction/shared/KeyboardGuide';
 import SellerActionButtons from '@/components/Live/Stream/SellerActionButtons';
@@ -31,6 +31,10 @@ interface Props {
   onIntroduce?: () => void;
   onStart?: () => void;
   micLevel?: number;
+  introduceButtonRef?: RefObject<HTMLButtonElement | null>;
+  startButtonRef?: RefObject<HTMLButtonElement | null>;
+  introduceButtonClassName?: string;
+  startButtonClassName?: string;
 }
 
 export default function SellerControlBar({
@@ -49,6 +53,11 @@ export default function SellerControlBar({
   variant = 'overlay',
   onIntroduce,
   onStart,
+  introduceButtonRef,
+  startButtonRef,
+  introduceButtonClassName,
+  startButtonClassName,
+  micLevel,
 }: Props) {
   const [guideOpen, setGuideOpen] = useState(false);
   const { id: streamId } = useParams<{ id: string }>();
@@ -140,7 +149,23 @@ export default function SellerControlBar({
   const activeKeys = useKeyboardShortcuts(handleKeyAction);
 
   return (
-    <div className={`${variant === 'overlay' ? 'absolute bottom-3 left-3 right-3' : ''} flex items-stretch justify-between`}>
+    <div className={`${variant === 'overlay' ? 'absolute bottom-4 left-3 right-3' : ''} flex flex-col gap-2`}>
+      {micLevel != null && (
+        <div className="flex justify-end px-1">
+          <div className="flex items-end gap-[4px] rounded-xl bg-surface/80 px-3 py-2 backdrop-blur-md">
+            {Array.from({ length: 5 }, (_, i) => {
+              const threshold = (i + 1) / 5;
+              const isActive = isMicOn && (micLevel ?? 0) >= threshold * 0.6;
+              const h = 4 + i * 3;
+              const color = isActive
+                ? i < 1 ? 'bg-accent' : i < 3 ? 'bg-gold' : 'bg-ember'
+                : 'bg-neutral-700';
+              return <div key={i} className={`w-[3px] rounded-full transition-all duration-75 ${color}`} style={{ height: `${h}px` }} />;
+            })}
+          </div>
+        </div>
+      )}
+      <div className="flex items-stretch justify-between">
       {/* 좌하단: 키보드 가이드 */}
       <KeyboardGuide variant="seller" open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} placement={variant === 'inline' ? 'top' : 'left'} />
 
@@ -151,6 +176,10 @@ export default function SellerControlBar({
           onStart={handleAuctionStart}
           canIntroduce={canIntroduce}
           canStart={canStart}
+          introduceButtonRef={introduceButtonRef}
+          startButtonRef={startButtonRef}
+          introduceButtonClassName={introduceButtonClassName}
+          startButtonClassName={startButtonClassName}
         />
       </div>
 
@@ -168,6 +197,7 @@ export default function SellerControlBar({
         >
           {!isCameraOn ? <LuVideoOff size={22} /> : <LuVideo size={22} />}
         </button>
+      </div>
       </div>
     </div>
   );

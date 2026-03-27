@@ -41,6 +41,8 @@ export default function SellerRankingPanel({ rankingItems = [] }: SellerRankingP
                 <img
                   src={seller.profileImage}
                   alt={`${seller.nickname} profile`}
+                  loading="lazy"
+                  decoding="async"
                   className="h-10 w-10 shrink-0 rounded-full object-cover"
                 />
               ) : (

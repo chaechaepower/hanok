@@ -637,7 +637,7 @@ export function useLiveStream(
 
       if (isUniqueBidAckEvent(event) && event.payload) {
         setUniqueBidSync((prev) => (prev ? { ...prev, hasBid: true } : prev));
-        showToast({ message: `${event.payload.amount.toLocaleString()}원 입찰이 접수되었습니다.` });
+        showToast({ type: 'success', message: `${event.payload.amount.toLocaleString()}원 입찰이 접수되었습니다.` });
         return;
       }
 

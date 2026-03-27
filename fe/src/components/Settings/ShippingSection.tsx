@@ -9,8 +9,8 @@ import type { Address, AddressModalMode } from '@/types';
 import AddressCard from './AddressCard';
 import AddressFormModal from '@/components/common/modal/AddressFormModal';
 
-export default function ShippingSection() {
-  const [modalOpen, setModalOpen] = useState(false);
+export default function ShippingSection({ autoOpenModal = false }: { autoOpenModal?: boolean }) {
+  const [modalOpen, setModalOpen] = useState(autoOpenModal);
   const [modalMode, setModalMode] = useState<AddressModalMode>('add');
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const { data, isLoading } = useGetAddresses();

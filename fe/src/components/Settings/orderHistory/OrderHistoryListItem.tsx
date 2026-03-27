@@ -22,7 +22,13 @@ export default function OrderHistoryListItem({ item, onSelect }: Props) {
       <div className="flex flex-1 items-center gap-6">
         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-[1.5px] border-neutral-700 bg-surface">
           {item.image ? (
-            <img src={item.image} alt={item.itemName} className="h-full w-full object-cover" />
+            <img
+              src={item.image}
+              alt={item.itemName}
+              loading="lazy"
+              decoding="async"
+              className="h-full w-full object-cover"
+            />
           ) : (
             <FiGift size={32} className="text-gold-light" />
           )}

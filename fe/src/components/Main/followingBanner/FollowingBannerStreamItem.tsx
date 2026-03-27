@@ -21,7 +21,13 @@ export default function FollowingBannerStreamItem({ stream, isSelected, onClick 
       }`}
     >
       <div className="relative h-20 w-32 shrink-0 overflow-hidden rounded-2xl bg-neutral-800">
-        <img src={stream.thumbnailUri ?? Logo} alt={stream.title} className="h-full w-full object-cover" />
+        <img
+          src={stream.thumbnailUri ?? Logo}
+          alt={stream.title}
+          loading="lazy"
+          decoding="async"
+          className="h-full w-full object-cover"
+        />
       </div>
 
       <div className="min-w-0 flex-1">

@@ -39,11 +39,11 @@ export default function ScheduledStreamCarousel({ streams }: ScheduledStreamCaro
       </div>
 
       {streams.length > 0 ? (
-        <>
+        <div className="relative">
           <button
             type="button"
             onClick={() => scrollByOffset('left')}
-            className="absolute left-3 top-[calc(50%+20px)] z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-surface-elevated text-warm shadow-[0_14px_30px_rgba(0,0,0,0.18)] transition hover:bg-primary-muted"
+            className="absolute -left-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-surface-elevated text-warm shadow-[0_14px_30px_rgba(0,0,0,0.18)] transition hover:bg-primary-muted"
             aria-label="예정 방송 왼쪽으로 이동"
           >
             <ChevronLeft size={18} />
@@ -52,7 +52,7 @@ export default function ScheduledStreamCarousel({ streams }: ScheduledStreamCaro
           <button
             type="button"
             onClick={() => scrollByOffset('right')}
-            className="absolute right-3 top-[calc(50%+20px)] z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-surface-elevated text-warm shadow-[0_14px_30px_rgba(0,0,0,0.18)] transition hover:bg-primary-muted"
+            className="absolute -right-3 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-surface-elevated text-warm shadow-[0_14px_30px_rgba(0,0,0,0.18)] transition hover:bg-primary-muted"
             aria-label="예정 방송 오른쪽으로 이동"
           >
             <ChevronRight size={18} />
@@ -77,12 +77,16 @@ export default function ScheduledStreamCarousel({ streams }: ScheduledStreamCaro
                       <img
                         src={stream.thumbnailUri}
                         alt={stream.title}
+                        loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : stream.seller.profileImageUri ? (
                       <img
                         src={stream.seller.profileImageUri}
                         alt={`${stream.seller.nickname} profile`}
+                        loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
@@ -128,7 +132,7 @@ export default function ScheduledStreamCarousel({ streams }: ScheduledStreamCaro
               );
             })}
           </div>
-        </>
+        </div>
       ) : (
         <div className="rounded-(--radius-panel) border border-dashed border-primary-dark/30">
           <NoItem

@@ -54,11 +54,11 @@ export default function ProductListPage() {
 
     try {
       await deleteItem(deleteTarget.itemId);
-      showToast({ message: '품목이 삭제되었습니다.' });
+      showToast({ type: 'success', message: '품목이 삭제되었습니다.' });
       setDeleteTarget(null);
     } catch (err) {
       console.error(err);
-      showToast({ message: '품목 삭제에 실패했습니다.' });
+      showToast({ type: 'error', message: '품목 삭제에 실패했습니다.' });
     }
   };
 

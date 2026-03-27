@@ -847,12 +847,12 @@ table {
 @supports not selector(::-webkit-scrollbar) {
   .left-panel-scroll {
     scrollbar-width: thin;
-    scrollbar-color: var(--color-neutral-900) transparent;
+    scrollbar-color: var(--color-neutral-700) transparent;
   }
 }
 
 .left-panel-scroll::-webkit-scrollbar {
-  width: 4px;
+  width: 5px;
 }
 
 .left-panel-scroll::-webkit-scrollbar-track {
@@ -860,7 +860,7 @@ table {
 }
 
 .left-panel-scroll::-webkit-scrollbar-thumb {
-  background: var(--color-neutral-900);
+  background: var(--color-neutral-700);
   border-radius: 999px;
 }
 

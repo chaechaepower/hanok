@@ -37,7 +37,13 @@ export default function AccountSection() {
       return;
     }
 
-    patchNotification({ notificationSetting: !notiData.notificationSetting });
+    patchNotification(
+      { notificationSetting: !notiData.notificationSetting },
+      {
+        onSuccess: () => showToast({ type: 'success', message: '알림 설정이 변경되었습니다.' }),
+        onError: () => showToast({ type: 'error', message: '알림 설정 변경에 실패했습니다.' }),
+      },
+    );
   };
 
   const handleOpenPasswordModal = () => {
@@ -74,7 +80,7 @@ export default function AccountSection() {
       {
         onSuccess: () => {
           setIsPasswordModalOpen(false);
-          showToast({ message: '비밀번호가 변경되었습니다.' });
+          showToast({ type: 'success', message: '비밀번호가 변경되었습니다.' });
         },
         onError: () => {
           setPasswordError('비밀번호 변경에 실패했습니다. 현재 비밀번호를 확인해주세요.');
@@ -100,10 +106,10 @@ export default function AccountSection() {
       {
         onSuccess: () => {
           setIsWithdrawModalOpen(false);
-          showToast({ message: '회원 탈퇴가 요청되었습니다.' });
+          showToast({ type: 'success', message: '회원 탈퇴가 요청되었습니다.' });
         },
         onError: () => {
-          showToast({ message: '탈퇴가 불가능한 서비스입니다. 경매에 참여해주세용!' });
+          showToast({ type: 'error', message: '탈퇴가 불가능한 서비스입니다. 경매에 참여해주세용!' });
         },
       },
     );

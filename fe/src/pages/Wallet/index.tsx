@@ -110,7 +110,7 @@ export default function WalletPage() {
     const nextAmount = clampWithdrawAmount(requestedAmount);
 
     if (isOverBalance) {
-      showToast({ message: '잔고가 부족합니다.' });
+      showToast({ type: 'warning', message: '잔고가 부족합니다.' });
     }
 
     setPointAmountInput(sanitizedValue ? String(nextAmount) : '');
@@ -119,7 +119,7 @@ export default function WalletPage() {
 
   const handlePointPresetClick = (amount: number) => {
     if (pointModalType === 'withdraw' && amount > balance) {
-      showToast({ message: '잔고가 부족합니다.' });
+      showToast({ type: 'warning', message: '잔고가 부족합니다.' });
     }
 
     setPointAmountInput(String(clampWithdrawAmount(amount)));
@@ -143,7 +143,7 @@ export default function WalletPage() {
 
     if (pointModalType === 'charge' && numericPointAmount < MIN_WALLET_CHARGE_AMOUNT) {
       setPointAmountInput(String(MIN_WALLET_CHARGE_AMOUNT));
-      showToast({ message: '최소 10000원부터 충전 가능합니다.' });
+      showToast({ type: 'warning', message: '최소 10000원부터 충전 가능합니다.' });
       return;
     }
 
@@ -160,7 +160,7 @@ export default function WalletPage() {
           queryClient.invalidateQueries({ queryKey: ['tradeReports', 'WITHDRAW'] }),
         ]);
 
-        showToast({ message: '출금 요청이 완료되었습니다.' });
+        showToast({ type: 'success', message: '출금 요청이 완료되었습니다.' });
         closePointModal();
         return;
       }
@@ -176,12 +176,12 @@ export default function WalletPage() {
       });
 
       if (!response) {
-        showToast({ message: '결제창을 열지 못했습니다. 팝업 차단 여부를 확인해주세요.' });
+        showToast({ type: 'error', message: '결제창을 열지 못했습니다. 팝업 차단 여부를 확인해주세요.' });
         return;
       }
 
       if (response.code) {
-        showToast({ message: response.message ?? '결제가 취소되었거나 실패했습니다.' });
+        showToast({ type: 'error', message: response.message ?? '결제가 취소되었거나 실패했습니다.' });
         return;
       }
 
@@ -194,10 +194,10 @@ export default function WalletPage() {
         queryClient.invalidateQueries({ queryKey: ['tradeReports', 'CHARGE'] }),
       ]);
 
-      showToast({ message: '결제가 완료되었습니다.' });
+      showToast({ type: 'success', message: '결제가 완료되었습니다.' });
       closePointModal();
     } catch (error) {
-      showToast({ message: error instanceof Error ? error.message : '결제 요청 중 오류가 발생했습니다.' });
+      showToast({ type: 'error', message: error instanceof Error ? error.message : '결제 요청 중 오류가 발생했습니다.' });
     } finally {
       setIsPointSubmitting(false);
     }

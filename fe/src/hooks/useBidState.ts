@@ -99,7 +99,7 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
       }
       setFreeInput(String(correctedUniqueBidAmount));
       setBidAmount(correctedUniqueBidAmount);
-      showToast({ message: '입찰가를 허용 범위로 보정했습니다. 다시 입찰해주세요.' });
+      showToast({ type: 'warning', message: '입찰가를 허용 범위로 보정했습니다. 다시 입찰해주세요.' });
       return false;
     },
     [activeAuctionId, normalizeUniqueBidAmount, showToast],
@@ -119,7 +119,7 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
 
     if (isUniqueAuction) {
       if (hasPlacedUniqueBid) return;
-      if (freeInput.trim().length === 0) { showToast({ message: '입찰 금액을 직접 입력해주세요.' }); return; }
+      if (freeInput.trim().length === 0) { showToast({ type: 'warning', message: '입찰 금액을 직접 입력해주세요.' }); return; }
       if (suppressNextUniqueBidAttemptRef.current === activeAuctionId) {
         suppressNextUniqueBidAttemptRef.current = null;
         return;

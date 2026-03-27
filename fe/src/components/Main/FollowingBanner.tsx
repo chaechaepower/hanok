@@ -1,5 +1,4 @@
 import { useState } from 'react';
-
 import { useNavigate } from 'react-router-dom';
 
 import Logo from '@/assets/Logo.png';
@@ -27,9 +26,10 @@ export default function FollowingBanner({ streams }: FollowingBannerProps) {
         />
 
         <div className="relative z-10 flex min-h-[420px] items-center justify-center px-8 py-8 text-center">
-          <p className="text-[22px] text-white" style={{ textShadow: '0 4px 14px rgba(0,0,0,0.72)' }}>
-            팔로우 중인 판매자의 라이브 방송이 없습니다<p> 다른 판매자를 팔로우 해보세요!</p>
-          </p>
+          <div className="text-[22px] text-white" style={{ textShadow: '0 4px 14px rgba(0,0,0,0.72)' }}>
+            <p>팔로우 중인 판매자의 라이브 방송이 없습니다.</p>
+            <p>다른 판매자를 팔로우 해보세요!</p>
+          </div>
         </div>
       </section>
     );

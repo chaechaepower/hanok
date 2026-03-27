@@ -26,11 +26,11 @@ export default function ReportModal({ sellerNickname, onClose, onSubmit }: Repor
   };
   const handleSubmit = () => {
     if (!reason) {
-      showToast({ message: '신고 사유를 선택해주세요.' });
+      showToast({ type: 'warning', message: '신고 사유를 선택해주세요.' });
       return;
     }
     if (!detail.trim()) {
-      showToast({ message: '상세 설명을 입력해주세요.' });
+      showToast({ type: 'warning', message: '상세 설명을 입력해주세요.' });
       return;
     }
     onSubmit({ reason, detail, images });

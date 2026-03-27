@@ -29,7 +29,7 @@ export default function SellerOnboardingPage() {
 
   useEffect(() => {
     if (sellerStatus?.isSeller) {
-      showToast({ message: '이미 판매자로 등록되어 있습니다.' });
+      showToast({ type: 'warning', message: '이미 판매자로 등록되어 있습니다.' });
       navigate('/main');
     }
   }, [sellerStatus, navigate, showToast]);

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { useGetNftReceipt } from '@/api/hooks/useGetNftReceipt';
+import NftReceiptModal from '@/components/common/modal/NftReceiptModal';
 import { shortenTxHash } from '@/utils/blockchain';
 
 const POLLING_TIMEOUT_MS = 3 * 60 * 1000;
@@ -11,8 +11,8 @@ type NftReceiptCardProps = {
 };
 
 export default function NftReceiptCard({ escrowId }: NftReceiptCardProps) {
-  const navigate = useNavigate();
   const [timedOut, setTimedOut] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: response } = useGetNftReceipt(escrowId);
   const nft = response?.data ?? null;
 
@@ -43,25 +43,25 @@ export default function NftReceiptCard({ escrowId }: NftReceiptCardProps) {
 
   if (liveNft.txStatus === 'COMPLETED' && liveNft.txHash) {
     return (
-      <div className="flex items-center justify-between rounded-2xl border border-green-500/20 bg-green-500/5 px-5 py-4">
-        <div className="flex flex-col gap-0.5">
-          <span className="text-sm font-semibold text-green-400">NFT 영수증 발행 완료</span>
-          <span className="text-xs text-neutral-500">
-            TX: {shortenTxHash(liveNft.txHash)}
-          </span>
+      <>
+        <div className="flex items-center justify-between rounded-2xl border border-green-500/20 bg-green-500/5 px-5 py-4">
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-semibold text-green-400">NFT 영수증 발행 완료</span>
+            <span className="text-xs text-neutral-500">TX: {shortenTxHash(liveNft.txHash)}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(true)}
+            className="rounded-xl bg-green-500/15 px-3 py-1.5 text-xs font-semibold text-green-400 transition hover:bg-green-500/25"
+          >
+            영수증 보기
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => navigate(`/nft-receipt/${escrowId}`)}
-          className="rounded-xl bg-green-500/15 px-3 py-1.5 text-xs font-semibold text-green-400 transition hover:bg-green-500/25"
-        >
-          영수증 보기
-        </button>
-      </div>
+        {isModalOpen && <NftReceiptModal escrowId={escrowId} onClose={() => setIsModalOpen(false)} />}
+      </>
     );
   }
 
-  // FAILED or timed out
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/5 px-5 py-4">
       <div className="flex flex-col gap-0.5">

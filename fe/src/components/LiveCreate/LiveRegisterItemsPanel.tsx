@@ -43,13 +43,13 @@ export default function LiveRegisterItemsPanel({
   onOpenInventory,
 }: Props) {
   return (
-    <aside className="scrollbar-hide min-w-0 flex-1 overflow-y-auto rounded-2xl bg-background px-4 py-6">
-      <div className="mb-4 flex items-center justify-between">
+    <aside className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-background">
+      <div className="flex shrink-0 items-center justify-between px-5 pb-3 pt-5">
         <span className="text-sm font-bold text-white">경매 물품 목록</span>
-        <span className="text-[13px] font-bold text-neutral-600">{tutorialVisibleItems.length}</span>
+        <span className="text-[13px] font-bold text-gold-light/70">{tutorialVisibleItems.length}개</span>
       </div>
 
-      <div className="flex flex-col gap-2 pr-2">
+      <div className="left-panel-scroll flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 pb-5">
         {tutorialVisibleItems.map((item, index) => {
           const conditionLabel = getItemConditionLabel(item.itemCondition);
           const isTutorialFocusItem = activeStepId === 'inventory' && index === 0;
@@ -64,7 +64,7 @@ export default function LiveRegisterItemsPanel({
               {isExampleItem ? (
                 <ActiveItemCard item={toPreviewAuctionItem(item)} isSelected={false} isSeller={false} />
               ) : (
-                <div className="flex flex-col gap-3 rounded-2xl border border-neutral-800 bg-white/2 p-3">
+                <div className="flex flex-col gap-3 rounded-2xl border border-neutral-800 bg-white/[0.02] p-4">
                   <div className="flex gap-3">
                     <div
                       className="h-14 w-14 shrink-0 rounded-xl bg-neutral-800"
@@ -98,14 +98,11 @@ export default function LiveRegisterItemsPanel({
                       </div>
                     </div>
                     <div className="flex shrink-0 flex-col items-end justify-center">
-                      <span className="rounded-full border border-neutral-700 bg-neutral-900 px-2 py-0.5 text-[11px] font-extrabold text-neutral-500">
-                        설정중
-                      </span>
                       {!isExampleItem && (
                         <button
                           type="button"
                           onClick={() => onToggleItem(item)}
-                          className="mt-1.5 cursor-pointer border-none bg-transparent text-xs text-accent hover:text-accent-light"
+                          className="cursor-pointer border-none bg-transparent p-1 text-xs text-neutral-500 hover:text-accent-light transition-colors"
                         >
                           <FaTimes size={10} />
                         </button>
@@ -113,8 +110,8 @@ export default function LiveRegisterItemsPanel({
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-neutral-800 bg-neutral-950/70 p-3">
-                    <div className="grid gap-3 md:grid-cols-2">
+                  <div className="rounded-xl border border-neutral-800 bg-neutral-950/70 p-4">
+                    <div className="grid gap-4 md:grid-cols-2">
                       <div className="flex flex-col gap-1.5">
                         <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
                           경매 방식
@@ -141,7 +138,7 @@ export default function LiveRegisterItemsPanel({
 
                     {item.auctionType === 'UNIQUE_TOP' ? (
                       <div className="mt-3">
-                        <div className="grid gap-2 md:grid-cols-2">
+                        <div className="flex flex-col gap-3">
                           <div className="flex flex-col gap-1.5">
                             <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
                               최소 입찰가
@@ -179,8 +176,8 @@ export default function LiveRegisterItemsPanel({
                       </div>
                     ) : (
                       <div className="mt-3">
-                        <div className="grid gap-2 md:grid-cols-2">
-                          <div className="flex flex-col gap-1.5">
+                        <div className="flex flex-col gap-3">
+                          <div className="group/starttip relative flex flex-col gap-1.5">
                             <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
                               시작가
                             </label>
@@ -191,10 +188,14 @@ export default function LiveRegisterItemsPanel({
                               onChange={(event) => onAuctionFieldChange(item.itemId, 'startPrice', event.target.value)}
                               onBlur={() => onAuctionFieldBlur(item, 'startPrice')}
                               placeholder="시작가 입력"
-                              className={auctionInputClassName}
+                              className={`${auctionInputClassName} ${auctionFieldErrors[item.itemId]?.startPrice ? 'animate-pulse border-red-400/60 bg-red-400/5' : ''}`}
                             />
+                            <div className="pointer-events-none absolute top-full left-0 z-30 mt-1 hidden whitespace-nowrap rounded-lg bg-neutral-800 px-3 py-2 text-[11px] text-neutral-300 shadow-lg group-hover/starttip:block">
+                              최소 1,000원 이상
+                              <div className="absolute bottom-full left-4 border-4 border-transparent border-b-neutral-800" />
+                            </div>
                           </div>
-                          <div className="flex flex-col gap-1.5">
+                          <div className="group/tip relative flex flex-col gap-1.5">
                             <label className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">
                               입찰 단위
                             </label>
@@ -205,13 +206,23 @@ export default function LiveRegisterItemsPanel({
                               onChange={(event) => onAuctionFieldChange(item.itemId, 'bidUnit', event.target.value)}
                               onBlur={() => onAuctionFieldBlur(item, 'bidUnit')}
                               placeholder="입찰 단위 입력"
-                              className={auctionInputClassName}
+                              className={`${auctionInputClassName} ${auctionFieldErrors[item.itemId]?.bidUnit ? 'animate-pulse border-red-400/60 bg-red-400/5' : ''}`}
                             />
+                            <div className="pointer-events-none absolute top-full left-0 z-30 mt-1 hidden whitespace-nowrap rounded-lg bg-neutral-800 px-3 py-2 text-[11px] text-neutral-300 shadow-lg group-hover/tip:block">
+                              <span className="block">최소 100원</span>
+                              <span className="block">최대 시작가의 10%</span>
+                              <div className="absolute bottom-full left-4 border-4 border-transparent border-b-neutral-800" />
+                            </div>
                           </div>
                         </div>
-                        {(auctionFieldErrors[item.itemId]?.startPrice || auctionFieldErrors[item.itemId]?.bidUnit) && (
+                        {auctionFieldErrors[item.itemId]?.startPrice && (
                           <p className="mt-1.5 text-[11px] font-bold text-accent-light">
-                            {auctionFieldErrors[item.itemId]?.startPrice ?? auctionFieldErrors[item.itemId]?.bidUnit}
+                            {auctionFieldErrors[item.itemId]?.startPrice}
+                          </p>
+                        )}
+                        {auctionFieldErrors[item.itemId]?.bidUnit && (
+                          <p className="mt-1.5 flex items-center gap-1 whitespace-pre-line text-[11px] font-bold text-red-400">
+                            <span>⚠</span> {auctionFieldErrors[item.itemId]?.bidUnit}
                           </p>
                         )}
                       </div>
@@ -224,13 +235,13 @@ export default function LiveRegisterItemsPanel({
         })}
       </div>
 
-      <button
-        type="button"
-        onClick={onOpenInventory}
-        className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-gold/30 bg-gold/[0.06] px-4 py-3 text-sm font-bold text-gold/60 transition-all hover:border-gold/50 hover:bg-gold/[0.12] hover:text-gold"
-      >
-        물품 선택
-      </button>
+        <button
+          type="button"
+          onClick={onOpenInventory}
+          className="mx-auto mb-2 mt-1 flex w-4/5 shrink-0 items-center justify-center gap-2 rounded-xl border border-dashed border-neutral-700 bg-white/[0.02] py-2.5 text-[13px] font-bold text-neutral-400 transition-all hover:border-gold/40 hover:bg-gold/[0.06] hover:text-gold"
+        >
+          물품 선택
+        </button>
     </aside>
   );
 }

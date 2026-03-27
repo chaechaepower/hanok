@@ -23,7 +23,13 @@ export default function LiveCardSeller({
       } disabled:pointer-events-none`}
     >
       {profileImageUri ? (
-        <img src={profileImageUri} alt={`${nickname} profile`} className="h-7 w-7 shrink-0 rounded-full object-cover" />
+        <img
+          src={profileImageUri}
+          alt={`${nickname} profile`}
+          loading="lazy"
+          decoding="async"
+          className="h-7 w-7 shrink-0 rounded-full object-cover"
+        />
       ) : (
         <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-muted text-[14px] font-semibold text-primary-light">
           {sellerInitial}
