@@ -1,5 +1,5 @@
 ﻿import { useState, useRef, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useGetSellerProfile } from '@/api/hooks/useGetSellerProfile';
 import { useGetSellerReputation } from '@/api/hooks/useGetSellerReputation';
 import { useGetSellerNotice } from '@/api/hooks/useGetSellerNotice';
@@ -71,6 +71,7 @@ const formatDate = formatDateTime;
 
 export default function ProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const sellerId = Number(id);
   const [activeTab, setActiveTab] = useState<'posts' | 'sales'>('posts');
 
@@ -128,7 +129,10 @@ export default function ProfilePage() {
   const { mutate: deleteNotice } = useDeleteSellerNotice(sellerId);
 
   const [viewNoticeId, setViewNoticeId] = useState<number | null>(null);
-  const { data: noticeDetail } = useGetSellerNoticeDetail(sellerId, viewNoticeId);
+  const routedNoticeIdParam = searchParams.get('noticeId');
+  const routedNoticeId = routedNoticeIdParam ? Number(routedNoticeIdParam) : null;
+  const activeNoticeId = routedNoticeId != null && Number.isFinite(routedNoticeId) ? routedNoticeId : viewNoticeId;
+  const { data: noticeDetail } = useGetSellerNoticeDetail(sellerId, activeNoticeId);
 
   const [selectedStream, setSelectedStream] = useState<ScheduledStream | null>(null);
   const [streamDropdownOpen, setStreamDropdownOpen] = useState(false);
@@ -254,6 +258,15 @@ export default function ProfilePage() {
 
   const handleDeleteNotice = (postId: number) => {
     setDeleteNoticeTarget(postId);
+  };
+
+  const handleCloseNoticeModal = () => {
+    setViewNoticeId(null);
+    if (searchParams.has('noticeId')) {
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.delete('noticeId');
+      setSearchParams(nextSearchParams);
+    }
   };
 
   const handleConfirmDeleteNotice = () => {
@@ -652,10 +665,10 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {viewNoticeId !== null && noticeDetail && (
+      {activeNoticeId !== null && noticeDetail && (
         <div
           className="fixed top-0 left-0 w-full h-full bg-black/90 z-[999] flex items-center justify-center backdrop-blur-sm"
-          onClick={() => setViewNoticeId(null)}
+          onClick={handleCloseNoticeModal}
         >
           <div
             className="bg-surface border border-neutral-800 rounded-2xl w-[600px] p-10 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
@@ -687,7 +700,7 @@ export default function ProfilePage() {
 
             <div className="flex justify-end">
               <button
-                onClick={() => setViewNoticeId(null)}
+                onClick={handleCloseNoticeModal}
                 className="py-3 px-8 bg-neutral-700 text-neutral-200 border-none rounded-lg cursor-pointer text-subtitle-sm hover:bg-neutral-600 transition-colors"
               >
                 닫기

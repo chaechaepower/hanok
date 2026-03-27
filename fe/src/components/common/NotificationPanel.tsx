@@ -7,12 +7,11 @@ import { usePatchNotificationReadAll } from '@/api/hooks/usePatchNotificationRea
 import NotificationItem from '@/components/common/NotificationItem';
 import NoItem from '@/components/common/NoItem';
 import type { Notification } from '@/types';
+import { getNotificationRoute } from '@/utils/getNotificationRoute';
 
 interface NotificationPanelProps {
   onClose: () => void;
 }
-
-const ROUTABLE_NOTIFICATION_TYPES = new Set(['STREAM_START']);
 
 export default function NotificationPanel({ onClose }: NotificationPanelProps) {
   const navigate = useNavigate();
@@ -43,8 +42,9 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
       markAsRead(notification.id);
     }
 
-    if (ROUTABLE_NOTIFICATION_TYPES.has(notification.type) && notification.actionUrl) {
-      navigate(notification.actionUrl);
+    const route = getNotificationRoute(notification);
+    if (route) {
+      navigate(route);
     }
 
     onClose();

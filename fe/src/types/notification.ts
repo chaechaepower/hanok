@@ -4,11 +4,24 @@ export type NotificationType =
   | 'ESCROW_STARTED_FOR_SELLER'
   | 'ESCROW_SHIPPED_FOR_BUYER'
   | 'ESCROW_SHIPPED_FOR_SELLER'
-  | 'ESCROW_COMPLETED'
-  | 'ESCROW_AUTO_COMPLETED'
-  | 'ESCROW_CANCELLED'
+  | 'ESCROW_COMPLETED_FOR_BUYER'
+  | 'ESCROW_COMPLETED_FOR_SELLER'
+  | 'ESCROW_COMPLETED_FOR_SELELR'
+  | 'ESCROW_AUTO_COMPLETED_FOR_BUYER'
+  | 'ESCROW_AUTO_COMPLETED_FOR_SELLER'
+  | 'ESCROW_AUTO_COMPLETED_FOR_SELELR'
+  | 'ESCROW_CANCELLED_FOR_BUYER'
+  | 'ESCROW_CANCELLED_FOR_SELLER'
+  | 'ESCROW_CANCELLED_FOR_SELELR'
   | 'NOTICE_CREATE'
   | string;
+
+export type NotificationRoutingPayload = {
+  streamId?: number;
+  escrowId?: number;
+  sellerId?: number;
+  noticeId?: number;
+};
 
 export type Notification = {
   id: number;
@@ -17,7 +30,7 @@ export type Notification = {
   body: string;
   isRead: boolean;
   createdAt: string;
-  actionUrl: string | null;
+  routingPayload?: NotificationRoutingPayload | null;
 };
 
 export type NotificationPage = {
