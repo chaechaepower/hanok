@@ -1,21 +1,27 @@
 package com.ssafy.be.domain.notification.service;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.be.domain.notification.exception.NotificationErrorCode;
 import com.ssafy.be.domain.notification.model.Notification;
 import com.ssafy.be.domain.notification.repository.NotificationRepository;
-
+import com.ssafy.be.domain.user.entity.User;
+import com.ssafy.be.domain.user.repository.UserRepository;
+import com.ssafy.be.global.common.response.JsonConverter;
 import com.ssafy.be.global.exception.GlobalException;
 import com.ssafy.be.global.extension.TestReportExtension;
 import com.ssafy.be.global.sse.enums.SseEventType;
 import com.ssafy.be.global.sse.service.SseEmitterService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -30,10 +36,22 @@ class NotificationServiceTest {
     private static final Logger TEST_LOG = LoggerFactory.getLogger("TEST_REPORT");
     private static final long SUITE_START = System.currentTimeMillis();
 
-    @InjectMocks NotificationService notificationService;
-    @Mock        NotificationRepository notificationRepository;
-    @Mock
-    SseEmitterService sseEmitterService;
+    @Mock NotificationRepository notificationRepository;
+    @Mock SseEmitterService sseEmitterService;
+    @Mock UserRepository userRepository;
+
+    private NotificationService notificationService;
+
+    @BeforeEach
+    void setUpNotificationService() {
+        JsonConverter jsonConverter = new JsonConverter(new ObjectMapper());
+        notificationService = new NotificationService(
+                notificationRepository,
+                sseEmitterService,
+                userRepository,
+                jsonConverter
+        );
+    }
 
     @BeforeAll
     static void suiteStart() {
@@ -82,12 +100,16 @@ class NotificationServiceTest {
         void sendNotification_success() {
             // given
             TEST_LOG.info("    [요청] userId=1 | type=PURCHASE | title=구매 완료");
-            TEST_LOG.info("    [요청] message=상품이 결제되었습니다. | link=/orders/1");
+            TEST_LOG.info("    [요청] message=상품이 결제되었습니다. | routingField=orderId");
+
+            User user = mock(User.class);
+            when(user.getNotificationSetting()).thenReturn(true);
+            given(userRepository.findById(1L)).willReturn(Optional.of(user));
 
             // when
             TEST_LOG.info("    [진행] sendNotification() 호출");
             notificationService.sendNotification(
-                    1L, "PURCHASE", "구매 완료", "상품이 결제되었습니다.", "/orders/1"
+                    1L, "PURCHASE", "구매 완료", "상품이 결제되었습니다.", Map.of("orderId", 1L)
             );
 
             // then
@@ -150,7 +172,15 @@ class NotificationServiceTest {
             // given
             TEST_LOG.info("    [요청] 접근자 userId=1 | 알림 소유자 userId=2 (권한 없음)");
             Notification noti = Notification.builder()
-                    .id(1L).userId(2L).isRead(false).build();
+                    .id(1L)
+                    .userId(2L)
+                    .type("TEST")
+                    .title("t")
+                    .body("b")
+                    .isRead(false)
+                    .createdAt(LocalDateTime.now())
+                    .routingField(null)
+                    .build();
             TEST_LOG.info("    [준비] findById(1) → Notification(owner=2L) Mock 설정");
             given(notificationRepository.findById(1L)).willReturn(noti);
 

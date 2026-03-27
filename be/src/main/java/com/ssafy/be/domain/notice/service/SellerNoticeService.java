@@ -9,6 +9,7 @@ import com.ssafy.be.domain.notice.dto.response.NoticeResponse;
 import com.ssafy.be.domain.notice.entity.SellerNotice;
 import com.ssafy.be.domain.notice.exception.NoticeErrorCode;
 import com.ssafy.be.domain.notice.repository.SellerNoticeRepository;
+import com.ssafy.be.domain.notification.model.NotificationRoutingField;
 import com.ssafy.be.domain.notification.service.NotificationService;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
@@ -51,7 +52,7 @@ public class SellerNoticeService {
                     NOTICE_CREATE.name(),
                     NOTICE_CREATE.getTitle(),
                     NOTICE_CREATE.renderBody(seller.getUser().getNickname()),
-                    null
+                    NotificationRoutingField.notice(seller.getId(), savedNotice.getId())
             );
         });
 

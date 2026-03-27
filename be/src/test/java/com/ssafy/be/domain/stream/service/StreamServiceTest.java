@@ -58,6 +58,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -251,7 +252,7 @@ class StreamServiceTest {
                     eq(NotificationType.STREAM_START.name()),
                     eq(NotificationType.STREAM_START.getTitle()),
                     any(),
-                    eq("/live/100"));
+                    eq(Map.of("streamId", 100L)));
             TEST_LOG.info("    [검증] ✔ 팔로워 알림");
         }
     }

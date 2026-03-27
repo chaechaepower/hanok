@@ -7,6 +7,7 @@ import com.ssafy.be.domain.notification.model.Notification;
 import com.ssafy.be.domain.notification.repository.NotificationRepository;
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
+import com.ssafy.be.global.common.response.JsonConverter;
 import com.ssafy.be.global.exception.GlobalException;
 import com.ssafy.be.global.sse.enums.SseEventType;
 import com.ssafy.be.global.sse.service.SseEmitterService;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,6 +28,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final SseEmitterService sseEmitterService;
     private final UserRepository userRepository;
+    private final JsonConverter jsonConverter;
 
     // 알림 목록 페이징
     public NotificationPageResponse getNotifications(Long userId, String cursor, int limit) {
@@ -82,7 +85,7 @@ public class NotificationService {
     }
 
     // 알림 발송
-    public void sendNotification(Long userId, String type, String title, String body, String actionUrl) {
+    public void sendNotification(Long userId, String type, String title, String body, Map<String, Object> routingField) {
         // 개인 알림 설정 확인: false이면 알림 저장 및 전송 모두 건너뜀
         User user = userRepository.findById(userId).orElse(null);
         if (user == null || Boolean.FALSE.equals(user.getNotificationSetting())) {
@@ -91,21 +94,14 @@ public class NotificationService {
             return;
         }
 
-        // 하단의 private 메서드를 호출해 도메인 객체(record)를 생성
-        Notification newNoti = createNewNotification(userId, type, title, body, actionUrl);
+        String routingJson = jsonConverter.toJsonOrNullIfEmpty(routingField);
+        Notification newNoti = createNewNotification(userId, type, title, body, routingJson);
 
         // Repository를 통해 Redis에 저장 (Hash, ZSet, String 카운트 증가 + TTL/Capping 적용)
         notificationRepository.save(newNoti);
 
         sseEmitterService.sendToClient(SseEventType.NOTIFICATION, userId, from(newNoti));
     }
-
-    // 전체 시스템 알림 (예비)
-//    public void sendNotification(Long userId, String type, String title, String body, String actionUrl) {
-//        Notification newNoti = createNewNotification(userId, type, title, body, actionUrl);
-//        notificationRepository.save(newNoti);
-//    }
-
 
     // Private --------------------------------------------------------------
 
@@ -116,7 +112,7 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
 
-    private Notification createNewNotification(Long userId, String type, String title, String body, String actionUrl) {
+    private Notification createNewNotification(Long userId, String type, String title, String body, String routingFieldJson) {
         Long generatedId = System.currentTimeMillis();
 
         return Notification.builder()
@@ -127,7 +123,7 @@ public class NotificationService {
                 .body(body)
                 .isRead(false)
                 .createdAt(LocalDateTime.now())
-                .actionUrl(actionUrl)
+                .routingField(routingFieldJson)
                 .build();
     }
 
@@ -139,7 +135,7 @@ public class NotificationService {
                 .body(noti.body())
                 .isRead(noti.isRead())
                 .createdAt(noti.createdAt())
-                .actionUrl(noti.actionUrl())
+                .routingField(jsonConverter.fromJsonToMapOrEmpty(noti.routingField()))
                 .build();
     }
 

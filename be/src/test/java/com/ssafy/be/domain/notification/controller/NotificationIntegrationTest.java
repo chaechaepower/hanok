@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -94,7 +95,7 @@ class NotificationIntegrationTest {
     private void seed(int count) {
         for (int i = 1; i <= count; i++) {
             notificationService.sendNotification(
-                    USER_ID, "test", "알림 " + i, "내용 " + i, "/url/" + i);
+                    USER_ID, "test", "알림 " + i, "내용 " + i, Map.of("ref", i));
         }
         IT_LOG.info("    [seed] 알림 {}건 생성 완료 (userId={})", count, USER_ID);
     }

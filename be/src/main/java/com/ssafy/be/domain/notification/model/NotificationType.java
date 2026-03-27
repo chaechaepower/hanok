@@ -30,18 +30,33 @@ public enum NotificationType {
     ),
 
     // ===== 거래 완료 =====
-    ESCROW_COMPLETED(
+    ESCROW_COMPLETED_FOR_BUYER(
             "거래 완료",
             "%s 거래가 안전하게 완료되었습니다."
     ),
 
-    ESCROW_AUTO_COMPLETED(
+    ESCROW_COMPLETED_FOR_SELLER(
+            "거래 완료",
+            "%s 거래가 안전하게 완료되었습니다."
+    ),
+
+    ESCROW_AUTO_COMPLETED_FOR_BUYER(
+            "거래 자동 확정",
+            "%s 구매 확정이 이루어지지 않아 자동으로 거래가 완료되었습니다."
+    ),
+
+    ESCROW_AUTO_COMPLETED_FOR_SELLER(
             "거래 자동 확정",
             "%s 구매 확정이 이루어지지 않아 자동으로 거래가 완료되었습니다."
     ),
 
     // ===== 거래 취소 =====
-    ESCROW_CANCELLED(
+    ESCROW_CANCELLED_FOR_BUYER(
+            "거래 취소",
+            "%s 거래가 취소되었습니다."
+    ),
+
+    ESCROW_CANCELLED_FOR_SELLER(
             "거래 취소",
             "%s 거래가 취소되었습니다."
     ),
@@ -55,9 +70,8 @@ public enum NotificationType {
     // ===== 방송 시작 =====
     STREAM_START(
             "방송 시작",
-                    "%s님이 방송을 시작했습니다."
+            "%s님이 방송을 시작했습니다."
     );
-
 
     private final String title;
     private final String body;

@@ -3,6 +3,7 @@ package com.ssafy.be.domain.escrow.service;
 import com.ssafy.be.domain.escrow.entity.Escrow;
 import com.ssafy.be.domain.escrow.exception.EscorwErrorCode;
 import com.ssafy.be.domain.escrow.repository.EscrowRepository;
+import com.ssafy.be.domain.notification.model.NotificationRoutingField;
 import com.ssafy.be.domain.notification.service.NotificationService;
 import com.ssafy.be.domain.tradereport.entity.TradeReport;
 import com.ssafy.be.domain.tradereport.entity.TradeType;
@@ -67,19 +68,19 @@ public class EscrowCompleteService {
         // 구매자
         notificationService.sendNotification(
                 escrow.getBuyer().getId(),
-                ESCROW_AUTO_COMPLETED.name(),
-                ESCROW_AUTO_COMPLETED.getTitle(),
-                ESCROW_AUTO_COMPLETED.renderBody(escrow.getAuction().getItem().getName()),
-                null
+                ESCROW_AUTO_COMPLETED_FOR_BUYER.name(),
+                ESCROW_AUTO_COMPLETED_FOR_BUYER.getTitle(),
+                ESCROW_AUTO_COMPLETED_FOR_BUYER.renderBody(escrow.getAuction().getItem().getName()),
+                NotificationRoutingField.escrow(escrowId)
         );
 
         // 판매자
         notificationService.sendNotification(
                 escrow.getSeller().getUser().getId(),
-                ESCROW_AUTO_COMPLETED.name(),
-                ESCROW_AUTO_COMPLETED.getTitle(),
-                ESCROW_AUTO_COMPLETED.renderBody(escrow.getAuction().getItem().getName()),
-                null
+                ESCROW_AUTO_COMPLETED_FOR_SELLER.name(),
+                ESCROW_AUTO_COMPLETED_FOR_SELLER.getTitle(),
+                ESCROW_AUTO_COMPLETED_FOR_SELLER.renderBody(escrow.getAuction().getItem().getName()),
+                NotificationRoutingField.escrow(escrowId)
         );
     }
 

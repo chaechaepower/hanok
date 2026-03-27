@@ -15,6 +15,7 @@ import com.ssafy.be.domain.escrow.repository.EscrowRepository;
 import com.ssafy.be.domain.escrow.scheduler.EscrowCompleteScheduler;
 import com.ssafy.be.domain.escrow.scheduler.EscrowShipmentScheduler;
 import com.ssafy.be.domain.item.entity.Item;
+import com.ssafy.be.domain.notification.model.NotificationRoutingField;
 import com.ssafy.be.domain.notification.service.NotificationService;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
@@ -82,7 +83,7 @@ public class EscrowService {
                 ESCROW_STARTED_FOR_BUYER.name(),
                 ESCROW_STARTED_FOR_BUYER.getTitle(),
                 ESCROW_STARTED_FOR_BUYER.renderBody(auction.getItem().getName()),
-                null
+                NotificationRoutingField.escrow(escrow.getId())
         );
 
         // 판매자
@@ -91,7 +92,7 @@ public class EscrowService {
                 ESCROW_STARTED_FOR_SELLER.name(),
                 ESCROW_STARTED_FOR_SELLER.getTitle(),
                 ESCROW_STARTED_FOR_SELLER.renderBody(buyer.getNickname(), auction.getItem().getName()),
-                null
+                NotificationRoutingField.escrow(escrow.getId())
         );
     }
 
@@ -122,7 +123,7 @@ public class EscrowService {
                 ESCROW_SHIPPED_FOR_BUYER.name(),
                 ESCROW_SHIPPED_FOR_BUYER.getTitle(),
                 ESCROW_SHIPPED_FOR_BUYER.renderBody(escrow.getSeller().getUser().getNickname(), escrow.getAuction().getItem().getName()),
-                null
+                NotificationRoutingField.escrow(escrowId)
         );
 
         // 판매자
@@ -131,7 +132,7 @@ public class EscrowService {
                 ESCROW_SHIPPED_FOR_SELLER.name(),
                 ESCROW_SHIPPED_FOR_SELLER.getTitle(),
                 ESCROW_SHIPPED_FOR_SELLER.renderBody(escrow.getAuction().getItem().getName()),
-                null
+                NotificationRoutingField.escrow(escrowId)
         );
     }
 
@@ -168,19 +169,19 @@ public class EscrowService {
         // 구매자
         notificationService.sendNotification(
                 escrow.getBuyer().getId(),
-                ESCROW_CANCELLED.name(),
-                ESCROW_CANCELLED.getTitle(),
-                ESCROW_CANCELLED.renderBody(escrow.getAuction().getItem().getName()),
-                null
+                ESCROW_CANCELLED_FOR_BUYER.name(),
+                ESCROW_CANCELLED_FOR_BUYER.getTitle(),
+                ESCROW_CANCELLED_FOR_BUYER.renderBody(escrow.getAuction().getItem().getName()),
+                NotificationRoutingField.escrow(escrowId)
         );
 
         // 판매자
         notificationService.sendNotification(
                 escrow.getSeller().getUser().getId(),
-                ESCROW_CANCELLED.name(),
-                ESCROW_CANCELLED.getTitle(),
-                ESCROW_CANCELLED.renderBody(escrow.getAuction().getItem().getName()),
-                null
+                ESCROW_CANCELLED_FOR_SELLER.name(),
+                ESCROW_CANCELLED_FOR_SELLER.getTitle(),
+                ESCROW_CANCELLED_FOR_SELLER.renderBody(escrow.getAuction().getItem().getName()),
+                NotificationRoutingField.escrow(escrowId)
         );
     }
 
@@ -237,19 +238,19 @@ public class EscrowService {
         // 구매자
         notificationService.sendNotification(
                 escrow.getBuyer().getId(),
-                ESCROW_COMPLETED.name(),
-                ESCROW_COMPLETED.getTitle(),
-                ESCROW_COMPLETED.renderBody(escrow.getAuction().getItem().getName()),
-                null
+                ESCROW_COMPLETED_FOR_BUYER.name(),
+                ESCROW_COMPLETED_FOR_BUYER.getTitle(),
+                ESCROW_COMPLETED_FOR_BUYER.renderBody(escrow.getAuction().getItem().getName()),
+                NotificationRoutingField.escrow(escrowId)
         );
 
         // 판매자
         notificationService.sendNotification(
                 escrow.getSeller().getUser().getId(),
-                ESCROW_COMPLETED.name(),
-                ESCROW_COMPLETED.getTitle(),
-                ESCROW_COMPLETED.renderBody(escrow.getAuction().getItem().getName()),
-                null
+                ESCROW_COMPLETED_FOR_SELLER.name(),
+                ESCROW_COMPLETED_FOR_SELLER.getTitle(),
+                ESCROW_COMPLETED_FOR_SELLER.renderBody(escrow.getAuction().getItem().getName()),
+                NotificationRoutingField.escrow(escrowId)
         );
 
         // NFT 민팅 대기 상태로 변경

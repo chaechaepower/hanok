@@ -9,7 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.ssafy.be.domain.notification.model.NotificationType.ESCROW_CANCELLED;
+import com.ssafy.be.domain.notification.model.NotificationRoutingField;
+
+import static com.ssafy.be.domain.notification.model.NotificationType.ESCROW_CANCELLED_FOR_BUYER;
+import static com.ssafy.be.domain.notification.model.NotificationType.ESCROW_CANCELLED_FOR_SELLER;
 
 @RequiredArgsConstructor
 @Service
@@ -36,19 +39,19 @@ public class EscrowCancellationService {
         // 구매자
         notificationService.sendNotification(
                 escrow.getBuyer().getId(),
-                ESCROW_CANCELLED.name(),
-                ESCROW_CANCELLED.getTitle(),
-                ESCROW_CANCELLED.renderBody(escrow.getAuction().getItem().getName()),
-                null
+                ESCROW_CANCELLED_FOR_BUYER.name(),
+                ESCROW_CANCELLED_FOR_BUYER.getTitle(),
+                ESCROW_CANCELLED_FOR_BUYER.renderBody(escrow.getAuction().getItem().getName()),
+                NotificationRoutingField.escrow(escrowId)
         );
 
         // 판매자
         notificationService.sendNotification(
                 escrow.getSeller().getUser().getId(),
-                ESCROW_CANCELLED.name(),
-                ESCROW_CANCELLED.getTitle(),
-                ESCROW_CANCELLED.renderBody(escrow.getAuction().getItem().getName()),
-                null
+                ESCROW_CANCELLED_FOR_SELLER.name(),
+                ESCROW_CANCELLED_FOR_SELLER.getTitle(),
+                ESCROW_CANCELLED_FOR_SELLER.renderBody(escrow.getAuction().getItem().getName()),
+                NotificationRoutingField.escrow(escrowId)
         );
     }
 

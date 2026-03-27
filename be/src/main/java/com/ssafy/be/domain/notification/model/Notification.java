@@ -14,7 +14,7 @@ public record Notification (
         String body,
         Boolean isRead,
         LocalDateTime createdAt,
-        String actionUrl
+        String routingField
 )
 {
 }

@@ -14,6 +14,7 @@ import com.ssafy.be.domain.item.entity.ItemStatus;
 import com.ssafy.be.domain.item.entity.Tag;
 import com.ssafy.be.domain.item.exception.ItemErrorCode;
 import com.ssafy.be.domain.item.repository.ItemRepository;
+import com.ssafy.be.domain.notification.model.NotificationRoutingField;
 import com.ssafy.be.domain.notification.service.NotificationService;
 import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
@@ -409,7 +410,7 @@ public class StreamService {
                     STREAM_START.name(),
                     STREAM_START.getTitle(),
                     STREAM_START.renderBody(seller.getUser().getNickname()),
-                    "/live/" + stream.getId() // 프론트 라이브 방송 라우팅 경로: /live/{streamId}
+                    NotificationRoutingField.stream(stream.getId())
             );
         });
     }
