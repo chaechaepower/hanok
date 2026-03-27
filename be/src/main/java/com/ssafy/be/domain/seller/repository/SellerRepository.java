@@ -18,11 +18,11 @@ public interface SellerRepository extends JpaRepository<Seller, Long> {
     List<Seller> findAllByIdInWithUser(@Param("ids") List<Long> ids);
 
     @Query(nativeQuery = true, value = """
-            SELECT seller_id, nickname, profile_image, follower_count
+            SELECT seller_id, s.shop_name, u.profile_image, follower_count
             FROM (
                 SELECT
                     s.id                          AS seller_id,
-                    u.nickname,
+                    s.shop_name,
                     u.profile_image,
                     COUNT(DISTINCT f.id)           AS follower_count,
                     COUNT(DISTINCT e_recent.id) * 40
@@ -44,7 +44,7 @@ public interface SellerRepository extends JpaRepository<Seller, Long> {
                 LEFT JOIN escrow e_all
                        ON e_all.seller_id    = s.id
                       AND e_all.escrow_status = 'COMPLETED'
-                GROUP BY s.id, u.nickname, u.profile_image, s.penalty_count
+                GROUP BY s.id, s.shop_name, u.profile_image, s.penalty_count
             ) ranked
             ORDER BY score DESC
             LIMIT 5
