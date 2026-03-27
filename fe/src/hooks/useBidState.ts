@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useGetAddresses } from '@/api/hooks/useGetAddresses';
@@ -11,6 +10,48 @@ import bidEffectSound from '@/assets/bid_effect_sound.mp3';
 
 const preloadedBidAudio = new Audio(bidEffectSound);
 preloadedBidAudio.load();
+
+const WALLET_INVALIDATION_PENDING_TTL_MS = 5000;
+const pendingWalletInvalidationStreamIds = new Set<string>();
+const pendingWalletInvalidationTimeouts = new Map<string, number>();
+
+const clearPendingWalletInvalidationTimeout = (streamId: string) => {
+  const timeoutId = pendingWalletInvalidationTimeouts.get(streamId);
+
+  if (timeoutId !== undefined) {
+    window.clearTimeout(timeoutId);
+    pendingWalletInvalidationTimeouts.delete(streamId);
+  }
+};
+
+export const markPendingWalletInvalidationForBid = (streamId: string) => {
+  clearPendingWalletInvalidationTimeout(streamId);
+  pendingWalletInvalidationStreamIds.add(streamId);
+
+  const timeoutId = window.setTimeout(() => {
+    pendingWalletInvalidationStreamIds.delete(streamId);
+    pendingWalletInvalidationTimeouts.delete(streamId);
+  }, WALLET_INVALIDATION_PENDING_TTL_MS);
+
+  pendingWalletInvalidationTimeouts.set(streamId, timeoutId);
+};
+
+export const consumePendingWalletInvalidationForBid = (streamId: string) => {
+  const hasPendingInvalidation = pendingWalletInvalidationStreamIds.has(streamId);
+
+  if (!hasPendingInvalidation) {
+    return false;
+  }
+
+  pendingWalletInvalidationStreamIds.delete(streamId);
+  clearPendingWalletInvalidationTimeout(streamId);
+  return true;
+};
+
+export const clearPendingWalletInvalidationForBid = (streamId: string) => {
+  pendingWalletInvalidationStreamIds.delete(streamId);
+  clearPendingWalletInvalidationTimeout(streamId);
+};
 
 export type BidTab = 'quick' | 'custom';
 export type AuctionEndPhase = 'ended' | 'waiting' | null;
@@ -33,7 +74,6 @@ export type BidState = ReturnType<typeof useBidState>;
 
 export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuctionId }: UseBidStateParams) {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { showToast } = useToast();
   const { id: streamId } = useParams<{ id: string }>();
   const isLoggedIn = useMemo(() => Boolean(localStorage.getItem('accessToken')), []);
@@ -134,11 +174,16 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
       payload: { auctionId: activeAuctionId, amount: effectiveBidAmount },
     })
       .then(() => {
-        queryClient.invalidateQueries({ queryKey: ['wallet'] });
+        if (!isUniqueAuction) {
+          markPendingWalletInvalidationForBid(streamId);
+        }
       })
-      .catch((error) => { console.error('[stream] failed to send bid', error); });
+      .catch((error) => {
+        clearPendingWalletInvalidationForBid(streamId);
+        console.error('[stream] failed to send bid', error);
+      });
   }, [
-    activeAuctionId, effectiveBidAmount, freeInput, hasActiveAuction, queryClient,
+    activeAuctionId, effectiveBidAmount, freeInput, hasActiveAuction,
     hasPlacedUniqueBid, hasRegisteredShippingAddress, isAddressesLoading,
     isInsufficientBalance, isLoggedIn, isUniqueAuction,
     applyUniqueBidCorrection, showToast, streamId, uniqueInputAmount,

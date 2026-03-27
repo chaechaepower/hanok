@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { SetStateAction } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 import type {
   AuctionStatisticsPayload,
@@ -18,6 +19,10 @@ import type {
   UniqueBidSyncPayload,
 } from '@/types';
 import { sendStreamMessage, subscribeStream } from '@/websocket/stompClient';
+import {
+  clearPendingWalletInvalidationForBid,
+  consumePendingWalletInvalidationForBid,
+} from './useBidState';
 import { useToast } from './useToast';
 
 // ---------------------------------------------------------------------------
@@ -189,6 +194,7 @@ export function useLiveStream(
   isLiveFromServer: boolean,
   initialStreamStatus?: string | null,
 ): UseLiveStreamReturn {
+  const queryClient = useQueryClient();
   const { showToast } = useToast();
 
   const [liveStateOverride, setLiveStateOverride] = useState<boolean | null>(null);
@@ -398,6 +404,7 @@ export function useLiveStream(
     const handleUniqueAuctionEndPayload = (payload: UniqueAuctionEndPayload) => {
       setTimer(null);
       setUniqueBidSync(null);
+      void requestItemSync();
 
       if (payload.isWon && ignoreWonUniqueEndRef.current) {
         return;
@@ -474,6 +481,10 @@ export function useLiveStream(
       }
 
       if (isBidPlacedEvent(event)) {
+        if (streamId && consumePendingWalletInvalidationForBid(streamId)) {
+          void queryClient.invalidateQueries({ queryKey: ['wallet'] });
+        }
+
         if (event.payload?.snipingTimer) {
           snipingTimerSetAtRef.current = Date.now();
           setTimer(createSyncedTimer(event.payload.snipingTimer));
@@ -648,6 +659,10 @@ export function useLiveStream(
         return;
       }
 
+      if (streamId) {
+        clearPendingWalletInvalidationForBid(streamId);
+      }
+
       if (isUniqueAlreadyBidError(event.payload)) {
         setUniqueBidSync((prev) => (prev ? { ...prev, hasBid: true } : prev));
       }
@@ -691,7 +706,7 @@ export function useLiveStream(
 
       unsubscribeStream();
     };
-  }, [setStreamState, showToast, streamId]);
+  }, [queryClient, setStreamState, showToast, streamId]);
 
   // ---------------------------------------------------------------------------
   // Race-condition-safe ITEM_SYNC on stream live transition.
