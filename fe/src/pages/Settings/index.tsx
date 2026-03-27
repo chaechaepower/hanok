@@ -36,6 +36,7 @@ export default function SettingsPage() {
   const tabParam = searchParams.get('tab');
   const initialTab = SETTINGS_TABS.includes(tabParam as SettingsTab) ? (tabParam as SettingsTab) : 'order';
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
+  const [autoOpenAddressModal, setAutoOpenAddressModal] = useState(false);
 
   const { data: meData, isLoading: isMeLoading } = useGetMe();
   const { isLoading: isNotiLoading } = useGetNotification();
@@ -60,10 +61,10 @@ export default function SettingsPage() {
 
     patchProfileImage(optimized, {
       onSuccess: () => {
-        showToast({ message: '프로필 이미지가 변경되었습니다.' });
+        showToast({ type: 'success', message: '프로필 이미지가 변경되었습니다.' });
       },
       onError: (error) => {
-        showToast({ message: getUploadErrorMessage(error, '프로필 이미지 변경에 실패했습니다.') });
+        showToast({ type: 'error', message: getUploadErrorMessage(error, '프로필 이미지 변경에 실패했습니다.') });
       },
     });
   };
@@ -74,7 +75,7 @@ export default function SettingsPage() {
         navigate('/login');
       },
       onError: () => {
-        showToast({ message: '로그아웃에 실패했습니다.' });
+        showToast({ type: 'error', message: '로그아웃에 실패했습니다.' });
       },
     });
   };
@@ -172,6 +173,7 @@ export default function SettingsPage() {
               onClick={() => {
                 setActiveTab('shipping');
                 setSearchParams({ tab: 'shipping' });
+                if (!defaultAddress) setAutoOpenAddressModal(true);
               }}
               className="flex flex-col justify-center gap-1 rounded-xl bg-white/[0.04] border border-white/[0.06] px-5 py-4 cursor-pointer hover:border-gold-light/30 transition-colors text-left min-w-0 overflow-hidden"
             >
@@ -182,7 +184,7 @@ export default function SettingsPage() {
                 </span>
               </div>
               {defaultAddress ? (
-                <span className="text-[13px] text-neutral-400 truncate w-full">
+                <span className="text-[13px] text-gold-light truncate w-full">
                   {defaultAddress.address} {defaultAddress.addressDetail}
                 </span>
               ) : (
@@ -278,7 +280,9 @@ export default function SettingsPage() {
         <div className="w-full flex flex-1 flex-col gap-6">
           {activeTab === 'order' && <OrderHistorySection />}
           {activeTab === 'stores' && <FollowedStoresSection />}
-          {activeTab === 'shipping' && <ShippingSection />}
+          {activeTab === 'shipping' && (
+            <ShippingSection autoOpenModal={autoOpenAddressModal} />
+          )}
           {activeTab === 'payment' && <PaymentSection />}
           {activeTab === 'account' && <AccountSection />}
         </div>

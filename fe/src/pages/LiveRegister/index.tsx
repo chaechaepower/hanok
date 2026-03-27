@@ -286,7 +286,7 @@ export default function LiveRegisterPage() {
             ...current,
             startPrice: correctedStartPrice,
           }));
-          setAuctionFieldError(item.itemId, 'startPrice', '시작가는 1,000원 이상이어야 합니다');
+          setAuctionFieldError(item.itemId, 'startPrice', '조건과 맞지 않아 자동으로 보정되었습니다!');
           return;
         }
 
@@ -308,7 +308,7 @@ export default function LiveRegisterPage() {
             ...current,
             bidUnit: correctedBidUnit,
           }));
-          setAuctionFieldError(item.itemId, 'bidUnit', `입찰 단위는 최소 100원, 최대 시작가의 10%까지입니다`);
+          setAuctionFieldError(item.itemId, 'bidUnit', `조건과 맞지 않아 자동으로 보정되었습니다!`);
           return;
         }
 
@@ -323,7 +323,7 @@ export default function LiveRegisterPage() {
             ...current,
             bidUnit: maximumBidUnit,
           }));
-          setAuctionFieldError(item.itemId, 'bidUnit', `입찰 단위는 최소 100원, 최대 시작가의 10%까지입니다`);
+          setAuctionFieldError(item.itemId, 'bidUnit', `조건과 맞지 않아 자동으로 보정되었습니다!`);
           return;
         }
       }
@@ -399,7 +399,7 @@ export default function LiveRegisterPage() {
 
   const handleSchedule = () => {
     if (!title.trim()) {
-      showToast({ message: '방송 제목을 입력해주세요.' });
+      showToast({ type: 'warning', message: '방송 제목을 입력해주세요.' });
       return;
     }
 
@@ -408,7 +408,7 @@ export default function LiveRegisterPage() {
 
   const handleEnter = () => {
     if (!title.trim()) {
-      showToast({ message: '방송 제목을 입력해주세요.' });
+      showToast({ type: 'warning', message: '방송 제목을 입력해주세요.' });
       return;
     }
 
@@ -436,66 +436,66 @@ export default function LiveRegisterPage() {
 
   const validateStreamForm = () => {
     if (!title.trim()) {
-      showToast({ message: '방송 제목을 입력해주세요.' });
+      showToast({ type: 'warning', message: '방송 제목을 입력해주세요.' });
       return false;
     }
 
     if (selectedItems.length === 0) {
-      showToast({ message: '방송에 등록할 물품을 선택해주세요.' });
+      showToast({ type: 'warning', message: '방송에 등록할 물품을 선택해주세요.' });
       return false;
     }
 
     for (const item of selectedItems) {
       if (!item.auctionType) {
-        showToast({ message: `${item.name}의 경매 방식을 선택해주세요.` });
+        showToast({ type: 'warning', message: `${item.name}의 경매 방식을 선택해주세요.` });
         return false;
       }
 
       if (!item.auctionDuration || item.auctionDuration <= 0) {
-        showToast({ message: `${item.name}의 경매 시간을 입력해주세요.` });
+        showToast({ type: 'warning', message: `${item.name}의 경매 시간을 입력해주세요.` });
         return false;
       }
 
       if (item.auctionType === 'BOTTOM_UP') {
         if (!item.startPrice || item.startPrice <= 0) {
-          showToast({ message: `${item.name}의 시작가를 입력해주세요.` });
+          showToast({ type: 'warning', message: `${item.name}의 시작가를 입력해주세요.` });
           return false;
         }
 
         if (item.startPrice < 1000) {
-          showToast({ message: `${item.name}의 시작가는 1,000원 이상이어야 합니다.` });
+          showToast({ type: 'warning', message: `${item.name}의 시작가는 1,000원 이상이어야 합니다.` });
           return false;
         }
 
         if (!item.bidUnit || item.bidUnit <= 0) {
-          showToast({ message: `${item.name}의 입찰 단위를 입력해주세요.` });
+          showToast({ type: 'warning', message: `${item.name}의 입찰 단위를 입력해주세요.` });
           return false;
         }
 
         if (item.bidUnit < 100) {
-          showToast({ message: `${item.name}의 입찰 단위는 100원 이상이어야 합니다.` });
+          showToast({ type: 'warning', message: `${item.name}의 입찰 단위는 100원 이상이어야 합니다.` });
           return false;
         }
 
         if (item.bidUnit > Math.max(100, Math.floor(item.startPrice * 0.1))) {
-          showToast({ message: `${item.name}의 입찰 단위는 시작가의 10% 이하여야 합니다.` });
+          showToast({ type: 'warning', message: `${item.name}의 입찰 단위는 시작가의 10% 이하여야 합니다.` });
           return false;
         }
       }
 
       if (item.auctionType === 'UNIQUE_TOP') {
         if (item.minPrice == null) {
-          showToast({ message: `${item.name}의 최소 입찰가를 입력해주세요.` });
+          showToast({ type: 'warning', message: `${item.name}의 최소 입찰가를 입력해주세요.` });
           return false;
         }
 
         if (item.maxPrice == null) {
-          showToast({ message: `${item.name}의 최대 입찰가를 입력해주세요.` });
+          showToast({ type: 'warning', message: `${item.name}의 최대 입찰가를 입력해주세요.` });
           return false;
         }
 
         if (item.maxPrice < item.minPrice) {
-          showToast({ message: `${item.name}의 최대 입찰가는 최소 입찰가보다 크거나 같아야 합니다.` });
+          showToast({ type: 'warning', message: `${item.name}의 최대 입찰가는 최소 입찰가보다 크거나 같아야 합니다.` });
           return false;
         }
       }
@@ -558,6 +558,7 @@ export default function LiveRegisterPage() {
     } catch (err) {
       console.error('[submitReadyEntry]', err);
       showToast({
+        type: 'error',
         message: getUploadErrorMessage(err, isEditMode ? '방송 수정에 실패했습니다.' : '방송 등록에 실패했습니다.'),
       });
     } finally {
@@ -590,7 +591,7 @@ export default function LiveRegisterPage() {
         if (startType === 'INSTANT') {
           navigate(`/live/${streamId}`);
         } else {
-          showToast({ message: '방송을 수정했습니다.' });
+          showToast({ type: 'success', message: '방송을 수정했습니다.' });
           navigate('/lives');
         }
 
@@ -608,9 +609,9 @@ export default function LiveRegisterPage() {
           ...payload,
         });
         console.log('[Stream Start] openviduToken:', startRes.data?.openviduToken);
-        showToast({ message: '방송이 시작되었습니다!' });
+        showToast({ type: 'success', message: '방송이 시작되었습니다!' });
       } else {
-        showToast({ message: '방송이 예약되었습니다!' });
+        showToast({ type: 'success', message: '방송이 예약되었습니다!' });
       }
 
       await postMacros.mutateAsync({
@@ -626,6 +627,7 @@ export default function LiveRegisterPage() {
     } catch (err) {
       console.error('[submitStream]', err);
       showToast({
+        type: 'error',
         message: getUploadErrorMessage(err, isEditMode ? '방송 수정에 실패했습니다.' : '방송 등록에 실패했습니다.'),
       });
     } finally {
@@ -633,7 +635,7 @@ export default function LiveRegisterPage() {
     }
   };
 
-  const sellerEntryButtonLabel = isEditMode ? '방송 입장' : '방송 준비';
+  const sellerEntryButtonLabel = '방송 입장';
   const pageTitle = isEditMode ? '라이브 방송 수정' : '라이브 방송 등록';
   const scheduleButtonLabel = isEditMode ? '예약 수정' : '방송 예약';
 
@@ -688,9 +690,9 @@ export default function LiveRegisterPage() {
                   type="button"
                   onClick={handleSchedule}
                   disabled={isSubmitting}
-                  className="flex items-center gap-2 rounded-lg border border-neutral-700 bg-transparent px-3 py-2 text-[13px] font-bold text-neutral-300 transition-colors hover:border-neutral-600 hover:bg-neutral-900 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-xl bg-surface-elevated px-4 py-2.5 text-[13px] font-bold text-neutral-300 transition-colors hover:bg-neutral-800 disabled:opacity-50"
                 >
-                  <FaCalendarAlt size={12} />
+                  <FaCalendarAlt size={14} />
                   {scheduleButtonLabel}
                   {scheduledAt && (
                     <span className="ml-1 text-xs font-bold text-gold">
@@ -707,9 +709,9 @@ export default function LiveRegisterPage() {
                   type="button"
                   onClick={handleEnter}
                   disabled={isSubmitting}
-                  className="flex items-center gap-2 rounded-lg border border-accent/35 bg-accent/12 px-3 py-2 text-[13px] font-bold text-accent-light transition-colors hover:bg-accent/18 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-accent-dark disabled:opacity-50"
                 >
-                  <MdLiveTv size={14} />
+                  <MdLiveTv size={18} />
                   {sellerEntryButtonLabel}
                 </button>
               </div>

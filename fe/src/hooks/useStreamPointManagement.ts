@@ -61,7 +61,7 @@ export default function useStreamPointManagement() {
     const nextAmount = clampWithdrawAmount(requestedAmount);
 
     if (isOverBalance) {
-      showToast({ message: '보유 포인트를 초과할 수 없습니다.' });
+      showToast({ type: 'warning', message: '보유 포인트를 초과할 수 없습니다.' });
     }
 
     setPointAmountInput(sanitizedValue ? String(nextAmount) : '');
@@ -70,7 +70,7 @@ export default function useStreamPointManagement() {
 
   const handlePointPresetClick = (amount: number) => {
     if (pointModalType === 'withdraw' && amount > balance) {
-      showToast({ message: '보유 포인트를 초과할 수 없습니다.' });
+      showToast({ type: 'warning', message: '보유 포인트를 초과할 수 없습니다.' });
     }
 
     setPointAmountInput(String(clampWithdrawAmount(amount)));
@@ -95,7 +95,7 @@ export default function useStreamPointManagement() {
 
     if (pointModalType === 'charge' && numericPointAmount < MIN_WALLET_CHARGE_AMOUNT) {
       setPointAmountInput(String(MIN_WALLET_CHARGE_AMOUNT));
-      showToast({ message: '최소 10000원부터 충전 가능합니다.' });
+      showToast({ type: 'warning', message: '최소 10000원부터 충전 가능합니다.' });
       return;
     }
 
@@ -114,22 +114,23 @@ export default function useStreamPointManagement() {
       });
 
       if (!paymentResponse) {
-        showToast({ message: '결제 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.' });
+        showToast({ type: 'error', message: '결제 응답을 확인하지 못했습니다. 잠시 후 다시 시도해주세요.' });
         return;
       }
 
       if (paymentResponse.code) {
-        showToast({ message: paymentResponse.message ?? '결제가 취소되었거나 실패했습니다.' });
+        showToast({ type: 'error', message: paymentResponse.message ?? '결제가 취소되었거나 실패했습니다.' });
         return;
       }
 
       await completeWalletCharge({ paymentId });
       await queryClient.invalidateQueries({ queryKey: ['wallet'] });
 
-      showToast({ message: '충전이 완료되었습니다.' });
+      showToast({ type: 'success', message: '충전이 완료되었습니다.' });
       closePointModal();
     } catch (error) {
       showToast({
+        type: 'error',
         message: error instanceof Error ? error.message : '충전 처리 중 문제가 발생했습니다.',
       });
     } finally {

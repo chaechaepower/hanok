@@ -91,7 +91,7 @@ export default function SignUpPage() {
         setIsIdentityVerified(true);
         setVerifiedName(res.data.name);
         setPhone(res.data.phoneNumber);
-        showToast({ message: `본인인증이 완료되었습니다. (${res.data.name})` });
+        showToast({ type: 'success', message: `본인인증이 완료되었습니다. (${res.data.name})` });
       } else {
         setPhoneError('본인인증에 실패했습니다.');
       }
@@ -104,33 +104,33 @@ export default function SignUpPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isEmailVerified) {
-      showToast({ message: '이메일 중복 확인을 해주세요.' });
+      showToast({ type: 'warning', message: '이메일 중복 확인을 해주세요.' });
       return;
     }
     if (!nickname) {
-      showToast({ message: '닉네임을 입력해주세요.' });
+      showToast({ type: 'warning', message: '닉네임을 입력해주세요.' });
       return;
     }
     if (validatePassword(password) || password !== passwordConfirm) {
-      showToast({ message: '비밀번호를 바르게 입력 및 확인해주세요.' });
+      showToast({ type: 'warning', message: '비밀번호를 바르게 입력 및 확인해주세요.' });
       return;
     }
     if (!isIdentityVerified || !phone) {
-      showToast({ message: '휴대폰 본인 인증을 완료해주세요.' });
+      showToast({ type: 'warning', message: '휴대폰 본인 인증을 완료해주세요.' });
       return;
     }
     if (!termsAgreed || !privacyAgreed) {
-      showToast({ message: '필수 약관에 모두 동의해주세요.' });
+      showToast({ type: 'warning', message: '필수 약관에 모두 동의해주세요.' });
       return;
     }
 
     try {
       await signUp({ email, nickname, password, phone });
-      showToast({ message: '회원가입이 완료되었습니다!' });
+      showToast({ type: 'success', message: '회원가입이 완료되었습니다!' });
       navigate('/login');
     } catch (error) {
       console.error(error);
-      showToast({ message: '회원가입 처리 중 오류가 발생했습니다.' });
+      showToast({ type: 'error', message: '회원가입 처리 중 오류가 발생했습니다.' });
     }
   };
 

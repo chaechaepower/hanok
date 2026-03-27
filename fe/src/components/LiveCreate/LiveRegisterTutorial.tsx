@@ -93,6 +93,8 @@ export default function LiveRegisterTutorial({
       return;
     }
 
+    const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
     const updateCardPosition = () => {
       const target = activeStep.targetRef.current;
       if (!target) {
@@ -100,12 +102,15 @@ export default function LiveRegisterTutorial({
       }
 
       const rect = target.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) {
+        return;
+      }
+
       const isActionStep = activeStep.id === 'introduce' || activeStep.id === 'start';
       const width = Math.min(isActionStep ? 380 : 320, window.innerWidth - 32);
       const height = isActionStep ? 236 : 208;
       const gap = activeStep.id === 'inventory' ? 18 : 14;
       const topOffset = activeStep.id === 'introduce' ? 18 : 0;
-      const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
 
       let left = activeStep.placement === 'right' ? rect.right + gap : rect.left + rect.width / 2 - width / 2;
       let top =
@@ -128,12 +133,25 @@ export default function LiveRegisterTutorial({
       });
     };
 
-    const frameId = window.requestAnimationFrame(updateCardPosition);
+    // 타겟이 화면에 보이도록 스크롤 후 위치 계산을 여러 번 시도
+    const target = activeStep.targetRef.current;
+    if (target) {
+      target.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'nearest' });
+    }
+
+    // 즉시 + 지연 업데이트로 위치를 확실히 잡음
+    updateCardPosition();
+    const timers = [
+      setTimeout(updateCardPosition, 50),
+      setTimeout(updateCardPosition, 150),
+      setTimeout(updateCardPosition, 300),
+    ];
+
     window.addEventListener('resize', updateCardPosition);
     window.addEventListener('scroll', updateCardPosition, true);
 
     return () => {
-      window.cancelAnimationFrame(frameId);
+      timers.forEach(clearTimeout);
       window.removeEventListener('resize', updateCardPosition);
       window.removeEventListener('scroll', updateCardPosition, true);
     };

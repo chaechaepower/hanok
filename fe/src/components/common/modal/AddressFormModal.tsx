@@ -6,6 +6,7 @@ import { usePatchAddress } from '@/api/hooks/usePatchAddress';
 import { usePostAddress } from '@/api/hooks/usePostAddress';
 import { EMPTY_FORM } from '@/constants/addressForm';
 import useAddressSearch from '@/hooks/useAddressSearch';
+import { useToast } from '@/hooks/useToast';
 import type { Address, AddressFormState, AddressModalMode, JusoResult } from '@/types';
 import { formatPhoneNumber, isValidPhoneNumber } from '@/utils/addressForm';
 import AddressSearchModal from './AddressSearchModal';
@@ -65,6 +66,7 @@ function AddressFormModalContent({
     closeAddressSearch,
     searchAddress,
   } = useAddressSearch();
+  const { showToast } = useToast();
 
   const setField = <K extends keyof AddressFormState>(key: K, value: AddressFormState[K]) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -123,9 +125,11 @@ function AddressFormModalContent({
         },
         {
           onSuccess: () => {
+            showToast({ type: 'success', message: '배송지가 추가되었습니다.' });
             onSuccess?.();
             onClose();
           },
+          onError: () => showToast({ type: 'error', message: '배송지 추가에 실패했습니다.' }),
         },
       );
       return;
@@ -148,9 +152,11 @@ function AddressFormModalContent({
       },
       {
         onSuccess: () => {
+          showToast({ type: 'success', message: '배송지가 수정되었습니다.' });
           onSuccess?.();
           onClose();
         },
+        onError: () => showToast({ type: 'error', message: '배송지 수정에 실패했습니다.' }),
       },
     );
   };

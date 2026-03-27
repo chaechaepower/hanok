@@ -1,5 +1,6 @@
 package com.ssafy.be.domain.search.repository;
 
+import com.ssafy.be.domain.search.dto.SellerSearchRow;
 import com.ssafy.be.domain.search.dto.StreamSearchRow;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -66,6 +67,39 @@ public class StreamSearchRepositoryCustom {
                 WHERE MATCH(t.name) AGAINST(:keyword IN BOOLEAN MODE)
                 """ + ACTIVE_STATUS_FILTER;  // ✅ 추가
         return executeSearch(sql, keyword);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<SellerSearchRow> searchByShopName(String keyword) {
+        String sql = """
+                SELECT
+                    sel.id            AS seller_id,
+                    sel.shop_name,
+                    u.profile_image,
+                    sel.intro,
+                    sel.penalty_count,
+                    COUNT(DISTINCT CASE WHEN tr.trade_type = 'SETTLEMENT' AND tr.amount > 0 THEN tr.id END) AS completed_trades
+                FROM seller sel
+                JOIN user u        ON u.id       = sel.user_id
+                LEFT JOIN trade_report tr ON tr.user_id = sel.user_id
+                WHERE sel.shop_name LIKE CONCAT('%', :keyword, '%')
+                GROUP BY sel.id, sel.shop_name, u.profile_image, sel.intro, sel.penalty_count
+                """;
+
+        List<Object[]> rows = em.createNativeQuery(sql)
+                .setParameter("keyword", keyword)
+                .getResultList();
+
+        return rows.stream()
+                .map(r -> SellerSearchRow.builder()
+                        .sellerId(toLong(r[0]))
+                        .shopName((String) r[1])
+                        .profileImage((String) r[2])
+                        .intro((String) r[3])
+                        .penaltyCount(r[4] != null ? ((Number) r[4]).intValue() : 0)
+                        .completedTrades(r[5] != null ? ((Number) r[5]).longValue() : 0L)
+                        .build())
+                .toList();
     }
 
     @SuppressWarnings("unchecked")

@@ -51,7 +51,7 @@ export default function StreamOverlay({ viewerCount = 0, isSeller = false }: Pro
   const handleShare = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      showToast({ message: '링크가 복사되었습니다.' });
+      showToast({ type: 'success', message: '링크가 복사되었습니다.' });
     } catch {
       // noop
     }

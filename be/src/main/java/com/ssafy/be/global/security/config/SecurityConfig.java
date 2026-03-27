@@ -19,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -79,18 +80,25 @@ public class SecurityConfig {
                                 auth
                                         .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll()
                                         .requestMatchers(
-                                                "/api/v1/auth/**",
-                                                "/api/v1/streams/**",
-                                                "/api/v1/sellers/*/profile",
-                                                "/swagger-ui/**",
-                                                "/swagger-ui.html",
-                                                "/v3/api-docs",
-                                                "/v3/api-docs/**",
-                                                "/error",
-                                                "/api/v1/wallet/charges/webhook",
-                                                "/api/v1/streams/webhook",
-                                                "/ws-connect/**",
-                                                "/actuator/**"
+                                                new AntPathRequestMatcher("/api/v1/auth/**"),
+                                                new AntPathRequestMatcher("/api/v1/streams/**"),
+                                                new AntPathRequestMatcher("/api/v1/search/**"),
+                                                new AntPathRequestMatcher("/api/v1/sellers/ranking"),
+                                                new AntPathRequestMatcher("/api/v1/sellers/verify-bizno"),
+                                                new AntPathRequestMatcher("/api/v1/sellers/*/profile"),
+                                                new AntPathRequestMatcher("/api/v1/sellers/*/sold-auctions"),
+                                                new AntPathRequestMatcher("/api/v1/sellers/*/reputation"),
+                                                new AntPathRequestMatcher("/api/v1/sellers/*/notices"),
+                                                new AntPathRequestMatcher("/api/v1/sellers/*/notices/**"),
+                                                new AntPathRequestMatcher("/swagger-ui/**"),
+                                                new AntPathRequestMatcher("/swagger-ui.html"),
+                                                new AntPathRequestMatcher("/v3/api-docs"),
+                                                new AntPathRequestMatcher("/v3/api-docs/**"),
+                                                new AntPathRequestMatcher("/error"),
+                                                new AntPathRequestMatcher("/api/v1/wallet/charges/webhook"),
+                                                new AntPathRequestMatcher("/api/v1/streams/webhook"),
+                                                new AntPathRequestMatcher("/ws-connect/**"),
+                                                new AntPathRequestMatcher("/actuator/**")
                                         )
                                         .permitAll()
                                         .anyRequest()

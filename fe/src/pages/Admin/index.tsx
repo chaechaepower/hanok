@@ -50,11 +50,11 @@ export default function AdminPage() {
     if (!confirmTarget) return;
     completeWithdraw(confirmTarget.id, {
       onSuccess: () => {
-        showToast({ message: '출금 완료 처리되었습니다.' });
+        showToast({ type: 'success', message: '출금 완료 처리되었습니다.' });
         setConfirmTarget(null);
       },
       onError: () => {
-        showToast({ message: '출금 완료 처리에 실패했습니다.' });
+        showToast({ type: 'error', message: '출금 완료 처리에 실패했습니다.' });
         setConfirmTarget(null);
       },
     });

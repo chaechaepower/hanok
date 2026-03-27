@@ -47,7 +47,7 @@ export default function LiveCreatePage() {
       });
       navigate(`/live/${stream.streamId}`);
     } catch {
-      showToast({ message: '방송 시작에 실패했습니다. 다시 시도해주세요.' });
+      showToast({ type: 'error', message: '방송 시작에 실패했습니다. 다시 시도해주세요.' });
     }
   };
 
@@ -63,7 +63,7 @@ export default function LiveCreatePage() {
       setDeleteTargetId(null);
     } catch (err) {
       console.error(err);
-      showToast({ message: '삭제에 실패했습니다. 다시 시도해주세요.' });
+      showToast({ type: 'error', message: '삭제에 실패했습니다. 다시 시도해주세요.' });
     }
   };
 

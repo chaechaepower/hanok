@@ -1,13 +1,16 @@
 package com.ssafy.be.domain.search.service;
 
+import com.ssafy.be.domain.follow.repository.FollowRepository;
+import com.ssafy.be.domain.search.dto.SellerSearchRow;
 import com.ssafy.be.domain.search.dto.StreamSearchRow;
 import com.ssafy.be.domain.search.dto.response.MatchReason;
 import com.ssafy.be.domain.search.dto.response.MatchType;
 import com.ssafy.be.domain.search.dto.response.SellerInfo;
+import com.ssafy.be.domain.search.dto.response.SellerSearchResult;
 import com.ssafy.be.domain.search.dto.response.StreamSearchResult;
 import com.ssafy.be.domain.search.repository.StreamSearchRepositoryCustom;
 import com.ssafy.be.domain.stream.entity.StreamStatus;
-import com.ssafy.be.domain.stream.service.StreamViewerService; // ✅ import 추가
+import com.ssafy.be.domain.stream.service.StreamViewerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -24,6 +28,7 @@ public class SearchService {
 
     private final StreamSearchRepositoryCustom searchRepository;
     private final StreamViewerService streamViewerService;
+    private final FollowRepository followRepository;
 
     @Transactional(readOnly = true)
     public List<StreamSearchResult> search(String keyword) {
@@ -70,6 +75,38 @@ public class SearchService {
                                 .build()));
 
         return new ArrayList<>(resultMap.values());
+    }
+
+    @Transactional(readOnly = true)
+    public List<SellerSearchResult> searchSellers(String keyword, Long userId) {
+        String safeKeyword = keyword.trim()
+                .replaceAll("[+\\-><()~*\"@]", " ").trim();
+
+        if (safeKeyword.isEmpty()) return new ArrayList<>();
+
+        List<SellerSearchRow> rows = searchRepository.searchByShopName(safeKeyword);
+
+        Set<Long> followedSellerIds = userId != null
+                ? followRepository.findFollowedSellerIdsByUserId(userId)
+                : Set.of();
+
+        return rows.stream()
+                .map(row -> toSellerResult(row, followedSellerIds))
+                .toList();
+    }
+
+    private SellerSearchResult toSellerResult(SellerSearchRow row, Set<Long> followedSellerIds) {
+        long total = row.completedTrades() + row.penaltyCount();
+        double rating = total == 0 ? 5.0
+                : Math.round(row.completedTrades() * 5.0 / total * 100.0) / 100.0;
+        return SellerSearchResult.builder()
+                .sellerId(row.sellerId())
+                .shopName(row.shopName())
+                .profileImage(row.profileImage())
+                .intro(row.intro())
+                .rating(rating)
+                .isFollowed(followedSellerIds.contains(row.sellerId()))
+                .build();
     }
 
     private StreamSearchResult toResult(StreamSearchRow row) {

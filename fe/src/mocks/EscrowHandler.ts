@@ -194,6 +194,31 @@ export const escrowHandlers = [
     );
   }),
 
+  http.get(`${BASE_URL}/v1/escrows/:escrowId/nft`, ({ params }) => {
+    const escrowId = String(params.escrowId);
+    const detail = detailMap[escrowId] ?? detailMap['1'];
+
+    return HttpResponse.json(
+      {
+        status: 'SUCCESS',
+        message: 'NFT receipt fetched successfully.',
+        data: {
+          escrowId: Number(escrowId),
+          txHash: '0x7b0f7e8d74d8c2e84125e3d6c4a6de7f6b4d0c9bb9c9b4f8c0d0a4e6f3a1b2c3',
+          txStatus: 'COMPLETED',
+          mintedAt: detail.wonAt,
+          itemName: detail.itemName,
+          price: detail.finalPrice,
+          buyerNickname: '입찰왕',
+          sellerNickname: '한옥셀러',
+          tokenId: 1,
+          blockNumber: 5832147,
+        },
+      },
+      { status: 200 },
+    );
+  }),
+
   http.post(`${BASE_URL}/v1/escrows/:escrowId/tracking`, async () =>
     HttpResponse.json({ success: true }, { status: 200 }),
   ),

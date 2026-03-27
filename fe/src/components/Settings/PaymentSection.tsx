@@ -33,10 +33,10 @@ export default function PaymentSection() {
           queryClient.invalidateQueries({ queryKey: ['account'] });
           setForm({ bankCode: '', bankName: '', accountNum: '', accountName: '' });
           setShowForm(false);
-          showToast({ message: '계좌가 등록/변경되었습니다.' });
+          showToast({ type: 'success', message: '계좌가 등록/변경되었습니다.' });
         },
         onError: () => {
-          showToast({ message: '계좌 등록/변경에 실패했습니다.' });
+          showToast({ type: 'error', message: '계좌 등록/변경에 실패했습니다.' });
         },
       },
     );
