@@ -1,10 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { getFetchInstance } from '../instance';
+import { clearAuthSession, getFetchInstance } from '../instance';
 import type { FollowPayload, FollowResponse } from '@/types';
 
 export const postFollowPath = (targetSellerId: number) => `/v1/follow/${targetSellerId}`;
 
 export const postFollow = async (req: FollowPayload): Promise<FollowResponse> => {
+  if (!localStorage.getItem('accessToken')) {
+    clearAuthSession();
+    throw new Error('Authentication is required to follow a seller.');
+  }
+
   const response = await getFetchInstance().post<FollowResponse>(postFollowPath(req.targetSellerId));
   return response.data;
 };

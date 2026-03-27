@@ -13,26 +13,53 @@ type SellerStoreCardProps = {
   seller: SellerStoreCardData;
   onToggleFollow?: (sellerId: number) => void;
   isFollowActionPending?: boolean;
-  followButtonLabel?: string;
   className?: string;
+  highlightKeyword?: string;
+};
+
+const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const renderHighlightedText = (
+  value: string,
+  keyword?: string,
+  highlightClassName = 'font-semibold text-gold-light',
+) => {
+  const trimmedKeyword = keyword?.trim();
+
+  if (!trimmedKeyword) {
+    return value;
+  }
+
+  const parts = value.split(new RegExp(`(${escapeRegExp(trimmedKeyword)})`, 'gi')).filter(Boolean);
+
+  return parts.map((part, index) =>
+    part.toLowerCase() === trimmedKeyword.toLowerCase() ? (
+      <strong key={`${value}-${trimmedKeyword}-${index}`} className={highlightClassName}>
+        {part}
+      </strong>
+    ) : (
+      <span key={`${value}-${trimmedKeyword}-${index}`}>{part}</span>
+    ),
+  );
 };
 
 export default function SellerStoreCard({
   seller,
   onToggleFollow,
   isFollowActionPending = false,
-  followButtonLabel,
   className,
+  highlightKeyword,
 }: SellerStoreCardProps) {
   const navigate = useNavigate();
   const roundedRating = Math.round(seller.rating);
   const introText = seller.intro?.trim() || '상점 소개가 아직 등록되지 않았습니다.';
-  const buttonLabel = followButtonLabel ?? (seller.isFollowed ? '팔로잉' : '팔로우');
+  const highlightedShopName = renderHighlightedText(seller.shopName, highlightKeyword);
+  const highlightedIntro = renderHighlightedText(introText, highlightKeyword);
 
   return (
     <article
       onClick={() => navigate(`/profile/${seller.sellerId}`)}
-      className={`box-border rounded-2xl border border-white/[0.06] bg-surface-elevated p-6 transition-colors hover:border-gold-light/40 cursor-pointer ${className ?? ''}`}
+      className={`box-border cursor-pointer rounded-2xl border border-white/[0.06] bg-surface-elevated p-6 transition-colors hover:border-gold-light/40 ${className ?? ''}`}
     >
       <div className="flex flex-col items-center gap-4">
         <div className="flex-shrink-0">
@@ -50,7 +77,7 @@ export default function SellerStoreCard({
         </div>
 
         <div className="flex flex-col items-center gap-1 text-center">
-          <span className="text-[16px] font-bold text-white">{seller.shopName}</span>
+          <span className="text-[16px] font-bold text-white">{highlightedShopName}</span>
           <div className="flex items-center gap-1.5">
             <span className="text-[14px] font-bold text-gold-light">{seller.rating.toFixed(1)}</span>
             <div className="flex items-center gap-0.5">
@@ -68,7 +95,7 @@ export default function SellerStoreCard({
           </div>
         </div>
 
-        <p className="min-h-[40px] text-center text-[13px] leading-[1.5] text-neutral-400">{introText}</p>
+        <p className="min-h-[40px] text-center text-[13px] leading-[1.5] text-neutral-400">{highlightedIntro}</p>
 
         {onToggleFollow && (
           <button
@@ -84,7 +111,7 @@ export default function SellerStoreCard({
                 : 'border-gold-light/30 bg-gold-light/10 text-gold-light hover:bg-gold-light/16'
             }`}
           >
-            {buttonLabel}
+            {seller.isFollowed ? '팔로우' : '언팔로우'}
           </button>
         )}
       </div>

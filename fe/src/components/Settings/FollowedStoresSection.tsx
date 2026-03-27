@@ -70,7 +70,6 @@ export default function FollowedStoresSection() {
                 }}
                 onToggleFollow={handleUnfollow}
                 isFollowActionPending={isPending}
-                followButtonLabel="팔로우 취소"
               />
             ))}
           </div>

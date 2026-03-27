@@ -30,7 +30,7 @@ export default function LiveRegisterTutorial({
   startTargetRef,
   children,
 }: Props) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [cardStyle, setCardStyle] = useState<CSSProperties>({});
 

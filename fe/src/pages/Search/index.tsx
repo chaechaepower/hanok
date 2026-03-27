@@ -5,13 +5,14 @@ import { usePostFollow } from '@/api/hooks/usePostFollow';
 import { useGetSearch } from '@/api/hooks/useGetSearch';
 import { useGetSearchSellers } from '@/api/hooks/useGetSearchSellers';
 import LiveCard from '@/components/Main/LiveCard';
+import NoItem from '@/components/common/NoItem';
 import SellerStoreCard from '@/components/common/SellerStoreCard';
 import type { LiveCardData, SearchMatchReason, SearchMatchType, SearchStreamResult } from '@/types';
 
 const KEYWORD_MIN_LENGTH = 2;
 const KEYWORD_MAX_LENGTH = 50;
 const STREAM_RESULT_GRID_CLASS_NAME = 'grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4';
-const STORE_RESULT_GRID_CLASS_NAME = 'grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3';
+const STORE_RESULT_GRID_CLASS_NAME = 'grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4';
 
 const MATCH_REASON_LABEL_MAP: Record<SearchMatchType, string> = {
   STREAM_TITLE: '방송 제목',
@@ -156,15 +157,17 @@ export default function SearchPage() {
             <h2 className="text-[24px] font-semibold text-point">검색 결과</h2>
             <p className="mt-1 text-[14px] text-white/55">
               {keywordParam
-                ? `"${keywordParam}"에 대한 방송과 상점을 함께 찾았습니다.`
-                : '검색어를 입력하면 방송과 상점 결과를 함께 확인할 수 있습니다.'}
+                ? `"${keywordParam}"에 대한 검색 결과를 찾았습니다`
+                : '검색어를 입력하면 결과를 확인할 수 있습니다'}
             </p>
           </div>
 
           {isSearchEnabled && (
             <p className="text-[14px] text-neutral-300">
               총 <span className="font-semibold text-primary-light">{totalResultCount}</span>건
-              <span className="ml-2 text-white/50">방송 {streamResults.length} · 상점 {sellerResults.length}</span>
+              <span className="ml-2 text-white/50">
+                방송 {streamResults.length} · 상점 {sellerResults.length}
+              </span>
             </p>
           )}
         </div>
@@ -177,7 +180,7 @@ export default function SearchPage() {
 
         {!keywordParam && (
           <div className="rounded-(--radius-panel) border border-dashed border-white/10 bg-white/[0.03] px-6 py-14 text-center text-white/55">
-            방송 제목, 상품명, 태그, 상점명으로 원하는 결과를 검색해보세요.
+            방송 제목, 상품명, 태그, 상점명으로 원하는 결과를 검색해보세요
           </div>
         )}
 
@@ -195,7 +198,7 @@ export default function SearchPage() {
             <div className="flex flex-col gap-4">
               <SearchSectionHeader title="상점 검색" count={0} />
               <div className={STORE_RESULT_GRID_CLASS_NAME}>
-                {Array.from({ length: 3 }, (_, index) => (
+                {Array.from({ length: 4 }, (_, index) => (
                   <SellerStoreCardSkeleton key={index} />
                 ))}
               </div>
@@ -208,10 +211,11 @@ export default function SearchPage() {
         )}
 
         {hasNoResult && (
-          <div className="rounded-(--radius-panel) border border-white/8 bg-white/[0.03] px-6 py-14 text-center">
-            <p className="text-[18px] font-semibold text-point">검색 결과가 없습니다.</p>
-            <p className="mt-2 text-[14px] text-white/50">다른 검색어로 다시 시도해보세요.</p>
-          </div>
+          <NoItem
+            message="검색 결과가 없습니다"
+            className="rounded-(--radius-panel) border border-white/8 bg-white/[0.03] px-6"
+            textClassName="text-[18px] font-semibold text-point"
+          />
         )}
 
         {!isInitialLoading && isSearchEnabled && !hasNoResult && (
@@ -221,7 +225,7 @@ export default function SearchPage() {
 
               {streamError ? (
                 <div className="rounded-2xl border border-accent/30 bg-accent/10 px-4 py-3 text-[14px] text-accent-light">
-                  방송 검색 결과를 불러오지 못했습니다.
+                  방송 검색 결과를 불러오지 못했습니다
                 </div>
               ) : streamResults.length > 0 ? (
                 <div className={STREAM_RESULT_GRID_CLASS_NAME}>
@@ -249,9 +253,11 @@ export default function SearchPage() {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-(--radius-panel) border border-white/8 bg-white/[0.03] px-5 py-10 text-center text-[14px] text-white/50">
-                  방송 검색 결과가 없습니다.
-                </div>
+                <NoItem
+                  message="방송 검색 결과가 없습니다"
+                  className="rounded-(--radius-panel) border border-white/8 bg-white/[0.03] px-5"
+                  textClassName="text-[14px] text-white/50"
+                />
               )}
             </div>
 
@@ -260,7 +266,7 @@ export default function SearchPage() {
 
               {sellerError ? (
                 <div className="rounded-2xl border border-accent/30 bg-accent/10 px-4 py-3 text-[14px] text-accent-light">
-                  상점 검색 결과를 불러오지 못했습니다.
+                  상점 검색 결과를 불러오지 못했습니다
                 </div>
               ) : sellerResults.length > 0 ? (
                 <div className={STORE_RESULT_GRID_CLASS_NAME}>
@@ -275,15 +281,18 @@ export default function SearchPage() {
                         rating: seller.rating,
                         isFollowed: seller.isFollowed,
                       }}
+                      highlightKeyword={keywordParam}
                       onToggleFollow={(sellerId) => toggleFollow({ targetSellerId: sellerId })}
                       isFollowActionPending={isFollowPending}
                     />
                   ))}
                 </div>
               ) : (
-                <div className="rounded-(--radius-panel) border border-white/8 bg-white/[0.03] px-5 py-10 text-center text-[14px] text-white/50">
-                  상점 검색 결과가 없습니다.
-                </div>
+                <NoItem
+                  message="상점 검색 결과가 없습니다"
+                  className="rounded-(--radius-panel) border border-white/8 bg-white/[0.03] px-5"
+                  textClassName="text-[14px] text-white/50"
+                />
               )}
             </div>
           </div>

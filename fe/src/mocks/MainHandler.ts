@@ -8,6 +8,7 @@ import type {
   NewSellerRecommendedStreamsResponse,
   PageResponse,
   SearchMatchReason,
+  SearchSellerResult,
   SearchStreamResult,
   SearchStreamStatus,
 } from '@/types';
@@ -32,6 +33,8 @@ type SearchMockEntry = SearchStreamResult & {
   itemNames: string[];
   tags: string[];
 };
+
+type SearchSellerMockEntry = Omit<SearchSellerResult, 'isFollowed'>;
 
 const SEARCH_STREAMS: SearchMockEntry[] = [
   {
@@ -135,6 +138,51 @@ const SEARCH_STREAMS: SearchMockEntry[] = [
     itemNames: ['드래곤볼 손오공 피규어', '원피스 조로 피규어'],
     tags: ['#피규어', '#애니', '#한정판'],
     matchReasons: [],
+  },
+];
+
+const SEARCH_SELLERS: SearchSellerMockEntry[] = [
+  {
+    sellerId: 10,
+    shopName: 'Vintage Hub',
+    profileImage: 'https://api.dicebear.com/7.x/adventurer/svg?seed=vintage-hub',
+    intro: 'Rare vintage clothing and archive pieces.',
+    rating: 4.8,
+  },
+  {
+    sellerId: 11,
+    shopName: 'Vintage Studio',
+    profileImage: 'https://api.dicebear.com/7.x/adventurer/svg?seed=watch-studio',
+    intro: 'Curated luxury and classic watch collections.',
+    rating: 4.7,
+  },
+  {
+    sellerId: 12,
+    shopName: 'Vintage창고',
+    profileImage: 'https://api.dicebear.com/7.x/adventurer/svg?seed=vintage-warehouse',
+    intro: '희귀 빈티지 아이템 전문 셀렉트샵',
+    rating: 4.75,
+  },
+  {
+    sellerId: 13,
+    shopName: 'Vintage 31',
+    profileImage: 'https://api.dicebear.com/7.x/adventurer/svg?seed=gallery-31',
+    intro: 'Figures, art toys, and limited edition collectibles.',
+    rating: 4.9,
+  },
+  {
+    sellerId: 14,
+    shopName: 'Vintage Deck',
+    profileImage: 'https://api.dicebear.com/7.x/adventurer/svg?seed=card-deck',
+    intro: 'Trading cards and sealed packs for collectors.',
+    rating: 4.6,
+  },
+  {
+    sellerId: 15,
+    shopName: 'Vintage Corner',
+    profileImage: 'https://api.dicebear.com/7.x/adventurer/svg?seed=bag-corner',
+    intro: 'Designer bags and fashion accessories.',
+    rating: 4.65,
   },
 ];
 
@@ -397,6 +445,24 @@ export const mainHandlers = [
       ...entry,
       matchReasons: buildSearchMatchReasons(entry, keyword),
     })).filter((entry) => entry.matchReasons.length > 0);
+
+    return HttpResponse.json(response);
+  }),
+
+  http.get(`${BASE_URL}/v1/search/sellers`, ({ request }) => {
+    const url = new URL(request.url);
+    const keyword = url.searchParams.get('keyword')?.trim().toLowerCase() ?? '';
+
+    if (keyword.length < 2 || keyword.length > 50) {
+      return HttpResponse.json([], { status: 200 });
+    }
+
+    const response: SearchSellerResult[] = SEARCH_SELLERS.filter(
+      (seller) => seller.shopName.toLowerCase().includes(keyword) || seller.intro.toLowerCase().includes(keyword),
+    ).map((seller) => ({
+      ...seller,
+      isFollowed: isSellerFollowed(seller.sellerId),
+    }));
 
     return HttpResponse.json(response);
   }),
