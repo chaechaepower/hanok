@@ -82,6 +82,15 @@ export type SellerProfileResponse = {
   posts: SellerPost[];
 };
 
+export type SearchSellerResult = {
+  sellerId: number;
+  shopName: string;
+  profileImage: string | null;
+  intro: string;
+  rating: number;
+  isFollowed: boolean;
+};
+
 export type NoticeItem = {
   noticeId: number;
   title: string;
