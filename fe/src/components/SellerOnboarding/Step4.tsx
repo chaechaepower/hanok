@@ -51,6 +51,7 @@ export default function Step4({
         accountNum: account?.accountNum ?? '',
         accountName: account?.accountName ?? '',
       });
+      showToast({ type: 'success', message: '판매자 등록이 완료되었습니다.' });
       navigate('/main');
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 409) {
