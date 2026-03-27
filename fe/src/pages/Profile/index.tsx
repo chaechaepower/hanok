@@ -256,8 +256,14 @@ export default function ProfilePage() {
   const handleConfirmDeleteNotice = () => {
     if (deleteNoticeTarget == null) return;
     deleteNotice(deleteNoticeTarget, {
-      onSuccess: () => setDeleteNoticeTarget(null),
-      onError: () => setDeleteNoticeTarget(null),
+      onSuccess: () => {
+        showToast({ type: 'success', message: '공지사항이 삭제되었습니다.' });
+        setDeleteNoticeTarget(null);
+      },
+      onError: () => {
+        showToast({ type: 'error', message: '공지사항 삭제에 실패했습니다.' });
+        setDeleteNoticeTarget(null);
+      },
     });
   };
 
@@ -277,11 +283,26 @@ export default function ProfilePage() {
     }
     const finalContent = buildNoticeContent();
     if (modalMode === 'create') {
-      postNotice({ title: noticeTitle, content: finalContent }, { onSuccess: () => setIsModalOpen(false) });
+      postNotice(
+        { title: noticeTitle, content: finalContent },
+        {
+          onSuccess: () => {
+            showToast({ type: 'success', message: '공지사항이 등록되었습니다.' });
+            setIsModalOpen(false);
+          },
+          onError: () => showToast({ type: 'error', message: '공지사항 등록에 실패했습니다.' }),
+        },
+      );
     } else if (modalMode === 'edit' && editPostId) {
       patchNotice(
         { noticeId: editPostId, payload: { title: noticeTitle, content: finalContent } },
-        { onSuccess: () => setIsModalOpen(false) },
+        {
+          onSuccess: () => {
+            showToast({ type: 'success', message: '공지사항이 수정되었습니다.' });
+            setIsModalOpen(false);
+          },
+          onError: () => showToast({ type: 'error', message: '공지사항 수정에 실패했습니다.' }),
+        },
       );
     }
   };
