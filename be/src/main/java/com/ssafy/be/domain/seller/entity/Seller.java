@@ -23,6 +23,9 @@ public class Seller {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "shop_name", length = 100)
+    private String shopName;
+
     @Column(nullable = false, length = 100)
     private String intro;
 
@@ -61,7 +64,8 @@ public class Seller {
     private User user;
 
     @Builder(toBuilder = true)
-    private Seller(String intro,
+    private Seller(String shopName,
+                   String intro,
                    Integer penaltyCount,
                    SellerType type,
                    String businessNumber,
@@ -70,6 +74,7 @@ public class Seller {
                    String tiktokUrl,
                    Double avgShipDays,
                    User user) {
+        this.shopName = shopName;
         this.intro = intro;
         this.penaltyCount = penaltyCount;
         this.type = type;
@@ -81,7 +86,8 @@ public class Seller {
         this.user = user;
     }
 
-    public void updateProfile(String intro, String instaUrl, String youtubeUrl, String tiktokUrl) {
+    public void updateProfile(String shopName, String intro, String instaUrl, String youtubeUrl, String tiktokUrl) {
+        if (shopName != null) this.shopName = shopName;
         if (intro != null) this.intro = intro;
         if (instaUrl != null) this.instaUrl = instaUrl;
         if (youtubeUrl != null) this.youtubeUrl = youtubeUrl;

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 public record ScheduledStreamResponse(
         Long streamId,
+        String shopName,
         String title,
         String category,
         String thumbnail,
@@ -15,6 +16,7 @@ public record ScheduledStreamResponse(
     public static ScheduledStreamResponse from(Stream stream) {
         return new ScheduledStreamResponse(
                 stream.getId(),
+                null,
                 stream.getTitle(),
                 stream.getCategory().name(),
                 stream.getThumbnail(),

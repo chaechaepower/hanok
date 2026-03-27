@@ -5,7 +5,7 @@ import java.util.List;
 
 public record SellerProfileResponse(
         Long sellerId,
-        String nickname,
+        String shopName,
         String intro,
         String profileImage,
         String instagramUrl,

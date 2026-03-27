@@ -1,7 +1,7 @@
 package com.ssafy.be.domain.seller.dto.request;
 
 public record SellerProfileUpdateRequest(
-        String nickname,
+        String shopName,
         String profileImage,
         String intro,
         String instaUrl,
