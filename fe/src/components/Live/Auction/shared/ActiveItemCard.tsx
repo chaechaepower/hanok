@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { IoChevronDown } from 'react-icons/io5';
 
-import { AUCTION_STATUS_BADGES } from '@/constants/auction';
-import { ITEM_CONDITION_BADGE } from '@/constants/itemCondition';
+import { AUCTION_STATUS_BADGES, AUCTION_TYPE_LABELS } from '@/constants/auction';
 import { CARD_BORDER_CLASS, PRICE_CLASS } from '@/constants/live';
 
 import type { AuctionItem } from '@/types';
@@ -19,7 +18,6 @@ interface ActiveCardProps {
 export default function ActiveItemCard({ item, isSelected, isSeller, onSelect }: ActiveCardProps) {
   const [expanded, setExpanded] = useState(false);
   const statusBadge = AUCTION_STATUS_BADGES[item.status];
-  const conditionBadge = ITEM_CONDITION_BADGE[item.condition];
   const isExpanded = isSeller ? isSelected : expanded;
   const borderClass = isSelected ? 'border-gold/55 shadow-primary-glow' : CARD_BORDER_CLASS[item.status];
 
@@ -53,10 +51,8 @@ export default function ActiveItemCard({ item, isSelected, isSeller, onSelect }:
             <span className={`min-w-0 truncate text-body-md font-black ${PRICE_CLASS[item.status]}`}>
               {formatAuctionLabel(item)}
             </span>
-            <span
-              className={`shrink-0 rounded-full bg-gold/[0.08] px-1.5 py-0.5 text-caption font-extrabold ${conditionBadge.className}`}
-            >
-              {conditionBadge.label}
+            <span className={`shrink-0 rounded-full bg-gold/[0.08] px-1.5 py-0.5 text-caption font-extrabold`}>
+              {AUCTION_TYPE_LABELS[item.auctionType]}
             </span>
           </div>
         </div>
