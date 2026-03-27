@@ -18,7 +18,7 @@ public interface SellerRepository extends JpaRepository<Seller, Long> {
     List<Seller> findAllByIdInWithUser(@Param("ids") List<Long> ids);
 
     @Query(nativeQuery = true, value = """
-            SELECT seller_id, s.shop_name, u.profile_image, follower_count
+            SELECT seller_id, shop_name, profile_image, follower_count
             FROM (
                 SELECT
                     s.id                          AS seller_id,
