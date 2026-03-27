@@ -27,6 +27,9 @@ export default function LiveRegisterPreviewPanel({
   onReopenTutorial,
   onPreviewIntroduce,
   onPreviewStart,
+  introduceButtonRef,
+  startButtonRef,
+  getTargetClassName,
 }: Props) {
   const bgVideoRef = useRef<HTMLVideoElement>(null);
   const { isMicOn, level, toggleMic } = useMicLevel();
@@ -75,28 +78,14 @@ export default function LiveRegisterPreviewPanel({
         )}
       </div>
 
-      {/* 우상단: 컨트롤 */}
-      <div className="absolute right-4 top-4 flex items-center gap-2 rounded-2xl bg-surface/80 px-2.5 py-2 backdrop-blur-md">
-        <button
-          type="button"
-          onClick={onReopenTutorial}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-[13px] font-bold text-neutral-400 transition-all hover:text-neutral-200"
-        >
-          튜토리얼
-        </button>
-        <div className="h-5 w-px bg-neutral-600" />
-        <div className="flex items-end gap-[4px] px-2 py-1.5">
-          {Array.from({ length: 5 }, (_, i) => {
-            const threshold = (i + 1) / 5;
-            const isActive = isMicOn && level >= threshold * 0.6;
-            const h = 6 + i * 4;
-            const color = isActive
-              ? i < 2 ? 'bg-accent' : i < 4 ? 'bg-gold' : 'bg-ember'
-              : 'bg-neutral-700';
-            return <div key={i} className={`w-[4px] rounded-full transition-all duration-75 ${color}`} style={{ height: `${h}px` }} />;
-          })}
-        </div>
-      </div>
+      {/* 우상단: 튜토리얼 */}
+      <button
+        type="button"
+        onClick={onReopenTutorial}
+        className="absolute right-4 top-4 flex items-center gap-1.5 rounded-2xl bg-surface/80 px-4 py-2 text-[13px] font-bold text-neutral-400 backdrop-blur-md transition-all hover:text-neutral-200"
+      >
+        튜토리얼
+      </button>
 
       {/* 좌상단: LIVE 뱃지 (미리보기) */}
       <div className="absolute left-3 top-4 z-10 flex items-center gap-1.5 rounded-full bg-accent/80 px-3 py-1.5 backdrop-blur-md">
@@ -115,6 +104,10 @@ export default function LiveRegisterPreviewPanel({
         isMicOn={isMicOn}
         isCameraOn={isCameraOn}
         micLevel={level}
+        introduceButtonRef={introduceButtonRef}
+        startButtonRef={startButtonRef}
+        introduceButtonClassName={getTargetClassName('introduce')}
+        startButtonClassName={getTargetClassName('start')}
       />
     </div>
   );
