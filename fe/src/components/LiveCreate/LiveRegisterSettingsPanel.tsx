@@ -36,7 +36,7 @@ export default function LiveRegisterSettingsPanel({
 
       <div className="scrollbar-hide flex flex-1 flex-col gap-3 overflow-y-auto px-3 py-3">
         <div className="flex flex-col gap-1.5 rounded-xl bg-white/[0.06] p-3">
-          <label className="text-sm font-bold tracking-wider text-neutral-300">썸네일 업로드</label>
+          <label className="text-sm font-bold tracking-wider text-neutral-300">썸네일 업로드 (선택)</label>
           <button
             type="button"
             onClick={() => thumbnailInputRef.current?.click()}
@@ -79,7 +79,7 @@ export default function LiveRegisterSettingsPanel({
         </div>
 
         <div className="flex flex-col gap-2 rounded-xl bg-ember/[0.06] p-3">
-          <label className="text-sm font-bold tracking-wider text-ember">카테고리 매크로</label>
+          <label className="text-sm font-bold tracking-wider text-ember">카테고리 매크로 (선택)</label>
 
           <div className="flex flex-col gap-2">
             {macroFields.map((macro) => {
