@@ -15,6 +15,7 @@ import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
 import NoticeList from '@/components/Profile/NoticeList';
 import ProfileEditModal, { type ProfileFormState } from '@/components/Profile/ProfileEditModal';
 import ReportModal from '@/components/Profile/ReportModal';
+import InfoPanelTooltip from '@/components/common/InfoPanelTooltip';
 import ConfirmModal from '@/components/common/modal/ConfirmModal';
 import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
 import { usePatchSellerProfile } from '@/api/hooks/usePatchSellerProfile';
@@ -433,10 +434,10 @@ export default function ProfilePage() {
                 <span className="text-[14px] text-primary-light">팔로워</span>
                 <span className="text-price-lg text-white">{reputation?.followerCount ?? data.stats.followerCount ?? '-'}</span>
               </div>
-              <div className="relative flex flex-col items-center gap-1.5 rounded-xl bg-white/[0.04] py-5 group">
-                <span className="text-[14px] text-primary-light flex items-center gap-1">
+              <div className="group relative flex flex-col items-center gap-1.5 rounded-xl bg-white/[0.04] py-5">
+                <span className="flex items-center gap-1 text-[14px] text-primary-light">
                   평점
-                  <svg className="w-3.5 h-3.5 text-neutral-500 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-3.5 w-3.5 cursor-help text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </span>
@@ -445,21 +446,20 @@ export default function ProfilePage() {
                     ? ((reputation.completionRate / 100) * 5).toFixed(1)
                     : (data.stats.rating ?? '-')}
                 </span>
-                <div className="absolute bottom-full mb-2 left-0 w-72 p-3 bg-neutral-900 border border-white/10 rounded-lg shadow-xl text-xs text-neutral-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                  <p className="font-semibold text-white mb-1.5">평점 산정 기준</p>
-                  <ul className="space-y-1 list-disc list-inside">
+                <InfoPanelTooltip title="평점 산정 기준">
+                  <ul className="list-disc list-inside space-y-1">
                     <li>완료된 거래와 거래 취소 건수로 산정</li>
                     <li>성공률(%) × 5점 만점으로 계산</li>
                     <li>거래가 없으면 기본 만점(5.0점)</li>
                   </ul>
                   {reputation?.totalTrades != null && (
-                    <div className="mt-2 pt-2 border-t border-white/10 space-y-0.5">
+                    <div className="mt-2 space-y-0.5 border-t border-white/10 pt-2">
                       <p>총 거래: <span className="text-white">{reputation.totalTrades}건</span></p>
                       <p>거래 취소: <span className="text-white">{reputation.cancelCount ?? 0}건</span></p>
                       <p>거래 성공률: <span className="text-white">{reputation.completionRate != null ? `${reputation.completionRate}%` : '-'}</span></p>
                     </div>
                   )}
-                </div>
+                </InfoPanelTooltip>
               </div>
               <div className="flex flex-col items-center gap-1.5 rounded-xl bg-white/[0.04] py-5">
                 <span className="text-[14px] text-primary-light">평균 배송</span>
