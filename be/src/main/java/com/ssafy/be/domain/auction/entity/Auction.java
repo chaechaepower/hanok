@@ -116,10 +116,6 @@ public class Auction {
         return this.auctionStatus == INTRODUCING;
     }
 
-    public boolean isCalculating() {
-        return this.auctionStatus == CALCULATING;
-    }
-
     public boolean isSeller(Long userId) {
         Long sellerId = stream.getSeller().getUser().getId();
         return Objects.equals(sellerId, userId);

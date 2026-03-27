@@ -360,6 +360,8 @@ public class StreamService {
             gcsClient.deleteImage(stream.getThumbnail());
         }
 
+        auctionRepository.findByStreamId(streamId).forEach(auction -> auction.getItem().ready());
+
         auctionRepository.deleteByStreamId(streamId);
 
         streamRepository.delete(stream);
