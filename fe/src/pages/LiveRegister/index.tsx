@@ -286,7 +286,7 @@ export default function LiveRegisterPage() {
             ...current,
             startPrice: correctedStartPrice,
           }));
-          setAuctionFieldError(item.itemId, 'startPrice', '시작가는 1,000원 이상이어야 합니다');
+          setAuctionFieldError(item.itemId, 'startPrice', '조건과 맞지 않아 자동으로 보정되었습니다!');
           return;
         }
 
@@ -308,7 +308,7 @@ export default function LiveRegisterPage() {
             ...current,
             bidUnit: correctedBidUnit,
           }));
-          setAuctionFieldError(item.itemId, 'bidUnit', `입찰 단위는 최소 100원, 최대 시작가의 10%까지입니다`);
+          setAuctionFieldError(item.itemId, 'bidUnit', `조건과 맞지 않아 자동으로 보정되었습니다!`);
           return;
         }
 
@@ -323,7 +323,7 @@ export default function LiveRegisterPage() {
             ...current,
             bidUnit: maximumBidUnit,
           }));
-          setAuctionFieldError(item.itemId, 'bidUnit', `입찰 단위는 최소 100원, 최대 시작가의 10%까지입니다`);
+          setAuctionFieldError(item.itemId, 'bidUnit', `조건과 맞지 않아 자동으로 보정되었습니다!`);
           return;
         }
       }
@@ -635,7 +635,7 @@ export default function LiveRegisterPage() {
     }
   };
 
-  const sellerEntryButtonLabel = isEditMode ? '방송 입장' : '방송 준비';
+  const sellerEntryButtonLabel = '방송 입장';
   const pageTitle = isEditMode ? '라이브 방송 수정' : '라이브 방송 등록';
   const scheduleButtonLabel = isEditMode ? '예약 수정' : '방송 예약';
 
@@ -690,9 +690,9 @@ export default function LiveRegisterPage() {
                   type="button"
                   onClick={handleSchedule}
                   disabled={isSubmitting}
-                  className="flex items-center gap-2 rounded-lg border border-neutral-700 bg-transparent px-3 py-2 text-[13px] font-bold text-neutral-300 transition-colors hover:border-neutral-600 hover:bg-neutral-900 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-xl bg-surface-elevated px-4 py-2.5 text-[13px] font-bold text-neutral-300 transition-colors hover:bg-neutral-800 disabled:opacity-50"
                 >
-                  <FaCalendarAlt size={12} />
+                  <FaCalendarAlt size={14} />
                   {scheduleButtonLabel}
                   {scheduledAt && (
                     <span className="ml-1 text-xs font-bold text-gold">
@@ -709,9 +709,9 @@ export default function LiveRegisterPage() {
                   type="button"
                   onClick={handleEnter}
                   disabled={isSubmitting}
-                  className="flex items-center gap-2 rounded-lg border border-accent/35 bg-accent/12 px-3 py-2 text-[13px] font-bold text-accent-light transition-colors hover:bg-accent/18 disabled:opacity-50"
+                  className="flex items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-accent-dark disabled:opacity-50"
                 >
-                  <MdLiveTv size={14} />
+                  <MdLiveTv size={18} />
                   {sellerEntryButtonLabel}
                 </button>
               </div>
