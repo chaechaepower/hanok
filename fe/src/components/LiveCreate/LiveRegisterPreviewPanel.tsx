@@ -2,12 +2,14 @@ import { useRef, useEffect } from 'react';
 import { MdLiveTv } from 'react-icons/md';
 
 import SellerControlBar from '@/components/Live/Stream/SellerControlBar';
+import SellerGuideOverlay from '@/components/Live/Stream/SellerGuideOverlay';
 import useMicLevel from '@/hooks/useMicLevel';
 import type { LiveRegisterTutorialStepId } from './LiveRegisterTutorial';
 
 type Props = {
   videoPreviewRef: React.RefObject<HTMLVideoElement | null>;
   isCameraOn: boolean;
+  activeStepId: LiveRegisterTutorialStepId | null;
   onStartCamera: () => void;
   onStopCamera: () => void;
   onReopenTutorial: () => void;
@@ -15,13 +17,14 @@ type Props = {
   onPreviewStart: () => void;
   introduceButtonRef: React.RefObject<HTMLButtonElement | null>;
   startButtonRef: React.RefObject<HTMLButtonElement | null>;
+  guidePanelRef: React.RefObject<HTMLDivElement | null>;
   getTargetClassName: (targetId: LiveRegisterTutorialStepId) => string;
 };
-
 
 export default function LiveRegisterPreviewPanel({
   videoPreviewRef,
   isCameraOn,
+  activeStepId,
   onStartCamera,
   onStopCamera,
   onReopenTutorial,
@@ -29,6 +32,7 @@ export default function LiveRegisterPreviewPanel({
   onPreviewStart,
   introduceButtonRef,
   startButtonRef,
+  guidePanelRef,
   getTargetClassName,
 }: Props) {
   const bgVideoRef = useRef<HTMLVideoElement>(null);
@@ -84,7 +88,7 @@ export default function LiveRegisterPreviewPanel({
         onClick={onReopenTutorial}
         className="absolute right-4 top-4 flex items-center gap-1.5 rounded-2xl bg-surface/80 px-4 py-2 text-[13px] font-bold text-neutral-400 backdrop-blur-md transition-all hover:text-neutral-200"
       >
-        튜토리얼
+        경매 튜토리얼
       </button>
 
       {/* 좌상단: LIVE 뱃지 (미리보기) */}
@@ -94,6 +98,14 @@ export default function LiveRegisterPreviewPanel({
       </div>
 
       {/* 하단: 판매자 컨트롤바 */}
+      <SellerGuideOverlay
+        defaultOpen={false}
+        forceOpen={activeStepId === 'guide'}
+        containerClassName={activeStepId === 'guide' ? 'z-[60]' : ''}
+        panelRef={guidePanelRef}
+        panelClassName={getTargetClassName('guide')}
+      />
+
       <SellerControlBar
         canIntroduce
         canStart

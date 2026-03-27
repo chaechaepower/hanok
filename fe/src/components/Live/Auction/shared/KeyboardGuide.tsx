@@ -84,7 +84,7 @@ export default function KeyboardGuide({ variant, open, onToggle, activeKeys = ne
       initial={false}
       animate={{ width: open ? OPEN_WIDTH : CLOSED_WIDTH }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="flex h-28 items-center overflow-hidden rounded-2xl bg-surface/80"
+      className="flex h-[88px] items-center overflow-hidden rounded-2xl bg-surface/80"
     >
       <div className="flex w-full shrink-0 flex-col items-center justify-center" style={{ maxWidth: CLOSED_WIDTH }}>
         <button

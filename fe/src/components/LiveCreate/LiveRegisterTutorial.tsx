@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode, type RefObject } from 'react';
 
-export type LiveRegisterTutorialStepId = 'inventory' | 'introduce' | 'start';
+export type LiveRegisterTutorialStepId = 'inventory' | 'introduce' | 'start' | 'guide';
 
 type TutorialTargetRefs = {
   inventoryTargetRef: RefObject<HTMLElement | null>;
   introduceTargetRef: RefObject<HTMLElement | null>;
   startTargetRef: RefObject<HTMLElement | null>;
+  guideTargetRef: RefObject<HTMLElement | null>;
 };
 
 type TutorialRenderProps = {
@@ -28,9 +29,10 @@ export default function LiveRegisterTutorial({
   inventoryTargetRef,
   introduceTargetRef,
   startTargetRef,
+  guideTargetRef,
   children,
 }: Props) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [cardStyle, setCardStyle] = useState<CSSProperties>({});
 
@@ -57,8 +59,15 @@ export default function LiveRegisterTutorial({
         placement: 'top' as const,
         targetRef: startTargetRef,
       },
+      {
+        id: 'guide' as LiveRegisterTutorialStepId,
+        title: '4단계. 판매 가이드라인',
+        description: '왼쪽에는 판매 가이드라인이 배치되어 있습니다.\n원활한 방송을 위해 체크리스트처럼 활용해 보세요.',
+        placement: 'right' as const,
+        targetRef: guideTargetRef,
+      },
     ],
-    [introduceTargetRef, inventoryTargetRef, startTargetRef],
+    [guideTargetRef, introduceTargetRef, inventoryTargetRef, startTargetRef],
   );
 
   const activeStep = isOpen ? steps[stepIndex] : null;
@@ -114,9 +123,7 @@ export default function LiveRegisterTutorial({
 
       let left = activeStep.placement === 'right' ? rect.right + gap : rect.left + rect.width / 2 - width / 2;
       let top =
-        activeStep.placement === 'right'
-          ? rect.top + rect.height / 2 - height / 2
-          : rect.top - height + topOffset;
+        activeStep.placement === 'right' ? rect.top + rect.height / 2 - height / 2 : rect.top - height + topOffset;
 
       if (activeStep.placement === 'right' && left + width > window.innerWidth - 16) {
         left = rect.left - width - gap;
@@ -133,25 +140,23 @@ export default function LiveRegisterTutorial({
       });
     };
 
-    // 타겟이 화면에 보이도록 스크롤 후 위치 계산을 여러 번 시도
     const target = activeStep.targetRef.current;
     if (target) {
       target.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'nearest' });
     }
 
-    // 즉시 + 지연 업데이트로 위치를 확실히 잡음
     updateCardPosition();
     const timers = [
-      setTimeout(updateCardPosition, 50),
-      setTimeout(updateCardPosition, 150),
-      setTimeout(updateCardPosition, 300),
+      window.setTimeout(updateCardPosition, 50),
+      window.setTimeout(updateCardPosition, 150),
+      window.setTimeout(updateCardPosition, 300),
     ];
 
     window.addEventListener('resize', updateCardPosition);
     window.addEventListener('scroll', updateCardPosition, true);
 
     return () => {
-      timers.forEach(clearTimeout);
+      timers.forEach((timer) => window.clearTimeout(timer));
       window.removeEventListener('resize', updateCardPosition);
       window.removeEventListener('scroll', updateCardPosition, true);
     };
@@ -187,7 +192,7 @@ export default function LiveRegisterTutorial({
               </button>
             </div>
 
-            <p className="text-base leading-7 whitespace-pre-line text-neutral-300">{activeStep.description}</p>
+            <p className="whitespace-pre-line text-base leading-7 text-neutral-300">{activeStep.description}</p>
 
             <div className="mt-5 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -206,7 +211,7 @@ export default function LiveRegisterTutorial({
                 onClick={nextStep}
                 className="rounded-full bg-gold px-4 py-2.5 text-base font-black text-background transition hover:bg-gold-light"
               >
-                {stepIndex === steps.length - 1 ? '튜토리얼 닫기' : '다음'}
+                {stepIndex === steps.length - 1 ? '튜토리얼 종료' : '다음'}
               </button>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { FaStore, FaWallet, FaMapMarkerAlt } from 'react-icons/fa';
 import { FiCamera, FiLogOut, FiChevronRight } from 'react-icons/fi';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -92,6 +92,11 @@ export default function SettingsPage() {
       needsBadge[item.id] ? { ...item, badge: <SetupDot /> } : item,
     );
   }, [hasAddress, hasAccount]);
+
+  useEffect(() => {
+    const nextTab = SETTINGS_TABS.includes(tabParam as SettingsTab) ? (tabParam as SettingsTab) : 'order';
+    setActiveTab(nextTab);
+  }, [tabParam]);
 
   if (isMeLoading || isNotiLoading || isWalletLoading) {
     return (

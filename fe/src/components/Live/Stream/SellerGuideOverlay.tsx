@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
 import { FiCheck, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 type SellerGuideOverlayProps = {
   defaultOpen?: boolean;
+  forceOpen?: boolean;
+  panelRef?: RefObject<HTMLDivElement | null>;
+  panelClassName?: string;
+  containerClassName?: string;
 };
 
 const guideSteps = [
@@ -32,16 +36,23 @@ const guideSteps = [
   },
 ] as const;
 
-export default function SellerGuideOverlay({ defaultOpen = true }: SellerGuideOverlayProps) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+export default function SellerGuideOverlay({
+  defaultOpen = true,
+  forceOpen = false,
+  panelRef,
+  panelClassName,
+  containerClassName,
+}: SellerGuideOverlayProps) {
+  const [manualIsOpen, setManualIsOpen] = useState(defaultOpen);
   const [checkedSteps, setCheckedSteps] = useState<boolean[]>(() => guideSteps.map(() => false));
+  const isOpen = forceOpen || manualIsOpen;
 
   const toggleStep = (index: number) => {
     setCheckedSteps((current) => current.map((value, currentIndex) => (currentIndex === index ? !value : value)));
   };
 
   return (
-    <div className="pointer-events-none absolute left-3 top-[43%] z-20 -translate-y-1/2">
+    <div className={`pointer-events-none absolute left-3 top-[43%] z-20 -translate-y-1/2 ${containerClassName ?? ''}`}>
       <div className="pointer-events-auto flex items-center gap-1.5">
         <div className="group relative z-30">
           <div className="pointer-events-none absolute left-full top-1/2 z-40 ml-2 -translate-y-1/2 whitespace-nowrap rounded-full border border-neutral-700 bg-surface/92 px-3 py-1 text-label font-medium text-neutral-300 opacity-0 shadow-[0_10px_24px_rgba(0,0,0,0.24)] transition duration-200 group-hover:opacity-100">
@@ -50,7 +61,13 @@ export default function SellerGuideOverlay({ defaultOpen = true }: SellerGuideOv
 
           <button
             type="button"
-            onClick={() => setIsOpen((current) => !current)}
+            onClick={() => {
+              if (forceOpen) {
+                return;
+              }
+
+              setManualIsOpen((current) => !current);
+            }}
             className={`flex items-center justify-center rounded-(--radius-control) bg-surface/80 text-neutral-400 backdrop-blur-xl transition hover:bg-surface/90 hover:text-neutral-200 ${
               isOpen
                 ? 'h-12 w-6 shadow-[0_10px_20px_rgba(0,0,0,0.16)]'
@@ -63,9 +80,10 @@ export default function SellerGuideOverlay({ defaultOpen = true }: SellerGuideOv
         </div>
 
         <div
+          ref={panelRef}
           className={`relative w-[min(22rem,calc(100vw-4.5rem))] overflow-hidden rounded-(--radius-panel) bg-surface/80 text-neutral-200 shadow-[0_24px_60px_rgba(0,0,0,0.34)] backdrop-blur-2xl transition-all duration-300 ${
             isOpen ? 'translate-x-0 opacity-100' : '-translate-x-6 opacity-0 pointer-events-none'
-          }`}
+          } ${panelClassName ?? ''}`}
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(214,189,138,0.16),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(112,90,56,0.18),transparent_34%)]" />
 

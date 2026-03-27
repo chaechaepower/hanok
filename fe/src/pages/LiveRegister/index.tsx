@@ -45,6 +45,7 @@ export default function LiveRegisterPage() {
   const tutorialItemRef = useRef<HTMLDivElement>(null);
   const introduceButtonRef = useRef<HTMLButtonElement>(null);
   const startButtonRef = useRef<HTMLButtonElement>(null);
+  const guidePanelRef = useRef<HTMLDivElement>(null);
   const initializedStreamIdRef = useRef<number | null>(null);
   const initializedItemsStreamIdRef = useRef<number | null>(null);
   const initializedMacroKeyRef = useRef<string | null>(null);
@@ -659,6 +660,7 @@ export default function LiveRegisterPage() {
       inventoryTargetRef={tutorialItemRef}
       introduceTargetRef={introduceButtonRef}
       startTargetRef={startButtonRef}
+      guideTargetRef={guidePanelRef}
     >
       {({ activeStepId, shouldShowExampleItem, getTargetClassName, reopenTutorial }) => {
         const tutorialVisibleItems = shouldShowExampleItem ? [LIVE_REGISTER_TUTORIAL_EXAMPLE_ITEM] : selectedItems;
@@ -731,6 +733,7 @@ export default function LiveRegisterPage() {
               <LiveRegisterPreviewPanel
                 videoPreviewRef={videoPreviewRef}
                 isCameraOn={isCameraOn}
+                activeStepId={activeStepId}
                 onStartCamera={() => void startCamera()}
                 onStopCamera={stopCamera}
                 onReopenTutorial={reopenTutorial}
@@ -738,6 +741,7 @@ export default function LiveRegisterPage() {
                 onPreviewStart={handlePreviewStart}
                 introduceButtonRef={introduceButtonRef}
                 startButtonRef={startButtonRef}
+                guidePanelRef={guidePanelRef}
                 getTargetClassName={getTargetClassName}
               />
 

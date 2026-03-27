@@ -32,7 +32,7 @@ export default function Step4({
   const navigate = useNavigate();
   const { mutateAsync: registerSeller, isPending } = useRegisterSeller();
 
-  const [nickname, setNickname] = useState('');
+  const [shopName, setShopName] = useState('');
   const [intro, setIntro] = useState('');
   const [youtubeLink, setYoutubeLink] = useState('');
   const [instaLink, setInstaLink] = useState('');
@@ -42,7 +42,7 @@ export default function Step4({
   const { showToast } = useToast();
 
   const handleRegister = async () => {
-    if (!nickname.trim()) {
+    if (!shopName.trim()) {
       setError('판매자명을 입력해주세요.');
       return;
     }
@@ -51,7 +51,7 @@ export default function Step4({
       await registerSeller({
         type: businessType,
         businessNumber: businessNumber,
-        nickname: nickname.trim(),
+        shopName: shopName.trim(),
         intro: intro.trim(),
         youtubeUrl: addPrefix(youtubeLink, SOCIAL_PREFIX.youtube),
         instaUrl: addPrefix(instaLink, SOCIAL_PREFIX.instagram),
@@ -78,9 +78,9 @@ export default function Step4({
         <label className="text-base text-neutral-200 font-semibold mb-3 block">판매자명</label>
         <input
           type="text"
-          value={nickname}
+          value={shopName}
           onChange={(e) => {
-            setNickname(e.target.value);
+            setShopName(e.target.value);
             setError('');
           }}
           placeholder="이름을 입력해주세요"

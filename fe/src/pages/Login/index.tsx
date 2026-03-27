@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { FiX } from 'react-icons/fi';
 
 import { login } from '@/api/hooks/usePostLogin';
 import { getMe } from '@/api/hooks/useGetMe';
 import Button from '@/components/common/Button';
+import { useToast } from '@/hooks/useToast';
 
 type ErrorField = 'email' | 'password' | '';
 type FormError = { message: string; field: ErrorField };
 const EMPTY_ERROR: FormError = { message: '', field: '' };
+type LoginLocationState = {
+  toast?: {
+    type?: 'success' | 'error' | 'warning' | 'info';
+    title?: string;
+    message: string;
+    duration?: number;
+  };
+} | null;
 
 const INPUT_BASE =
   'flex items-center border rounded-(--radius-control) h-[52px] px-3 bg-transparent focus-within:border-primary transition-colors';
@@ -24,13 +33,27 @@ function inputContainerClass(field: ErrorField, errorField: ErrorField) {
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
+  const { showToast } = useToast();
 
   const [email, setEmail] = useState(() => localStorage.getItem('savedEmail') ?? '');
   const [password, setPassword] = useState('');
   const [rememberEmail, setRememberEmail] = useState(() => !!localStorage.getItem('savedEmail'));
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<FormError>(EMPTY_ERROR);
+  const locationState = location.state as LoginLocationState;
+
+  useEffect(() => {
+    const toast = locationState?.toast;
+
+    if (!toast) {
+      return;
+    }
+
+    showToast(toast);
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+  }, [location.pathname, location.search, locationState, navigate, showToast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useGetAddresses } from '@/api/hooks/useGetAddresses';
@@ -11,6 +10,49 @@ import bidEffectSound from '@/assets/bid_effect_sound.mp3';
 
 const preloadedBidAudio = new Audio(bidEffectSound);
 preloadedBidAudio.load();
+
+const WALLET_INVALIDATION_PENDING_TTL_MS = 5000;
+const UNIQUE_BID_AMOUNT_UNIT = 500;
+const pendingWalletInvalidationStreamIds = new Set<string>();
+const pendingWalletInvalidationTimeouts = new Map<string, number>();
+
+const clearPendingWalletInvalidationTimeout = (streamId: string) => {
+  const timeoutId = pendingWalletInvalidationTimeouts.get(streamId);
+
+  if (timeoutId !== undefined) {
+    window.clearTimeout(timeoutId);
+    pendingWalletInvalidationTimeouts.delete(streamId);
+  }
+};
+
+export const markPendingWalletInvalidationForBid = (streamId: string) => {
+  clearPendingWalletInvalidationTimeout(streamId);
+  pendingWalletInvalidationStreamIds.add(streamId);
+
+  const timeoutId = window.setTimeout(() => {
+    pendingWalletInvalidationStreamIds.delete(streamId);
+    pendingWalletInvalidationTimeouts.delete(streamId);
+  }, WALLET_INVALIDATION_PENDING_TTL_MS);
+
+  pendingWalletInvalidationTimeouts.set(streamId, timeoutId);
+};
+
+export const consumePendingWalletInvalidationForBid = (streamId: string) => {
+  const hasPendingInvalidation = pendingWalletInvalidationStreamIds.has(streamId);
+
+  if (!hasPendingInvalidation) {
+    return false;
+  }
+
+  pendingWalletInvalidationStreamIds.delete(streamId);
+  clearPendingWalletInvalidationTimeout(streamId);
+  return true;
+};
+
+export const clearPendingWalletInvalidationForBid = (streamId: string) => {
+  pendingWalletInvalidationStreamIds.delete(streamId);
+  clearPendingWalletInvalidationTimeout(streamId);
+};
 
 export type BidTab = 'quick' | 'custom';
 export type AuctionEndPhase = 'ended' | 'waiting' | null;
@@ -33,7 +75,6 @@ export type BidState = ReturnType<typeof useBidState>;
 
 export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuctionId }: UseBidStateParams) {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { showToast } = useToast();
   const { id: streamId } = useParams<{ id: string }>();
   const isLoggedIn = useMemo(() => Boolean(localStorage.getItem('accessToken')), []);
@@ -44,11 +85,11 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
   const [customUnit, setCustomUnit] = useState(1000);
   const [bidAmount, setBidAmount] = useState(1000);
   const [freeInput, setFreeInput] = useState('');
+  const [isUniqueBidCorrectionPending, setIsUniqueBidCorrectionPending] = useState(false);
   const [isBidAccessModalOpen, setIsBidAccessModalOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [auctionEndPhase, setAuctionEndPhase] = useState<AuctionEndPhase>(null);
   const hadActiveAuctionRef = useRef(false);
-  const suppressNextUniqueBidAttemptRef = useRef<number | null>(null);
 
   const balance = wallet?.balance ?? 0;
   const isUniqueAuction = auctionType === 'UNIQUE_TOP';
@@ -66,17 +107,40 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
   const normalizeUniqueBidAmount = useCallback(
     (amount: number) => {
       if (!Number.isFinite(amount) || amount <= 0) return 0;
-      return Math.min(Math.max(Math.round(amount), uniqueMinPrice), uniqueMaxPrice);
+
+      const boundedAmount = Math.min(Math.max(Math.round(amount), uniqueMinPrice), uniqueMaxPrice);
+      const lowerCandidate = Math.floor(boundedAmount / UNIQUE_BID_AMOUNT_UNIT) * UNIQUE_BID_AMOUNT_UNIT;
+      const upperCandidate = Math.ceil(boundedAmount / UNIQUE_BID_AMOUNT_UNIT) * UNIQUE_BID_AMOUNT_UNIT;
+      const validCandidates = [lowerCandidate, upperCandidate].filter(
+        (candidate) => candidate >= uniqueMinPrice && candidate <= uniqueMaxPrice,
+      );
+
+      if (validCandidates.length === 0) {
+        return boundedAmount;
+      }
+
+      return validCandidates.reduce((closestCandidate, candidate) => {
+        const candidateDistance = Math.abs(candidate - boundedAmount);
+        const closestDistance = Math.abs(closestCandidate - boundedAmount);
+
+        if (candidateDistance !== closestDistance) {
+          return candidateDistance < closestDistance ? candidate : closestCandidate;
+        }
+
+        return candidate > closestCandidate ? candidate : closestCandidate;
+      });
     },
     [uniqueMaxPrice, uniqueMinPrice],
   );
+
+  const correctedUniqueInputAmount = isUniqueAuction ? normalizeUniqueBidAmount(uniqueInputAmount) : 0;
 
   const isFreeMode = activeTab === 'custom' && activeCustomUnit === 0;
   const quickUnit = activeTab === 'quick' ? baseBidUnit : activeCustomUnit;
   const minimumBidAmount = isUniqueAuction ? uniqueMinPrice : currentPrice + quickUnit;
   const displayedBidAmount = isFreeMode ? bidAmount : Math.max(bidAmount, minimumBidAmount);
   const effectiveBidAmount = isUniqueAuction
-    ? uniqueInputAmount
+    ? correctedUniqueInputAmount
     : hasActiveAuction
       ? Math.max(displayedBidAmount, minimumBidAmount)
       : displayedBidAmount;
@@ -91,18 +155,16 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
   const hasRegisteredShippingAddress = Boolean(addresses?.length) && addresses?.some((address) => address.isDefault);
 
   const applyUniqueBidCorrection = useCallback(
-    (amount: number, options?: { suppressNextBidAttempt?: boolean }) => {
+    (amount: number) => {
       const correctedUniqueBidAmount = normalizeUniqueBidAmount(amount);
       if (correctedUniqueBidAmount === amount) return true;
-      if (options?.suppressNextBidAttempt) {
-        suppressNextUniqueBidAttemptRef.current = activeAuctionId;
-      }
       setFreeInput(String(correctedUniqueBidAmount));
       setBidAmount(correctedUniqueBidAmount);
-      showToast({ type: 'warning', message: '입찰가를 허용 범위로 보정했습니다. 다시 입찰해주세요.' });
+      setIsUniqueBidCorrectionPending(true);
+      showToast({ type: 'warning', message: '입찰가를 500원 단위로 자동 보정했습니다. 확인 후 다시 입찰해주세요.' });
       return false;
     },
-    [activeAuctionId, normalizeUniqueBidAmount, showToast],
+    [normalizeUniqueBidAmount, showToast],
   );
 
   const handleBidPlace = useCallback(() => {
@@ -110,21 +172,36 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
       showToast({ message: '진행 중인 경매 정보를 불러오는 중입니다.' });
       return;
     }
-    if (!isLoggedIn) { setIsBidAccessModalOpen(true); return; }
-    if (isAddressesLoading) { showToast({ message: '배송지 정보를 확인하는 중입니다.' }); return; }
-    if (!hasRegisteredShippingAddress) { setIsAddressModalOpen(true); return; }
+    if (!isLoggedIn) {
+      setIsBidAccessModalOpen(true);
+      return;
+    }
+    if (isAddressesLoading) {
+      showToast({ message: '배송지 정보를 확인하는 중입니다.' });
+      return;
+    }
+    if (!hasRegisteredShippingAddress) {
+      setIsAddressModalOpen(true);
+      return;
+    }
     if (isInsufficientBalance) return;
-    if (!streamId) { console.error('[stream] missing streamId for bid'); return; }
-    if (activeAuctionId === null) { console.error('[stream] missing active auctionId for bid'); return; }
+    if (!streamId) {
+      console.error('[stream] missing streamId for bid');
+      return;
+    }
+    if (activeAuctionId === null) {
+      console.error('[stream] missing active auctionId for bid');
+      return;
+    }
 
     if (isUniqueAuction) {
       if (hasPlacedUniqueBid) return;
-      if (freeInput.trim().length === 0) { showToast({ type: 'warning', message: '입찰 금액을 직접 입력해주세요.' }); return; }
-      if (suppressNextUniqueBidAttemptRef.current === activeAuctionId) {
-        suppressNextUniqueBidAttemptRef.current = null;
+      if (freeInput.trim().length === 0) {
+        showToast({ type: 'warning', message: '입찰 금액을 직접 입력해주세요.' });
         return;
       }
       if (!applyUniqueBidCorrection(uniqueInputAmount)) return;
+      setIsUniqueBidCorrectionPending(false);
     }
 
     (preloadedBidAudio.cloneNode(true) as HTMLAudioElement).play().catch(() => {});
@@ -134,14 +211,29 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
       payload: { auctionId: activeAuctionId, amount: effectiveBidAmount },
     })
       .then(() => {
-        queryClient.invalidateQueries({ queryKey: ['wallet'] });
+        if (!isUniqueAuction) {
+          markPendingWalletInvalidationForBid(streamId);
+        }
       })
-      .catch((error) => { console.error('[stream] failed to send bid', error); });
+      .catch((error) => {
+        clearPendingWalletInvalidationForBid(streamId);
+        console.error('[stream] failed to send bid', error);
+      });
   }, [
-    activeAuctionId, effectiveBidAmount, freeInput, hasActiveAuction, queryClient,
-    hasPlacedUniqueBid, hasRegisteredShippingAddress, isAddressesLoading,
-    isInsufficientBalance, isLoggedIn, isUniqueAuction,
-    applyUniqueBidCorrection, showToast, streamId, uniqueInputAmount,
+    activeAuctionId,
+    effectiveBidAmount,
+    freeInput,
+    hasActiveAuction,
+    hasPlacedUniqueBid,
+    hasRegisteredShippingAddress,
+    isAddressesLoading,
+    isInsufficientBalance,
+    isLoggedIn,
+    isUniqueAuction,
+    applyUniqueBidCorrection,
+    showToast,
+    streamId,
+    uniqueInputAmount,
   ]);
 
   const handleBidAccessAction = useCallback(() => {
@@ -159,18 +251,18 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
     setBidAmount((prev) => Math.min(balance, Math.max(prev, minimumBidAmount) + quickUnit));
   }, [balance, isFreeMode, isUniqueAuction, minimumBidAmount, quickUnit]);
 
-  const handleFreeInput = useCallback((value: string) => {
-    if (hasPlacedUniqueBid) return;
-    const nextValue = value.replace(/[^0-9]/g, '');
-    setFreeInput(nextValue);
-    suppressNextUniqueBidAttemptRef.current = null;
-    setBidAmount(nextValue ? Number(nextValue) : 0);
-  }, [hasPlacedUniqueBid]);
+  const handleFreeInput = useCallback(
+    (value: string) => {
+      if (hasPlacedUniqueBid) return;
+      const nextValue = value.replace(/[^0-9]/g, '');
+      setIsUniqueBidCorrectionPending(false);
+      setFreeInput(nextValue);
+      setBidAmount(nextValue ? normalizeUniqueBidAmount(Number(nextValue)) : 0);
+    },
+    [hasPlacedUniqueBid, normalizeUniqueBidAmount],
+  );
 
-  const handleUniqueInputBlur = useCallback(() => {
-    if (hasPlacedUniqueBid || !freeInput.trim()) return;
-    applyUniqueBidCorrection(Number(freeInput), { suppressNextBidAttempt: true });
-  }, [applyUniqueBidCorrection, freeInput, hasPlacedUniqueBid]);
+  const handleUniqueInputBlur = useCallback(() => {}, []);
 
   // auction end phase transition
   useEffect(() => {
@@ -182,26 +274,53 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
     if (hadActiveAuctionRef.current) {
       const endedTimer = window.setTimeout(() => setAuctionEndPhase('ended'), 0);
       const waitingTimer = window.setTimeout(() => setAuctionEndPhase('waiting'), 3000);
-      return () => { window.clearTimeout(endedTimer); window.clearTimeout(waitingTimer); };
+      return () => {
+        window.clearTimeout(endedTimer);
+        window.clearTimeout(waitingTimer);
+      };
     }
   }, [hasActiveAuction]);
 
   return {
-    tab, setTab,
-    customUnit, setCustomUnit,
+    tab,
+    setTab,
+    customUnit,
+    setCustomUnit,
     freeInput,
-    isBidAccessModalOpen, setIsBidAccessModalOpen,
-    isAddressModalOpen, setIsAddressModalOpen,
-    isLoggedIn, balance, isUniqueAuction,
-    activeTab, activeCustomUnit, currentPrice, baseBidUnit,
-    uniqueMinPrice, uniqueMaxPrice, hasPlacedUniqueBid,
-    hasActiveAuction, visibleAuctionEndPhase, uniqueInputAmount,
-    isFreeMode, quickUnit, minimumBidAmount,
-    displayedBidAmount, effectiveBidAmount,
-    increment, isInsufficientBalance, isHighestBidder,
-    isBidDisabled, hasRegisteredShippingAddress,
-    handleBidPlace, handleBidAccessAction,
-    handleDecrease, handleIncrease,
-    handleFreeInput, handleUniqueInputBlur,
+    isUniqueBidCorrectionPending,
+    isBidAccessModalOpen,
+    setIsBidAccessModalOpen,
+    isAddressModalOpen,
+    setIsAddressModalOpen,
+    isLoggedIn,
+    balance,
+    isUniqueAuction,
+    activeTab,
+    activeCustomUnit,
+    currentPrice,
+    baseBidUnit,
+    uniqueMinPrice,
+    uniqueMaxPrice,
+    hasPlacedUniqueBid,
+    hasActiveAuction,
+    visibleAuctionEndPhase,
+    uniqueInputAmount,
+    isFreeMode,
+    quickUnit,
+    minimumBidAmount,
+    displayedBidAmount,
+    effectiveBidAmount,
+    increment,
+    isInsufficientBalance,
+    isHighestBidder,
+    isBidDisabled,
+    hasRegisteredShippingAddress,
+    handleBidPlace,
+    handleBidAccessAction,
+    handleDecrease,
+    handleIncrease,
+    handleFreeInput,
+    handleUniqueInputBlur,
   };
 }
+

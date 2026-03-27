@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 
 import { useGetEscrowDetail } from '@/api/hooks/useGetEscrowDetail';
 import { useGetEscrowsBuyer } from '@/api/hooks/useGetEscrowsBuyer';
@@ -15,6 +16,7 @@ import OrderHistoryToolbar from './OrderHistoryToolbar';
 import { getFilteredAndSortedEscrows, getOrderHistorySummary, type SortOption } from '../../../utils/orderHistory';
 
 export default function OrderHistorySection() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const { data: escrowsResponse } = useGetEscrowsBuyer();
   const { showToast } = useToast();
   const { mutateAsync: completeEscrow, isPending: isCompletingEscrow } = usePostCompleteEscrow();
@@ -23,10 +25,12 @@ export default function OrderHistorySection() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<EscrowStatusFilter>('ALL');
   const [sortBy, setSortBy] = useState<SortOption>('LATEST');
+  const routedEscrowId = searchParams.get('escrowId');
+  const activeSelectedItemId = routedEscrowId ?? selectedItemId;
 
-  const { data: detailResponse, isLoading: isDetailLoading } = useGetEscrowDetail(selectedItemId);
+  const { data: detailResponse, isLoading: isDetailLoading } = useGetEscrowDetail(activeSelectedItemId);
   const selectedItemDetail = detailResponse?.data;
-  const selectedEscrow = items.find((item) => String(item.escrowId) === selectedItemId) ?? null;
+  const selectedEscrow = items.find((item) => String(item.escrowId) === activeSelectedItemId) ?? null;
   const canCompletePurchase = selectedEscrow?.escrowStatus === 'SHIPPED';
 
   const { totalCount, totalAmount } = getOrderHistorySummary(items);
@@ -34,15 +38,20 @@ export default function OrderHistorySection() {
 
   const handleCloseModal = () => {
     setSelectedItemId(null);
+    if (searchParams.has('escrowId')) {
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.delete('escrowId');
+      setSearchParams(nextSearchParams);
+    }
   };
 
   const handleCompletePurchase = async () => {
-    if (!selectedItemId || !canCompletePurchase) {
+    if (!activeSelectedItemId || !canCompletePurchase) {
       return;
     }
 
     try {
-      await completeEscrow(selectedItemId);
+      await completeEscrow(activeSelectedItemId);
       showToast({ type: 'success', message: '구매 확정이 완료되었습니다.' });
     } catch (error) {
       console.error('[escrow] failed to complete purchase', error);
@@ -78,7 +87,7 @@ export default function OrderHistorySection() {
         )}
       </div>
 
-      {selectedItemId && (
+      {activeSelectedItemId && (
         <div
           className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 px-4 py-6 backdrop-blur-sm"
           onClick={handleCloseModal}
@@ -99,7 +108,7 @@ export default function OrderHistorySection() {
                 showHeaderCloseButton={false}
                 footer={
                   <div className="mt-6 flex flex-col gap-3">
-                    {selectedEscrow?.escrowStatus === 'COMPLETED' && <NftReceiptCard escrowId={selectedItemId} />}
+                    {selectedEscrow?.escrowStatus === 'COMPLETED' && <NftReceiptCard escrowId={activeSelectedItemId} />}
                     <div className="flex gap-3">
                       <button
                         type="button"

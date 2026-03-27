@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw';
+﻿import { http, HttpResponse } from 'msw';
 
 import { BASE_URL } from '@/api/instance';
 import LogoImage from '@/assets/Logo.png';
@@ -45,52 +45,51 @@ export const profileHandlers = [
       status: 'SUCCESS',
       message: 'Seller ranking fetched successfully.',
       data: [
-      {
-        rank: 1,
-        sellerId: 7,
-        nickname: '스니커즈마켓',
-        profileImage: 'https://picsum.photos/seed/rank-7/120/120',
-        followerCount: 1024,
-      },
-      {
-        rank: 2,
-        sellerId: 12,
-        nickname: '판매왕',
-        profileImage: 'https://picsum.photos/seed/rank-12/120/120',
-        followerCount: 876,
-      },
-      {
-        rank: 3,
-        sellerId: 3,
-        nickname: '명품창고',
-        profileImage: 'https://picsum.photos/seed/rank-3/120/120',
-        followerCount: 754,
-      },
-      {
-        rank: 4,
-        sellerId: 19,
-        nickname: '빈티지샵',
-        profileImage: 'https://picsum.photos/seed/rank-19/120/120',
-        followerCount: 612,
-      },
-      {
-        rank: 5,
-        sellerId: 25,
-        nickname: '한정판마켓',
-        profileImage: 'https://picsum.photos/seed/rank-25/120/120',
-        followerCount: 489,
-      },
+        {
+          rank: 1,
+          sellerId: 7,
+          shopName: '스니커즈마켓',
+          profileImage: 'https://picsum.photos/seed/rank-7/120/120',
+          followerCount: 1024,
+        },
+        {
+          rank: 2,
+          sellerId: 12,
+          shopName: '판매왕',
+          profileImage: 'https://picsum.photos/seed/rank-12/120/120',
+          followerCount: 876,
+        },
+        {
+          rank: 3,
+          sellerId: 3,
+          shopName: '명품창고',
+          profileImage: 'https://picsum.photos/seed/rank-3/120/120',
+          followerCount: 754,
+        },
+        {
+          rank: 4,
+          sellerId: 19,
+          shopName: '빈티지샵',
+          profileImage: 'https://picsum.photos/seed/rank-19/120/120',
+          followerCount: 612,
+        },
+        {
+          rank: 5,
+          sellerId: 25,
+          shopName: '한정판마켓',
+          profileImage: 'https://picsum.photos/seed/rank-25/120/120',
+          followerCount: 489,
+        },
       ],
     });
   }),
-
   http.patch(`${BASE_URL}/v1/sellers/:sellerId/profile`, async ({ request, params }) => {
     const sellerId = Number(params.sellerId);
     const body = (await request.json()) as Record<string, string>;
 
     mockSellerProfiles[sellerId] = {
       ...mockSellerProfiles[sellerId],
-      ...(body.nickname != null && { nickname: body.nickname }),
+      ...(body.shopName != null && { nickname: body.shopName }),
       ...(body.intro != null && { intro: body.intro }),
       ...(body.instaUrl != null && { instagramUrl: body.instaUrl }),
       ...(body.youtubeUrl != null && { youtubeUrl: body.youtubeUrl }),
@@ -181,7 +180,7 @@ export const profileHandlers = [
           message: 'Seller profile fetched successfully.',
           data: {
             sellerId: 200,
-            nickname: 'Luxury Seller',
+            shopName: 'Luxury Seller',
             intro: 'Authentic luxury goods only. Feel free to ask questions anytime.',
             profileImage: LogoImage,
             instagramUrl: 'https://instagram.com/luxury_seller',
@@ -223,7 +222,7 @@ export const profileHandlers = [
         message: 'Seller profile fetched successfully.',
         data: {
           sellerId,
-          nickname: (overrides.nickname as string) ?? 'Seller Mock',
+          shopName: (overrides.nickname as string) ?? 'Seller Mock',
           intro: (overrides.intro as string) ?? 'Curating good items and running regular live auctions.',
           profileImage: LogoImage,
           instagramUrl: (overrides.instagramUrl as string) ?? 'https://instagram.com/im_rerak',
@@ -267,7 +266,7 @@ export const profileHandlers = [
     const notice = mockNoticeItems.find((item) => item.noticeId === noticeId);
 
     if (!notice) {
-      return HttpResponse.json({ code: 'NOT_FOUND', message: '공지사항을 찾을 수 없음' }, { status: 404 });
+      return HttpResponse.json({ code: 'NOT_FOUND', message: '怨듭??ы빆??李얠쓣 ???놁쓬' }, { status: 404 });
     }
 
     return HttpResponse.json(notice, { status: 200 });
@@ -331,3 +330,6 @@ export const profileHandlers = [
     return HttpResponse.json({ success: true }, { status: 200 });
   }),
 ];
+
+
+
