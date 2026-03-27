@@ -94,7 +94,7 @@ export default function LeftPanel({
             />
           ))}
 
-          {isSeller && doneItems.length > 0 && (
+          {doneItems.length > 0 && (
             <>
               <div className="mt-1.5 flex items-center gap-3">
                 <span className="text-caption font-bold uppercase tracking-wider text-neutral-700">종료</span>
