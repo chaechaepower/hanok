@@ -87,7 +87,7 @@ public class FollowService {
                 .followId(follow.getId())
                 .seller(SellerSummaryResponse.builder()
                         .sellerId(seller.getId())
-                        .nickname(seller.getUser().getNickname())
+                        .nickname(seller.getShopName())
                         .profileImageUri(seller.getUser().getProfileImage())
                         .rating(seller.getRating())
                         .build())

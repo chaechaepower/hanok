@@ -124,7 +124,7 @@ public class SearchService {
                 .category(row.category())
                 .seller(SellerInfo.builder()
                         .sellerId(row.sellerId())
-                        .nickname(row.sellerNickname())
+                        .nickname(row.shopName())
                         .profileImageUri(row.sellerProfileImageUri())
                         .build())
                 .matchReasons(new ArrayList<>())

@@ -14,6 +14,6 @@ public record StreamSearchRow(
         Integer viewerCount,
         String category,
         Long sellerId,
-        String sellerNickname,
+        String shopName,
         String sellerProfileImageUri
 ) {}

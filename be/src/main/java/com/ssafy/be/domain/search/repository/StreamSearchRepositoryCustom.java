@@ -32,8 +32,8 @@ public class StreamSearchRepositoryCustom {
                 s.status,
                 s.scheduled_at,
                 s.category,
-                u.id            AS seller_user_id,
-                u.nickname,
+                sel.id          AS seller_id,
+                sel.shop_name,
                 u.profile_image
             """;
 
@@ -118,7 +118,7 @@ public class StreamSearchRepositoryCustom {
                         .scheduledAt(toLocalDateTime(r[4]))
                         .category((String) r[5])
                         .sellerId(toLong(r[6]))
-                        .sellerNickname((String) r[7])
+                        .shopName((String) r[7])
                         .sellerProfileImageUri((String) r[8])
                         .build())
                 .toList();
