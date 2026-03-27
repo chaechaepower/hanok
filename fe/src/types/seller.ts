@@ -19,7 +19,7 @@ export type RegisterAccountResponse = unknown;
 export type RegisterSellerPayload = {
   type: BusinessType;
   businessNumber: string | null;
-  nickname: string;
+  shopName: string;
   intro: string;
   youtubeUrl: string;
   instaUrl: string;
@@ -31,7 +31,7 @@ export type RegisterSellerPayload = {
 
 export type RegisterSellerResponse = {
   sellerId: number;
-  nickname: string;
+  shopName: string;
 };
 
 export type SellerStatusResponse = {
@@ -42,7 +42,7 @@ export type SellerStatusResponse = {
 export type SellerRankingItem = {
   rank: number;
   sellerId: number;
-  nickname: string;
+  shopName: string;
   profileImage: string | null;
   followerCount: number;
 };
@@ -71,7 +71,7 @@ export type SellerPost = {
 
 export type SellerProfileResponse = {
   sellerId: number;
-  nickname: string;
+  shopName: string;
   intro: string;
   profileImage: string | null;
   instagramUrl: string | null;
@@ -80,6 +80,15 @@ export type SellerProfileResponse = {
   stats: SellerProfileStats;
   recentSales: SellerRecentSale[];
   posts: SellerPost[];
+};
+
+export type SearchSellerResult = {
+  sellerId: number;
+  shopName: string;
+  profileImage: string | null;
+  intro: string;
+  rating: number;
+  isFollowed: boolean;
 };
 
 export type NoticeItem = {
@@ -104,7 +113,7 @@ export type PostSellerNoticeResponse = {
 };
 
 export type PatchSellerProfilePayload = {
-  nickname?: string;
+  shopName?: string;
   profileImage?: string;
   intro?: string;
   instaUrl?: string;

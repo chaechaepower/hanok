@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { BsBox } from 'react-icons/bs';
 import { FiX } from 'react-icons/fi';
 
@@ -125,6 +126,7 @@ function CancelModal({
 }
 
 export default function TrackingInput() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeMenu, setActiveMenu] = useState('delivery');
   const { data: escrowsResponse } = useGetEscrowsSeller();
   const items = escrowsResponse?.data || [];
@@ -140,6 +142,8 @@ export default function TrackingInput() {
   const [trackingNumber, setTrackingNumber] = useState('');
   const [showCarrierModal, setShowCarrierModal] = useState(false);
   const carrierDropdownRef = useRef<HTMLDivElement>(null);
+  const routedEscrowId = searchParams.get('escrowId');
+  const activeSelectedItemId = routedEscrowId ?? selectedItemId;
 
   useEffect(() => {
     if (!showCarrierModal) return;
@@ -152,12 +156,12 @@ export default function TrackingInput() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showCarrierModal]);
 
-  const currentSelectedItem = items.find((item) => String(item.escrowId) === selectedItemId);
+  const currentSelectedItem = items.find((item) => String(item.escrowId) === activeSelectedItemId);
   const isTrackingSubmitted = currentSelectedItem
     ? isTrackingSubmittedEscrowState(currentSelectedItem.escrowStatus)
     : false;
 
-  const { data: detailResponse } = useGetEscrowDetail(selectedItemId);
+  const { data: detailResponse } = useGetEscrowDetail(activeSelectedItemId);
   const selectedItemDetail = detailResponse?.data;
 
   const pendingItems = items.filter((item) => isPendingEscrowState(item.escrowStatus));
@@ -173,8 +177,17 @@ export default function TrackingInput() {
     setTrackingNumber('');
   };
 
+  const handleCloseSelectedItem = () => {
+    setSelectedItemId(null);
+    if (searchParams.has('escrowId')) {
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.delete('escrowId');
+      setSearchParams(nextSearchParams);
+    }
+  };
+
   const handleCancelConfirm = (cancelReason: string) => {
-    if (!selectedItemId) return;
+    if (!activeSelectedItemId) return;
     const normalizedReason = cancelReason.trim();
 
     if (!normalizedReason) {
@@ -183,7 +196,7 @@ export default function TrackingInput() {
     }
 
     cancelEscrow(
-      { escrowId: selectedItemId, cancelReason: normalizedReason },
+      { escrowId: activeSelectedItemId, cancelReason: normalizedReason },
       {
         onSuccess: () => {
           setShowCancelModal(false);
@@ -230,7 +243,7 @@ export default function TrackingInput() {
                     key={item.escrowId || item.itemName}
                     onClick={() => handleSelectItem(item.escrowId)}
                     className={`flex justify-between items-center p-4 rounded-2xl cursor-pointer transition-colors ${
-                      selectedItemId === String(item.escrowId)
+                      activeSelectedItemId === String(item.escrowId)
                         ? 'bg-surface border border-neutral-700'
                         : 'bg-transparent border border-transparent hover:bg-surface/60'
                     }`}
@@ -271,7 +284,7 @@ export default function TrackingInput() {
                   <CompletedItemRow
                     key={item.escrowId || item.itemName}
                     item={item}
-                    isSelected={selectedItemId === String(item.escrowId)}
+                    isSelected={activeSelectedItemId === String(item.escrowId)}
                     onSelect={() => handleSelectItem(item.escrowId)}
                     formatPrice={formatPrice}
                   />
@@ -323,7 +336,7 @@ export default function TrackingInput() {
           {selectedItemDetail ? (
             <EscrowDetailCard
               detail={selectedItemDetail}
-              onClose={() => setSelectedItemId(null)}
+              onClose={handleCloseSelectedItem}
               footer={
                 isTrackingSubmitted ? (
                   <div className="bg-neutral-800 rounded-xl p-5 border border-neutral-700 text-center text-neutral-500 text-sm">
@@ -335,8 +348,8 @@ export default function TrackingInput() {
                       <div className="relative w-[130px] shrink-0" ref={carrierDropdownRef}>
                         <button
                           type="button"
-                          onClick={() => selectedItemId && setShowCarrierModal((prev) => !prev)}
-                          disabled={!selectedItemId}
+                          onClick={() => activeSelectedItemId && setShowCarrierModal((prev) => !prev)}
+                          disabled={!activeSelectedItemId}
                           className="w-full h-[48px] bg-transparent border border-neutral-700 rounded-lg px-3 text-left cursor-pointer flex items-center justify-between hover:border-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <span
@@ -389,7 +402,7 @@ export default function TrackingInput() {
                       <button
                         type="button"
                         onClick={async () => {
-                          if (!carrier || !trackingNumber || !selectedItemId) {
+                          if (!carrier || !trackingNumber || !activeSelectedItemId) {
                             showToast({ type: 'warning', message: '택배사와 송장 번호를 모두 입력해주세요.' });
                             return;
                           }
@@ -408,7 +421,7 @@ export default function TrackingInput() {
                           }
 
                           submitTracking(
-                            { escrowId: selectedItemId, carrierName: carrierName, trackingNumber },
+                            { escrowId: activeSelectedItemId, carrierName: carrierName, trackingNumber },
                             {
                               onSuccess: () => {
                                 showToast({ type: 'success', message: '운송장 번호가 등록되었습니다.' });

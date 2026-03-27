@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { AUCTION_TYPE_LABELS } from '@/constants/auction';
 import type { AuctionItem } from '@/types';
 import { formatPrice } from '@/utils/formatPrice';
 import { FiX } from 'react-icons/fi';
+import { ITEM_CONDITION_LABELS } from '@/constants/itemCondition';
 
 function formatAuctionTime(seconds: number) {
   if (seconds >= 60) {
@@ -16,6 +16,8 @@ export default function ItemDetailAccordion({ item }: { item: AuctionItem }) {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const hasUniqueRange = item.minPrice !== null && item.maxPrice !== null && item.maxPrice >= item.minPrice;
   const hasBottomUpPrice = item.startPrice !== null;
+  const conditionBadge = ITEM_CONDITION_LABELS[item.condition];
+
   const hasBidUnit = item.bidUnit !== null;
   const hasDetail =
     item.description ||
@@ -85,10 +87,8 @@ export default function ItemDetailAccordion({ item }: { item: AuctionItem }) {
             )}
             <div className="flex items-center gap-1.5">
               <div className="flex items-center gap-1.5">
-                <span className="text-caption font-bold text-neutral-600">경매 방식</span>
-                <span className="text-label font-extrabold text-gold-dark">
-                  {AUCTION_TYPE_LABELS[item.auctionType]}
-                </span>
+                <span className="text-caption font-bold text-neutral-600">물품 상태</span>
+                <span className={`text-label font-extrabold text-gold-dark`}>{conditionBadge}</span>
               </div>
             </div>
           </div>

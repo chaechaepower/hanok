@@ -706,6 +706,7 @@ export const LiveCreateHandlers = [
       .map((live) => ({
         streamId: live.streamId,
         title: live.title,
+        shopName: live.sellerNickname,
         category: live.category,
         thumbnail: live.thumbnail,
         scheduledAt: live.scheduledAt,

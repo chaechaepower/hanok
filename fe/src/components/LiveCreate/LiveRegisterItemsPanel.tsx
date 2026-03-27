@@ -6,6 +6,7 @@ import { AUCTION_TYPE_SELECT_OPTIONS, DURATION_SELECT_OPTIONS } from '@/constant
 import { getItemConditionLabel } from '@/constants/itemCondition';
 import { LIVE_REGISTER_TUTORIAL_EXAMPLE_ITEM } from '@/constants/live';
 import type { Product } from '@/types';
+import { formatNumericInputValue } from '@/utils/formatNumericInputValue';
 
 import type { LiveRegisterTutorialStepId } from './LiveRegisterTutorial';
 import {
@@ -146,7 +147,7 @@ export default function LiveRegisterItemsPanel({
                             <input
                               type="text"
                               inputMode="numeric"
-                              value={item.minPrice ?? ''}
+                              value={formatNumericInputValue(item.minPrice)}
                               onChange={(event) => onAuctionFieldChange(item.itemId, 'minPrice', event.target.value)}
                               onBlur={() => onAuctionFieldBlur(item, 'minPrice')}
                               placeholder="최소 입찰가 입력"
@@ -160,7 +161,7 @@ export default function LiveRegisterItemsPanel({
                             <input
                               type="text"
                               inputMode="numeric"
-                              value={item.maxPrice ?? ''}
+                              value={formatNumericInputValue(item.maxPrice)}
                               onChange={(event) => onAuctionFieldChange(item.itemId, 'maxPrice', event.target.value)}
                               onBlur={() => onAuctionFieldBlur(item, 'maxPrice')}
                               placeholder="최대 입찰가 입력"
@@ -184,7 +185,7 @@ export default function LiveRegisterItemsPanel({
                             <input
                               type="text"
                               inputMode="numeric"
-                              value={item.startPrice ?? ''}
+                              value={formatNumericInputValue(item.startPrice)}
                               onChange={(event) => onAuctionFieldChange(item.itemId, 'startPrice', event.target.value)}
                               onBlur={() => onAuctionFieldBlur(item, 'startPrice')}
                               placeholder="시작가 입력"
@@ -202,7 +203,7 @@ export default function LiveRegisterItemsPanel({
                             <input
                               type="text"
                               inputMode="numeric"
-                              value={item.bidUnit ?? ''}
+                              value={formatNumericInputValue(item.bidUnit)}
                               onChange={(event) => onAuctionFieldChange(item.itemId, 'bidUnit', event.target.value)}
                               onBlur={() => onAuctionFieldBlur(item, 'bidUnit')}
                               placeholder="입찰 단위 입력"

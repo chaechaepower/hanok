@@ -1,6 +1,8 @@
 import { CATEGORIES } from '@/constants/category';
-import { useState, useRef, useEffect } from 'react';
-import { FiChevronDown } from 'react-icons/fi';
+import { useState, useRef, useEffect, useMemo } from 'react';import { FiChevronDown } from 'react-icons/fi';
+import { getItems } from '@/api/hooks/useGetItems';
+import { useQuery } from '@tanstack/react-query';
+
 
 type Props = {
   onConfirm: (categoryId: string) => void;
@@ -8,11 +10,23 @@ type Props = {
 };
 
 export default function CategorySelectModal({ onConfirm, onClose }: Props) {
-  const [selectedId, setSelectedId] = useState<string>(CATEGORIES[0]?.id ?? '');
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const selectedLabel = CATEGORIES.find((c) => c.id === selectedId)?.label ?? '';
+  const { data: items = [] } = useQuery({
+    queryKey: ['items', 'READY'],
+    queryFn: () => getItems('READY'),
+  });
+
+  const availableCategories = useMemo(() => {
+    const categorySet = new Set(items.map((item) => item.category));
+    return CATEGORIES.filter((c) => categorySet.has(c.id));
+  }, [items]);
+
+  const [selectedId, setSelectedId] = useState<string>('');
+
+  const effectiveSelectedId = selectedId || availableCategories[0]?.id || '';
+  const selectedLabel = availableCategories.find((c) => c.id === effectiveSelectedId)?.label ?? '';
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -39,10 +53,11 @@ export default function CategorySelectModal({ onConfirm, onClose }: Props) {
             <div className="relative" ref={dropdownRef}>
               <button
                 type="button"
-                onClick={() => setIsOpen((prev) => !prev)}
-                className="w-full flex items-center justify-between bg-transparent border border-gold rounded-xl px-4 py-4 text-neutral-100 text-base outline-none cursor-pointer"
+                onClick={() => availableCategories.length > 0 && setIsOpen((prev) => !prev)}
+                disabled={availableCategories.length === 0}
+                className="w-full flex items-center justify-between bg-transparent border border-gold rounded-xl px-4 py-4 text-neutral-100 text-base outline-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span>{selectedLabel}</span>
+                <span>{selectedLabel || (availableCategories.length === 0 ? '등록된 상품이 없습니다' : '선택')}</span>
                 <span className={`text-gold transition-transform ${isOpen ? 'rotate-180' : ''}`}>
                   <FiChevronDown size={20} />
                 </span>
@@ -50,26 +65,30 @@ export default function CategorySelectModal({ onConfirm, onClose }: Props) {
 
               {isOpen && (
                 <div className="absolute z-10 left-0 right-0 top-[calc(100%+8px)] bg-neutral-900 border border-neutral-700 rounded-xl overflow-hidden shadow-lg max-h-[280px] overflow-y-auto custom-scrollbar">
-                  {CATEGORIES.map((cat) => {
-                    const isSelected = cat.id === selectedId;
-                    return (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedId(cat.id);
-                          setIsOpen(false);
-                        }}
-                        className={`w-full text-left px-4 py-3 text-[15px] transition-colors cursor-pointer ${
-                          isSelected
-                            ? 'bg-gold/15 text-gold-light font-semibold'
-                            : 'text-neutral-300 hover:bg-warm/8 hover:text-neutral-100'
-                        }`}
-                      >
-                        {cat.label}
-                      </button>
-                    );
-                  })}
+                  {availableCategories.length === 0 ? (
+                    <p className="px-4 py-3 text-sm text-neutral-500">등록된 상품이 없습니다.</p>
+                  ) : (
+                    availableCategories.map((cat) => {
+                      const isSelected = cat.id === effectiveSelectedId;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedId(cat.id);
+                            setIsOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 text-[15px] transition-colors cursor-pointer whitespace-nowrap ${
+                            isSelected
+                              ? 'bg-gold/15 text-gold-light font-semibold'
+                              : 'text-neutral-300 hover:bg-warm/8 hover:text-neutral-100'
+                          }`}
+                        >
+                          {cat.label}
+                        </button>
+                      );
+                    })
+                  )}
                 </div>
               )}
             </div>
@@ -85,8 +104,9 @@ export default function CategorySelectModal({ onConfirm, onClose }: Props) {
             </button>
             <button
               type="button"
-              onClick={() => onConfirm(selectedId)}
-              className="flex-1 py-4 rounded-2xl bg-gold text-background text-base font-bold hover:bg-gold-dark transition-colors"
+              onClick={() => onConfirm(effectiveSelectedId)}
+              disabled={!effectiveSelectedId}
+              className="flex-1 py-4 rounded-2xl bg-gold text-background text-base font-bold hover:bg-gold-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               방송 등록하기
             </button>

@@ -361,6 +361,7 @@ export type EndStreamResponse = {
 export type ScheduledStream = {
   streamId: number;
   title: string;
+  shopName: string;
   category: string;
   thumbnail: string | null;
   scheduledAt: string | null;

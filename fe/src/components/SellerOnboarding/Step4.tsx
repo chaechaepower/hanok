@@ -5,6 +5,15 @@ import Button from '@/components/common/Button';
 import type { AccountData, BusinessType } from '@/types';
 import axios from 'axios';
 import { useToast } from '@/hooks/useToast';
+import { FaYoutube, FaInstagram, FaTiktok } from 'react-icons/fa6';
+
+const SOCIAL_PREFIX = {
+  youtube: 'https://www.youtube.com/@',
+  instagram: 'https://www.instagram.com/',
+  tiktok: 'https://www.tiktok.com/@',
+} as const;
+
+const addPrefix = (handle: string, prefix: string) => (handle.trim() ? `${prefix}${handle.trim()}` : '');
 
 const inputClass =
   'w-full h-14 bg-surface border border-neutral-700 rounded-xl text-base px-5 outline-none font-[inherit] text-white';
@@ -23,7 +32,7 @@ export default function Step4({
   const navigate = useNavigate();
   const { mutateAsync: registerSeller, isPending } = useRegisterSeller();
 
-  const [nickname, setNickname] = useState('');
+  const [shopName, setShopName] = useState('');
   const [intro, setIntro] = useState('');
   const [youtubeLink, setYoutubeLink] = useState('');
   const [instaLink, setInstaLink] = useState('');
@@ -33,7 +42,7 @@ export default function Step4({
   const { showToast } = useToast();
 
   const handleRegister = async () => {
-    if (!nickname.trim()) {
+    if (!shopName.trim()) {
       setError('판매자명을 입력해주세요.');
       return;
     }
@@ -42,11 +51,11 @@ export default function Step4({
       await registerSeller({
         type: businessType,
         businessNumber: businessNumber,
-        nickname: nickname.trim(),
+        shopName: shopName.trim(),
         intro: intro.trim(),
-        youtubeUrl: youtubeLink.trim(),
-        instaUrl: instaLink.trim(),
-        tiktokUrl: tictokLink.trim(),
+        youtubeUrl: addPrefix(youtubeLink, SOCIAL_PREFIX.youtube),
+        instaUrl: addPrefix(instaLink, SOCIAL_PREFIX.instagram),
+        tiktokUrl: addPrefix(tictokLink, SOCIAL_PREFIX.tiktok),
         bankCode: account?.bankCode ?? '',
         accountNum: account?.accountNum ?? '',
         accountName: account?.accountName ?? '',
@@ -69,9 +78,9 @@ export default function Step4({
         <label className="text-base text-neutral-200 font-semibold mb-3 block">판매자명</label>
         <input
           type="text"
-          value={nickname}
+          value={shopName}
           onChange={(e) => {
-            setNickname(e.target.value);
+            setShopName(e.target.value);
             setError('');
           }}
           placeholder="이름을 입력해주세요"
@@ -94,28 +103,54 @@ export default function Step4({
 
       <div className="mb-8">
         <label className="text-base text-neutral-200 font-semibold mb-3 block">SNS 링크(선택)</label>
-        <div className="flex flex-col gap-3">
-          <input
-            type="url"
-            value={youtubeLink}
-            onChange={(e) => setYoutubeLink(e.target.value)}
-            placeholder="유튜브 URL"
-            className={inputClass}
-          />
-          <input
-            type="url"
-            value={instaLink}
-            onChange={(e) => setInstaLink(e.target.value)}
-            placeholder="인스타그램 URL"
-            className={inputClass}
-          />
-          <input
-            type="url"
-            value={tictokLink}
-            onChange={(e) => setTictokLink(e.target.value)}
-            placeholder="틱톡 URL"
-            className={inputClass}
-          />
+        <div className="rounded-xl border border-neutral-800 overflow-hidden divide-y divide-neutral-800">
+          {/* YouTube */}
+          <div className="flex items-center h-14 focus-within:bg-neutral-900 transition-colors group">
+            <div className="flex items-center gap-2 px-4 w-44 shrink-0">
+              <FaYoutube className="text-red-500 text-base shrink-0" />
+              <span className="text-sm text-neutral-400 font-medium">YouTube</span>
+            </div>
+            <div className="w-px h-5 bg-neutral-700 shrink-0" />
+            <input
+              type="text"
+              value={youtubeLink}
+              onChange={(e) => setYoutubeLink(e.target.value)}
+              placeholder="예) HanokAuction"
+              className="flex-1 bg-transparent text-white px-4 text-sm outline-none font-[inherit] placeholder:text-neutral-600"
+            />
+          </div>
+
+          {/* Instagram */}
+          <div className="flex items-center h-14 focus-within:bg-neutral-900 transition-colors group">
+            <div className="flex items-center gap-2 px-4 w-44 shrink-0">
+              <FaInstagram className="text-pink-500 text-base shrink-0" />
+              <span className="text-sm text-neutral-400 font-medium">Instagram</span>
+            </div>
+            <div className="w-px h-5 bg-neutral-700 shrink-0" />
+            <input
+              type="text"
+              value={instaLink}
+              onChange={(e) => setInstaLink(e.target.value)}
+              placeholder="예) hanok_official"
+              className="flex-1 bg-transparent text-white px-4 text-sm outline-none font-[inherit] placeholder:text-neutral-600"
+            />
+          </div>
+
+          {/* TikTok */}
+          <div className="flex items-center h-14 focus-within:bg-neutral-900 transition-colors group">
+            <div className="flex items-center gap-2 px-4 w-44 shrink-0">
+              <FaTiktok className="text-neutral-300 text-base shrink-0" />
+              <span className="text-sm text-neutral-400 font-medium">TikTok</span>
+            </div>
+            <div className="w-px h-5 bg-neutral-700 shrink-0" />
+            <input
+              type="text"
+              value={tictokLink}
+              onChange={(e) => setTictokLink(e.target.value)}
+              placeholder="예) hanok_official"
+              className="flex-1 bg-transparent text-white px-4 text-sm outline-none font-[inherit] placeholder:text-neutral-600"
+            />
+          </div>
         </div>
       </div>
 

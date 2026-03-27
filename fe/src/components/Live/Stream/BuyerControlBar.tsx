@@ -14,6 +14,11 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 export type ControlBarVariant = 'overlay' | 'inline';
 
+const BUYER_AUCTION_TYPE_LABELS: Record<Exclude<LiveAuctionType, null>, string> = {
+  BOTTOM_UP: '상향식 경매',
+  UNIQUE_TOP: '유일최고가 경매',
+};
+
 interface Props {
   auctionType: LiveAuctionType | null;
   bidSync: BidSyncPayload | null;
@@ -87,13 +92,31 @@ export default function BuyerControlBar({
   return (
     <>
       <div className={`${variant === 'overlay' ? 'absolute bottom-3 left-3 right-3' : ''} flex flex-col gap-2`}>
-        <div className="flex items-center justify-between">
-          <KeyboardGuide variant="buyer" open={guideOpen} onToggle={setGuideOpen} activeKeys={activeKeys} placement={variant === 'inline' ? 'top' : 'left'} />
+        {auctionType ? (
+          <div className="flex items-center gap-2">
+            <div className="rounded-full border border-gold/30 bg-surface/85 px-4 py-3 text-price-sm font-bold tracking-[0.12em] text-gold shadow-[0_10px_30px_rgba(0,0,0,0.2)] backdrop-blur-md">
+              {BUYER_AUCTION_TYPE_LABELS[auctionType]}
+            </div>
+            {auctionType === 'UNIQUE_TOP' && uniqueBidSync?.bidRange ? (
+              <div className="rounded-full border border-white/8 bg-surface/75 px-4 py-3 text-price-sm font-bold tabular-nums text-neutral-300 backdrop-blur-md">
+                입찰 범위 {uniqueBidSync.bidRange.minPrice.toLocaleString()} ~{' '}
+                {uniqueBidSync.bidRange.maxPrice.toLocaleString()}원
+              </div>
+            ) : null}
+          </div>
+        ) : null}
 
-          <div className="mx-4 flex min-h-28 flex-1">
-            <div
-              className="flex min-h-28 flex-1 flex-col gap-2 rounded-2xl bg-surface/80 px-4 py-3"
-            >
+        <div className="flex items-center justify-between">
+          <KeyboardGuide
+            variant="buyer"
+            open={guideOpen}
+            onToggle={setGuideOpen}
+            activeKeys={activeKeys}
+            placement={variant === 'inline' ? 'top' : 'left'}
+          />
+
+          <div className="mx-4 flex min-h-[88px] flex-1">
+            <div className="flex min-h-[88px] flex-1 flex-col gap-1.5 rounded-2xl bg-surface/80 px-4 py-2">
               {bid.visibleAuctionEndPhase !== null ? (
                 <div className="flex flex-1 flex-col items-center justify-center gap-2">
                   {bid.visibleAuctionEndPhase === 'ended' ? (
@@ -113,34 +136,28 @@ export default function BuyerControlBar({
                 </div>
               ) : (
                 <>
-                  <div className="flex gap-1 rounded-lg bg-neutral-900 p-0.5">
-                    {bid.isUniqueAuction ? (
-                      <div className="flex-1 rounded-md bg-neutral-800 py-1.5 text-center text-sm font-bold text-neutral-100">
-                        유일 최고가 경매
-                      </div>
-                    ) : (
-                      <>
-                        <button
-                          type="button"
-                          className={`flex-1 rounded-md py-1.5 text-sm font-bold transition ${
-                            bid.activeTab === 'quick' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'
-                          }`}
-                          onClick={() => bid.setTab('quick')}
-                        >
-                          빠른 입찰
-                        </button>
-                        <button
-                          type="button"
-                          className={`flex-1 rounded-md py-1.5 text-sm font-bold transition ${
-                            bid.activeTab === 'custom' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'
-                          }`}
-                          onClick={() => bid.setTab('custom')}
-                        >
-                          직접 입찰
-                        </button>
-                      </>
-                    )}
-                  </div>
+                  {bid.isUniqueAuction ? null : (
+                    <div className="flex gap-1 rounded-lg bg-neutral-900 p-0.5">
+                      <button
+                        type="button"
+                        className={`flex-1 rounded-md py-1 text-sm font-bold transition ${
+                          bid.activeTab === 'quick' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'
+                        }`}
+                        onClick={() => bid.setTab('quick')}
+                      >
+                        빠른 입찰
+                      </button>
+                      <button
+                        type="button"
+                        className={`flex-1 rounded-md py-1 text-sm font-bold transition ${
+                          bid.activeTab === 'custom' ? 'bg-neutral-800 text-neutral-100' : 'text-neutral-500'
+                        }`}
+                        onClick={() => bid.setTab('custom')}
+                      >
+                        직접 입찰
+                      </button>
+                    </div>
+                  )}
 
                   {bid.isUniqueAuction ? (
                     <UniqueBidPanel bid={bid} />
@@ -154,10 +171,10 @@ export default function BuyerControlBar({
             </div>
           </div>
 
-          <div className="flex min-h-28 flex-col justify-center gap-3 rounded-2xl bg-surface/80 px-2.5">
+          <div className="flex h-[88px] flex-col justify-center gap-1.5 rounded-2xl bg-surface/80 px-2">
             <button
               type="button"
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-neutral-400 transition hover:bg-warm/10 hover:text-neutral-200"
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-neutral-400 transition hover:bg-warm/10 hover:text-neutral-200"
               onClick={onToggleMute}
             >
               {isRemoteAudioMuted ? <LuVolumeOff size={18} /> : <LuVolume2 size={18} />}
@@ -165,7 +182,7 @@ export default function BuyerControlBar({
             {showChatToggle && (
               <button
                 type="button"
-                className="flex h-10 w-10 items-center justify-center rounded-xl text-neutral-400 transition hover:bg-warm/10 hover:text-neutral-200"
+                className="flex h-9 w-9 items-center justify-center rounded-xl text-neutral-400 transition hover:bg-warm/10 hover:text-neutral-200"
                 onClick={onToggleChat}
               >
                 <IoChatbubbleOutline size={18} />
@@ -173,7 +190,6 @@ export default function BuyerControlBar({
             )}
           </div>
         </div>
-
       </div>
 
       <BidAccessModal

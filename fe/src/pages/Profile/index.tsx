@@ -1,5 +1,5 @@
 ﻿import { useState, useRef, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { useGetSellerProfile } from '@/api/hooks/useGetSellerProfile';
 import { useGetSellerReputation } from '@/api/hooks/useGetSellerReputation';
 import { useGetSellerNotice } from '@/api/hooks/useGetSellerNotice';
@@ -15,6 +15,7 @@ import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
 import NoticeList from '@/components/Profile/NoticeList';
 import ProfileEditModal, { type ProfileFormState } from '@/components/Profile/ProfileEditModal';
 import ReportModal from '@/components/Profile/ReportModal';
+import InfoPanelTooltip from '@/components/common/InfoPanelTooltip';
 import ConfirmModal from '@/components/common/modal/ConfirmModal';
 import { useGetSoldAuctions } from '@/api/hooks/useGetSoldAuctions';
 import { usePatchSellerProfile } from '@/api/hooks/usePatchSellerProfile';
@@ -70,6 +71,7 @@ const formatDate = formatDateTime;
 
 export default function ProfilePage() {
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const sellerId = Number(id);
   const [activeTab, setActiveTab] = useState<'posts' | 'sales'>('posts');
 
@@ -127,7 +129,10 @@ export default function ProfilePage() {
   const { mutate: deleteNotice } = useDeleteSellerNotice(sellerId);
 
   const [viewNoticeId, setViewNoticeId] = useState<number | null>(null);
-  const { data: noticeDetail } = useGetSellerNoticeDetail(sellerId, viewNoticeId);
+  const routedNoticeIdParam = searchParams.get('noticeId');
+  const routedNoticeId = routedNoticeIdParam ? Number(routedNoticeIdParam) : null;
+  const activeNoticeId = routedNoticeId != null && Number.isFinite(routedNoticeId) ? routedNoticeId : viewNoticeId;
+  const { data: noticeDetail } = useGetSellerNoticeDetail(sellerId, activeNoticeId);
 
   const [selectedStream, setSelectedStream] = useState<ScheduledStream | null>(null);
   const [streamDropdownOpen, setStreamDropdownOpen] = useState(false);
@@ -216,7 +221,7 @@ export default function ProfilePage() {
   const handleOpenProfileEdit = () => {
     if (!data) return;
     setProfileForm({
-      nickname: data.nickname,
+      nickname: data.shopName,
       intro: data.intro,
       instaUrl: stripPrefix(data.instagramUrl ?? ''),
       youtubeUrl: stripPrefix(data.youtubeUrl ?? ''),
@@ -232,7 +237,9 @@ export default function ProfilePage() {
     }
     patchProfile(
       {
-        ...profileForm,
+        shopName: profileForm.nickname.trim(),
+        intro: profileForm.intro,
+        profileImage: undefined,
         instaUrl: addPrefix(profileForm.instaUrl, SOCIAL_PREFIX.instagram),
         youtubeUrl: addPrefix(profileForm.youtubeUrl, SOCIAL_PREFIX.youtube),
         tiktokUrl: addPrefix(profileForm.tiktokUrl, SOCIAL_PREFIX.tiktok),
@@ -251,6 +258,15 @@ export default function ProfilePage() {
 
   const handleDeleteNotice = (postId: number) => {
     setDeleteNoticeTarget(postId);
+  };
+
+  const handleCloseNoticeModal = () => {
+    setViewNoticeId(null);
+    if (searchParams.has('noticeId')) {
+      const nextSearchParams = new URLSearchParams(searchParams);
+      nextSearchParams.delete('noticeId');
+      setSearchParams(nextSearchParams);
+    }
   };
 
   const handleConfirmDeleteNotice = () => {
@@ -324,7 +340,7 @@ export default function ProfilePage() {
     );
   }
 
-  const { nickname, intro, profileImage, instagramUrl, youtubeUrl, tiktokUrl } = data;
+  const { shopName, intro, profileImage, instagramUrl, youtubeUrl, tiktokUrl } = data;
 
   return (
     <div className="w-full box-border max-w-[1200px] mx-auto py-10 px-5 flex flex-col gap-6">
@@ -348,7 +364,7 @@ export default function ProfilePage() {
                   <>
                     <img
                       src={profileImage}
-                      alt={nickname}
+                      alt={shopName}
                       className="w-[96px] h-[96px] rounded-full object-cover border-[3px] border-surface"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
@@ -357,12 +373,12 @@ export default function ProfilePage() {
                       }}
                     />
                     <div className="hidden w-[96px] h-[96px] rounded-full bg-surface border-[3px] border-surface text-gold-light text-[36px] items-center justify-center font-bold">
-                      {nickname.charAt(0)}
+                      {shopName.charAt(0)}
                     </div>
                   </>
                 ) : (
                   <div className="w-[96px] h-[96px] rounded-full bg-surface border-[3px] border-surface text-gold-light text-[36px] flex items-center justify-center font-bold">
-                    {nickname.charAt(0)}
+                    {shopName.charAt(0)}
                   </div>
                 )}
               </div>
@@ -375,7 +391,7 @@ export default function ProfilePage() {
 
             <div className="flex flex-col gap-2 flex-1 min-w-0 pt-1">
               <div className="flex items-center gap-3">
-                <h2 className="m-0 text-[22px] text-white">{nickname}</h2>
+                <h2 className="m-0 text-[22px] text-white">{shopName}</h2>
                 {isMyProfile && (
                   <button onClick={handleOpenProfileEdit} className="rounded-lg bg-white/[0.06] border-none px-3 py-1.5 text-[12px] text-neutral-300 cursor-pointer hover:bg-white/[0.1] hover:text-white transition-colors">
                     수정
@@ -433,10 +449,10 @@ export default function ProfilePage() {
                 <span className="text-[14px] text-primary-light">팔로워</span>
                 <span className="text-price-lg text-white">{reputation?.followerCount ?? data.stats.followerCount ?? '-'}</span>
               </div>
-              <div className="relative flex flex-col items-center gap-1.5 rounded-xl bg-white/[0.04] py-5 group">
-                <span className="text-[14px] text-primary-light flex items-center gap-1">
+              <div className="group relative flex flex-col items-center gap-1.5 rounded-xl bg-white/[0.04] py-5">
+                <span className="flex items-center gap-1 text-[14px] text-primary-light">
                   평점
-                  <svg className="w-3.5 h-3.5 text-neutral-500 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-3.5 w-3.5 cursor-help text-neutral-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </span>
@@ -445,21 +461,20 @@ export default function ProfilePage() {
                     ? ((reputation.completionRate / 100) * 5).toFixed(1)
                     : (data.stats.rating ?? '-')}
                 </span>
-                <div className="absolute bottom-full mb-2 left-0 w-72 p-3 bg-neutral-900 border border-white/10 rounded-lg shadow-xl text-xs text-neutral-300 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                  <p className="font-semibold text-white mb-1.5">평점 산정 기준</p>
-                  <ul className="space-y-1 list-disc list-inside">
+                <InfoPanelTooltip title="평점 산정 기준">
+                  <ul className="list-disc list-inside space-y-1">
                     <li>완료된 거래와 거래 취소 건수로 산정</li>
                     <li>성공률(%) × 5점 만점으로 계산</li>
                     <li>거래가 없으면 기본 만점(5.0점)</li>
                   </ul>
                   {reputation?.totalTrades != null && (
-                    <div className="mt-2 pt-2 border-t border-white/10 space-y-0.5">
+                    <div className="mt-2 space-y-0.5 border-t border-white/10 pt-2">
                       <p>총 거래: <span className="text-white">{reputation.totalTrades}건</span></p>
                       <p>거래 취소: <span className="text-white">{reputation.cancelCount ?? 0}건</span></p>
                       <p>거래 성공률: <span className="text-white">{reputation.completionRate != null ? `${reputation.completionRate}%` : '-'}</span></p>
                     </div>
                   )}
-                </div>
+                </InfoPanelTooltip>
               </div>
               <div className="flex flex-col items-center gap-1.5 rounded-xl bg-white/[0.04] py-5">
                 <span className="text-[14px] text-primary-light">평균 배송</span>
@@ -650,10 +665,10 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {viewNoticeId !== null && noticeDetail && (
+      {activeNoticeId !== null && noticeDetail && (
         <div
           className="fixed top-0 left-0 w-full h-full bg-black/90 z-[999] flex items-center justify-center backdrop-blur-sm"
-          onClick={() => setViewNoticeId(null)}
+          onClick={handleCloseNoticeModal}
         >
           <div
             className="bg-surface border border-neutral-800 rounded-2xl w-[600px] p-10 flex flex-col gap-6 shadow-[0_8px_30px_rgba(0,0,0,0.5)]"
@@ -685,7 +700,7 @@ export default function ProfilePage() {
 
             <div className="flex justify-end">
               <button
-                onClick={() => setViewNoticeId(null)}
+                onClick={handleCloseNoticeModal}
                 className="py-3 px-8 bg-neutral-700 text-neutral-200 border-none rounded-lg cursor-pointer text-subtitle-sm hover:bg-neutral-600 transition-colors"
               >
                 닫기
@@ -718,7 +733,7 @@ export default function ProfilePage() {
 
       {isReportModalOpen && (
         <ReportModal
-          sellerNickname={nickname}
+          sellerNickname={shopName}
           onClose={() => setIsReportModalOpen(false)}
           onSubmit={() => {
             showToast({ type: 'success', message: '신고가 접수되었습니다.' });

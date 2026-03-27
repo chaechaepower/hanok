@@ -22,7 +22,7 @@ export default function CustomSelectTrigger({
         disabled ? 'cursor-not-allowed opacity-60' : 'hover:border-primary'
       }`}
     >
-      <span className={selectedLabel ? 'text-neutral-100' : 'text-neutral-500'}>{selectedLabel || placeholder}</span>
+      <span className={`truncate ${selectedLabel ? 'text-neutral-100' : 'text-neutral-500'}`}>{selectedLabel || placeholder}</span>
       <span className={`text-sm text-gold transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
     </button>
   );

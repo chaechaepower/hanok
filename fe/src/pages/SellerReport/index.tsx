@@ -340,7 +340,9 @@ export default function SellerReportPage() {
             <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-neutral-800/50">
               <FiPackage className="text-gold-light" size={24} />
               <span className="text-neutral-500 text-xs">평균 배송</span>
-              <span className="text-2xl font-bold text-white">{report.reputation.avgShipDays}일</span>
+              <span className="text-2xl font-bold text-white">
+                {report.reputation.avgShipDays != null ? `${report.reputation.avgShipDays}일` : '-'}
+              </span>
             </div>
             <div className="flex flex-col items-center gap-2 p-4 rounded-xl bg-neutral-800/50">
               <FiAlertCircle

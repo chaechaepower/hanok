@@ -10,18 +10,28 @@ import { getDefaultScheduleTime, getScheduleMaxDate, getScheduleToday, mergeDate
 type Props = {
   onConfirm: (scheduledAt: string) => void;
   onClose: () => void;
+  initialScheduledAt?: string;
 };
 
-const today = getScheduleToday();
-const maxDate = getScheduleMaxDate(today);
-const defaultTime = getDefaultScheduleTime();
+export default function ScheduleModal({ onConfirm, onClose, initialScheduledAt }: Props) {
+  const today = getScheduleToday();
+  const maxDate = getScheduleMaxDate(today);
 
-export default function ScheduleModal({ onConfirm, onClose }: Props) {
-  const [selectedDate, setSelectedDate] = useState(new Date(today));
-  const [viewYear, setViewYear] = useState(today.getFullYear());
-  const [viewMonth, setViewMonth] = useState(today.getMonth());
-  const [hour, setHour] = useState(defaultTime.hour);
-  const [minute, setMinute] = useState(defaultTime.minute);
+  const getInitialDateTime = () => {
+    if (initialScheduledAt) {
+      const d = new Date(initialScheduledAt);
+      if (!isNaN(d.getTime())) return { date: d, hour: d.getHours(), minute: d.getMinutes() };
+    }
+    const defaultTime = getDefaultScheduleTime();
+    return { date: new Date(today), hour: defaultTime.hour, minute: defaultTime.minute };
+  };
+
+  const initial = getInitialDateTime();
+  const [selectedDate, setSelectedDate] = useState(initial.date);
+  const [viewYear, setViewYear] = useState(initial.date.getFullYear());
+  const [viewMonth, setViewMonth] = useState(initial.date.getMonth());
+  const [hour, setHour] = useState(initial.hour);
+  const [minute, setMinute] = useState(initial.minute);
 
   const scheduledDate = useMemo(() => mergeDateAndTime(selectedDate, hour, minute), [selectedDate, hour, minute]);
   const isPast = scheduledDate <= new Date();

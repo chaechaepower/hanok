@@ -18,7 +18,7 @@ export const sellerHandlers = [
     return HttpResponse.json(
       {
         sellerId: 101,
-        nickname: 'Mock Seller',
+        shopName: 'Mock Seller',
       },
       { status: 201 },
     );

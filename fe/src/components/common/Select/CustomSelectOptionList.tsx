@@ -22,7 +22,7 @@ export default function CustomSelectOptionList({
           onMouseEnter={() => onOptionHover(option)}
           onMouseLeave={() => onOptionHover(null)}
           onClick={() => onSelect(option.value)}
-          className={`w-full px-4 py-2.5 text-left text-[14px] transition-colors ${
+          className={`w-full px-4 py-2.5 text-left text-[14px] transition-colors whitespace-nowrap ${
             value === option.value
               ? 'bg-gold/15 font-semibold text-gold-light'
               : 'text-neutral-300 hover:bg-warm/8 hover:text-neutral-100'
