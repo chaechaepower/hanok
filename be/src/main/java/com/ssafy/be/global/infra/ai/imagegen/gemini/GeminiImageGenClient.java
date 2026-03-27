@@ -1,8 +1,8 @@
-package com.ssafy.be.global.infra.imagegen.gemini;
+package com.ssafy.be.global.infra.ai.imagegen.gemini;
 
 import com.ssafy.be.global.exception.GlobalException;
-import com.ssafy.be.global.infra.imagegen.ImageGenClient;
-import com.ssafy.be.global.infra.imagegen.ImageGenerationResult;
+import com.ssafy.be.global.infra.ai.imagegen.ImageGenClient;
+import com.ssafy.be.global.infra.ai.imagegen.ImageGenerationResult;
 
 import java.net.URI;
 import java.util.Base64;
@@ -14,10 +14,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
-import static com.ssafy.be.global.infra.imagegen.exception.ImageGenErrorCode.IMAGE_GENERATION_FAILED;
-import static com.ssafy.be.global.infra.imagegen.gemini.GeminiGenerateContentModels.InlineDataOut;
-import static com.ssafy.be.global.infra.imagegen.gemini.GeminiGenerateContentModels.PartOut;
-import static com.ssafy.be.global.infra.imagegen.gemini.GeminiGenerateContentModels.Request;
+import static com.ssafy.be.global.infra.ai.imagegen.exception.ImageGenErrorCode.IMAGE_GENERATION_FAILED;
+import static com.ssafy.be.global.infra.ai.imagegen.gemini.GeminiGenerateContentModels.InlineDataOut;
+import static com.ssafy.be.global.infra.ai.imagegen.gemini.GeminiGenerateContentModels.PartOut;
+import static com.ssafy.be.global.infra.ai.imagegen.gemini.GeminiGenerateContentModels.Request;
 
 @Component
 public class GeminiImageGenClient implements ImageGenClient {
@@ -26,10 +26,10 @@ public class GeminiImageGenClient implements ImageGenClient {
     private final String generateContentUrl;
 
     public GeminiImageGenClient(
-            @Value("${gms.api-key}") String gmsApiKey,
-            @Value("${gms.image-generation.generate-content-url}") String imageGenerationUrl
+            @Value("${ai.gms.api-key}") String gmsApiKey,
+            @Value("${ai.image-generation.generate-content-url}") String imageGenUrl
     ) {
-        this.generateContentUrl = imageGenerationUrl;
+        this.generateContentUrl = imageGenUrl;
         this.restClient = RestClient.builder()
                 .defaultHeader("x-goog-api-key", gmsApiKey)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -37,7 +37,7 @@ public class GeminiImageGenClient implements ImageGenClient {
     }
 
     @Override
-    public ImageGenerationResult generateImageFrom(String prompt) {
+    public ImageGenerationResult generateImage(String prompt) {
         GeminiGenerateContentModels.Response response = restClient
                 .post()
                 .uri(URI.create(generateContentUrl))

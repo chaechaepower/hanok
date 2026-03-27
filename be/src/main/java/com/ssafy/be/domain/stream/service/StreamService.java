@@ -29,6 +29,7 @@ import com.ssafy.be.domain.stream.entity.StreamSortType;
 import com.ssafy.be.domain.stream.entity.StreamStatus;
 import com.ssafy.be.domain.stream.entity.StreamViewType;
 import com.ssafy.be.domain.stream.exception.StreamErrorCode;
+import com.ssafy.be.global.infra.ai.prompt.StreamThumbnailPromptRenderer;
 import com.ssafy.be.domain.stream.repository.MacroRedisRepository;
 import com.ssafy.be.domain.stream.repository.StreamReconnectRedisRepository;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
@@ -37,6 +38,8 @@ import com.ssafy.be.domain.uniqueaction.repository.UniqueBidAuctionDetailReposit
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
+import com.ssafy.be.global.infra.ai.imagegen.ImageGenClient;
+import com.ssafy.be.global.infra.ai.imagegen.ImageGenerationResult;
 import com.ssafy.be.global.infra.storage.gcs.GcsClient;
 import com.ssafy.be.global.infra.livekit.LiveKitProperties;
 import com.ssafy.be.global.websocket.enums.StreamEventType;
@@ -88,8 +91,9 @@ public class StreamService {
     private final MacroRedisRepository macroRedisRepository;
     private final StreamReconnectRedisRepository streamReconnectRedisRepository;
     private final StreamPublisher streamPublisher; // 추가
+    private final ImageGenClient imageGenClient;
+    private final StreamThumbnailPromptRenderer streamThumbnailPromptRenderer;
 
-    // TODO: Item 엔티티에서 경매 데이터 분리 시 다른 서비스 메서드도 리팩토링 필요
     @Transactional
     public StreamRegisterResponse register(Long userId, StreamRegisterRequest request, MultipartFile thumbnail) {
         // 판매자 조회
@@ -107,9 +111,11 @@ public class StreamService {
             } catch (IOException e) {
                 throw new GlobalException(StreamErrorCode.THUMBNAIL_UPLOAD_FAILED);
             }
-        }
-        else{ // 썸네일 생성해서 저장
-
+        } else {
+            String imageGenPrompt = streamThumbnailPromptRenderer.render(request, seller);
+            ImageGenerationResult result = imageGenClient.generateImage(imageGenPrompt);
+            String thumbnailUrl = gcsClient.uploadStreamThumbnailBytes(result.bytes(), result.mimeType(), seller.getId(), savedStream.getId());
+            savedStream.updateThumbnail(thumbnailUrl);
         }
 
         // 물품 상태 변경 및 경매 생성

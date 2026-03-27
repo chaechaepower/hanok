@@ -1,4 +1,4 @@
-package com.ssafy.be.global.infra.imagegen.gemini;
+package com.ssafy.be.global.infra.ai.imagegen.gemini;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

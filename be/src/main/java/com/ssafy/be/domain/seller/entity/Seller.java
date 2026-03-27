@@ -128,4 +128,8 @@ public class Seller {
             this.avgShipDays = (this.avgShipDays + newShipDays) / 2.0;
         }
     }
+
+    public String describe() {
+        return String.format("상점 이름: %s, 소개: %s", shopName, intro);
+    }
 }
