@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ComponentType, CSSProperties, ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { FiAlertCircle, FiCheck, FiCheckCircle, FiClock, FiCopy, FiExternalLink } from 'react-icons/fi';
 
 import { useGetNftReceipt } from '@/api/hooks/useGetNftReceipt';
@@ -18,58 +18,45 @@ type StatusMeta = {
   label: string;
   headline: string;
   chipClassName: string;
-  resultClassName: string;
-  resultTextClassName: string;
+  noteClassName: string;
+  noteTextClassName: string;
   icon: ComponentType<{ className?: string }>;
 };
 
 const STATUS_META: Record<StatusKey, StatusMeta> = {
   COMPLETED: {
     label: 'MINTED',
-    headline: '블록체인에 성공적으로 기록되었습니다',
-    chipClassName: 'bg-gold-light text-background',
-    resultClassName: 'border-emerald-500/28 bg-emerald-500/10',
-    resultTextClassName: 'text-emerald-200',
+    headline: '블록체인에 성공적으로 기록되었습니다.',
+    chipClassName: 'border-green-800 bg-green-950/40 text-green-400',
+    noteClassName: 'border-green-900/50 bg-green-950/20',
+    noteTextClassName: 'text-green-300/90',
     icon: FiCheckCircle,
   },
   PENDING: {
     label: 'PENDING',
-    headline: '블록체인에 기록 중입니다...',
-    chipClassName: 'bg-primary-light text-background',
-    resultClassName: 'border-amber-400/28 bg-amber-400/10',
-    resultTextClassName: 'text-amber-200',
+    headline: '블록체인에 기록 중입니다.',
+    chipClassName: 'border-yellow-800 bg-yellow-950/40 text-yellow-400',
+    noteClassName: 'border-yellow-900/50 bg-yellow-950/20',
+    noteTextClassName: 'text-yellow-300/90',
     icon: FiClock,
   },
   FAILED: {
     label: 'FAILED',
-    headline: '블록체인 기록에 실패했습니다',
-    chipClassName: 'bg-accent-light text-background',
-    resultClassName: 'border-rose-400/28 bg-rose-400/10',
-    resultTextClassName: 'text-rose-200',
+    headline: '블록체인 기록에 실패했습니다.',
+    chipClassName: 'border-red-800 bg-red-950/40 text-red-400',
+    noteClassName: 'border-red-900/50 bg-red-950/20',
+    noteTextClassName: 'text-red-300/90',
     icon: FiAlertCircle,
   },
 };
 
-const ticketWrapperMaskStyle: CSSProperties = {
-  WebkitMask:
-    'radial-gradient(circle at 12.5px 0px, transparent 6px, black 6.5px) top left / 25px 51% repeat-x, radial-gradient(circle at 12.5px 100%, transparent 6px, black 6.5px) bottom left / 25px 51% repeat-x',
-  mask: 'radial-gradient(circle at 12.5px 0px, transparent 6px, black 6.5px) top left / 25px 51% repeat-x, radial-gradient(circle at 12.5px 100%, transparent 6px, black 6.5px) bottom left / 25px 51% repeat-x',
-};
-
-const ticketInnerMaskStyle: CSSProperties = {
-  WebkitMask:
-    'radial-gradient(circle at 12.5px -2px, transparent 8px, black 8.5px) top left / 25px 51% repeat-x, radial-gradient(circle at 12.5px calc(100% + 2px), transparent 8px, black 8.5px) bottom left / 25px 51% repeat-x',
-  mask: 'radial-gradient(circle at 12.5px -2px, transparent 8px, black 8.5px) top left / 25px 51% repeat-x, radial-gradient(circle at 12.5px calc(100% + 2px), transparent 8px, black 8.5px) bottom left / 25px 51% repeat-x',
-};
-
-function TicketFrame({ children, className }: { children: ReactNode; className?: string }) {
+function WoodenPlaque({ children }: { children: ReactNode }) {
   return (
-    <div
-      className={`relative h-[680px] w-[325px] rounded-[2px] bg-primary-light p-[2px] ${className ?? ''}`}
-      style={ticketWrapperMaskStyle}
-    >
-      <div className="flex h-full w-full flex-col bg-[#060606] text-white" style={ticketInnerMaskStyle}>
-        {children}
+    <div className="relative mx-auto w-full max-w-[430px] rounded-[30px] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.7)] p-4 flex flex-col items-center bg-gradient-to-br from-amber-800 via-yellow-900 to-amber-950 border-[5px] border-amber-950 font-serif">
+      <div className="w-8 h-8 rounded-full bg-[#1a0f07] shadow-[inset_0_5px_10px_rgba(0,0,0,0.8)] mb-5 mt-1"></div>
+
+      <div className="w-full h-full border border-amber-700/40 p-5 sm:p-6 rounded-xl shadow-[inset_0_0_20px_rgba(0,0,0,0.6)] flex flex-col bg-amber-900/20">
+        <div className="relative z-10 w-full">{children}</div>
       </div>
     </div>
   );
@@ -88,32 +75,27 @@ function CopyButton({ text }: { text: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="ml-2 shrink-0 text-white/45 transition hover:text-white"
+      className="ml-2 shrink-0 text-amber-400/60 transition hover:text-amber-200"
       aria-label="복사"
     >
-      {copied ? <FiCheck className="h-4 w-4 text-gold-light" /> : <FiCopy className="h-4 w-4" />}
+      {copied ? <FiCheck className="h-4 w-4 text-green-400" /> : <FiCopy className="h-4 w-4" />}
     </button>
   );
 }
 
-function SectionRow({ label, value }: { label: string; value: ReactNode }) {
+function DetailRow({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <>
-      <div>{label}</div>
-      <div>{value}</div>
-    </>
+    <div className="grid grid-cols-[84px_1fr] items-start gap-3 border-b border-amber-800/60 py-2.5 last:border-b-0">
+      <div className="text-[11px] font-medium tracking-[0.18em] text-amber-200/60">{label}</div>
+      <div className="text-right text-[13px] font-bold text-amber-50 drop-shadow-md">{value}</div>
+    </div>
   );
 }
 
-function Crosshair({ active = false }: { active?: boolean }) {
+function MiniSeal({ children }: { children: ReactNode }) {
   return (
-    <div className={`relative h-4 w-4 rounded-full border ${active ? 'border-gold-light' : 'border-white'}`}>
-      <span
-        className={`absolute left-1/2 top-[-3px] h-[22px] w-px -translate-x-1/2 ${active ? 'bg-gold-light' : 'bg-white'}`}
-      />
-      <span
-        className={`absolute left-[-3px] top-1/2 h-px w-[22px] -translate-y-1/2 ${active ? 'bg-gold-light' : 'bg-white'}`}
-      />
+    <div className="inline-flex h-7 min-w-7 items-center justify-center rounded-sm border-[2px] border-red-700/80 bg-red-900/10 px-2 text-[10px] font-bold tracking-[0.14em] text-red-500 shadow-sm transform -rotate-3 select-none">
+      {children}
     </div>
   );
 }
@@ -128,24 +110,21 @@ export default function NftReceiptDetailContent({
 
   if (isLoading) {
     return (
-      <div className="mx-auto flex max-w-[760px] flex-col gap-6">
-        <div className="h-8 w-48 animate-pulse rounded-xl bg-white/10" />
-        <div className="flex flex-wrap justify-center gap-[30px]">
-          <div className="h-[680px] w-[325px] animate-pulse rounded-[10px] bg-white/10" />
-          <div className="h-[680px] w-[325px] animate-pulse rounded-[10px] bg-white/10" />
-        </div>
+      <div className="mx-auto flex max-w-[430px] flex-col gap-6">
+        <div className="h-8 w-44 animate-pulse rounded-xl bg-amber-900/50 mx-auto" />
+        <div className="h-[760px] animate-pulse rounded-[30px] bg-gradient-to-br from-amber-800/80 to-amber-950" />
       </div>
     );
   }
 
   if (!nft) {
     return (
-      <div className="flex flex-col items-center gap-4 py-20 text-center">
-        <p className="text-lg font-semibold text-neutral-300">NFT 영수증을 찾을 수 없습니다</p>
+      <div className="flex flex-col items-center gap-4 py-20 text-center font-serif">
+        <p className="text-lg font-semibold text-amber-200">NFT 영수증 정보를 찾을 수 없습니다.</p>
         <button
           type="button"
           onClick={onClose}
-          className="rounded-2xl bg-primary px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-light"
+          className="rounded-full border border-amber-700 bg-amber-900 px-6 py-2.5 text-sm font-semibold text-amber-100 transition hover:bg-amber-800"
         >
           {closeVariant === 'modal' ? '닫기' : '돌아가기'}
         </button>
@@ -156,7 +135,6 @@ export default function NftReceiptDetailContent({
   const isModal = closeVariant === 'modal';
   const statusKey = (nft.txStatus ?? 'PENDING') as StatusKey;
   const status = STATUS_META[statusKey];
-  const titleYear = nft.mintedAt ? new Date(nft.mintedAt).getFullYear() : '----';
   const hashLabel = nft.txHash ? shortenTxHash(nft.txHash) : 'PENDING';
   const barcodeDigits = `${nft.escrowId}${nft.tokenId ?? 0}${nft.blockNumber ?? 0}`
     .replace(/\D/g, '')
@@ -164,130 +142,103 @@ export default function NftReceiptDetailContent({
     .slice(0, 14);
 
   return (
-    <div className="mx-auto flex max-w-[760px] flex-col gap-6 text-neutral-100">
-      <div className="flex flex-wrap justify-center gap-[30px]">
-        <TicketFrame>
-          <div className="flex h-full items-stretch justify-between px-5 py-10 font-['Arial_Black',Impact,sans-serif] uppercase">
-            <div className="flex flex-col justify-between text-[190px] leading-[0.76]">
-              <div>H</div>
-              <div>A</div>
-              <div>N</div>
-              <div>O</div>
+    <div className="mx-auto flex max-w-[430px] flex-col gap-6 text-amber-50">
+      <WoodenPlaque>
+        {/* 헤더 타이틀 영역 */}
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <div className="text-[10px] font-semibold tracking-[0.42em] text-amber-500/80 drop-shadow-sm">
+              한옥 영수증 명패
             </div>
-            <div className="flex flex-col justify-between pt-[15px] text-right text-[140px] leading-[0.76]">
-              <div>K</div>
-              <div>N</div>
-              <div>F</div>
-              <div>T</div>
+            <div className="mt-2 font-['Nanum_Myeongjo',serif] text-[32px] font-bold tracking-[0.08em] text-amber-100 drop-shadow-[1px_1px_3px_rgba(0,0,0,0.8)]">
+              호패 명부
             </div>
           </div>
-        </TicketFrame>
+        </div>
 
-        <TicketFrame>
-          <div className="flex h-full flex-col px-5 py-[30px]">
-            <div className="mb-3 flex items-center justify-between text-[10px] font-bold tracking-[0.5px]">
-              <span>HANOK ORIGINAL TICKET</span>
-              <span>NO.{String(nft.escrowId).padStart(2, '0')}</span>
-            </div>
+        {/* 작품 정보 박스 (음각 상자 느낌) */}
+        <div className="mb-6 rounded-[16px] border border-amber-800/50 bg-black/20 px-5 py-6 text-center shadow-[inset_0_2px_8px_rgba(0,0,0,0.3)]">
+          <div className="text-[11px] font-semibold tracking-[0.28em] text-amber-400/60">
+            발행 시각 [{nft.mintedAt ? formatLongDate(nft.mintedAt) : '기록 대기 중'}]
+          </div>
+          <div className="mt-4 font-['Nanum_Myeongjo',serif] text-[26px] sm:text-[28px] font-bold leading-tight text-amber-50 drop-shadow-md">
+            {nft.itemName ?? 'UNTITLED NFT'}
+          </div>
+        </div>
 
-            <div className="mb-3 flex flex-1 flex-col border border-white">
-              <div className="border-b border-white px-[15px] py-[15px] text-center">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span>Title</span>
-                  <span>[{titleYear}]</span>
-                </div>
-                <div className="my-[25px] mb-[5px] text-[26px] font-black leading-tight tracking-[1px]">
-                  {nft.itemName ?? 'UNTITLED NFT'}
-                </div>
-                <div className="mb-[15px] text-[13px] font-normal text-neutral-300">Hanok Live Auction Receipt</div>
-              </div>
+        {/* 안내 메시지 */}
+        <div className={`mb-6 rounded-[14px] border px-4 py-4 ${status.noteClassName}`}>
+          <div className="text-[10px] font-semibold tracking-[0.18em] text-amber-500/80">결과</div>
+          <div className={`mt-2 text-sm font-medium leading-relaxed ${status.noteTextClassName}`}>
+            {status.headline}
+          </div>
+        </div>
 
-              <div className="grid grid-cols-[80px_1fr] gap-y-[10px] border-b border-white px-[15px] py-[15px] text-[11px] leading-[1.4]">
-                <SectionRow label="Release" value={nft.mintedAt ? formatLongDate(nft.mintedAt) : '기록 대기 중'} />
-                <SectionRow label="Seller" value={nft.sellerNickname ?? '정보 없음'} />
-                <SectionRow label="Buyer" value={nft.buyerNickname ?? '정보 없음'} />
-                <SectionRow label="Price" value={nft.price != null ? formatPrice(nft.price) : '--'} />
-              </div>
+        {/* 상세 정보 테이블 */}
+        <div className="mb-6 rounded-[16px] border border-amber-800/50 bg-black/10 px-4 py-2 shadow-inner">
+          <DetailRow label="판매자" value={nft.sellerNickname ?? '정보 없음'} />
+          <DetailRow label="구매자" value={nft.buyerNickname ?? '정보 없음'} />
+          <DetailRow label="가격" value={nft.price != null ? formatPrice(nft.price) : '--'} />
+          <DetailRow label="날짜" value={nft.mintedAt ? formatShortDate(nft.mintedAt) : '--'} />
+          <DetailRow label="시간" value={nft.mintedAt ? formatTime(nft.mintedAt) : '--'} />
+        </div>
 
-              <div className="flex items-center border-b border-white px-[15px] py-[15px] text-[11px]">
-                <div className="w-20">Status</div>
-                <div className="mr-[15px] flex gap-2">
-                  {Array.from({ length: 5 }, (_, index) => (
-                    <Crosshair key={index} active={index === 0} />
-                  ))}
-                </div>
-                <div>[ 1 / 5 ]</div>
-              </div>
-
-              <div className={`h-[60px] border-b px-[15px] py-[15px] text-[11px] ${status.resultClassName}`}>
-                <div className="font-semibold">결과</div>
-                <div className={`mt-2 leading-relaxed ${status.resultTextClassName}`}>{status.headline}</div>
-              </div>
-
-              <div className="grid grid-cols-2 border-b border-white text-[11px]">
-                <div className="h-10 border-r border-dashed border-white px-[15px] py-[10px]">
-                  <div>Date</div>
-                  <div className="mt-1 text-white/70">{nft.mintedAt ? formatShortDate(nft.mintedAt) : '--'}</div>
-                </div>
-                <div className="h-10 px-[20px] py-[10px]">
-                  <div>Time</div>
-                  <div className="mt-1 text-white/70">{nft.mintedAt ? formatTime(nft.mintedAt) : '--'}</div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 border-b border-white text-[11px]">
-                <div className="h-[50px] border-r border-dashed border-white px-[15px] py-[10px] text-center">
-                  <div>Theater</div>
-                  <div className="mt-1 text-white/70">HANOK</div>
-                </div>
-                <div className="h-[50px] border-r border-dashed border-white px-[15px] py-[10px] text-center">
-                  <div>Screen</div>
-                  <div className="mt-1 text-white/70">ERC-721</div>
-                </div>
-                <div className="h-[50px] px-[15px] py-[10px] text-center">
-                  <div>Seat</div>
-                  <div className="mt-1 text-white/70">{nft.tokenId != null ? `#${nft.tokenId}` : '--'}</div>
-                </div>
-              </div>
-
-              <div className="px-[15px] py-[15px] text-[11px]">
-                <div className="font-semibold">Tx Hash</div>
-                <div className="mt-2 flex items-center text-white/70">
-                  <span className="truncate font-mono">{hashLabel}</span>
-                  {nft.txHash && <CopyButton text={nft.txHash} />}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-auto flex items-end justify-between text-[11px] font-black">
-              <span>HANOK LIVE HOUSE</span>
-              <div className="flex gap-[2px]">
-                {['H', 'A', 'N', 'O', 'K'].map((letter) => (
-                  <span
-                    key={letter}
-                    className="inline-block h-[14px] w-[14px] bg-white text-center text-[10px] leading-[14px] text-black"
-                  >
-                    {letter}
-                  </span>
-                ))}
-              </div>
+        {/* 서브 정보 그리드 */}
+        <div className="mb-6 grid grid-cols-3 gap-3">
+          <div className="rounded-[14px] border border-amber-800/40 bg-black/20 px-2 py-3 text-center shadow-[inset_0_1px_4px_rgba(0,0,0,0.2)]">
+            <div className="text-[10px] font-semibold tracking-[0.18em] text-amber-500/70">발행처</div>
+            <div className="mt-2 text-sm font-bold text-amber-100">한옥</div>
+          </div>
+          <div className="rounded-[14px] border border-amber-800/40 bg-black/20 px-2 py-3 text-center shadow-[inset_0_1px_4px_rgba(0,0,0,0.2)]">
+            <div className="text-[10px] font-semibold tracking-[0.18em] text-amber-500/70">토큰 표준</div>
+            <div className="mt-2 text-sm font-bold text-amber-100">ERC-721</div>
+          </div>
+          <div className="rounded-[14px] border border-amber-800/40 bg-black/20 px-2 py-3 text-center shadow-[inset_0_1px_4px_rgba(0,0,0,0.2)]">
+            <div className="text-[10px] font-semibold tracking-[0.18em] text-amber-500/70">토큰</div>
+            <div className="mt-2 text-sm font-bold text-amber-100 drop-shadow-sm">
+              {nft.tokenId != null ? `#${nft.tokenId}` : '--'}
             </div>
           </div>
-        </TicketFrame>
-      </div>
-      <div className="rounded-[18px] border border-gold/16 bg-white/[0.03] px-4 py-3">
-        <div className="h-[64px] w-full bg-[repeating-linear-gradient(90deg,var(--color-warm)_0,var(--color-warm)_2px,transparent_2px,transparent_4px,var(--color-warm)_4px,var(--color-warm)_7px,transparent_7px,transparent_9px)] opacity-90" />
-        <p className="mt-2 text-center font-mono text-sm tracking-[0.22em] text-gold-light">{barcodeDigits}</p>
-      </div>
+        </div>
 
+        {/* TX Hash */}
+        <div className="mb-6 rounded-[14px] border border-amber-800/50 bg-black/30 px-4 py-4 shadow-inner">
+          <div className="text-[11px] font-semibold tracking-[0.18em] text-amber-500/80">해시</div>
+          <div className="mt-2 flex items-center text-sm text-amber-200/90">
+            <span className="truncate font-mono">{hashLabel}</span>
+            {nft.txHash && <CopyButton text={nft.txHash} />}
+          </div>
+        </div>
+
+        {/* 바코드 및 아카이브 마크 */}
+        <div className="rounded-[16px] border border-amber-900/60 bg-gradient-to-b from-black/40 to-transparent px-4 py-5 shadow-[inset_0_0_10px_rgba(0,0,0,0.5)]">
+          <div className="mb-3 text-center text-[10px] font-semibold tracking-[0.38em] text-amber-500/60">
+            ARCHIVE MARK
+          </div>
+          {/* 바코드 (어두운 배경에 맞게 색상 조절) */}
+          <div className="h-[50px] w-full rounded-[8px] border border-amber-900/50 bg-[repeating-linear-gradient(90deg,rgba(251,191,36,0.3)_0,rgba(251,191,36,0.3)_2px,transparent_2px,transparent_4px,rgba(251,191,36,0.2)_4px,rgba(251,191,36,0.2)_7px,transparent_7px,transparent_9px)]" />
+          <p className="mt-3 text-center font-mono text-sm tracking-[0.22em] text-amber-300/60">{barcodeDigits}</p>
+
+          <div className="mt-5 flex items-center justify-between border-t border-amber-800/40 pt-4 text-[10px] font-semibold tracking-[0.24em] text-amber-400/80">
+            <span>ROYAL ARCHIVE</span>
+            <div className="flex gap-1">
+              {['H', 'A', 'N', 'O', 'K'].map((letter) => (
+                <MiniSeal key={letter}>{letter}</MiniSeal>
+              ))}
+            </div>
+          </div>
+        </div>
+      </WoodenPlaque>
+
+      {/* 하단 액션 버튼 */}
       {(isModal || (nft.txHash && nft.txStatus === 'COMPLETED')) && (
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="flex flex-col gap-3 sm:flex-row mt-2">
           {nft.txHash && nft.txStatus === 'COMPLETED' && (
             <a
               href={getExplorerUrl(nft.txHash)}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-gold/30 bg-gold-muted/50 px-5 py-3.5 text-sm font-semibold text-gold-light transition hover:bg-gold-muted"
+              className="flex flex-1 items-center justify-center gap-2 rounded-full border border-amber-700 bg-amber-900 px-5 py-3.5 text-sm font-semibold text-amber-100 shadow-lg transition hover:bg-amber-800 hover:border-amber-600"
             >
               <FiExternalLink className="h-4 w-4" />
               Etherscan에서 상세 내역 보기
@@ -298,7 +249,7 @@ export default function NftReceiptDetailContent({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-2xl border border-white/10 bg-white/6 px-5 py-3 text-sm font-semibold text-neutral-100 transition hover:bg-white/10 sm:min-w-[120px]"
+              className="rounded-full border border-amber-800 bg-black/40 px-5 py-3.5 text-sm font-semibold text-amber-200 shadow-lg transition hover:bg-black/60 sm:min-w-[120px]"
             >
               닫기
             </button>
@@ -309,33 +260,21 @@ export default function NftReceiptDetailContent({
   );
 }
 
+// Helper 함수 (그대로 유지)
 function formatLongDate(dateStr: string) {
   const date = new Date(dateStr);
   if (Number.isNaN(date.getTime())) return dateStr;
-
-  return date.toLocaleDateString('ko-KR', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  });
+  return date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
 
 function formatShortDate(dateStr: string) {
   const date = new Date(dateStr);
   if (Number.isNaN(date.getTime())) return dateStr;
-
-  return date.toLocaleDateString('ko-KR', {
-    month: '2-digit',
-    day: '2-digit',
-  });
+  return date.toLocaleDateString('ko-KR', { month: '2-digit', day: '2-digit' });
 }
 
 function formatTime(dateStr: string) {
   const date = new Date(dateStr);
   if (Number.isNaN(date.getTime())) return dateStr;
-
-  return date.toLocaleTimeString('ko-KR', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  return date.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
 }
