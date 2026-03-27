@@ -7,6 +7,7 @@
     import com.ssafy.be.domain.bottomupauction.model.Bid;
     import com.ssafy.be.domain.escrow.service.EscrowService;
     import com.ssafy.be.domain.item.entity.AuctionType;
+    import com.ssafy.be.domain.stream.service.StreamViewerService;
     import com.ssafy.be.domain.uniqueaction.dto.response.UniqueAuctionResultResponse;
     import com.ssafy.be.domain.uniqueaction.dto.response.UniqueBidItemSyncResponse;
     import com.ssafy.be.domain.uniqueaction.entity.UniqueBidAuctionDetail;
@@ -59,6 +60,7 @@
         private final UserRepository userRepository;
         private final ShippingAddressRepository shippingAddressRepository;
         private final EscrowService escrowService;
+        private final StreamViewerService streamViewerService;
 
         @Transactional
         public List<StreamPublishTask> startAuction(Long streamId, UniqueBidStartRequest request, Long userId) {
@@ -150,22 +152,18 @@
 
             Long sellerUserId = auction.getStream().getSeller().getUser().getId();
 
-            // 유찰: winnerPrice=null로 각 입찰자에게 private 전송
+            // 유찰: 방송 참여 전체 유저에게 private 전송 (입찰자는 myBidPrice 포함, 비입찰자는 null)
             if (winnerPrice.isEmpty()) {
                 auction.unsold();
                 refundAll(auctionId);
                 UniqueAuctionResult result = buildUnsoldResult(topDuplicates);
 
-                for (Map.Entry<Object, Object> entry : allBids.entrySet()) {
-                    Long bidUserId = Long.parseLong(entry.getKey().toString());
-                    Long bidAmount = Long.parseLong(entry.getValue().toString());
-                    publishTasks.add(buildStreamPublishTask(PRIVATE, streamId, bidUserId, UNIQUE_AUCTION_END,
+                for (Long viewerUserId : streamViewerService.getViewerUserIds(streamId)) {
+                    Object bidEntry = allBids.get(String.valueOf(viewerUserId));
+                    Long bidAmount = bidEntry != null ? Long.parseLong(bidEntry.toString()) : null;
+                    publishTasks.add(buildStreamPublishTask(PRIVATE, streamId, viewerUserId, UNIQUE_AUCTION_END,
                             buildResultResponse(result, bidAmount)));
                 }
-
-                // 판매자에게 유찰 결과 전송
-                publishTasks.add(buildStreamPublishTask(PRIVATE, streamId, sellerUserId, UNIQUE_AUCTION_END,
-                        buildResultResponse(result, null)));
 
                 publishTasks.add(buildStreamPublishTask(BROADCAST, streamId, null, AUCTION_COMMENT,
                         buildAuctionCommentResponse(UNSOLD.getValue())));
@@ -194,21 +192,16 @@
 
             UniqueAuctionResult result = buildWonResult(winnerId, winnerPrice.get(), topDuplicates, shipping);
 
-            // 각 입찰자에게 private로 결과 전송 (myBidPrice 포함)
-            // 프론트엔드: winnerPrice == myBidPrice → 내가 낙찰, 아니면 경매 낙찰·나는 유찰
-            for (Map.Entry<Object, Object> entry : allBids.entrySet()) {
-                Long bidUserId = Long.parseLong(entry.getKey().toString());
-                Long bidAmount = Long.parseLong(entry.getValue().toString());
-                publishTasks.add(buildStreamPublishTask(PRIVATE, streamId, bidUserId, UNIQUE_AUCTION_END,
+            // 방송 참여 전체 유저에게 private로 결과 전송 (입찰자는 myBidPrice 포함, 비입찰자는 null)
+            for (Long viewerUserId : streamViewerService.getViewerUserIds(streamId)) {
+                Object bidEntry = allBids.get(String.valueOf(viewerUserId));
+                Long bidAmount = bidEntry != null ? Long.parseLong(bidEntry.toString()) : null;
+                publishTasks.add(buildStreamPublishTask(PRIVATE, streamId, viewerUserId, UNIQUE_AUCTION_END,
                         buildResultResponse(result, bidAmount)));
             }
 
             // 낙찰자에게 배송지 포함 상세 정보
             publishTasks.add(buildStreamPublishTask(PRIVATE, streamId, winnerId, BID_WINNER, buildWinnerResponse(result)));
-
-            // 판매자에게 낙찰 결과 전송
-            publishTasks.add(buildStreamPublishTask(PRIVATE, streamId, sellerUserId, UNIQUE_AUCTION_END,
-                    buildResultResponse(result, null)));
 
             // 전체 경매 중계 메시지
             String message = String.format(SOLD.getValue(), winner.getNickname(), winnerPrice.get());

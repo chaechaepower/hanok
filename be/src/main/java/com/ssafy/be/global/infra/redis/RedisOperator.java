@@ -211,4 +211,10 @@ public class RedisOperator {
         Long size = redisTemplate.opsForSet().size(key);
         return size != null ? size : 0L;
     }
+
+    public Set<String> getSetMembers(String key) {
+        Set<Object> members = redisTemplate.opsForSet().members(key);
+        if (members == null) return Set.of();
+        return members.stream().map(Object::toString).collect(Collectors.toSet());
+    }
 }

@@ -1,7 +1,9 @@
 package com.ssafy.be.domain.stream.service;
 
 import com.ssafy.be.global.infra.redis.RedisOperator;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,5 +32,13 @@ public class StreamViewerService {
 
     public void clearViewers(Long streamId) {
         redisOperator.delete(VIEWER_SET_KEY + streamId);
+    }
+
+    // 등록 유저(숫자 identity)만 userId로 반환
+    public Set<Long> getViewerUserIds(Long streamId) {
+        return redisOperator.getSetMembers(VIEWER_SET_KEY + streamId).stream()
+                .filter(identity -> identity.matches("\\d+"))
+                .map(Long::parseLong)
+                .collect(Collectors.toSet());
     }
 }
