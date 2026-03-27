@@ -43,10 +43,10 @@ export default function OrderHistorySection() {
 
     try {
       await completeEscrow(selectedItemId);
-      showToast({ message: '구매 확정이 완료되었습니다.' });
+      showToast({ type: 'success', message: '구매 확정이 완료되었습니다.' });
     } catch (error) {
       console.error('[escrow] failed to complete purchase', error);
-      showToast({ message: '구매 확정 처리에 실패했습니다.' });
+      showToast({ type: 'error', message: '구매 확정 처리에 실패했습니다.' });
     }
   };
 

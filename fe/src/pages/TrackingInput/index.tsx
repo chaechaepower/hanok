@@ -178,7 +178,7 @@ export default function TrackingInput() {
     const normalizedReason = cancelReason.trim();
 
     if (!normalizedReason) {
-      showToast({ message: '취소 사유를 입력해 주세요.' });
+      showToast({ type: 'warning', message: '취소 사유를 입력해 주세요.' });
       return;
     }
 
@@ -187,12 +187,12 @@ export default function TrackingInput() {
       {
         onSuccess: () => {
           setShowCancelModal(false);
-          showToast({ message: '거래가 취소되었습니다.' });
+          showToast({ type: 'success', message: '거래가 취소되었습니다.' });
           setSelectedItemId(null);
         },
         onError: () => {
           setShowCancelModal(false);
-          showToast({ message: '거래 취소에 실패했습니다. 다시 시도해주세요.' });
+          showToast({ type: 'error', message: '거래 취소에 실패했습니다. 다시 시도해주세요.' });
         },
       },
     );
@@ -390,7 +390,7 @@ export default function TrackingInput() {
                         type="button"
                         onClick={async () => {
                           if (!carrier || !trackingNumber || !selectedItemId) {
-                            showToast({ message: '택배사와 송장 번호를 모두 입력해주세요.' });
+                            showToast({ type: 'warning', message: '택배사와 송장 번호를 모두 입력해주세요.' });
                             return;
                           }
 
@@ -398,6 +398,7 @@ export default function TrackingInput() {
                             await validateTrackingInput(carrier, trackingNumber);
                           } catch (error) {
                             showToast({
+                              type: 'error',
                               message:
                                 error instanceof Error
                                   ? error.message
@@ -410,10 +411,10 @@ export default function TrackingInput() {
                             { escrowId: selectedItemId, carrierName: carrierName, trackingNumber },
                             {
                               onSuccess: () => {
-                                showToast({ message: '운송장 번호가 등록되었습니다.' });
+                                showToast({ type: 'success', message: '운송장 번호가 등록되었습니다.' });
                               },
                               onError: () => {
-                                showToast({ message: '운송장 번호 등록에 실패했습니다. 다시 시도해주세요.' });
+                                showToast({ type: 'error', message: '운송장 번호 등록에 실패했습니다. 다시 시도해주세요.' });
                               },
                             },
                           );
