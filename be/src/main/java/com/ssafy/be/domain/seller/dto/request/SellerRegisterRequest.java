@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 public record SellerRegisterRequest(
         @NotNull SellerType type,
         String businessNumber,
-        String nickname,
+        String shopName,
         String intro,
         String instaUrl,
         String youtubeUrl,

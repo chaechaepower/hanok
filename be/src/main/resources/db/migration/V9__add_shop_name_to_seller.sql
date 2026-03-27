@@ -1,0 +1,1 @@
+ALTER TABLE seller ADD COLUMN shop_name VARCHAR(100) NULL COMMENT '상점 이름';

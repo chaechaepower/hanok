@@ -69,10 +69,6 @@ public class SellerService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new GlobalException(UserErrorCode.USER_NOT_FOUND));
 
-        // 닉네임 업데이트
-        if (request.nickname() != null) {
-            user.updateProfile(request.nickname(), null);
-        }
 
         // 계좌 정보 업데이트
         if (request.bankCode() != null && request.accountNum() != null && request.accountName() != null) {
@@ -80,6 +76,7 @@ public class SellerService {
         }
 
         Seller seller = Seller.builder()
+                .shopName(request.shopName())
                 .intro(request.intro() != null ? request.intro() : "")
                 .type(request.type())
                 .businessNumber(request.businessNumber())
@@ -91,7 +88,7 @@ public class SellerService {
                 .build();
 
         Seller saved = sellerRepository.save(seller);
-        return new SellerRegisterResponse(saved.getId(), user.getNickname());
+        return new SellerRegisterResponse(saved.getId(), saved.getShopName());
     }
 
     @Transactional(readOnly = true)
@@ -129,6 +126,7 @@ public class SellerService {
                 .stream()
                 .map(stream -> new ScheduledStreamResponse(
                         stream.getId(),
+                        seller.getShopName(),
                         stream.getTitle(),
                         stream.getCategory().name(),
                         stream.getThumbnail(),
@@ -139,7 +137,7 @@ public class SellerService {
 
         return new SellerProfileResponse(
                 seller.getId(),
-                user.getNickname(),
+                seller.getShopName(),
                 seller.getIntro(),
                 user.getProfileImage(),
                 seller.getInstaUrl(),
@@ -165,8 +163,17 @@ public class SellerService {
             throw new GlobalException(SellerErrorCode.SELLER_FORBIDDEN);
         }
 
-        seller.updateProfile(request.intro(), request.instaUrl(), request.youtubeUrl(), request.tiktokUrl());
-        seller.getUser().updateProfile(request.nickname(), request.profileImage());
+        seller.updateProfile(
+                request.shopName(),
+                request.intro(),
+                request.instaUrl(),
+                request.youtubeUrl(),
+                request.tiktokUrl()
+        );
+
+        if (request.profileImage() != null) {
+            seller.getUser().updateProfile(null, request.profileImage());
+        }
     }
 
     public BiznoVerifyResponse verifyBizno(String bizno, int gb) {
@@ -367,7 +374,7 @@ public class SellerService {
                     return new SellerRankingResponse(
                             i + 1,
                             sellerId,
-                            seller.getUser().getNickname(),
+                            seller.getShopName(),
                             seller.getUser().getProfileImage(),
                             followerCountMap.get(sellerId)
                     );
