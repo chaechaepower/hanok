@@ -96,13 +96,15 @@ public class SellerService {
     }
 
     @Transactional(readOnly = true)
-    public SellerProfileResponse getProfile(Long sellerId) {
+    public SellerProfileResponse getProfile(Long sellerId, Long requestUserId) {
         Seller seller = sellerRepository.findById(sellerId)
                 .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
 
         User user = seller.getUser();
 
         long followerCount = followRepository.countBySeller(seller);
+        boolean isFollowed = requestUserId != null
+                && followRepository.existsByUserIdAndSellerId(requestUserId, sellerId);
 
         // N+1 개선 - 쿼리 1번으로 해결
         List<RecentSaleResponse> recentSales = itemRepository
@@ -140,6 +142,7 @@ public class SellerService {
                 seller.getInstaUrl(),
                 seller.getYoutubeUrl(),
                 seller.getTiktokUrl(),
+                isFollowed,
                 new SellerStatsResponse(
                         seller.getRating(),
                         seller.getAvgShipDays(),
