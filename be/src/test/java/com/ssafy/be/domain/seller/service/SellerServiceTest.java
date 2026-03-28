@@ -3,6 +3,7 @@ package com.ssafy.be.domain.seller.service;
 import com.ssafy.be.domain.escrow.entity.EscrowStatus;
 import com.ssafy.be.domain.escrow.repository.EscrowRepository;
 import com.ssafy.be.domain.follow.repository.FollowRepository;
+import com.ssafy.be.domain.item.repository.ItemRepository;
 import com.ssafy.be.domain.seller.client.BiznoClient;
 import com.ssafy.be.domain.seller.dto.request.SellerProfileUpdateRequest;
 import com.ssafy.be.domain.seller.dto.request.SellerRegisterRequest;
@@ -11,6 +12,7 @@ import com.ssafy.be.domain.seller.entity.Seller;
 import com.ssafy.be.domain.seller.entity.SellerType;
 import com.ssafy.be.domain.seller.exception.SellerErrorCode;
 import com.ssafy.be.domain.seller.repository.SellerRepository;
+import com.ssafy.be.domain.stream.repository.StreamRepository;
 import com.ssafy.be.domain.stream.dto.response.SellerRankingResponse;
 import com.ssafy.be.support.util.TestFixture;
 import com.ssafy.be.domain.user.entity.User;
@@ -50,6 +52,8 @@ class SellerServiceTest {
     @Mock private SellerRepository sellerRepository;
     @Mock private UserRepository userRepository;
     @Mock private FollowRepository followRepository;
+    @Mock private ItemRepository itemRepository;
+    @Mock private StreamRepository streamRepository;
     @Mock private EscrowRepository escrowRepository;
     @Mock private BiznoClient biznoClient;
 
@@ -220,6 +224,75 @@ class SellerServiceTest {
 
     @Nested
     @Order(4)
+    @DisplayName("Section 4 │ 판매자 프로필 조회 (getProfile)")
+    @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+    class SellerProfileTest {
+
+        @BeforeEach
+        void groupStart() {
+            TEST_LOG.info("");
+            TEST_LOG.info("┌──────────────────────────────────────────────────────────");
+            TEST_LOG.info("│ 📦 Section 4 │ getProfile");
+            TEST_LOG.info("└──────────────────────────────────────────────────────────");
+        }
+
+        private Seller sellerWithId(long sellerId, long ownerUserId) {
+            User user = User.createUser("seller@test.com", "p", "판매자", "010").toBuilder()
+                    .id(ownerUserId)
+                    .profileImage("https://img.test/profile.png")
+                    .build();
+            Seller seller = TestFixture.createSeller(user).toBuilder()
+                    .shopName("한옥샵")
+                    .intro("소개")
+                    .instaUrl("https://instagram.com/hanok")
+                    .youtubeUrl("https://youtube.com/@hanok")
+                    .tiktokUrl("https://tiktok.com/@hanok")
+                    .avgShipDays(2.5)
+                    .build();
+            ReflectionTestUtils.setField(seller, "id", sellerId);
+            return seller;
+        }
+
+        @Test
+        @Order(1)
+        @DisplayName("PF-1. 로그인 사용자가 팔로우 중이면 isFollowed=true")
+        void getProfile_whenFollowing_setsIsFollowedTrue() {
+            Seller seller = sellerWithId(1L, 10L);
+            given(sellerRepository.findById(1L)).willReturn(Optional.of(seller));
+            given(followRepository.countBySeller(seller)).willReturn(3L);
+            given(followRepository.existsByUserIdAndSellerId(99L, 1L)).willReturn(true);
+            given(itemRepository.findTop10SoldItemsWithFinalPrice(1L)).willReturn(List.of());
+            given(streamRepository.findTop10BySellerIdAndStatusAndScheduledAtAfterOrderByScheduledAtAsc(
+                    any(), any(), any())).willReturn(List.of());
+
+            SellerProfileResponse response = sellerService.getProfile(1L, 99L);
+
+            assertThat(response.isFollowed()).isTrue();
+            assertThat(response.stats().followerCount()).isEqualTo(3L);
+            TEST_LOG.info("    [검증] ✔ 로그인 사용자 팔로우 여부 반영");
+        }
+
+        @Test
+        @Order(2)
+        @DisplayName("PF-2. 비로그인 사용자는 isFollowed=false")
+        void getProfile_whenAnonymous_setsIsFollowedFalse() {
+            Seller seller = sellerWithId(1L, 10L);
+            given(sellerRepository.findById(1L)).willReturn(Optional.of(seller));
+            given(followRepository.countBySeller(seller)).willReturn(0L);
+            given(itemRepository.findTop10SoldItemsWithFinalPrice(1L)).willReturn(List.of());
+            given(streamRepository.findTop10BySellerIdAndStatusAndScheduledAtAfterOrderByScheduledAtAsc(
+                    any(), any(), any())).willReturn(List.of());
+
+            SellerProfileResponse response = sellerService.getProfile(1L, null);
+
+            assertThat(response.isFollowed()).isFalse();
+            then(followRepository).should(never()).existsByUserIdAndSellerId(any(), any());
+            TEST_LOG.info("    [검증] ✔ 비로그인 사용자 기본 false");
+        }
+    }
+
+    @Nested
+    @Order(5)
     @DisplayName("Section 4 │ 프로필 수정 (updateProfile)")
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class UpdateProfileTest {
@@ -293,7 +366,7 @@ class SellerServiceTest {
     }
 
     @Nested
-    @Order(5)
+    @Order(6)
     @DisplayName("Section 5 │ 사업자번호 검증 (verifyBizno)")
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class BiznoVerifyTest {
@@ -350,7 +423,7 @@ class SellerServiceTest {
     }
 
     @Nested
-    @Order(6)
+    @Order(7)
     @DisplayName("Section 6 │ 평판 조회 (getReputation)")
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class ReputationTest {
@@ -423,7 +496,7 @@ class SellerServiceTest {
     }
 
     @Nested
-    @Order(7)
+    @Order(8)
     @DisplayName("Section 7 │ 낙찰 에스크로 목록 (getAllSoldAuctions)")
     @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
     class SoldAuctionsTest {

@@ -34,7 +34,9 @@ public interface SellerApi {
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "판매자 없음",
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     @GetMapping("/{sellerId}/profile")
-    ResponseEntity<ApiResponse<SellerProfileResponse>> getProfile(@PathVariable Long sellerId);
+    ResponseEntity<ApiResponse<SellerProfileResponse>> getProfile(
+            @PathVariable Long sellerId,
+            @AuthenticationPrincipal String principal);
 
     @Operation(summary = "판매자 프로필 수정")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "수정 성공")

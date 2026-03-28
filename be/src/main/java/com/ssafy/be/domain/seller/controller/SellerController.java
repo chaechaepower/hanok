@@ -37,8 +37,12 @@ public class SellerController implements SellerApi {
 
 
     @GetMapping("/{sellerId}/profile")
-    public ResponseEntity<ApiResponse<SellerProfileResponse>> getProfile(@PathVariable Long sellerId) {
-        return ResponseEntity.ok(ApiResponse.success(sellerService.getProfile(sellerId)));
+    public ResponseEntity<ApiResponse<SellerProfileResponse>> getProfile(
+            @PathVariable Long sellerId,
+            @AuthenticationPrincipal String principal) {
+        Long requestUserId = (principal == null || principal.equals("anonymousUser"))
+                ? null : Long.parseLong(principal);
+        return ResponseEntity.ok(ApiResponse.success(sellerService.getProfile(sellerId, requestUserId)));
     }
 
     @PatchMapping("/{sellerId}/profile")

@@ -11,6 +11,7 @@ public record SellerProfileResponse(
         String instagramUrl,
         String youtubeUrl,
         String tiktokUrl,
+        boolean isFollowed,
         SellerStatsResponse stats,
         List<RecentSaleResponse> recentSales,
         List<ScheduledStreamResponse> posts
