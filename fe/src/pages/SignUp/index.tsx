@@ -4,6 +4,7 @@ import { checkEmailDuplicate } from '@/api/hooks/useGetCheckEmailDuplicate';
 import { postIdentityVerification } from '@/api/hooks/usePostIdentityVerification';
 import { signUp } from '@/api/hooks/usePostSignUp';
 import { requestIdentityVerification } from '@/utils/requestIdentityVerification';
+import { getEmailValidationError } from '@/utils/validateEmail';
 import Button from '@/components/common/Button';
 import { useToast } from '@/hooks/useToast';
 
@@ -203,10 +204,13 @@ export default function SignUpPage() {
   const [modalType, setModalType] = useState<'terms' | 'privacy' | null>(null);
 
   const handleEmailCheck = async () => {
-    if (!email.includes('@')) {
-      setEmailError('유효한 이메일 형식을 입력해주세요.');
+    const emailValidationError = getEmailValidationError(email);
+    if (emailValidationError) {
+      setEmailError(emailValidationError);
+      setIsEmailVerified(false);
       return;
     }
+
     try {
       await checkEmailDuplicate(email);
       setEmailError('');
@@ -252,6 +256,15 @@ export default function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const emailValidationError = getEmailValidationError(email);
+    if (emailValidationError) {
+      setEmailError(emailValidationError);
+      setIsEmailVerified(false);
+      showToast({ type: 'warning', message: '이메일 형식을 다시 확인해주세요.' });
+      return;
+    }
+
     if (!isEmailVerified) {
       showToast({ type: 'warning', message: '이메일 중복 확인을 해주세요.' });
       return;
@@ -314,6 +327,7 @@ export default function SignUpPage() {
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
+                setEmailError('');
                 setIsEmailVerified(false);
               }}
               className={inputClass}

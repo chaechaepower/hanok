@@ -186,6 +186,7 @@ export const profileHandlers = [
             instagramUrl: 'https://instagram.com/luxury_seller',
             youtubeUrl: 'https://youtube.com/@luxury_seller_tv',
             tiktokUrl: 'https://tiktok.com/@luxury_seller_official',
+            isFollowed: isSellerFollowed(200),
             stats: {
               rating: 4.9,
               avgShipDays: 1.2,
@@ -228,6 +229,7 @@ export const profileHandlers = [
           instagramUrl: (overrides.instagramUrl as string) ?? 'https://instagram.com/im_rerak',
           youtubeUrl: (overrides.youtubeUrl as string) ?? 'https://youtube.com/@im_rerak',
           tiktokUrl: (overrides.tiktokUrl as string) ?? 'https://tiktok.com/@seller123',
+          isFollowed: isSellerFollowed(sellerId),
           stats: {
             rating: null,
             avgShipDays: 1.8,
@@ -330,6 +332,5 @@ export const profileHandlers = [
     return HttpResponse.json({ success: true }, { status: 200 });
   }),
 ];
-
 
 

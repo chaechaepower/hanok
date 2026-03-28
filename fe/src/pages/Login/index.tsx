@@ -7,6 +7,7 @@ import { login } from '@/api/hooks/usePostLogin';
 import { getMe } from '@/api/hooks/useGetMe';
 import Button from '@/components/common/Button';
 import { useToast } from '@/hooks/useToast';
+import { getEmailValidationError } from '@/utils/validateEmail';
 
 type ErrorField = 'email' | 'password' | '';
 type FormError = { message: string; field: ErrorField };
@@ -60,16 +61,9 @@ export default function LoginPage() {
     e.preventDefault();
     setError(EMPTY_ERROR);
 
-    if (!email.trim()) {
-      setError({ message: '이메일 주소를 입력해주세요.', field: 'email' });
-      return;
-    }
-    if (!email.includes('@')) {
-      setError({ message: "'@'를 포함한 이메일 주소를 입력해주세요.\n(예: example@hanok.com)", field: 'email' });
-      return;
-    }
-    if (!email.split('@')[1]?.includes('.')) {
-      setError({ message: '도메인이 올바르지 않습니다.\n(예: example@hanok.com)', field: 'email' });
+    const emailValidationError = getEmailValidationError(email);
+    if (emailValidationError) {
+      setError({ message: emailValidationError, field: 'email' });
       return;
     }
     if (!password) {

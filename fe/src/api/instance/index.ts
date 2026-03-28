@@ -4,6 +4,7 @@ import { QueryClient } from '@tanstack/react-query';
 import type { ApiResponse, LoginResponseData } from '@/types';
 
 let instance: AxiosInstance | null = null;
+let guestSafeInstance: AxiosInstance | null = null;
 let refreshRequestPromise: Promise<ApiResponse<LoginResponseData>> | null = null;
 
 export const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -155,6 +156,34 @@ export const getFetchInstance = (): AxiosInstance => {
     instance = initInstance();
   }
   return instance;
+};
+
+export const getGuestSafeFetchInstance = (): AxiosInstance => {
+  if (!guestSafeInstance) {
+    guestSafeInstance = axios.create({
+      baseURL: import.meta.env.VITE_API_BASE_URL,
+      timeout: 20_000,
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    guestSafeInstance.interceptors.request.use(
+      (config) => {
+        const accessToken = localStorage.getItem('accessToken');
+
+        if (accessToken) {
+          config.headers.Authorization = `Bearer ${accessToken}`;
+        }
+
+        return config;
+      },
+      (error) => Promise.reject(error),
+    );
+  }
+
+  return guestSafeInstance;
 };
 
 export const queryClient = new QueryClient({

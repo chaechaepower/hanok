@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useMemo } from 'react';
+﻿import { useState, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useGetSellerProfile } from '@/api/hooks/useGetSellerProfile';
 import { useGetSellerReputation } from '@/api/hooks/useGetSellerReputation';
@@ -10,7 +10,6 @@ import { useGetSellerNoticeDetail } from '@/api/hooks/useGetSellerNoticeDetail';
 import { useGetSellerStatus } from '@/api/hooks/useGetSellerStatus';
 import { useGetMe } from '@/api/hooks/useGetMe';
 import { usePostFollow } from '@/api/hooks/usePostFollow';
-import { useGetFollowedStores } from '@/api/hooks/useGetFollowedStores';
 import { FaInstagram, FaYoutube, FaTiktok } from 'react-icons/fa';
 import NoticeList from '@/components/Profile/NoticeList';
 import ProfileEditModal, { type ProfileFormState } from '@/components/Profile/ProfileEditModal';
@@ -73,6 +72,7 @@ export default function ProfilePage() {
   const { id } = useParams<{ id: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const sellerId = Number(id);
+  const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
   const [activeTab, setActiveTab] = useState<'posts' | 'sales'>('posts');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -96,8 +96,8 @@ export default function ProfilePage() {
 
   const { data, isLoading, isError } = useGetSellerProfile(sellerId);
   const { data: reputation } = useGetSellerReputation(sellerId);
-  const { data: mySellerStatus } = useGetSellerStatus();
-  const { data: meData } = useGetMe();
+  const { data: mySellerStatus } = useGetSellerStatus(isLoggedIn);
+  const { data: meData } = useGetMe({ enabled: isLoggedIn });
   const { mutate: patchProfile, isPending: isProfilePending } = usePatchSellerProfile(sellerId);
   const { mutate: patchProfileImage } = usePatchProfileImage(sellerId);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -159,24 +159,14 @@ export default function ProfilePage() {
   const scheduledStreamOptions = scheduledStreamsData?.streams ?? [];
 
   const { mutate: postFollow, isPending: isFollowPending } = usePostFollow();
-  const { data: followedData } = useGetFollowedStores();
 
   const { showToast } = useToast();
 
-  const initialFollowing = useMemo(() => {
-    if (!followedData?.pages) return false;
-    return followedData.pages.some((page) => page.content.some((item) => item.seller.sellerId === sellerId));
-  }, [followedData, sellerId]);
-
   const [isFollowing, setIsFollowing] = useState(false);
-  const [followInitialized, setFollowInitialized] = useState(false);
 
   React.useEffect(() => {
-    if (!followInitialized && followedData) {
-      setIsFollowing(initialFollowing);
-      setFollowInitialized(true);
-    }
-  }, [initialFollowing, followedData, followInitialized]);
+    setIsFollowing(data?.isFollowed ?? false);
+  }, [data?.isFollowed, sellerId]);
 
   const mySellerId = meData?.sellerId ?? mySellerStatus?.sellerId ?? null;
   const isMyProfile = mySellerId != null && mySellerId === sellerId;
