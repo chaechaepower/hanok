@@ -5,16 +5,35 @@ import { useNavigate } from 'react-router-dom';
 
 import NoItem from '@/components/common/NoItem';
 import { getCategoryLabel } from '@/constants/category';
+import useInfiniteScrollTrigger from '@/hooks/useInfiniteScrollTrigger';
 import type { LiveCardData } from '@/types';
 import { formatScheduledDateTime } from '@/utils/formatDateTime';
 
 type ScheduledStreamCarouselProps = {
   streams: LiveCardData[];
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  fetchNextPage: () => Promise<unknown>;
 };
 
-export default function ScheduledStreamCarousel({ streams }: ScheduledStreamCarouselProps) {
+export default function ScheduledStreamCarousel({
+  streams,
+  hasNextPage,
+  isFetchingNextPage,
+  fetchNextPage,
+}: ScheduledStreamCarouselProps) {
   const navigate = useNavigate();
   const trackRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLDivElement | null>(null);
+
+  useInfiniteScrollTrigger({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    triggerRef,
+    rootRef: trackRef,
+    rootMargin: '0px 240px 0px 0px',
+  });
 
   const scrollByOffset = (direction: 'left' | 'right') => {
     const track = trackRef.current;
@@ -131,7 +150,11 @@ export default function ScheduledStreamCarousel({ streams }: ScheduledStreamCaro
                 </article>
               );
             })}
+            {hasNextPage && <div ref={triggerRef} className="h-px w-12 shrink-0 self-stretch" aria-hidden />}
           </div>
+          {isFetchingNextPage && (
+            <p className="pt-4 text-center text-sm text-neutral-500">예정 경매를 더 불러오는 중입니다</p>
+          )}
         </div>
       ) : (
         <div className="rounded-(--radius-panel) border border-dashed border-primary-dark/30">
