@@ -159,7 +159,7 @@ export function useStompChat(category: string) {
 
   const sendMessage = useCallback(
     async (message: string) => {
-      if (!streamId || !message.trim()) {
+      if (!isLoggedIn || !streamId || !message.trim()) {
         return;
       }
 
@@ -169,12 +169,12 @@ export function useStompChat(category: string) {
         payload,
       });
     },
-    [streamId],
+    [isLoggedIn, streamId],
   );
 
   const sendMacro = useCallback(
     async (question: string) => {
-      if (!streamId || !question.trim()) {
+      if (!isLoggedIn || !streamId || !question.trim()) {
         return;
       }
 
@@ -195,7 +195,7 @@ export function useStompChat(category: string) {
         payload,
       });
     },
-    [appendMessageForStream, category, me?.nickname, streamId],
+    [appendMessageForStream, category, isLoggedIn, me?.nickname, streamId],
   );
 
   return { messages, sendMessage, sendMacro, connectionState, streamId };

@@ -69,6 +69,11 @@ const isUniqueAuctionCalculatingEvent = (
 ): event is Extract<BroadcastStreamEvent, { eventType: 'UNIQUE_AUCTION_CALCULATING' }> =>
   event.eventType === 'UNIQUE_AUCTION_CALCULATING';
 
+const isUniqueAuctionEndPublicEvent = (
+  event: BroadcastStreamEvent,
+): event is Extract<BroadcastStreamEvent, { eventType: 'UNIQUE_AUCTION_END_PUBLIC' }> =>
+  event.eventType === 'UNIQUE_AUCTION_END_PUBLIC';
+
 const isStreamPausedEvent = (
   event: BroadcastStreamEvent,
 ): event is Extract<BroadcastStreamEvent, { eventType: 'STREAM_PAUSED' }> =>
@@ -561,6 +566,13 @@ export function useLiveStream(
               }
             : prev,
         );
+        return;
+      }
+
+      if (isUniqueAuctionEndPublicEvent(event)) {
+        setTimer(null);
+        setUniqueBidSync(null);
+        void requestItemSync();
         return;
       }
 
