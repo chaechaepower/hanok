@@ -6,6 +6,9 @@ type InfiniteScrollTriggerParams = {
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   triggerRef: RefObject<HTMLDivElement | null>;
+  rootRef?: RefObject<HTMLElement | null>;
+  rootMargin?: string;
+  threshold?: number;
 };
 
 export default function useInfiniteScrollTrigger({
@@ -13,6 +16,9 @@ export default function useInfiniteScrollTrigger({
   hasNextPage,
   isFetchingNextPage,
   triggerRef,
+  rootRef,
+  rootMargin = '280px 0px',
+  threshold = 0,
 }: InfiniteScrollTriggerParams) {
   useEffect(() => {
     if (!hasNextPage || isFetchingNextPage) {
@@ -24,6 +30,8 @@ export default function useInfiniteScrollTrigger({
       return;
     }
 
+    const root = rootRef?.current ?? null;
+
     const observer = new IntersectionObserver(
       (entries) => {
         if (!entries[0]?.isIntersecting) {
@@ -33,7 +41,7 @@ export default function useInfiniteScrollTrigger({
         observer.unobserve(target);
         void fetchNextPage();
       },
-      { rootMargin: '280px 0px' },
+      { root, rootMargin, threshold },
     );
 
     observer.observe(target);
@@ -41,5 +49,5 @@ export default function useInfiniteScrollTrigger({
     return () => {
       observer.disconnect();
     };
-  }, [fetchNextPage, hasNextPage, isFetchingNextPage, triggerRef]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, rootMargin, rootRef, threshold, triggerRef]);
 }

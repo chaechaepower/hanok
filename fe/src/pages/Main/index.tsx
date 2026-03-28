@@ -46,7 +46,12 @@ export default function MainPage() {
   const allLiveSortLabel = SORT_OPTIONS.find((option) => option.value === allLiveSortFilter)?.label ?? '';
 
   const { data: rankingData = [] } = useGetSellerRanking();
-  const { data: followingLiveData } = useGetMain({
+  const {
+    data: followingLiveData,
+    fetchNextPage: fetchFollowingLiveNextPage,
+    hasNextPage: hasFollowingLiveNextPage,
+    isFetchingNextPage: isFetchingFollowingLiveNextPage,
+  } = useGetMain({
     type: 'FOLLOWING',
     category: selectedCategory,
     status: 'LIVE',
@@ -72,7 +77,13 @@ export default function MainPage() {
     size: PAGE_SIZE,
     enabled: shouldLoadAllLiveSection,
   });
-  const { data: scheduledLiveData, isPending: isScheduledPending } = useGetMain({
+  const {
+    data: scheduledLiveData,
+    fetchNextPage: fetchScheduledLiveNextPage,
+    hasNextPage: hasScheduledLiveNextPage,
+    isFetchingNextPage: isFetchingScheduledLiveNextPage,
+    isPending: isScheduledPending,
+  } = useGetMain({
     type: 'ALL',
     category: selectedCategory,
     status: 'SCHEDULED',
@@ -117,7 +128,14 @@ export default function MainPage() {
       <MainSideBar activeItemId={selectedCategoryItemId} onItemClick={handleCategoryClick} rankingItems={rankingData} />
 
       <div className="flex min-w-0 flex-1 flex-col gap-12">
-        {isLoggedIn && <FollowingBanner streams={followingBroadcasts} />}
+        {isLoggedIn && (
+          <FollowingBanner
+            streams={followingBroadcasts}
+            hasNextPage={hasFollowingLiveNextPage}
+            isFetchingNextPage={isFetchingFollowingLiveNextPage}
+            fetchNextPage={fetchFollowingLiveNextPage}
+          />
+        )}
 
         <NewSellerLiveSection streams={recommendedBroadcasts} />
 
@@ -125,7 +143,12 @@ export default function MainPage() {
           {!shouldLoadScheduledSection || isScheduledPending ? (
             <DeferredSectionPlaceholder />
           ) : (
-            <ScheduledStreamCarousel streams={scheduledBroadcasts} />
+            <ScheduledStreamCarousel
+              streams={scheduledBroadcasts}
+              hasNextPage={hasScheduledLiveNextPage}
+              isFetchingNextPage={isFetchingScheduledLiveNextPage}
+              fetchNextPage={fetchScheduledLiveNextPage}
+            />
           )}
         </div>
 

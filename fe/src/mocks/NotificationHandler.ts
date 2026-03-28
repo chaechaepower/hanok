@@ -1,6 +1,8 @@
 import { http, HttpResponse } from 'msw';
 
-let mockNotifications = [
+import type { Notification } from '@/types';
+
+let mockNotifications: Notification[] = [
   {
     id: 1730000000000,
     type: 'STREAM_START',
@@ -8,7 +10,7 @@ let mockNotifications = [
     body: '홍길동님이 방송을 시작했습니다.',
     isRead: false,
     createdAt: '2025-03-27T12:00:00',
-    routingPayload: {
+    routingField: {
       streamId: 1,
     },
   },
@@ -19,7 +21,7 @@ let mockNotifications = [
     body: '빈티지창고님이 공지사항을 게시했습니다.',
     isRead: false,
     createdAt: '2025-03-27T11:40:00',
-    routingPayload: {
+    routingField: {
       sellerId: 200,
       noticeId: 5,
     },
@@ -31,7 +33,7 @@ let mockNotifications = [
     body: '오프화이트 스니커즈를 낙찰하여 거래가 시작되었습니다.',
     isRead: false,
     createdAt: '2025-03-27T11:15:00',
-    routingPayload: {
+    routingField: {
       escrowId: 101,
     },
   },
@@ -42,7 +44,7 @@ let mockNotifications = [
     body: '빈티지창고님이 롤렉스 데이저스트를 발송했습니다.',
     isRead: false,
     createdAt: '2025-03-27T10:45:00',
-    routingPayload: {
+    routingField: {
       escrowId: 102,
     },
   },
@@ -53,7 +55,7 @@ let mockNotifications = [
     body: '김구매님이 한정판 피규어를 낙찰했습니다. 배송을 준비해주세요.',
     isRead: false,
     createdAt: '2025-03-27T10:20:00',
-    routingPayload: {
+    routingField: {
       escrowId: 201,
     },
   },
@@ -64,7 +66,7 @@ let mockNotifications = [
     body: '빈티지 백 거래가 안전하게 완료되었습니다.',
     isRead: true,
     createdAt: '2025-03-27T09:10:00',
-    routingPayload: {
+    routingField: {
       escrowId: 202,
     },
   },

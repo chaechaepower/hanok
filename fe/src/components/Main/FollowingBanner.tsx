@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import Logo from '@/assets/Logo.png';
 import bannerFrame from '@/assets/banner.png';
+import useInfiniteScrollTrigger from '@/hooks/useInfiniteScrollTrigger';
 
 import FollowingBannerFeaturedCard from './followingBanner/FollowingBannerFeaturedCard';
 import FollowingBannerStreamItem from './followingBanner/FollowingBannerStreamItem';
@@ -11,9 +12,20 @@ import type { FollowingBannerProps } from './followingBanner/types';
 const bannerShellClassName =
   'relative overflow-hidden bg-surface-elevated px-8 py-8 shadow-[0_24px_60px_rgba(0,0,0,0.24)]';
 
-export default function FollowingBanner({ streams }: FollowingBannerProps) {
+export default function FollowingBanner({ streams, hasNextPage, isFetchingNextPage, fetchNextPage }: FollowingBannerProps) {
   const navigate = useNavigate();
   const [selectedStreamId, setSelectedStreamId] = useState<number | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLDivElement | null>(null);
+
+  useInfiniteScrollTrigger({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    triggerRef,
+    rootRef: listRef,
+    rootMargin: '0px 0px 160px 0px',
+  });
 
   if (streams.length === 0) {
     return (
@@ -63,7 +75,7 @@ export default function FollowingBanner({ streams }: FollowingBannerProps) {
           />
         </div>
         <div className="absolute inset-y-0 right-0 hidden w-[320px] xl:block">
-          <div className="custom-scrollbar flex h-full flex-col gap-1 overflow-y-auto px-3 py-3">
+          <div ref={listRef} className="custom-scrollbar flex h-full flex-col gap-1 overflow-y-auto px-3 py-3">
             {streams.map((stream) => (
               <FollowingBannerStreamItem
                 key={stream.streamId}
@@ -72,6 +84,10 @@ export default function FollowingBanner({ streams }: FollowingBannerProps) {
                 onClick={() => setSelectedStreamId(stream.streamId)}
               />
             ))}
+            {hasNextPage && <div ref={triggerRef} className="h-6 w-full shrink-0" aria-hidden />}
+            {isFetchingNextPage && (
+              <p className="px-2 py-2 text-center text-xs text-neutral-400">팔로우 라이브를 더 불러오는 중입니다</p>
+            )}
           </div>
         </div>
       </div>

@@ -16,7 +16,7 @@ export type NotificationType =
   | 'NOTICE_CREATE'
   | string;
 
-export type NotificationRoutingPayload = {
+export type NotificationRoutingField = {
   streamId?: number;
   escrowId?: number;
   sellerId?: number;
@@ -30,7 +30,7 @@ export type Notification = {
   body: string;
   isRead: boolean;
   createdAt: string;
-  routingPayload?: NotificationRoutingPayload | null;
+  routingField?: NotificationRoutingField | null;
 };
 
 export type NotificationPage = {
