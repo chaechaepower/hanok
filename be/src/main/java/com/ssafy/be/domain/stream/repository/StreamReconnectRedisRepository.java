@@ -14,7 +14,7 @@ public class StreamReconnectRedisRepository {
 
     private final RedisOperator redisOperator;
 
-    // 재연결 대기 타이머 시작 (30초 TTL)
+    // 재연결 대기 타이머 시작 (5분 TTL)
     public void startTimer(Long streamId) {
         String key = RECONNECT_KEY + streamId;
         redisOperator.setValue(key, "waiting");

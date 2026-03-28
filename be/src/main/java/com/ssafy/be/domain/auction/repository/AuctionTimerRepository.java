@@ -33,4 +33,9 @@ public class AuctionTimerRepository {
         String key = AuctionRedisKeys.getTimerKey(auctionId);
         redisOperator.setExpire(key, seconds, TimeUnit.SECONDS);
     }
+
+    public void delete(Long auctionId) {
+        String key = AuctionRedisKeys.getTimerKey(auctionId);
+        redisOperator.delete(key);
+    }
 }
