@@ -22,8 +22,10 @@ export default function ChatInput({ streamId, category, connectionState, onSendM
   const emojiButtonRef = useRef<HTMLButtonElement>(null);
   const [message, setMessage] = useState('');
   const [showPicker, setShowPicker] = useState(false);
+  const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
   const isConnected = connectionState === 'connected';
-  const { data: streamMacros } = useGetStreamMacros(streamId, category);
+  const canSendChat = isLoggedIn && isConnected;
+  const { data: streamMacros } = useGetStreamMacros(streamId, category, isLoggedIn);
 
   const macros = useMemo(() => {
     if (!streamMacros) {
@@ -84,7 +86,7 @@ export default function ChatInput({ streamId, category, connectionState, onSendM
   }, [showPicker]);
 
   const handleSubmit = async () => {
-    if (!message.trim() || !isConnected) {
+    if (!message.trim() || !canSendChat) {
       return;
     }
 
@@ -93,7 +95,7 @@ export default function ChatInput({ streamId, category, connectionState, onSendM
   };
 
   const handleMacroClick = async (macro: string) => {
-    if (!isConnected) {
+    if (!canSendChat) {
       return;
     }
 
@@ -113,7 +115,7 @@ export default function ChatInput({ streamId, category, connectionState, onSendM
               <button
                 key={macro.questionType}
                 type="button"
-                disabled={!isConnected}
+                disabled={!canSendChat}
                 onClick={() => void handleMacroClick(macro.command)}
                 className="shrink-0 rounded-full border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-caption font-bold text-neutral-400 transition-all hover:border-gold hover:text-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
               >
@@ -129,8 +131,14 @@ export default function ChatInput({ streamId, category, connectionState, onSendM
         <input
           type="text"
           value={message}
-          disabled={!isConnected}
-          placeholder={isConnected ? '메시지를 입력하세요' : '채팅 연결 중입니다..'}
+          disabled={!canSendChat}
+          placeholder={
+            isLoggedIn
+              ? isConnected
+                ? '메시지를 입력하세요'
+                : '채팅 연결 중입니다..'
+              : '로그인 후 채팅에 참여해보세요!'
+          }
           onChange={(event) => setMessage(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.nativeEvent.isComposing) {
@@ -151,7 +159,7 @@ export default function ChatInput({ streamId, category, connectionState, onSendM
           </button>
           <button
             type="button"
-            disabled={!isConnected || !message.trim()}
+            disabled={!canSendChat || !message.trim()}
             onClick={() => void handleSubmit()}
             className="text-gold transition hover:scale-110 disabled:cursor-not-allowed disabled:opacity-40"
           >
