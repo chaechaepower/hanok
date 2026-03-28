@@ -7,7 +7,7 @@ public record UniqueBidSyncResponse(
         BidRangeDto bidRange,
         TimerDto timer,
         long participantCount,
-        boolean hasBid
+        Boolean hasBid
 ) {
     @Builder
     public record BidRangeDto(

@@ -310,7 +310,7 @@ public class BottomUpAuctionService {
 
         // 4. 응답 생성
         return buildBidSyncResponse(
-                topBid != null && topBid.userId().equals(userId), // 현재 요청 userId가 최고 입찰자인지 여부
+                userId>0? (topBid != null && topBid.userId().equals(userId)) : null, // 현재 요청 userId가 최고 입찰자인지 여부
                 buildBidSyncItemInfo(detail.getBidUnit(), currentPrice),
                 buildBidSyncTimerInfo((int) remainingSeconds, serverNow, auction.getStartedAt()));
     }
@@ -469,7 +469,7 @@ public class BottomUpAuctionService {
     }
 
     private BidSyncResponse buildBidSyncResponse(
-            boolean isHighestBidder,
+            Boolean isHighestBidder,
             BidSyncResponse.ItemInfo itemInfo,
             BidSyncResponse.TimerInfo timerInfo) {
         return BidSyncResponse.builder()
