@@ -63,7 +63,7 @@ export default function MainCategoryPanel({ activeItemId, onItemClick }: MainCat
                     key={item.id}
                     type="button"
                     onClick={() => handleCategoryClick(item)}
-                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition ${
+                    className={`flex w-full items-center gap-3 rounded-2xl px-4 py-2 text-left transition ${
                       isActive
                         ? 'bg-point/15 text-point'
                         : 'text-neutral-400 hover:bg-surface-elevated hover:text-neutral-100'
@@ -72,7 +72,7 @@ export default function MainCategoryPanel({ activeItemId, onItemClick }: MainCat
                     <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-primary-muted/70">
                       {item.icon}
                     </span>
-                    <span className="truncate text-[14px] font-medium">{item.label}</span>
+                    <span className="truncate text-[15px] font-medium">{item.label}</span>
                   </button>
                 );
               })}

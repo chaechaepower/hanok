@@ -88,9 +88,7 @@ export default function SettingsPage() {
       shipping: !hasAddress,
       payment: !hasAccount,
     };
-    return settingsSidebarItems.map((item) =>
-      needsBadge[item.id] ? { ...item, badge: <SetupDot /> } : item,
-    );
+    return settingsSidebarItems.map((item) => (needsBadge[item.id] ? { ...item, badge: <SetupDot /> } : item));
   }, [hasAddress, hasAccount]);
 
   useEffect(() => {
@@ -263,17 +261,21 @@ export default function SettingsPage() {
                   {item.icon}
                 </span>
                 <span
-                  className={`flex-1 text-[14px] leading-none transition-colors ${
-                    isActive
-                      ? 'font-bold text-gold-light'
-                      : 'font-medium text-neutral-400 group-hover:text-neutral-200'
+                  className={`flex-1 text-[15px] leading-none transition-colors ${
+                    isActive ? 'font-bold text-gold-light' : 'font-medium text-neutral-400 group-hover:text-neutral-200'
                   }`}
                 >
                   {item.label}
                 </span>
                 {item.badge && <span className="ml-auto">{item.badge}</span>}
                 {isActive && (
-                  <svg className="shrink-0 w-4 h-4 text-gold-light/50" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <svg
+                    className="shrink-0 w-4 h-4 text-gold-light/50"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 )}
@@ -285,9 +287,7 @@ export default function SettingsPage() {
         <div className="w-full flex flex-1 flex-col gap-6">
           {activeTab === 'order' && <OrderHistorySection />}
           {activeTab === 'stores' && <FollowedStoresSection />}
-          {activeTab === 'shipping' && (
-            <ShippingSection autoOpenModal={autoOpenAddressModal} />
-          )}
+          {activeTab === 'shipping' && <ShippingSection autoOpenModal={autoOpenAddressModal} />}
           {activeTab === 'payment' && <PaymentSection />}
           {activeTab === 'account' && <AccountSection />}
         </div>

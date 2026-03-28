@@ -12,7 +12,7 @@ export default function SellerRankingPanel({ rankingItems = [] }: SellerRankingP
   const navigate = useNavigate();
 
   return (
-    <section className="rounded-(--radius-panel) bg-surface-elevated p-4">
+    <section className="relative z-[10000] rounded-(--radius-panel) bg-surface-elevated p-4">
       <div className="flex items-center gap-3 px-2">
         <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-point/15 text-point">
           <Trophy size={18} />
@@ -28,7 +28,11 @@ export default function SellerRankingPanel({ rankingItems = [] }: SellerRankingP
               >
                 <Info size={13} />
               </button>
-              <InfoPanelTooltip title="인기상점 산정 기준" placementClassName="top-full left-0 mt-2">
+              <InfoPanelTooltip
+                title="인기상점 산정 기준"
+                placementClassName="top-full left-0 mt-2"
+                widthClassName="w-40"
+              >
                 <ul className="list-disc list-inside space-y-1">
                   <li>최근 판매 실적 40%</li>
                   <li>팔로워 30%</li>

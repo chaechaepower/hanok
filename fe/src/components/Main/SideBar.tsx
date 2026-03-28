@@ -18,10 +18,12 @@ export default function MainSideBar({
 }: MainSideBarProps) {
   return (
     <aside
-      className={`scrollbar-hide flex w-full shrink-0 flex-col gap-5 pb-6 xl:sticky xl:top-16 xl:h-[calc(100vh-64px)] xl:w-[280px] xl:overflow-y-auto xl:border-r xl:border-white/5 xl:pr-4 ${className}`.trim()}
+      className={`relative z-20 flex w-full shrink-0 flex-col gap-5 pb-6 xl:sticky xl:top-16 xl:w-[280px] xl:border-r xl:border-white/5 xl:pr-4 ${className}`.trim()}
     >
       <MainCategoryPanel activeItemId={activeItemId} onItemClick={onItemClick} />
-      <SellerRankingPanel rankingItems={rankingItems} />
+      <div className="relative z-30 shrink-0">
+        <SellerRankingPanel rankingItems={rankingItems} />
+      </div>
     </aside>
   );
 }

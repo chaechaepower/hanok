@@ -149,20 +149,11 @@ const TERMS_CONTENT = {
   },
 };
 
-function TermsModal({
-  type,
-  onClose,
-}: {
-  type: 'terms' | 'privacy';
-  onClose: () => void;
-}) {
+function TermsModal({ type, onClose }: { type: 'terms' | 'privacy'; onClose: () => void }) {
   const { title, content } = TERMS_CONTENT[type];
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="absolute inset-0 bg-black/70" />
       <div
         className="relative bg-neutral-900 border border-neutral-700 rounded-xl w-full max-w-lg max-h-[80vh] flex flex-col shadow-2xl"
@@ -172,9 +163,7 @@ function TermsModal({
           <h2 className="text-neutral-100 font-semibold text-[16px]">{title}</h2>
         </div>
         <div className="overflow-y-auto px-6 py-4 flex-1 custom-scrollbar">
-          <pre className="text-neutral-300 text-[13px] leading-relaxed whitespace-pre-wrap font-sans">
-            {content}
-          </pre>
+          <pre className="text-neutral-300 text-[13px] leading-relaxed whitespace-pre-wrap font-sans">{content}</pre>
         </div>
         <div className="px-6 py-4 border-t border-neutral-700">
           <button
@@ -302,14 +291,14 @@ export default function SignUpPage() {
 
   return (
     <div className="w-full flex flex-col items-center px-4 py-10">
-      <div className="w-full max-w-[480px] text-center mb-10 mx-auto">
-        <h1 className="text-neutral-100 text-[32px] font-bold mb-4">회원가입</h1>
-        <p className="text-neutral-300 text-[15px]">한옥에 가입하고 경매에 참여해 보세요!</p>
+      <div className="w-full max-w-[480px] text-center mb-6 mx-auto">
+        <h1 className="text-neutral-100 text-[32px] font-bold mb-2">회원가입</h1>
+        <p className="text-neutral-300 text-h3">한옥에 가입하고 경매에 참여해 보세요!</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="w-full max-w-[480px] flex flex-col gap-6 mx-auto">
+      <form onSubmit={handleSubmit} className="w-full max-w-[480px] flex flex-col gap-4 mx-auto">
         <div className="flex flex-col gap-2">
-          <label className="text-[13px] font-medium text-neutral-300 ml-1">이메일</label>
+          <label className="text-body-md font-medium text-neutral-300 ml-1">이메일</label>
           <div className={inputContainerClass}>
             <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -339,12 +328,12 @@ export default function SignUpPage() {
               중복 확인
             </Button>
           </div>
-          {emailError && <p className="text-accent-light text-xs px-1">{emailError}</p>}
+          {emailError && <p className="text-accent-light text-md px-1">{emailError}</p>}
           {isEmailVerified && <p className="text-ember-light text-xs px-1">사용 가능한 이메일입니다</p>}
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[13px] font-medium text-neutral-300 ml-1">닉네임</label>
+          <label className="text-body-md font-medium text-neutral-300 ml-1">닉네임</label>
           <div className={inputContainerClass}>
             <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -365,7 +354,7 @@ export default function SignUpPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[13px] font-medium text-neutral-300 ml-1">비밀번호</label>
+          <label className="text-body-md font-medium text-neutral-300 ml-1">비밀번호</label>
           <div className={`${inputContainerClass} mb-1`}>
             <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -383,7 +372,7 @@ export default function SignUpPage() {
               className={inputClass}
             />
           </div>
-          {passwordError && <p className="text-accent-light text-xs px-1 -mt-2 mb-1">{passwordError}</p>}
+          {passwordError && <p className="text-accent-light text-md px-1 -mt-2 mb-1">{passwordError}</p>}
 
           <div className={inputContainerClass}>
             <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -408,7 +397,7 @@ export default function SignUpPage() {
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className="text-[13px] font-medium text-neutral-300 ml-1">휴대폰 본인인증</label>
+          <label className="text-body-md font-medium text-neutral-300 ml-1">휴대폰 본인인증</label>
           <div className={inputContainerClass}>
             <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path
@@ -435,9 +424,9 @@ export default function SignUpPage() {
               {isIdentityVerified ? '인증완료' : '본인인증'}
             </Button>
           </div>
-          {phoneError && <p className="text-accent-light text-xs px-1">{phoneError}</p>}
+          {phoneError && <p className="text-accent-light text-md px-1">{phoneError}</p>}
           {isIdentityVerified && (
-            <p className="text-ember-light text-xs px-1">본인인증이 완료되었습니다. ({verifiedName})</p>
+            <p className="text-ember-light text-xs px-1">본인인증이 완료되었습니다 ({verifiedName})</p>
           )}
         </div>
 
@@ -451,13 +440,15 @@ export default function SignUpPage() {
             }}
           >
             <CheckboxIcon checked={termsAgreed && privacyAgreed} />
-            <span className="text-sm font-semibold text-neutral-100">전체 동의</span>
+            <span className="text-body-md font-semibold text-neutral-100">전체 동의</span>
           </label>
-          <div className="border-t border-neutral-800 pt-3 flex flex-col gap-3">
+          <div className="border-t border-neutral-800 pt-3 flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-3 cursor-pointer" onClick={() => setTermsAgreed(!termsAgreed)}>
                 <CheckboxIcon checked={termsAgreed} />
-                <span className="text-sm text-neutral-300">온라인 경매 약관 동의 <span className="text-accent-light">[필수]</span></span>
+                <span className="text-body-lg text-neutral-300">
+                  온라인 경매 약관 동의 <span className="text-accent-light">[필수]</span>
+                </span>
               </label>
               <button
                 type="button"
@@ -468,9 +459,14 @@ export default function SignUpPage() {
               </button>
             </div>
             <div className="flex items-center justify-between">
-              <label className="flex items-center gap-3 cursor-pointer" onClick={() => setPrivacyAgreed(!privacyAgreed)}>
+              <label
+                className="flex items-center gap-3 cursor-pointer"
+                onClick={() => setPrivacyAgreed(!privacyAgreed)}
+              >
                 <CheckboxIcon checked={privacyAgreed} />
-                <span className="text-sm text-neutral-300">개인정보 수집 및 이용 동의 <span className="text-accent-light">[필수]</span></span>
+                <span className="text-body-lg text-neutral-300">
+                  개인정보 수집 및 이용 동의 <span className="text-accent-light">[필수]</span>
+                </span>
               </label>
               <button
                 type="button"
@@ -495,7 +491,7 @@ export default function SignUpPage() {
           </Button>
         </div>
 
-        <div className="text-center text-[13px] text-neutral-500 mt-1 flex items-center justify-center gap-1">
+        <div className="text-center text-h4 text-neutral-500 mt-1 flex items-center justify-center gap-1">
           이미 계정이 있으신가요?
           <button
             type="button"
