@@ -209,10 +209,21 @@ class StreamServiceTest {
                     .build(), 100L);
             given(sellerRepository.findByUserId(1L)).willReturn(Optional.of(seller));
             given(streamRepository.findByIdAndSellerId(100L, 4L)).willReturn(Optional.of(stream));
+            Item linkedItem = Mockito.spy(TestFixture.createEscrowAuctionItem("연결상품", seller));
+            linkedItem.schedule();
+            Auction auction = Auction.builder()
+                    .auctionType(AuctionType.BOTTOM_UP)
+                    .auctionStatus(AuctionStatus.READY)
+                    .auctionDuration(60)
+                    .stream(stream)
+                    .item(linkedItem)
+                    .build();
+            given(auctionRepository.findByStreamId(100L)).willReturn(List.of(auction));
 
             streamService.deleteStream(1L, 100L);
 
             verify(gcsClient).deleteImage("thumb.jpg");
+            verify(linkedItem).ready();
             verify(auctionRepository).deleteByStreamId(100L);
             verify(streamRepository).delete(stream);
             TEST_LOG.info("    [검증] ✔ 썸네일/경매/방송 데이터 삭제 확인");
