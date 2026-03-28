@@ -25,7 +25,9 @@ public class UniqueBidCalculateHandler implements StreamEventHandler {
     private final StreamPublisher streamPublisher;
 
     @Override
-    public StreamEventType getEventType() { return StreamEventType.UNIQUE_AUCTION_CALCULATING; }
+    public StreamEventType getEventType() {
+        return StreamEventType.UNIQUE_AUCTION_CALCULATING;
+    }
 
     @Override
     public void handle(StompRequest<?> request, Long streamId, Principal principal) {
@@ -35,9 +37,13 @@ public class UniqueBidCalculateHandler implements StreamEventHandler {
         // 1. 현재 참가자 수 조회
         long participantCount = uniqueBidAuctionService.getParticipantCount(payload.auctionId());
 
+        Long userId = extractUserId(principal);
+
         // 2. 집계 시작 알림
-        streamPublisher.broadcast(streamId, StreamEventType.UNIQUE_AUCTION_CALCULATING,
-                new UniqueBidCalculatingResponse(participantCount));
+        if (userId > 0) { // 로그인한 사용자에게만 전송
+            streamPublisher.sendToUser(userId, streamId, StreamEventType.UNIQUE_AUCTION_CALCULATING,
+                    new UniqueBidCalculatingResponse(participantCount));
+        }
 
         // 3. 집계 로직 실행 (트랜잭션 커밋까지 포함)
         List<StreamPublishTask> publishTasks = uniqueBidAuctionService.aggregate(payload);
@@ -47,13 +53,13 @@ public class UniqueBidCalculateHandler implements StreamEventHandler {
         uniqueBidAuctionService.deleteAllBids(payload.auctionId());
 
         // 5. 전체 유저에게 결과 공지
-        for (StreamPublishTask task : publishTasks) {
-            if (task.getDestType() == DestType.BROADCAST) {
-                streamPublisher.broadcast(task.getStreamId(), task.getEventType(), task.getPayload());
-            } else if (task.getDestType() == DestType.PRIVATE) {
-                streamPublisher.sendToUser(task.getUserId(), task.getStreamId(), task.getEventType(), task.getPayload());
-            }
+        publishTasks.forEach(streamPublisher::publish);
+    }
 
+    private Long extractUserId(Principal principal) {
+        if (principal == null) {
+            return null;
         }
+        return Long.parseLong(principal.getName());
     }
 }

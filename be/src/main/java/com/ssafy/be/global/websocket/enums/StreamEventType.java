@@ -46,7 +46,19 @@ public enum StreamEventType {
     UNIQUE_BID_ACK,
     UNIQUE_AUCTION_STATS,
     UNIQUE_AUCTION_CALCULATING,
-    UNIQUE_AUCTION_END,
-    UNIQUE_BID_SYNC,
+    UNIQUE_AUCTION_END, // private
+    UNIQUE_AUCTION_END_PUBLIC, // public
+    UNIQUE_BID_SYNC;
+
+    public boolean isGuestSendAllowedEventType() {
+        return switch (this) {
+            case AUCTION_STATISTICS_SYNC,
+                 UNIQUE_BID_SYNC,
+                 BID_SYNC,
+                 ITEM_SYNC,
+                 UNIQUE_AUCTION_END_PUBLIC -> true;
+            default -> false;
+        };
+    }
 }
 
