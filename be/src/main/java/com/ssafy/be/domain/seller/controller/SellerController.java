@@ -71,7 +71,8 @@ public class SellerController implements SellerApi {
             @PathVariable Long sellerId,
             @AuthenticationPrincipal String principal) {
 
-        Long requestUserId = principal != null ? Long.parseLong(principal) : null;
+        Long requestUserId = (principal == null || principal.equals("anonymousUser"))
+                        ? null : Long.parseLong(principal);
         return ResponseEntity.ok(ApiResponse.success(sellerService.getReputation(sellerId, requestUserId)));
     }
 
@@ -80,7 +81,8 @@ public class SellerController implements SellerApi {
             @PathVariable Long sellerId,
             @AuthenticationPrincipal String principal) {
 
-        Long requestUserId = principal != null ? Long.parseLong(principal) : null;
+        Long requestUserId = (principal == null || principal.equals("anonymousUser"))
+                        ? null : Long.parseLong(principal);
 
         return ResponseEntity.ok(ApiResponse.success(sellerService.getSellerReport(sellerId, requestUserId)));
     }

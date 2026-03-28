@@ -36,7 +36,8 @@ public class SearchController implements SearchApi {
             @AuthenticationPrincipal String principal
     ) {
         validateKeyword(keyword);
-        Long userId = principal != null ? Long.parseLong(principal) : null;
+        Long userId = (principal == null || principal.equals("anonymousUser"))
+                        ? null : Long.parseLong(principal);
         return ResponseEntity.ok(searchService.searchSellers(keyword, userId));
     }
 
