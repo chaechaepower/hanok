@@ -2,6 +2,7 @@ import type { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axio
 import axios, { AxiosHeaders } from 'axios';
 import { QueryClient } from '@tanstack/react-query';
 import type { ApiResponse, LoginResponseData } from '@/types';
+import { disconnectStompClient, refreshStompClientConnection } from '@/websocket/stompClient';
 
 let instance: AxiosInstance | null = null;
 let guestSafeInstance: AxiosInstance | null = null;
@@ -18,6 +19,7 @@ type RetriableRequestConfig = InternalAxiosRequestConfig & {
 const isRefreshRequest = (url?: string) => url?.includes(REFRESH_TOKEN_PATH) ?? false;
 
 export const clearAuthSession = ({ redirectToLogin = true }: { redirectToLogin?: boolean } = {}) => {
+  void disconnectStompClient();
   localStorage.removeItem('accessToken');
   localStorage.removeItem('refreshToken');
   localStorage.removeItem('userId');
@@ -58,7 +60,7 @@ export const refreshSessionTokens = async () => {
         },
       },
     )
-    .then((response) => {
+    .then(async (response) => {
       const { accessToken, refreshToken } = response.data.data;
 
       if (!accessToken) {
@@ -70,6 +72,8 @@ export const refreshSessionTokens = async () => {
       if (refreshToken) {
         localStorage.setItem('refreshToken', refreshToken);
       }
+
+      await refreshStompClientConnection();
 
       return response.data;
     })

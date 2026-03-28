@@ -130,7 +130,7 @@ export type UniqueBidSyncPayload = {
   bidRange: UniqueBidRange;
   timer: StreamTimerPayload;
   participantCount: number;
-  hasBid: boolean;
+  hasBid: boolean | null;
 };
 
 export type UniqueBidAckPayload = {
@@ -164,7 +164,7 @@ export type BidSyncPayload = {
     currentPrice: number;
   };
   timer: StreamTimerPayload;
-  isHighestBidder: boolean;
+  isHighestBidder: boolean | null;
 };
 
 export type AuctionCommentPayload = {
@@ -425,6 +425,10 @@ export type BroadcastStreamEvent =
   | {
       eventType: 'UNIQUE_AUCTION_CALCULATING';
       payload?: UniqueAuctionCalculatingPayload | null;
+    }
+  | {
+      eventType: 'UNIQUE_AUCTION_END_PUBLIC';
+      payload: null;
     }
   | {
       eventType: 'ITEM_INTRODUCE';

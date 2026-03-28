@@ -218,6 +218,21 @@ export const disconnectStompClient = async () => {
   setConnectionState('idle');
 };
 
+export const refreshStompClientConnection = async () => {
+  const hadActiveConnection = client !== null || connectPromise !== null || connectionState !== 'idle';
+  const hadSubscriptions = managedSubscriptions.size > 0;
+
+  if (!hadActiveConnection) {
+    return;
+  }
+
+  await disconnectStompClient();
+
+  if (hadSubscriptions) {
+    await connectStompClient();
+  }
+};
+
 export const subscribeStream = async <TBroadcast = unknown, TPrivate = unknown, TError = unknown>({
   streamId,
   onBroadcast,

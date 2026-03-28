@@ -3,7 +3,7 @@ import { getFetchInstance } from '@/api/instance';
 import type { GetStreamMacrosResponse } from '@/types';
 
 // GET /api/v1/streams/{streamId}/macros
-export const useGetStreamMacros = (streamId: number, category: string) => {
+export const useGetStreamMacros = (streamId: number, category: string, enabled = true) => {
   return useQuery<GetStreamMacrosResponse>({
     queryKey: ['stream-macros', streamId, category],
     queryFn: async () => {
@@ -12,6 +12,6 @@ export const useGetStreamMacros = (streamId: number, category: string) => {
       );
       return res.data;
     },
-    enabled: streamId > 0 && !!category,
+    enabled: enabled && streamId > 0 && !!category,
   });
 };
