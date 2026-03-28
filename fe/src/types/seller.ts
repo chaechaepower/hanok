@@ -77,6 +77,7 @@ export type SellerProfileResponse = {
   instagramUrl: string | null;
   youtubeUrl: string | null;
   tiktokUrl: string | null;
+  isFollowed: boolean;
   stats: SellerProfileStats;
   recentSales: SellerRecentSale[];
   posts: SellerPost[];
