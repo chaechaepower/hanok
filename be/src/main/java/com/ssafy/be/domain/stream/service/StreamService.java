@@ -191,7 +191,7 @@ public class StreamService {
                         .maxPrice(request.uniqueTop().maxPrice())
                         .build();
 
-                detail.validateSetting();
+//                detail.validateSetting();
 
                 uniqueBidAuctionDetailRepository.save(detail);
             }
