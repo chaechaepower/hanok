@@ -36,9 +36,9 @@ export default function ConfirmModal({
         className="w-full max-w-[420px] rounded-3xl border border-neutral-800 bg-surface-elevated p-7 shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="mb-2 text-xs font-semibold uppercase tracking-[0.24em] text-accent">{badgeLabel}</div>
+        <div className="mb-2 text-md font-semibold uppercase tracking-[0.24em] text-accent">{badgeLabel}</div>
         <h3 className="mb-3 text-xl font-semibold text-warm">{title}</h3>
-        <p className="mb-7 text-sm leading-6 text-neutral-300">{description}</p>
+        <p className="mb-7 text-md leading-6 text-neutral-300">{description}</p>
 
         <div className="flex justify-end gap-3">
           <button
