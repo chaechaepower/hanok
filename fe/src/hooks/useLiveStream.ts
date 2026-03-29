@@ -516,6 +516,7 @@ export function useLiveStream(
       if (isStreamPausedEvent(event)) {
         setStreamState('disconnected');
         setTimer(null);
+        snipingTimerSetAtRef.current = 0;
         return;
       }
 
@@ -663,6 +664,9 @@ export function useLiveStream(
       }
 
       if (isUniqueBidAckEvent(event) && event.payload) {
+        if (streamId && consumePendingWalletInvalidationForBid(streamId)) {
+          void queryClient.invalidateQueries({ queryKey: ['wallet'] });
+        }
         setUniqueBidSync((prev) => (prev ? { ...prev, hasBid: true } : prev));
         showToast({ type: 'success', message: `${event.payload.amount.toLocaleString()}원 입찰이 접수되었습니다.` });
         return;

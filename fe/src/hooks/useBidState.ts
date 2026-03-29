@@ -88,6 +88,7 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
   const [isUniqueBidCorrectionPending, setIsUniqueBidCorrectionPending] = useState(false);
   const [isBidAccessModalOpen, setIsBidAccessModalOpen] = useState(false);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [isBidLoading, setIsBidLoading] = useState(false);
   const [auctionEndPhase, setAuctionEndPhase] = useState<AuctionEndPhase>(null);
   const hadActiveAuctionRef = useRef(false);
 
@@ -149,6 +150,7 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
   const isHighestBidder = !isUniqueAuction && (bidSync?.isHighestBidder ?? false);
   const isBidDisabled =
     !hasActiveAuction ||
+    isBidLoading ||
     isInsufficientBalance ||
     isHighestBidder ||
     (isUniqueAuction && (hasPlacedUniqueBid || freeInput.trim().length === 0));
@@ -204,20 +206,22 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
       setIsUniqueBidCorrectionPending(false);
     }
 
-    (preloadedBidAudio.cloneNode(true) as HTMLAudioElement).play().catch(() => {});
-
+    setIsBidLoading(true);
     void sendStreamMessage(streamId, {
       eventType: isUniqueAuction ? 'UNIQUE_BID_PLACE' : 'BID_PLACED',
       payload: { auctionId: activeAuctionId, amount: effectiveBidAmount },
     })
       .then(() => {
-        if (!isUniqueAuction) {
-          markPendingWalletInvalidationForBid(streamId);
-        }
+        (preloadedBidAudio.cloneNode(true) as HTMLAudioElement).play().catch(() => {});
+        markPendingWalletInvalidationForBid(streamId);
       })
       .catch((error) => {
         clearPendingWalletInvalidationForBid(streamId);
+        showToast({ type: 'warning', message: '입찰 전송에 실패했습니다. 다시 시도해주세요.' });
         console.error('[stream] failed to send bid', error);
+      })
+      .finally(() => {
+        setIsBidLoading(false);
       });
   }, [
     activeAuctionId,
@@ -314,6 +318,7 @@ export function useBidState({ auctionType, bidSync, uniqueBidSync, activeAuction
     isInsufficientBalance,
     isHighestBidder,
     isBidDisabled,
+    isBidLoading,
     hasRegisteredShippingAddress,
     handleBidPlace,
     handleBidAccessAction,
