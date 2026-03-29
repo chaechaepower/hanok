@@ -111,7 +111,7 @@ export default function SellerStoreCard({
                 : 'border-gold-light/30 bg-gold-light/10 text-gold-light hover:bg-gold-light/16'
             }`}
           >
-            {seller.isFollowed ? '팔로우' : '언팔로우'}
+            {seller.isFollowed ? '언팔로우' : '팔로우'}
           </button>
         )}
       </div>

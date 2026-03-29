@@ -81,12 +81,6 @@ export default function FollowedStoresSection() {
               <div className="h-6 w-6 animate-spin rounded-full border-[3px] border-neutral-700 border-t-gold-light" />
             </div>
           )}
-
-          {totalStores > 0 && (
-            <p className="mt-6 text-[14px] text-neutral-500">
-              총 {totalStores}개 중 {followedList.length}개를 불러왔습니다.
-            </p>
-          )}
         </div>
       )}
     </>
