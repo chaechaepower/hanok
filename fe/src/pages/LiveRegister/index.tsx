@@ -521,18 +521,18 @@ export default function LiveRegisterPage() {
   const submitOverlayTitle =
     submitIntent === 'SCHEDULE'
       ? shouldGenerateAiThumbnail
-        ? 'AI 썸네일을 생성하며 방송을 예약하고 있습니다'
-        : '방송을 저장하고 있습니다'
+        ? 'AI 썸네일 생성중'
+        : '방송을 저장중'
       : shouldGenerateAiThumbnail
-        ? 'AI 썸네일을 생성하며 방송을 준비하고 있습니다'
-        : '방송 입장을 준비하고 있습니다';
+        ? 'AI 썸네일 생성중'
+        : '방송 입장중';
   const submitOverlayDescription =
     submitIntent === 'SCHEDULE'
       ? shouldGenerateAiThumbnail
-        ? '썸네일이 없어 한옥이 AI 썸네일을 만들고 있습니다. 방송 예약까지 10~15초 정도 걸릴 수 있습니다.'
+        ? '썸네일이 없어 한옥이 AI 썸네일을 만들고 있습니다.\n방송 예약까지 10초 정도 걸릴 수 있습니다.'
         : '방송 정보와 경매 물품을 저장하고 있습니다. 잠시만 기다려주세요.'
       : shouldGenerateAiThumbnail
-        ? '썸네일이 없어 한옥이 AI 썸네일을 만들고 있습니다. 10~15초 정도 걸릴 수 있습니다.'
+        ? '썸네일이 없어 한옥이 AI 썸네일을 만들고 있습니다.\n생성은 10초 정도 걸릴 수 있습니다.'
         : '라이브로 이동할 준비를 하고 있습니다. 잠시만 기다려주세요.';
 
   const submitReadyEntry = async () => {
@@ -697,9 +697,11 @@ export default function LiveRegisterPage() {
                 <div className="w-full max-w-[420px] rounded-3xl border border-white/10 bg-surface-elevated px-7 py-8 text-center shadow-2xl">
                   <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-4 border-neutral-700 border-t-gold-light" />
                   <h2 className="text-xl font-semibold text-warm">{submitOverlayTitle}</h2>
-                  <p className="mt-3 text-sm leading-6 text-neutral-300">{submitOverlayDescription}</p>
+                  <p className="mt-3 text-sm leading-6 whitespace-pre-line text-neutral-300">
+                    {submitOverlayDescription}
+                  </p>
                   {shouldGenerateAiThumbnail && (
-                    <p className="mt-4 text-xs leading-5 text-gold-light">
+                    <p className="mt-4 text-sm leading-5 text-gold-light">
                       {submitIntent === 'SCHEDULE'
                         ? 'AI 썸네일 생성이 끝나면 방송이 예약됩니다'
                         : 'AI 썸네일 생성이 끝나면 자동으로 다음 화면으로 이동합니다'}
