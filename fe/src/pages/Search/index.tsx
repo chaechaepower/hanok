@@ -154,12 +154,9 @@ export default function SearchPage() {
       <section className="flex flex-col gap-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-[24px] font-semibold text-point">검색 결과</h2>
-            <p className="mt-1 text-[14px] text-white/55">
-              {keywordParam
-                ? `"${keywordParam}"에 대한 검색 결과를 찾았습니다`
-                : '검색어를 입력하면 결과를 확인할 수 있습니다'}
-            </p>
+            <h2 className="text-[24px] font-semibold text-point">
+              "{keywordParam}" <span className="mt-1 text-[15px] text-white/55">에 대한 검색 결과</span>
+            </h2>
           </div>
 
           {isSearchEnabled && (
