@@ -56,7 +56,7 @@ export default function MainPage() {
     category: selectedCategory,
     status: 'LIVE',
     sort: 'LATEST',
-    size: 20,
+    size: 6,
     enabled: isLoggedIn,
   });
   const scheduledSectionRef = useRef<HTMLDivElement | null>(null);

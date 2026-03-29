@@ -24,7 +24,6 @@ export default function BidAccessModal({ isOpen, onClose, onAction }: BidAccessM
       >
         <div className="space-y-2">
           <h2 className="text-[22px] font-black leading-snug">로그인 후 입찰할 수 있습니다</h2>
-          <h2 className="text-[22px] font-black leading-snug">로그인 후 입찰할 수 있습니다.</h2>
           <p className="text-body-lg leading-6 text-white/68">입찰과 결제 기능을 이용하려면 먼저 로그인해주세요.</p>
         </div>
         <div className="mt-7 flex gap-3">

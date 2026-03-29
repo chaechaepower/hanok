@@ -703,8 +703,8 @@ export default function LiveRegisterPage() {
                   {shouldGenerateAiThumbnail && (
                     <p className="mt-4 text-sm leading-5 text-gold-light">
                       {submitIntent === 'SCHEDULE'
-                        ? 'AI 썸네일 생성이 끝나면 방송이 예약됩니다'
-                        : 'AI 썸네일 생성이 끝나면 자동으로 다음 화면으로 이동합니다'}
+                        ? 'AI 썸네일 생성 후 방송이 예약됩니다'
+                        : 'AI 썸네일 생성 후 자동으로 다음 화면으로 이동합니다'}
                     </p>
                   )}
                 </div>
