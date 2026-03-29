@@ -32,6 +32,8 @@ import LiveRegisterSettingsPanel from '@/components/LiveCreate/LiveRegisterSetti
 import InventorySelectModal from '@/components/LiveCreate/InventorySelectModal';
 import ScheduleModal from '@/components/LiveCreate/ScheduleModal';
 
+type SubmitIntent = 'ENTER' | 'SCHEDULE' | null;
+
 export default function LiveRegisterPage() {
   const [searchParams] = useSearchParams();
   const rawStreamId = Number(searchParams.get('streamId') ?? 0);
@@ -69,6 +71,7 @@ export default function LiveRegisterPage() {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [scheduledAt, setScheduledAt] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitIntent, setSubmitIntent] = useState<SubmitIntent>(null);
 
   const [macroAnswers, setMacroAnswers] = useState<Record<string, string>>({});
   const { videoPreviewRef, isCameraOn, startCamera, stopCamera } = useLiveRegisterCamera();
@@ -514,11 +517,30 @@ export default function LiveRegisterPage() {
     };
   };
 
+  const shouldGenerateAiThumbnail = !thumbnailFile && !thumbnailUrl;
+  const submitOverlayTitle =
+    submitIntent === 'SCHEDULE'
+      ? shouldGenerateAiThumbnail
+        ? 'AI 썸네일을 생성하며 방송을 예약하고 있습니다'
+        : '방송을 저장하고 있습니다'
+      : shouldGenerateAiThumbnail
+        ? 'AI 썸네일을 생성하며 방송을 준비하고 있습니다'
+        : '방송 입장을 준비하고 있습니다';
+  const submitOverlayDescription =
+    submitIntent === 'SCHEDULE'
+      ? shouldGenerateAiThumbnail
+        ? '썸네일이 없어 한옥이 AI 썸네일을 만들고 있습니다. 방송 예약까지 10~15초 정도 걸릴 수 있습니다.'
+        : '방송 정보와 경매 물품을 저장하고 있습니다. 잠시만 기다려주세요.'
+      : shouldGenerateAiThumbnail
+        ? '썸네일이 없어 한옥이 AI 썸네일을 만들고 있습니다. 10~15초 정도 걸릴 수 있습니다.'
+        : '라이브로 이동할 준비를 하고 있습니다. 잠시만 기다려주세요.';
+
   const submitReadyEntry = async () => {
     if (!categoryId || !validateStreamForm()) {
       return;
     }
 
+    setSubmitIntent('ENTER');
     setIsSubmitting(true);
     try {
       const payload = {
@@ -560,6 +582,7 @@ export default function LiveRegisterPage() {
       });
     } finally {
       setIsSubmitting(false);
+      setSubmitIntent(null);
     }
   };
 
@@ -568,6 +591,7 @@ export default function LiveRegisterPage() {
       return;
     }
 
+    setSubmitIntent(startType === 'SCHEDULED' ? 'SCHEDULE' : 'ENTER');
     setIsSubmitting(true);
     try {
       const request = buildStreamRequest(startType, scheduledAtValue);
@@ -629,6 +653,7 @@ export default function LiveRegisterPage() {
       });
     } finally {
       setIsSubmitting(false);
+      setSubmitIntent(null);
     }
   };
 
@@ -667,6 +692,23 @@ export default function LiveRegisterPage() {
 
         return (
           <div className="relative flex h-[calc(100vh-6.5rem)] w-full flex-col overflow-hidden bg-surface p-3">
+            {isSubmitting && (
+              <div className="absolute inset-0 z-[1200] flex items-center justify-center bg-black/72 px-4 backdrop-blur-sm">
+                <div className="w-full max-w-[420px] rounded-3xl border border-white/10 bg-surface-elevated px-7 py-8 text-center shadow-2xl">
+                  <div className="mx-auto mb-5 h-12 w-12 animate-spin rounded-full border-4 border-neutral-700 border-t-gold-light" />
+                  <h2 className="text-xl font-semibold text-warm">{submitOverlayTitle}</h2>
+                  <p className="mt-3 text-sm leading-6 text-neutral-300">{submitOverlayDescription}</p>
+                  {shouldGenerateAiThumbnail && (
+                    <p className="mt-4 text-xs leading-5 text-gold-light">
+                      {submitIntent === 'SCHEDULE'
+                        ? 'AI 썸네일 생성이 끝나면 방송이 예약됩니다'
+                        : 'AI 썸네일 생성이 끝나면 자동으로 다음 화면으로 이동합니다'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center justify-between pb-2">
               <div className="flex items-center gap-3">
                 <button
