@@ -19,10 +19,7 @@ import type {
   UniqueBidSyncPayload,
 } from '@/types';
 import { sendStreamMessage, subscribeStream } from '@/websocket/stompClient';
-import {
-  clearPendingWalletInvalidationForBid,
-  consumePendingWalletInvalidationForBid,
-} from './useBidState';
+import { clearPendingWalletInvalidationForBid, consumePendingWalletInvalidationForBid } from './useBidState';
 import { useToast } from './useToast';
 
 // ---------------------------------------------------------------------------
@@ -244,8 +241,7 @@ export function useLiveStream(
   const setStreamState = useCallback(
     (value: SetStateAction<StreamState>) => {
       setRuntimeStreamState((prev) => {
-        const prevValue =
-          prev.streamId === streamId && prev.value !== null ? prev.value : serverStreamState;
+        const prevValue = prev.streamId === streamId && prev.value !== null ? prev.value : serverStreamState;
         const nextValue = typeof value === 'function' ? value(prevValue) : value;
 
         return {
@@ -671,7 +667,6 @@ export function useLiveStream(
         showToast({ type: 'success', message: `${event.payload.amount.toLocaleString()}원 입찰이 접수되었습니다.` });
         return;
       }
-
     };
 
     const handleErrorEvent = (event: ErrorStreamEvent) => {
@@ -726,7 +721,7 @@ export function useLiveStream(
 
       unsubscribeStream();
     };
-  }, [queryClient, setStreamState, showToast, streamId]);
+  }, [isLoggedIn, queryClient, setStreamState, showToast, streamId]);
 
   // ---------------------------------------------------------------------------
   // Race-condition-safe ITEM_SYNC on stream live transition.
