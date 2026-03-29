@@ -4,9 +4,9 @@ import com.ssafy.be.domain.auction.dto.response.AuctionCommentResponse;
 import com.ssafy.be.domain.auction.dto.response.BidWinnerResponse;
 import com.ssafy.be.domain.auction.entity.Auction;
 import com.ssafy.be.domain.auction.entity.AuctionStatus;
+import com.ssafy.be.domain.auction.repository.AuctionTimerRepository;
 import com.ssafy.be.domain.bottomupauction.model.Bid;
 import com.ssafy.be.domain.escrow.service.EscrowService;
-import com.ssafy.be.domain.item.entity.AuctionType;
 import com.ssafy.be.domain.stream.service.StreamViewerService;
 import com.ssafy.be.domain.uniqueaction.dto.response.UniqueAuctionResultResponse;
 import com.ssafy.be.domain.uniqueaction.dto.response.UniqueBidItemSyncResponse;
@@ -61,6 +61,7 @@ public class UniqueBidAuctionService {
     private final ShippingAddressRepository shippingAddressRepository;
     private final EscrowService escrowService;
     private final StreamViewerService streamViewerService;
+    private final AuctionTimerRepository auctionTimerRepository;
 
     @Transactional
     public List<StreamPublishTask> startAuction(Long streamId, UniqueBidStartRequest request, Long userId) {
@@ -73,6 +74,8 @@ public class UniqueBidAuctionService {
         auction.startAuction(serverNow);
 
         UniqueBidAuctionDetail detail = auction.getUniqueBidAuctionDetail();
+
+        auctionTimerRepository.save(auction.getId(), auction.getAuctionDuration()); // 타이머 추가
 
         StreamPublishTask uniqueAuctionStartPublishTask = buildStreamPublishTask(
                 BROADCAST,
@@ -211,6 +214,13 @@ public class UniqueBidAuctionService {
         publishTasks.add(buildStreamPublishTask(BROADCAST, streamId, null, AUCTION_COMMENT,
                 buildAuctionCommentResponse(message)));
         return publishTasks;
+    }
+
+    @Transactional(readOnly = true)
+    public List<StreamPublishTask> publishTimerExpiredEndPublicOnly(Long auctionId) {
+        return auctionRepository.findById(auctionId)
+                .map(a -> List.of(buildStreamPublishTask(BROADCAST, a.getStream().getId(), null, UNIQUE_AUCTION_END_PUBLIC, null)))
+                .orElse(List.of());
     }
 
     @Transactional(readOnly = true)
