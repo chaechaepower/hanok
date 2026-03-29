@@ -20,6 +20,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.stereotype.Component;
 
 import java.security.Principal;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 
@@ -97,7 +98,7 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
             }
 
             if (userId < 0) { // 게스트인 경우
-                StreamEventType eventType = jsonConverter.convert(message.getPayload(), StompRequest.class).getEventType();
+                StreamEventType eventType = extractEventType(message.getPayload());
 
                 if (eventType == null || !eventType.isGuestSendAllowedEventType()) {
                     throw new MessageDeliveryException("게스트는 허용된 이벤트만 전송할 수 있습니다");
@@ -113,6 +114,15 @@ public class StompAuthChannelInterceptor implements ChannelInterceptor {
             return null;
         }
         return Long.parseLong(principal.getName());
+    }
+
+    private StreamEventType extractEventType(Object payload) {
+        if (payload instanceof byte[] bytes) {
+            return jsonConverter.fromJson(new String(bytes, StandardCharsets.UTF_8), StompRequest.class)
+                    .getEventType();
+        }
+
+        return jsonConverter.convert(payload, StompRequest.class).getEventType();
     }
 }
 
