@@ -7,7 +7,9 @@ import CustomBidPanel from '@/components/Live/Auction/Buyer/CustomBidPanel';
 import QuickBidPanel from '@/components/Live/Auction/Buyer/QuickBidPanel';
 import UniqueBidPanel from '@/components/Live/Auction/Buyer/UniqueBidPanel';
 import KeyboardGuide from '@/components/Live/Auction/shared/KeyboardGuide';
+import InfoPanelTooltip from '@/components/common/InfoPanelTooltip';
 import AddressFormModal from '@/components/common/modal/AddressFormModal';
+import { AUCTION_TYPE_DESCRIPTIONS } from '@/constants/auction';
 import type { BidSyncPayload, LiveAuctionType, UniqueBidSyncPayload } from '@/types';
 import { useBidState, CUSTOM_UNIT_OPTIONS } from '@/hooks/useBidState';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -43,6 +45,7 @@ export default function BuyerControlBar({
   showChatToggle = true,
 }: Props) {
   const bid = useBidState({ auctionType, bidSync, uniqueBidSync, activeAuctionId });
+  const auctionTypeDescription = auctionType ? AUCTION_TYPE_DESCRIPTIONS[auctionType] : null;
 
   const [guideOpen, setGuideOpen] = useState(false);
 
@@ -94,8 +97,18 @@ export default function BuyerControlBar({
       <div className={`${variant === 'overlay' ? 'absolute bottom-3 left-3 right-3' : ''} flex flex-col gap-2`}>
         {auctionType ? (
           <div className="flex items-center gap-2">
-            <div className="rounded-full border border-gold/30 bg-surface/85 px-4 py-3 text-price-sm font-bold tracking-[0.12em] text-gold shadow-[0_10px_30px_rgba(0,0,0,0.2)] backdrop-blur-md">
-              {BUYER_AUCTION_TYPE_LABELS[auctionType]}
+            <div className="group relative">
+              <div
+                tabIndex={0}
+                className="rounded-full border border-gold/30 bg-surface/85 px-4 py-3 text-price-sm font-bold tracking-[0.12em] text-gold shadow-[0_10px_30px_rgba(0,0,0,0.2)] backdrop-blur-md outline-none"
+              >
+                {BUYER_AUCTION_TYPE_LABELS[auctionType]}
+              </div>
+              {auctionTypeDescription ? (
+                <InfoPanelTooltip placementClassName="bottom-full left-0 mb-2" widthClassName="w-72">
+                  <p className="whitespace-pre-line leading-5 text-neutral-300">{auctionTypeDescription}</p>
+                </InfoPanelTooltip>
+              ) : null}
             </div>
             {auctionType === 'UNIQUE_TOP' && uniqueBidSync?.bidRange ? (
               <>

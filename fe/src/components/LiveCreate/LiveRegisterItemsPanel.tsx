@@ -14,7 +14,7 @@ import {
   type AuctionFieldErrors,
   type AuctionNumberField,
   toPreviewAuctionItem,
-} from '../../utils/liveRegister';
+} from '@/utils/liveRegister';
 
 type Props = {
   activeStepId?: LiveRegisterTutorialStepId | null;
@@ -236,13 +236,13 @@ export default function LiveRegisterItemsPanel({
         })}
       </div>
 
-        <button
-          type="button"
-          onClick={onOpenInventory}
-          className="mx-auto mb-2 mt-1 flex w-4/5 shrink-0 items-center justify-center gap-2 rounded-xl border border-dashed border-neutral-700 bg-white/[0.02] py-2.5 text-[13px] font-bold text-neutral-400 transition-all hover:border-gold/40 hover:bg-gold/[0.06] hover:text-gold"
-        >
-          물품 선택
-        </button>
+      <button
+        type="button"
+        onClick={onOpenInventory}
+        className="mx-auto mb-2 mt-1 flex w-4/5 shrink-0 items-center justify-center gap-2 rounded-xl border border-dashed border-neutral-700 bg-white/[0.02] py-2.5 text-[13px] font-bold text-neutral-400 transition-all hover:border-gold/40 hover:bg-gold/[0.06] hover:text-gold"
+      >
+        물품 선택
+      </button>
     </aside>
   );
 }
