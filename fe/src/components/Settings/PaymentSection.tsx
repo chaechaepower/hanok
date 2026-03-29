@@ -53,10 +53,10 @@ export default function PaymentSection() {
   const hasAccount = accountData && accountData.bankName && accountData.accountNum;
 
   return (
-    <div className="box-border w-full">
-      <div className="mb-10 mt-2">
-        <h2 className="mb-3 text-[22px] font-bold text-white">결제수단 관리</h2>
-        <p className="text-[15px] text-neutral-600">카드 및 계좌를 간편하게 관리하세요.</p>
+    <>
+      <div className="mb-2 flex flex-col gap-2">
+        <h2 className="m-0 text-2xl font-bold text-white">결제수단 관리</h2>
+        <p className="m-0 text-[15px] text-neutral-400">출금에 사용될 계좌는 한 건만 등록 가능합니다</p>
       </div>
 
       <div className="mb-12 flex items-center justify-between rounded-xl bg-surface-elevated p-8">
@@ -135,6 +135,6 @@ export default function PaymentSection() {
         activeTabClassName="border-gold-light text-gold-light"
         selectedItemClassName="bg-gold-light font-bold text-background"
       />
-    </div>
+    </>
   );
 }

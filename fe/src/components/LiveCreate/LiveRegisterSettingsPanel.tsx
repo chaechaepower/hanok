@@ -52,6 +52,9 @@ export default function LiveRegisterSettingsPanel({
             )}
           </button>
           <input ref={thumbnailInputRef} type="file" accept="image/*" className="hidden" onChange={onThumbnailChange} />
+          <p className="mt-1 text-[14px] leading-5 text-neutral-400">
+            썸네일 미등록시, AI 썸네일을 자동으로 생성합니다!
+          </p>
         </div>
 
         <div className="flex flex-col gap-1.5 rounded-xl bg-gold/[0.06] p-3">
@@ -66,9 +69,7 @@ export default function LiveRegisterSettingsPanel({
         </div>
 
         <div className="flex flex-col gap-1.5 rounded-xl bg-accent/[0.06] p-3">
-          <label className="text-sm font-bold tracking-wider text-accent">
-            상단 고정 공지사항 (선택)
-          </label>
+          <label className="text-sm font-bold tracking-wider text-accent">상단 고정 공지사항 (선택)</label>
           <input
             type="text"
             value={notice}
@@ -89,13 +90,14 @@ export default function LiveRegisterSettingsPanel({
                 <div key={macro.questionType} className="flex items-center gap-2">
                   <button
                     type="button"
-                    className={`w-20 shrink-0 whitespace-nowrap rounded-full py-2 text-center text-xs font-extrabold transition-colors ${macroAnswers[macro.questionType]
-                      ? 'bg-ember/15 text-ember-light'
-                      : 'bg-white/[0.08] text-neutral-500'
-                      }`}
+                    className={`w-20 shrink-0 whitespace-nowrap rounded-full py-2 text-center text-xs font-extrabold transition-colors ${
+                      macroAnswers[macro.questionType]
+                        ? 'bg-ember/15 text-ember-light'
+                        : 'bg-white/[0.08] text-neutral-500'
+                    }`}
                     onClick={() => {
                       const cmd = `!${command}`;
-                      navigator.clipboard?.writeText(cmd).catch(() => { });
+                      navigator.clipboard?.writeText(cmd).catch(() => {});
                     }}
                     title="클릭하면 커맨드 복사"
                   >
@@ -112,7 +114,13 @@ export default function LiveRegisterSettingsPanel({
               );
             })}
 
-            {!macroFields.length && <NoItem message="해당 카테고리의 매크로가 없습니다" className="py-6" textClassName="text-sm font-bold text-neutral-600" />}
+            {!macroFields.length && (
+              <NoItem
+                message="해당 카테고리의 매크로가 없습니다"
+                className="py-6"
+                textClassName="text-sm font-bold text-neutral-600"
+              />
+            )}
           </div>
         </div>
       </div>

@@ -41,7 +41,7 @@ const walletTabs: Array<{ key: WalletType; label: string }> = [
 export default function WalletPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<WalletType>('withdraw');
+  const [activeTab, setActiveTab] = useState<WalletType>('charge');
   const [isPointModalOpen, setIsPointModalOpen] = useState(false);
   const [pointModalType, setPointModalType] = useState<PointModalType>('charge');
   const [pointAmountInput, setPointAmountInput] = useState('');
@@ -197,7 +197,10 @@ export default function WalletPage() {
       showToast({ type: 'success', message: '결제가 완료되었습니다.' });
       closePointModal();
     } catch (error) {
-      showToast({ type: 'error', message: error instanceof Error ? error.message : '결제 요청 중 오류가 발생했습니다.' });
+      showToast({
+        type: 'error',
+        message: error instanceof Error ? error.message : '결제 요청 중 오류가 발생했습니다.',
+      });
     } finally {
       setIsPointSubmitting(false);
     }

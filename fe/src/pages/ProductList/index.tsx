@@ -173,7 +173,7 @@ export default function ProductListPage() {
             </>
           ) : (
             <div className="flex flex-1 items-center justify-center py-16">
-              <p className="text-body-lg text-neutral-500">새 물품을 등록 해주세요.</p>
+              <p className="text-body-lg text-neutral-500">새 물품을 등록 해주세요</p>
             </div>
           )}
         </div>

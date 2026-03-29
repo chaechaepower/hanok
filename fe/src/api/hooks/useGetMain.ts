@@ -51,6 +51,20 @@ export const useGetMain = (params: UseGetMainParams = {}) => {
   const size = params.size ?? 10;
   const normalizePage = (value: unknown) =>
     typeof value === 'number' && Number.isFinite(value) && value >= 0 ? Math.floor(value) : 0;
+  const getPageMetadata = (pageResponse: PageResponse<LiveCardData>) => {
+    const compactPage = pageResponse.page;
+    const contentLength = Array.isArray(pageResponse.content) ? pageResponse.content.length : 0;
+
+    return {
+      currentPage: normalizePage(pageResponse.number ?? compactPage?.number ?? pageResponse.pageable?.pageNumber),
+      totalPages: normalizePage(pageResponse.totalPages ?? compactPage?.totalPages),
+      totalElements: normalizePage(pageResponse.totalElements ?? compactPage?.totalElements),
+      pageSize: normalizePage(pageResponse.size ?? compactPage?.size ?? pageResponse.pageable?.pageSize ?? size),
+      numberOfElements: normalizePage(pageResponse.numberOfElements ?? contentLength),
+      contentLength,
+      isLast: pageResponse.last,
+    };
+  };
 
   return useInfiniteQuery({
     queryKey: ['liveCards', type, category ?? null, status, sort, size],
@@ -66,15 +80,15 @@ export const useGetMain = (params: UseGetMainParams = {}) => {
         page: normalizePage(pageParam),
       }),
     getNextPageParam: (lastPage) => {
-      const currentPage = normalizePage(lastPage.number);
-      const totalPages = normalizePage(lastPage.totalPages);
-      const numberOfElements = normalizePage(lastPage.numberOfElements);
-      const contentLength = Array.isArray(lastPage.content) ? lastPage.content.length : 0;
+      const { currentPage, totalPages, totalElements, pageSize, numberOfElements, contentLength, isLast } =
+        getPageMetadata(lastPage);
       const isLastByTotalPages = totalPages > 0 && currentPage >= totalPages - 1;
       const isLastByEmptyPage = numberOfElements === 0 || contentLength === 0;
       const isLastByShortPage = contentLength < size;
+      const isLastByTotalElements =
+        totalElements > 0 && pageSize > 0 && currentPage * pageSize + numberOfElements >= totalElements;
 
-      if (lastPage.last || isLastByTotalPages || isLastByEmptyPage || isLastByShortPage) {
+      if (isLast || isLastByTotalPages || isLastByEmptyPage || isLastByShortPage || isLastByTotalElements) {
         return undefined;
       }
 

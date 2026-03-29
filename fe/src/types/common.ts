@@ -7,9 +7,9 @@ export type ApiResponse<T = Record<string, never>> = {
 };
 
 export type PageResponse<T> = {
-  totalElements: number;
-  totalPages: number;
-  pageable: {
+  totalElements?: number;
+  totalPages?: number;
+  pageable?: {
     pageNumber: number;
     paged: boolean;
     pageSize: number;
@@ -21,18 +21,24 @@ export type PageResponse<T> = {
       empty: boolean;
     };
   };
-  numberOfElements: number;
-  size: number;
+  page?: {
+    size?: number;
+    number?: number;
+    totalElements?: number;
+    totalPages?: number;
+  };
+  numberOfElements?: number;
+  size?: number;
   content: T[];
-  number: number;
-  sort: {
+  number?: number;
+  sort?: {
     sorted: boolean;
     unsorted: boolean;
     empty: boolean;
   };
-  first: boolean;
-  last: boolean;
-  empty: boolean;
+  first?: boolean;
+  last?: boolean;
+  empty?: boolean;
 };
 
 export type SideBarItem = {

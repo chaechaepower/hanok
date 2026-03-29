@@ -176,7 +176,7 @@ export default function LiveCreatePage() {
         <div className="flex items-start justify-between">
           <div>
             <h2 className="m-0 mb-2 text-[24px] font-semibold leading-tight text-warm">라이브 방송 관리</h2>
-            <p className="m-0 text-body-md text-neutral-500">예정된 방송을 확인하고 바로 시작해보세요.</p>
+            <p className="m-0 text-body-md text-neutral-500">예정된 방송을 확인하고 경매를 시작해보세요!</p>
           </div>
           <button
             type="button"

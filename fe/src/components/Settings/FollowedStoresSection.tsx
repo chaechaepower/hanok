@@ -43,7 +43,7 @@ export default function FollowedStoresSection() {
           팔로우한 상점
           <span className="ml-2 text-gold-light">({totalStores})</span>
         </h2>
-        <p className="m-0 text-[15px] text-neutral-400">관심 상점을 한 곳에서 확인하고 바로 방문할 수 있습니다.</p>
+        <p className="m-0 text-[15px] text-neutral-400">팔로우한 상점을 확인하고 방문해 보세요!</p>
       </div>
 
       {isLoading ? (
@@ -53,7 +53,7 @@ export default function FollowedStoresSection() {
       ) : followedList.length === 0 ? (
         <div className="flex w-full flex-col items-center gap-4 rounded-2xl bg-surface-elevated p-12">
           <FaStore size={40} className="text-neutral-700" />
-          <p className="m-0 text-[15px] text-neutral-500">팔로우한 상점이 아직 없습니다.</p>
+          <p className="m-0 text-[15px] text-neutral-500">팔로우한 상점이 아직 없습니다</p>
         </div>
       ) : (
         <div>
@@ -80,12 +80,6 @@ export default function FollowedStoresSection() {
             <div className="flex items-center justify-center py-4">
               <div className="h-6 w-6 animate-spin rounded-full border-[3px] border-neutral-700 border-t-gold-light" />
             </div>
-          )}
-
-          {totalStores > 0 && (
-            <p className="mt-6 text-[14px] text-neutral-500">
-              총 {totalStores}개 중 {followedList.length}개를 불러왔습니다.
-            </p>
           )}
         </div>
       )}
