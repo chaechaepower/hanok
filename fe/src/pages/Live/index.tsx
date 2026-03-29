@@ -96,6 +96,7 @@ export default function LivePage() {
 
   const activeStreamEnter = streamEnter ?? null;
   const isSeller = activeStreamEnter?.isHost ?? false;
+  const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
   const [startedStreamIds] = useState(() => getStartedLiveStreamIds());
   const hasStartedThisStream = Number.isFinite(numericStreamId) && startedStreamIds.has(numericStreamId);
 
@@ -314,7 +315,7 @@ export default function LivePage() {
   };
 
   const handleAuctionTimerExpire = useCallback(() => {
-    if (!streamId || activeAuctionType !== 'UNIQUE_TOP' || activeBidAuctionId === null) {
+    if (!isLoggedIn || !streamId || activeAuctionType !== 'UNIQUE_TOP' || activeBidAuctionId === null) {
       return;
     }
 
@@ -334,7 +335,7 @@ export default function LivePage() {
       uniqueCalculatingSentAuctionIdRef.current = null;
       console.error('[stream] failed to send unique auction calculating event', error);
     });
-  }, [activeAuctionType, activeBidAuctionId, streamId]);
+  }, [activeAuctionType, activeBidAuctionId, isLoggedIn, streamId]);
 
   const breakpoint = useBreakpoint();
 

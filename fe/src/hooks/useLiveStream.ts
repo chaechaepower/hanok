@@ -204,6 +204,7 @@ export function useLiveStream(
 ): UseLiveStreamReturn {
   const queryClient = useQueryClient();
   const { showToast } = useToast();
+  const isLoggedIn = Boolean(localStorage.getItem('accessToken'));
 
   const [liveStateOverride, setLiveStateOverride] = useState<boolean | null>(null);
   const [liveStartedAt, setLiveStartedAt] = useState<string | null>(null);
@@ -573,6 +574,10 @@ export function useLiveStream(
       }
 
       if (isUniqueAuctionEndPublicEvent(event)) {
+        if (isLoggedIn) {
+          return;
+        }
+
         setTimer(null);
         setUniqueBidSync(null);
         void requestItemSync();
