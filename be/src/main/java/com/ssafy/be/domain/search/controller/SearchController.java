@@ -2,7 +2,8 @@ package com.ssafy.be.domain.search.controller;
 
 import com.ssafy.be.domain.search.controller.api.SearchApi;
 import com.ssafy.be.domain.search.dto.response.SellerSearchResult;
-import com.ssafy.be.domain.search.dto.response.StreamSearchResult;
+import com.ssafy.be.domain.search.dto.response.StreamSearchPage;
+import java.util.List;
 import com.ssafy.be.domain.search.exception.SearchErrorCode;
 import com.ssafy.be.domain.search.service.SearchService;
 import com.ssafy.be.global.exception.GlobalException;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/search")
@@ -23,11 +23,13 @@ public class SearchController implements SearchApi {
     private final SearchService searchService;
 
     @Override
-    public ResponseEntity<List<StreamSearchResult>> search(
-            @RequestParam String keyword
+    public ResponseEntity<StreamSearchPage> search(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
     ) {
         validateKeyword(keyword);
-        return ResponseEntity.ok(searchService.search(keyword));
+        return ResponseEntity.ok(searchService.search(keyword, page, size));
     }
 
     @Override
