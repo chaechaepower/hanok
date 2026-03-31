@@ -15,5 +15,6 @@ public record StreamSearchRow(
         String category,
         Long sellerId,
         String shopName,
-        String sellerProfileImageUri
+        String sellerProfileImageUri,
+        String matchType
 ) {}
