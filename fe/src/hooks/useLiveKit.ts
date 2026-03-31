@@ -15,7 +15,7 @@ interface UseLiveKitOptions {
   isHost: boolean;
 }
 
-interface UseLiveKitReturn {
+export interface UseLiveKitReturn {
   state: LiveKitState;
   videoRef: React.RefObject<HTMLVideoElement | null>;
   bgVideoRef: React.RefObject<HTMLVideoElement | null>;

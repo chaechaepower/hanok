@@ -21,16 +21,17 @@ import SellerStartModal from '../SellerStartModal';
 import StreamEndModal from '../StreamEndModal';
 import { getPausedInitialSeconds } from './getPausedInitialSeconds';
 import type { LiveLayoutProps } from './types';
+import { useLiveKitContext } from '@/hooks/liveKitContext';
 
 const CHAT_PANEL_INITIAL = { flex: 0, opacity: 0 };
 const CHAT_PANEL_ANIMATE = { flex: 1, opacity: 1 };
 const CHAT_PANEL_TRANSITION = { type: 'spring', stiffness: 400, damping: 30 } as const;
 
-export default function DesktopLayout({ stream, auction, livekit, chat, modal, navigate }: LiveLayoutProps) {
+export default function DesktopLayout({ stream, auction, chat, modal, navigate }: LiveLayoutProps) {
   const {
     videoRef,
     bgVideoRef,
-    livekitState,
+    state: livekitState,
     viewerCount,
     toggleMic,
     toggleCamera,
@@ -39,7 +40,7 @@ export default function DesktopLayout({ stream, auction, livekit, chat, modal, n
     isCameraOn,
     isRemoteAudioMuted,
     micLevel,
-  } = livekit;
+  } = useLiveKitContext();
   const pausedInitialSeconds = getPausedInitialSeconds(stream.activeStreamEnter);
 
   return (

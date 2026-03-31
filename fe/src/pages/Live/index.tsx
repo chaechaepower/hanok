@@ -7,11 +7,11 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { usePostEndStream } from '@/api/hooks/usePostEndStream';
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { useGetStreamEnter } from '@/api/hooks/useGetStreamEnter';
-import { useLiveKit } from '@/hooks/useLiveKit';
 import { useRenderStats } from '@/hooks/useRenderStats';
 import { useLiveStream } from '@/hooks/useLiveStream';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { LiveHotStateProvider } from '@/provider/LiveHotStateProvider';
+import { LiveKitProvider } from '@/provider/LiveKitProvider';
 import type { StreamRequest } from '@/types';
 import { sendStreamMessage } from '@/websocket/stompClient';
 
@@ -145,24 +145,6 @@ export default function LivePage() {
 
   const livekitUrl = import.meta.env.VITE_LIVEKIT_URL ?? '';
   const livekitToken = activeStreamEnter?.token ?? '';
-  const {
-    state: livekitState,
-    videoRef,
-    bgVideoRef,
-    toggleMic,
-    toggleCamera,
-    toggleRemoteAudio,
-    isMicOn,
-    isCameraOn,
-    isRemoteAudioMuted,
-    viewerCount,
-    micLevel,
-    disconnect,
-  } = useLiveKit({
-    serverUrl: isStreamLive ? livekitUrl : '',
-    token: isStreamLive ? livekitToken : '',
-    isHost: isSeller,
-  });
   const canIntroduce = liveAuctionItem === null && introducingAuctionItem === null && introduceAuctionId !== null;
   const canStart = liveAuctionItem === null && startAuctionId !== null;
   const canIntroduceAuction = isStreamLive && canIntroduce;
@@ -247,14 +229,13 @@ export default function LivePage() {
     try {
       await postEndStream.mutateAsync(numericStreamId);
       unmarkStartedLiveStream(numericStreamId);
-      disconnect();
       setShowStreamEndModal(false);
       markStreamEnded();
       navigate('/main');
     } catch (error) {
       console.error('[stream] failed to end stream', error);
     }
-  }, [disconnect, markStreamEnded, navigate, numericStreamId, postEndStream]);
+  }, [markStreamEnded, navigate, numericStreamId, postEndStream]);
 
   const streamTitle = activeStreamEnter?.title ?? '방송 ?�목';
 
@@ -395,37 +376,6 @@ export default function LivePage() {
 
   const auctionProps = memoizedAuctionProps;
 
-  const memoizedLivekitProps = useMemo<LiveLayoutProps['livekit']>(
-    () => ({
-      livekitState,
-      videoRef,
-      bgVideoRef,
-      viewerCount,
-      toggleMic,
-      toggleCamera,
-      toggleRemoteAudio,
-      isMicOn,
-      isCameraOn,
-      isRemoteAudioMuted,
-      micLevel,
-    }),
-    [
-      bgVideoRef,
-      isCameraOn,
-      isMicOn,
-      isRemoteAudioMuted,
-      livekitState,
-      micLevel,
-      toggleCamera,
-      toggleMic,
-      toggleRemoteAudio,
-      videoRef,
-      viewerCount,
-    ],
-  );
-
-  const livekitProps = memoizedLivekitProps;
-
   const memoizedChatProps = useMemo<LiveLayoutProps['chat']>(
     () => ({
       isChatOpen,
@@ -478,12 +428,11 @@ export default function LivePage() {
     () => ({
       stream: streamProps,
       auction: auctionProps,
-      livekit: livekitProps,
       chat: chatProps,
       modal: modalProps,
       navigate,
     }),
-    [auctionProps, chatProps, livekitProps, modalProps, navigate, streamProps],
+    [auctionProps, chatProps, modalProps, navigate, streamProps],
   );
 
   const layoutProps = memoizedLayoutProps;
@@ -521,9 +470,15 @@ export default function LivePage() {
         transition={{ duration: 0.2 }}
         className="h-screen w-full"
       >
-        <LiveHotStateProvider store={hotStateStore}>
-          <Layout {...layoutProps} />
-        </LiveHotStateProvider>
+        <LiveKitProvider
+          serverUrl={isStreamLive ? livekitUrl : ''}
+          token={isStreamLive ? livekitToken : ''}
+          isHost={isSeller}
+        >
+          <LiveHotStateProvider store={hotStateStore}>
+            <Layout {...layoutProps} />
+          </LiveHotStateProvider>
+        </LiveKitProvider>
       </motion.div>
     </AnimatePresence>
   );
