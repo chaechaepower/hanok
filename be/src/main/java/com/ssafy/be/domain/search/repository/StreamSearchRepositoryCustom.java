@@ -70,6 +70,69 @@ public class StreamSearchRepositoryCustom {
     }
 
     @SuppressWarnings("unchecked")
+    public List<StreamSearchRow> searchUnion(String keyword, int perQueryLimit) {
+        String sql = """
+                (SELECT s.id AS stream_id, s.title, s.thumbnail, s.status,
+                        s.scheduled_at, s.category,
+                        sel.id AS seller_id, sel.shop_name, u.profile_image,
+                        'STREAM_TITLE' AS match_type
+                 FROM stream s
+                 JOIN seller sel ON s.seller_id = sel.id
+                 JOIN user u     ON sel.user_id  = u.id
+                 WHERE MATCH(s.title) AGAINST(:keyword IN BOOLEAN MODE)
+                 AND s.status IN ('LIVE', 'SCHEDULED')
+                 LIMIT :lim)
+                UNION ALL
+                (SELECT s.id AS stream_id, s.title, s.thumbnail, s.status,
+                        s.scheduled_at, s.category,
+                        sel.id AS seller_id, sel.shop_name, u.profile_image,
+                        'ITEM_NAME' AS match_type
+                 FROM stream s
+                 JOIN seller sel ON s.seller_id = sel.id
+                 JOIN user u     ON sel.user_id  = u.id
+                 JOIN auction a  ON a.stream_id  = s.id
+                 JOIN item i     ON a.item_id    = i.id
+                 WHERE MATCH(i.name) AGAINST(:keyword IN BOOLEAN MODE)
+                 AND s.status IN ('LIVE', 'SCHEDULED')
+                 LIMIT :lim)
+                UNION ALL
+                (SELECT s.id AS stream_id, s.title, s.thumbnail, s.status,
+                        s.scheduled_at, s.category,
+                        sel.id AS seller_id, sel.shop_name, u.profile_image,
+                        'TAG' AS match_type
+                 FROM stream s
+                 JOIN seller sel ON s.seller_id = sel.id
+                 JOIN user u     ON sel.user_id  = u.id
+                 JOIN auction a  ON a.stream_id  = s.id
+                 JOIN item i     ON a.item_id    = i.id
+                 JOIN tag t      ON t.item_id    = i.id
+                 WHERE MATCH(t.name) AGAINST(:keyword IN BOOLEAN MODE)
+                 AND s.status IN ('LIVE', 'SCHEDULED')
+                 LIMIT :lim)
+                """;
+
+        List<Object[]> rows = em.createNativeQuery(sql)
+                .setParameter("keyword", keyword)
+                .setParameter("lim", perQueryLimit)
+                .getResultList();
+
+        return rows.stream()
+                .map(r -> StreamSearchRow.builder()
+                        .streamId(toLong(r[0]))
+                        .title((String) r[1])
+                        .thumbnail((String) r[2])
+                        .status((String) r[3])
+                        .scheduledAt(toLocalDateTime(r[4]))
+                        .category((String) r[5])
+                        .sellerId(toLong(r[6]))
+                        .shopName((String) r[7])
+                        .sellerProfileImageUri((String) r[8])
+                        .matchType((String) r[9])
+                        .build())
+                .toList();
+    }
+
+    @SuppressWarnings("unchecked")
     public List<SellerSearchRow> searchByShopName(String keyword) {
         String sql = """
                 SELECT
