@@ -1,4 +1,5 @@
 import { FaCrown } from 'react-icons/fa6';
+import { useRenderStats } from '@/hooks/useRenderStats';
 import type { AuctionStatisticsPayload } from '@/types';
 import { formatPrice } from '@/utils/formatPrice';
 
@@ -21,6 +22,8 @@ function formatPlacedAt(placedAt: string) {
 }
 
 export default function BidFeed({ auctionStatistics, currentUserId }: Props) {
+  useRenderStats('BidFeed');
+
   const bids = auctionStatistics?.recentBids ?? [];
 
   return (
