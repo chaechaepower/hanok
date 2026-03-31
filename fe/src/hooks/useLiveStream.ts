@@ -325,11 +325,19 @@ const getStreamMetricsRegistry = () => {
       },
       reset: (streamId) => {
         if (streamId) {
-          metricsWindow.__streamMetricsRegistry!.delete(streamId);
+          const targetMetrics = metricsWindow.__streamMetricsRegistry!.get(streamId);
+
+          if (targetMetrics) {
+            resetStreamMetrics(targetMetrics);
+          } else {
+            metricsWindow.__streamMetricsRegistry!.set(streamId, createStreamMetrics(streamId));
+          }
           return;
         }
 
-        metricsWindow.__streamMetricsRegistry!.clear();
+        metricsWindow.__streamMetricsRegistry!.forEach((metrics) => {
+          resetStreamMetrics(metrics);
+        });
       },
       markSyncSuppressed: (streamId, kind, reason) => {
         const metrics = getOrCreateStreamMetrics(metricsWindow.__streamMetricsRegistry!, streamId);
@@ -365,6 +373,18 @@ const getOrCreateStreamMetrics = (registry: Map<string, StreamMetrics>, streamId
   const created = createStreamMetrics(streamId);
   registry.set(streamId, created);
   return created;
+};
+
+const resetStreamMetrics = (metrics: StreamMetrics) => {
+  const next = createStreamMetrics(metrics.streamId);
+
+  metrics.startedAt = next.startedAt;
+  metrics.lastUpdatedAt = next.lastUpdatedAt;
+  metrics.broadcastCounts = next.broadcastCounts;
+  metrics.privateCounts = next.privateCounts;
+  metrics.errorCounts = next.errorCounts;
+  metrics.eventTimestamps = next.eventTimestamps;
+  metrics.requests = next.requests;
 };
 
 const buildRequestSnapshot = (requestMetrics: RequestMetrics, now: number) => ({
