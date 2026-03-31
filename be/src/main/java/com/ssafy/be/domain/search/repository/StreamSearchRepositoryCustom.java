@@ -2,6 +2,7 @@ package com.ssafy.be.domain.search.repository;
 
 import com.ssafy.be.domain.search.dto.SellerSearchRow;
 import com.ssafy.be.domain.search.dto.StreamSearchRow;
+import com.ssafy.be.domain.search.dto.response.AutocompleteSuggestion;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -75,6 +76,7 @@ public class StreamSearchRepositoryCustom {
                 (SELECT s.id AS stream_id, s.title, s.thumbnail, s.status,
                         s.scheduled_at, s.category,
                         sel.id AS seller_id, sel.shop_name, u.profile_image,
+                        MATCH(s.title) AGAINST(:keyword IN BOOLEAN MODE) AS score,
                         'STREAM_TITLE' AS match_type
                  FROM stream s
                  JOIN seller sel ON s.seller_id = sel.id
@@ -86,6 +88,7 @@ public class StreamSearchRepositoryCustom {
                 (SELECT s.id AS stream_id, s.title, s.thumbnail, s.status,
                         s.scheduled_at, s.category,
                         sel.id AS seller_id, sel.shop_name, u.profile_image,
+                        MATCH(i.name) AGAINST(:keyword IN BOOLEAN MODE) AS score,
                         'ITEM_NAME' AS match_type
                  FROM stream s
                  JOIN seller sel ON s.seller_id = sel.id
@@ -99,6 +102,7 @@ public class StreamSearchRepositoryCustom {
                 (SELECT s.id AS stream_id, s.title, s.thumbnail, s.status,
                         s.scheduled_at, s.category,
                         sel.id AS seller_id, sel.shop_name, u.profile_image,
+                        MATCH(t.name) AGAINST(:keyword IN BOOLEAN MODE) AS score,
                         'TAG' AS match_type
                  FROM stream s
                  JOIN seller sel ON s.seller_id = sel.id
@@ -127,7 +131,48 @@ public class StreamSearchRepositoryCustom {
                         .sellerId(toLong(r[6]))
                         .shopName((String) r[7])
                         .sellerProfileImageUri((String) r[8])
-                        .matchType((String) r[9])
+                        .score(r[9] != null ? ((Number) r[9]).doubleValue() : 0.0)
+                        .matchType((String) r[10])
+                        .build())
+                .toList();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<AutocompleteSuggestion> searchAutocomplete(String keyword, int limit) {
+        String sql = """
+                (SELECT s.title AS text, 'STREAM_TITLE' AS type
+                 FROM stream s
+                 WHERE MATCH(s.title) AGAINST(:keyword IN BOOLEAN MODE)
+                 AND s.status IN ('LIVE', 'SCHEDULED')
+                 LIMIT :lim)
+                UNION ALL
+                (SELECT DISTINCT i.name AS text, 'ITEM_NAME' AS type
+                 FROM item i
+                 JOIN auction a  ON a.item_id   = i.id
+                 JOIN stream s   ON a.stream_id = s.id
+                 WHERE MATCH(i.name) AGAINST(:keyword IN BOOLEAN MODE)
+                 AND s.status IN ('LIVE', 'SCHEDULED')
+                 LIMIT :lim)
+                UNION ALL
+                (SELECT DISTINCT t.name AS text, 'TAG' AS type
+                 FROM tag t
+                 JOIN item i     ON t.item_id   = i.id
+                 JOIN auction a  ON a.item_id   = i.id
+                 JOIN stream s   ON a.stream_id = s.id
+                 WHERE MATCH(t.name) AGAINST(:keyword IN BOOLEAN MODE)
+                 AND s.status IN ('LIVE', 'SCHEDULED')
+                 LIMIT :lim)
+                """;
+
+        List<Object[]> rows = em.createNativeQuery(sql)
+                .setParameter("keyword", keyword)
+                .setParameter("lim", limit)
+                .getResultList();
+
+        return rows.stream()
+                .map(r -> AutocompleteSuggestion.builder()
+                        .text((String) r[0])
+                        .type((String) r[1])
                         .build())
                 .toList();
     }

@@ -5,9 +5,10 @@ import { generateSearchSummary } from '../shared/searchSummary.js';
 import { loginAll, authHeader } from '../shared/auth.js';
 import { KEYWORDS } from '../shared/searchKeywords.js';
 
-const BASE         = (__ENV.BASE_URL || 'http://j14d105.p.ssafy.io:8080/api/v1').replace(/\/+$/, '');
+const BASE         = (__ENV.BASE_URL     || 'http://j14d105.p.ssafy.io:8080/api/v1').replace(/\/+$/, '');
 const FULLTEXT_ON  = __ENV.FULLTEXT_ENABLED === 'true';
 const BASELINE_VUS = parseInt(__ENV.BASELINE || '1000');
+const SEARCH_PATH  = (__ENV.SEARCH_PATH  || '/search').replace(/\/+$/, '');
 
 const searchDuration = new Trend('search_duration_ms',  true);
 const searchHitRate  = new Rate('search_hit_rate');
@@ -51,7 +52,7 @@ export default function (data) {
   const keyword   = KEYWORDS[Math.floor(Math.random() * KEYWORDS.length)];
 
   const res = http.get(
-    `${BASE}/search?keyword=${encodeURIComponent(keyword)}`,
+    `${BASE}${SEARCH_PATH}?keyword=${encodeURIComponent(keyword)}`,
     {
       headers: authHeader(token),
       tags: { api: 'search_keyword' },
@@ -88,5 +89,6 @@ export default function (data) {
 }
 
 export function handleSummary(data) {
-  return generateSearchSummary(data, 'search_03_stress');
+  const label = SEARCH_PATH === '/search' ? 'search_03_stress' : `search_03_stress_${SEARCH_PATH.replace(/\//g, '_').replace(/^_/, '')}`;
+  return generateSearchSummary(data, label);
 }

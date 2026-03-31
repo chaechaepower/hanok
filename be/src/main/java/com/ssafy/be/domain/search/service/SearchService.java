@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.be.domain.follow.repository.FollowRepository;
 import com.ssafy.be.domain.search.dto.SellerSearchRow;
 import com.ssafy.be.domain.search.dto.StreamSearchRow;
+import com.ssafy.be.domain.search.dto.response.AutocompleteSuggestion;
 import com.ssafy.be.domain.search.dto.response.MatchReason;
 import com.ssafy.be.domain.search.dto.response.MatchType;
 import com.ssafy.be.domain.search.dto.response.SellerInfo;
@@ -20,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,8 +65,10 @@ public class SearchService {
         List<StreamSearchRow> rows = searchRepository.searchUnion(safeKeyword, perQueryLimit);
 
         Map<Long, StreamSearchResult> resultMap = new LinkedHashMap<>();
+        Map<Long, Double> scoreMap = new HashMap<>();
         for (StreamSearchRow row : rows) {
             StreamSearchResult result = resultMap.computeIfAbsent(row.streamId(), id -> toResult(row));
+            scoreMap.merge(row.streamId(), row.score(), Math::max);
             MatchReason reason = switch (row.matchType()) {
                 case "ITEM_NAME" -> MatchReason.builder()
                         .type(MatchType.ITEM_NAME).matchedValue(safeKeyword).build();
@@ -78,6 +83,8 @@ public class SearchService {
         }
 
         List<StreamSearchResult> merged = new ArrayList<>(resultMap.values());
+        merged.sort(Comparator.comparingDouble(
+                (StreamSearchResult r) -> scoreMap.getOrDefault(r.streamId(), 0.0)).reversed());
         int totalCount = merged.size();
         int from = page * size;
         List<StreamSearchResult> paged = from >= totalCount
@@ -134,6 +141,33 @@ public class SearchService {
         return rows.stream()
                 .map(row -> toSellerResult(row, followedSellerIds))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<AutocompleteSuggestion> autocomplete(String keyword, int limit) {
+        String safeKeyword = keyword.trim()
+                .replaceAll("[+\\-><()~*\"@]", " ").trim();
+
+        if (safeKeyword.isEmpty()) return new ArrayList<>();
+
+        String cacheKey = "search:autocomplete:" + safeKeyword + ":" + limit;
+        String cached = redisService.get(cacheKey);
+        if (cached != null) {
+            try {
+                return objectMapper.readValue(cached,
+                        objectMapper.getTypeFactory().constructCollectionType(List.class, AutocompleteSuggestion.class));
+            } catch (Exception e) {
+                log.warn("autocomplete cache deserialize 실패, DB 조회로 fallback. key={}", cacheKey);
+            }
+        }
+
+        List<AutocompleteSuggestion> suggestions = searchRepository.searchAutocomplete(safeKeyword, limit);
+        try {
+            redisService.save(cacheKey, objectMapper.writeValueAsString(suggestions), 30L, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.warn("autocomplete cache 저장 실패. key={}", cacheKey);
+        }
+        return suggestions;
     }
 
     private SellerSearchResult toSellerResult(SellerSearchRow row, Set<Long> followedSellerIds) {

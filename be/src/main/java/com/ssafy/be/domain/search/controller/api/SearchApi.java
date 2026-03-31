@@ -1,5 +1,6 @@
 package com.ssafy.be.domain.search.controller.api;
 
+import com.ssafy.be.domain.search.dto.response.AutocompleteSuggestion;
 import com.ssafy.be.domain.search.dto.response.SellerSearchResult;
 import com.ssafy.be.domain.search.dto.response.StreamSearchPage;
 import java.util.List;
@@ -31,6 +32,20 @@ public interface SearchApi {
             @RequestParam(defaultValue = "0") int page,
             @Parameter(description = "페이지 크기", example = "20")
             @RequestParam(defaultValue = "20") int size
+    );
+
+    @Operation(summary = "검색 자동완성", description = "입력 키워드에 대한 자동완성 후보를 반환합니다. n-gram FULLTEXT 기반 부분 일치.")
+    @ApiResponse(responseCode = "200", description = "자동완성 성공")
+    @ApiResponse(
+            responseCode = "400",
+            description = "키워드 검증 실패",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @GetMapping("/autocomplete")
+    ResponseEntity<List<AutocompleteSuggestion>> autocomplete(
+            @Parameter(description = "검색 키워드 (2자 이상)", required = true)
+            @RequestParam String keyword,
+            @Parameter(description = "최대 제안 수 (기본 10)", example = "10")
+            @RequestParam(defaultValue = "10") int limit
     );
 
     @Operation(summary = "상점 검색", description = "키워드로 상점(셀러)을 검색합니다.")

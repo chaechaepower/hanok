@@ -1,6 +1,7 @@
 package com.ssafy.be.domain.search.controller;
 
 import com.ssafy.be.domain.search.controller.api.SearchApi;
+import com.ssafy.be.domain.search.dto.response.AutocompleteSuggestion;
 import com.ssafy.be.domain.search.dto.response.SellerSearchResult;
 import com.ssafy.be.domain.search.dto.response.StreamSearchPage;
 import java.util.List;
@@ -30,6 +31,15 @@ public class SearchController implements SearchApi {
     ) {
         validateKeyword(keyword);
         return ResponseEntity.ok(searchService.search(keyword, page, size));
+    }
+
+    @Override
+    public ResponseEntity<List<AutocompleteSuggestion>> autocomplete(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "10") int limit
+    ) {
+        validateKeyword(keyword);
+        return ResponseEntity.ok(searchService.autocomplete(keyword, limit));
     }
 
     @Override

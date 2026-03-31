@@ -16,5 +16,6 @@ public record StreamSearchRow(
         Long sellerId,
         String shopName,
         String sellerProfileImageUri,
+        double score,
         String matchType
 ) {}

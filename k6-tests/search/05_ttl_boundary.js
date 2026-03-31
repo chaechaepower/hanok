@@ -18,10 +18,13 @@
  * 환경변수:
  *   CACHE_TTL_SECONDS : 서버 TTL 설정값 (기본 60)
  *   TEST_KEYWORD      : 테스트 키워드 (기본 나이키)
+ *   SEARCH_PATH       : 검색 엔드포인트 경로 (기본 /search, seller: /search/sellers)
  *
  * 실행:
- *   k6 run k6-tests/search/05_ttl_boundary.js
+ *   # 스트림 검색 (기본)
  *   k6 run -e CACHE_TTL_SECONDS=60 -e TEST_KEYWORD=나이키 k6-tests/search/05_ttl_boundary.js
+ *   # 셀러 검색
+ *   k6 run -e CACHE_TTL_SECONDS=60 -e TEST_KEYWORD=나이키 -e SEARCH_PATH=/search/sellers k6-tests/search/05_ttl_boundary.js
  *
  * 주의: iteration당 TTL+5초 sleep 포함 → 전체 소요 약 (TTL+5) × iterations 초
  */
@@ -31,9 +34,10 @@ import { check, sleep } from 'k6';
 import { Trend } from 'k6/metrics';
 import { loginAll, authHeader } from '../shared/auth.js';
 
-const BASE     = (__ENV.BASE_URL           || 'http://j14d105.p.ssafy.io:8080/api/v1').replace(/\/+$/, '');
-const TTL_S    = parseInt(__ENV.CACHE_TTL_SECONDS || '60', 10);
-const KEYWORD  = __ENV.TEST_KEYWORD        || '나이키';
+const BASE        = (__ENV.BASE_URL           || 'http://j14d105.p.ssafy.io:8080/api/v1').replace(/\/+$/, '');
+const TTL_S       = parseInt(__ENV.CACHE_TTL_SECONDS || '60', 10);
+const KEYWORD     = __ENV.TEST_KEYWORD        || '나이키';
+const SEARCH_PATH = (__ENV.SEARCH_PATH        || '/search').replace(/\/+$/, '');
 
 const warmMs   = new Trend('ttl_warm_ms',  true);  // TTL 내 재요청 (캐시 히트)
 const missMs   = new Trend('ttl_miss_ms',  true);  // TTL 초과 첫 요청 (캐시 미스)
@@ -68,7 +72,7 @@ export function setup() {
 
 export default function (data) {
   const token   = data.tokens[0];
-  const url     = `${BASE}/search?keyword=${encodeURIComponent(KEYWORD)}`;
+  const url     = `${BASE}${SEARCH_PATH}?keyword=${encodeURIComponent(KEYWORD)}`;
   const headers = authHeader(token);
 
   // Phase 1: 캐시 워밍
@@ -132,6 +136,7 @@ export function handleSummary(data) {
   const summary = `
 ========================================
   테스트: search_05_ttl_boundary
+  엔드포인트: ${SEARCH_PATH}
   키워드: ${KEYWORD} | TTL 설정: ${TTL_S}s
 
   Phase 2 warm  (캐시 히트):   avg=${warmAvg} ms  p95=${warmP95} ms
