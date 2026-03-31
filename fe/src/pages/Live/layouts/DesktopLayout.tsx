@@ -200,7 +200,13 @@ export default function DesktopLayout({ stream, auction, livekit, chat, modal, n
                 auctionType={auction.activeAuctionType}
                 auctionStatistics={auction.auctionStatistics}
                 uniqueBidSync={auction.uniqueBidSync}
-                streamEnter={stream.activeStreamEnter}
+                streamId={stream.activeStreamEnter?.streamId ?? 0}
+                category={stream.activeStreamEnter?.category ?? ''}
+                notice={stream.activeStreamEnter?.notice ?? null}
+                sellerId={stream.activeStreamEnter?.seller.sellerId ?? 0}
+                sellerNickname={stream.activeStreamEnter?.seller.nickname ?? 'seller'}
+                sellerProfileImage={stream.activeStreamEnter?.seller.profileImage ?? null}
+                isFollowing={stream.activeStreamEnter?.isFollowing ?? false}
               />
             </motion.div>
           )}

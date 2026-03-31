@@ -1,9 +1,13 @@
+import { memo } from 'react';
+
 import SellerStats from '../Seller/SellerStats';
 import SellerPriceInfo from '../Seller/SellerPriceInfo';
 import BidFeed from '../Seller/BidFeed';
 import { useRenderStats } from '@/hooks/useRenderStats';
 import type { AuctionStatisticsPayload, LiveAuctionType, UniqueBidSyncPayload } from '@/types';
 import { formatPrice } from '@/utils/formatPrice';
+import { isAuctionStatisticsEqual, isUniqueBidSyncEqual } from '@/utils/liveEquality';
+import { isLiveStructureOptimizationEnabled } from '@/utils/liveOptimization';
 
 interface Props {
   isSeller: boolean;
@@ -13,13 +17,7 @@ interface Props {
   currentUserId: number | null;
 }
 
-export default function AuctionPanel({
-  isSeller,
-  auctionType,
-  auctionStatistics,
-  uniqueBidSync,
-  currentUserId,
-}: Props) {
+function AuctionPanel({ isSeller, auctionType, auctionStatistics, uniqueBidSync, currentUserId }: Props) {
   useRenderStats('AuctionPanel');
 
   if (auctionType === 'UNIQUE_TOP') {
@@ -72,20 +70,34 @@ export default function AuctionPanel({
     <div className="bid-feed-scroll flex h-full flex-col gap-4 overflow-y-auto p-4">
       <SellerStats auctionStatistics={auctionStatistics} riseRate={riseRate} />
 
-      {/* 현재 물품 구분선 */}
       <div className="flex items-center gap-2.5">
-        <div className="shrink-0 text-label font-extrabold uppercase tracking-[.08em] text-neutral-600">현재 물품</div>
+        <div className="shrink-0 text-label font-extrabold uppercase tracking-[.08em] text-neutral-600">경매 상품</div>
         <div className="h-px flex-1 bg-linear-to-r from-white/6 to-transparent" />
       </div>
 
-      {/* 물품명 칩 */}
       <div className="-mt-2 flex min-w-0 items-center gap-2">
         <span className="shrink-0 rounded-full bg-gold/15 px-2.5 py-0.5 text-caption font-bold text-gold">경매중</span>
-        <span className="min-w-0 truncate text-xs font-bold text-white">{auctionStatistics?.itemName ?? '데이터 수신 대기중'}</span>
+        <span className="min-w-0 truncate text-xs font-bold text-white">
+          {auctionStatistics?.itemName ?? '데이터 수신 대기중'}
+        </span>
       </div>
 
       <SellerPriceInfo auctionStatistics={auctionStatistics} />
-      <BidFeed auctionStatistics={auctionStatistics} currentUserId={currentUserId} />
+      <BidFeed recentBids={auctionStatistics?.recentBids ?? []} currentUserId={currentUserId} />
     </div>
   );
 }
+
+export default memo(AuctionPanel, (prev, next) => {
+  if (!isLiveStructureOptimizationEnabled()) {
+    return false;
+  }
+
+  return (
+    prev.isSeller === next.isSeller &&
+    prev.auctionType === next.auctionType &&
+    prev.currentUserId === next.currentUserId &&
+    isAuctionStatisticsEqual(prev.auctionStatistics, next.auctionStatistics) &&
+    isUniqueBidSyncEqual(prev.uniqueBidSync, next.uniqueBidSync)
+  );
+});

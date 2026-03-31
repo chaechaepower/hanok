@@ -132,8 +132,6 @@ const isUniqueAlreadyBidError = (payload?: StompErrorPayload) => payload?.code =
 
 const TIMER_SNAPSHOT_TOLERANCE_MS = 1000;
 const UNIQUE_WINNER_RESOLVE_DELAY_MS = 250;
-const DEFAULT_STREAM_NOOP_GUARD_ENABLED = false;
-const STREAM_NOOP_GUARD_STORAGE_KEY = 'streamNoopGuard';
 
 type SyncRequestSource =
   | 'INITIAL_SUBSCRIBE'
@@ -202,24 +200,6 @@ const shouldRecoverActiveAuctionSync = (source: SyncRequestSource) =>
   source === 'SYSTEM_STREAM_START';
 
 const shouldRecoverAuctionStatisticsSync = (source: SyncRequestSource) => shouldRecoverActiveAuctionSync(source);
-
-const isStreamNoopGuardEnabled = () => {
-  if (typeof window === 'undefined') {
-    return DEFAULT_STREAM_NOOP_GUARD_ENABLED;
-  }
-
-  const override = window.localStorage.getItem(STREAM_NOOP_GUARD_STORAGE_KEY);
-
-  if (override === '0') {
-    return false;
-  }
-
-  if (override === '1') {
-    return true;
-  }
-
-  return DEFAULT_STREAM_NOOP_GUARD_ENABLED;
-};
 
 type SyncedTimerMode = 'auto' | 'remainingSnapshot';
 
@@ -335,9 +315,8 @@ export function useLiveStream(
       setRuntimeStreamState((prev) => {
         const prevValue = prev.streamId === streamId && prev.value !== null ? prev.value : serverStreamState;
         const nextValue = typeof value === 'function' ? value(prevValue) : value;
-        const isNoopGuardEnabled = isStreamNoopGuardEnabled();
 
-        if (isNoopGuardEnabled && prev.streamId === streamId && prev.value === nextValue) {
+        if (prev.streamId === streamId && prev.value === nextValue) {
           return prev;
         }
 
@@ -478,7 +457,7 @@ export function useLiveStream(
     const setBidSyncState = (value: SetStateAction<BidSyncPayload | null>) => {
       setBidSync((prev) => {
         const next = typeof value === 'function' ? value(prev) : value;
-        if (isStreamNoopGuardEnabled() && isBidSyncEqual(prev, next)) {
+        if (isBidSyncEqual(prev, next)) {
           return prev;
         }
         return next;
@@ -488,7 +467,7 @@ export function useLiveStream(
     const setAuctionStatisticsState = (value: SetStateAction<AuctionStatisticsPayload | null>) => {
       setAuctionStatistics((prev) => {
         const next = typeof value === 'function' ? value(prev) : value;
-        if (isStreamNoopGuardEnabled() && isAuctionStatisticsEqual(prev, next)) {
+        if (isAuctionStatisticsEqual(prev, next)) {
           return prev;
         }
         return next;
@@ -498,7 +477,7 @@ export function useLiveStream(
     const setUniqueBidSyncState = (value: SetStateAction<UniqueBidSyncPayload | null>) => {
       setUniqueBidSync((prev) => {
         const next = typeof value === 'function' ? value(prev) : value;
-        if (isStreamNoopGuardEnabled() && isUniqueBidSyncEqual(prev, next)) {
+        if (isUniqueBidSyncEqual(prev, next)) {
           return prev;
         }
         return next;

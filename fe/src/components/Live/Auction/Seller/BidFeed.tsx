@@ -1,10 +1,14 @@
+import { memo } from 'react';
 import { FaCrown } from 'react-icons/fa6';
+
 import { useRenderStats } from '@/hooks/useRenderStats';
 import type { AuctionStatisticsPayload } from '@/types';
 import { formatPrice } from '@/utils/formatPrice';
+import { areRecentBidsEqual } from '@/utils/liveEquality';
+import { isLiveStructureOptimizationEnabled } from '@/utils/liveOptimization';
 
 interface Props {
-  auctionStatistics: AuctionStatisticsPayload | null;
+  recentBids: AuctionStatisticsPayload['recentBids'];
   currentUserId: number | null;
 }
 
@@ -21,27 +25,23 @@ function formatPlacedAt(placedAt: string) {
   };
 }
 
-export default function BidFeed({ auctionStatistics, currentUserId }: Props) {
+function BidFeed({ recentBids, currentUserId }: Props) {
   useRenderStats('BidFeed');
-
-  const bids = auctionStatistics?.recentBids ?? [];
 
   return (
     <div className="mt-2 flex flex-col gap-2 border-t border-white/6 pt-5">
-      {/* 라벨 + 구분선 */}
       <div className="flex items-center gap-2 text-label font-extrabold uppercase tracking-[.06em] text-neutral-400">
         실시간 입찰
         <div className="h-px flex-1 bg-linear-to-r from-white/6 to-transparent" />
       </div>
 
-      {/* 입찰 목록 */}
       <div className="bid-feed-scroll flex flex-col gap-1 overflow-y-auto">
-        {bids.length === 0 ? (
+        {recentBids.length === 0 ? (
           <div className="rounded-xl border border-white/4 bg-surface px-3 py-4 text-center text-label font-medium text-neutral-500">
             아직 수신된 입찰 데이터가 없습니다
           </div>
         ) : (
-          bids.map((bid, idx) => {
+          recentBids.map((bid, idx) => {
             const formattedTime = formatPlacedAt(bid.placedAt);
             const isTop = idx === 0;
             const isCurrentUser = currentUserId !== null && bid.userId === currentUserId;
@@ -70,7 +70,9 @@ export default function BidFeed({ auctionStatistics, currentUserId }: Props) {
                   {bid.nickname}
                 </span>
                 <span
-                  className={`ml-auto min-w-0 truncate font-mono text-label font-black ${isTop ? 'text-gold' : 'text-neutral-500'}`}
+                  className={`ml-auto min-w-0 truncate font-mono text-label font-black ${
+                    isTop ? 'text-gold' : 'text-neutral-500'
+                  }`}
                 >
                   {formatPrice(bid.amount)}
                 </span>
@@ -87,3 +89,11 @@ export default function BidFeed({ auctionStatistics, currentUserId }: Props) {
     </div>
   );
 }
+
+export default memo(BidFeed, (prev, next) => {
+  if (!isLiveStructureOptimizationEnabled()) {
+    return false;
+  }
+
+  return prev.currentUserId === next.currentUserId && areRecentBidsEqual(prev.recentBids, next.recentBids);
+});

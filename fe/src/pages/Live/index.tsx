@@ -11,6 +11,7 @@ import { useLiveKit } from '@/hooks/useLiveKit';
 import { useRenderStats } from '@/hooks/useRenderStats';
 import { useLiveStream } from '@/hooks/useLiveStream';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { isLiveStructureOptimizationEnabled } from '@/utils/liveOptimization';
 import type { StreamRequest } from '@/types';
 import { sendStreamMessage } from '@/websocket/stompClient';
 
@@ -210,7 +211,7 @@ export default function LivePage() {
     [activeStreamEnter],
   );
 
-  const handleSellerStartModalConfirm = async () => {
+  const handleSellerStartModalConfirm = useCallback(async () => {
     if (
       isStreamLive ||
       postStartStream.isPending ||
@@ -232,17 +233,17 @@ export default function LivePage() {
     } catch (error) {
       console.error('[stream] failed to start stream', error);
     }
-  };
+  }, [confirmStreamStart, isStreamLive, numericStreamId, postStartStream, startRequest]);
 
-  const handleOpenStreamEndModal = () => {
+  const handleOpenStreamEndModal = useCallback(() => {
     if (isAuctionInProgress || postEndStream.isPending) {
       return;
     }
 
     setShowStreamEndModal(true);
-  };
+  }, [isAuctionInProgress, postEndStream.isPending]);
 
-  const handleStreamEndConfirm = async () => {
+  const handleStreamEndConfirm = useCallback(async () => {
     if (!Number.isFinite(numericStreamId) || numericStreamId <= 0) {
       return;
     }
@@ -257,9 +258,9 @@ export default function LivePage() {
     } catch (error) {
       console.error('[stream] failed to end stream', error);
     }
-  };
+  }, [disconnect, markStreamEnded, navigate, numericStreamId, postEndStream]);
 
-  const streamTitle = activeStreamEnter?.title ?? '방송 제목';
+  const streamTitle = activeStreamEnter?.title ?? '방송 ?�목';
 
   useEffect(() => {
     if (
@@ -305,17 +306,19 @@ export default function LivePage() {
     unmarkStartedLiveStream(numericStreamId);
   }, [numericStreamId, streamState]);
 
-  const handleWinConfirm = async () => {
+  const handleWinConfirm = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ['wallet'] });
     clearWinnerInfo();
     clearUniqueAuctionResult();
-  };
+  }, [clearUniqueAuctionResult, clearWinnerInfo, queryClient]);
 
-  const handleUniqueAuctionResultClose = () => {
+  const handleUniqueAuctionResultClose = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: ['wallet'] });
     clearWinnerInfo();
     clearUniqueAuctionResult();
-  };
+  }, [clearUniqueAuctionResult, clearWinnerInfo, queryClient]);
+
+  const isStructureOptimizationEnabled = isLiveStructureOptimizationEnabled();
 
   const handleAuctionTimerExpire = useCallback(() => {
     if (!isLoggedIn || !streamId || activeAuctionType !== 'UNIQUE_TOP' || activeBidAuctionId === null) {
@@ -332,7 +335,7 @@ export default function LivePage() {
       eventType: 'UNIQUE_AUCTION_CALCULATING',
       payload: {
         auctionId: activeBidAuctionId,
-        message: '집계 중입니다...',
+        message: '집계 중입?�다...',
       },
     }).catch((error) => {
       uniqueCalculatingSentAuctionIdRef.current = null;
@@ -342,38 +345,44 @@ export default function LivePage() {
 
   const breakpoint = useBreakpoint();
 
-  if (isNotFoundLive) {
-    return (
-      <LiveFallback
-        title="존재하지 않는 라이브입니다"
-        description={`삭제되었거나 잘못된 주소로 접근했습니다.\n메인 화면에서 현재 진행 중인 라이브를 다시 확인해 주세요.`}
-        actionLabel="홈으로"
-        onAction={() => navigate('/main')}
-      />
-    );
-  }
-
-  if (!isStreamEnterPending && isStreamEnterUnavailable) {
-    return (
-      <LiveFallback
-        title="라이브 정보를 불러오지 못했습니다"
-        description={`잠시 후 다시 시도해 주세요\n문제가 계속되면 홈에서 다시 접근하는 편이 안전합니다.`}
-        actionLabel="홈으로"
-        onAction={() => navigate('/main')}
-      />
-    );
-  }
-
-  const layoutProps: LiveLayoutProps = {
-    stream: {
+  const memoizedStreamProps = useMemo<LiveLayoutProps['stream']>(
+    () => ({
       streamTitle,
       isSeller,
       isStreamLive,
       streamState,
       liveStartedAt,
       activeStreamEnter,
-    },
-    auction: {
+    }),
+    [activeStreamEnter, isSeller, isStreamLive, liveStartedAt, streamState, streamTitle],
+  );
+
+  const streamProps = useMemo<LiveLayoutProps['stream']>(
+    () =>
+      isStructureOptimizationEnabled
+        ? memoizedStreamProps
+        : {
+            streamTitle,
+            isSeller,
+            isStreamLive,
+            streamState,
+            liveStartedAt,
+            activeStreamEnter,
+          },
+    [
+      activeStreamEnter,
+      isSeller,
+      isStreamLive,
+      isStructureOptimizationEnabled,
+      liveStartedAt,
+      memoizedStreamProps,
+      streamState,
+      streamTitle,
+    ],
+  );
+
+  const memoizedAuctionProps = useMemo<LiveLayoutProps['auction']>(
+    () => ({
       selectedAuctionId,
       visibleSelectedAuctionId,
       setSelectedAuctionId,
@@ -396,8 +405,89 @@ export default function LivePage() {
       canIntroduceAuction,
       canStartAuction,
       handleAuctionTimerExpire,
-    },
-    livekit: {
+    }),
+    [
+      activeAuctionType,
+      activeBidAuctionId,
+      auctionComment,
+      auctionStatistics,
+      bidSync,
+      canIntroduceAuction,
+      canStartAuction,
+      handleAuctionTimerExpire,
+      hasPendingAuctionItems,
+      introducingAuctionItem,
+      introduceAuctionId,
+      isAuctionInProgress,
+      itemSync,
+      liveAuctionItem,
+      readyItems,
+      selectedAuctionId,
+      startAuctionId,
+      startAuctionType,
+      timer,
+      uniqueBidSync,
+      visibleSelectedAuctionId,
+    ],
+  );
+
+  const auctionProps = useMemo<LiveLayoutProps['auction']>(
+    () =>
+      isStructureOptimizationEnabled
+        ? memoizedAuctionProps
+        : {
+            selectedAuctionId,
+            visibleSelectedAuctionId,
+            setSelectedAuctionId,
+            liveAuctionItem,
+            introducingAuctionItem,
+            activeBidAuctionId,
+            activeAuctionType,
+            isAuctionInProgress,
+            hasPendingAuctionItems,
+            itemSync,
+            bidSync,
+            uniqueBidSync,
+            auctionStatistics,
+            auctionComment,
+            timer,
+            readyItems,
+            introduceAuctionId,
+            startAuctionId,
+            startAuctionType,
+            canIntroduceAuction,
+            canStartAuction,
+            handleAuctionTimerExpire,
+          },
+    [
+      activeAuctionType,
+      activeBidAuctionId,
+      auctionComment,
+      auctionStatistics,
+      bidSync,
+      canIntroduceAuction,
+      canStartAuction,
+      handleAuctionTimerExpire,
+      hasPendingAuctionItems,
+      introducingAuctionItem,
+      introduceAuctionId,
+      isAuctionInProgress,
+      isStructureOptimizationEnabled,
+      itemSync,
+      liveAuctionItem,
+      memoizedAuctionProps,
+      readyItems,
+      selectedAuctionId,
+      startAuctionId,
+      startAuctionType,
+      timer,
+      uniqueBidSync,
+      visibleSelectedAuctionId,
+    ],
+  );
+
+  const memoizedLivekitProps = useMemo<LiveLayoutProps['livekit']>(
+    () => ({
       livekitState,
       videoRef,
       bgVideoRef,
@@ -409,31 +499,209 @@ export default function LivePage() {
       isCameraOn,
       isRemoteAudioMuted,
       micLevel,
-    },
-    chat: {
+    }),
+    [
+      bgVideoRef,
+      isCameraOn,
+      isMicOn,
+      isRemoteAudioMuted,
+      livekitState,
+      micLevel,
+      toggleCamera,
+      toggleMic,
+      toggleRemoteAudio,
+      videoRef,
+      viewerCount,
+    ],
+  );
+
+  const livekitProps = useMemo<LiveLayoutProps['livekit']>(
+    () =>
+      isStructureOptimizationEnabled
+        ? memoizedLivekitProps
+        : {
+            livekitState,
+            videoRef,
+            bgVideoRef,
+            viewerCount,
+            toggleMic,
+            toggleCamera,
+            toggleRemoteAudio,
+            isMicOn,
+            isCameraOn,
+            isRemoteAudioMuted,
+            micLevel,
+          },
+    [
+      bgVideoRef,
+      isCameraOn,
+      isMicOn,
+      isRemoteAudioMuted,
+      isStructureOptimizationEnabled,
+      livekitState,
+      memoizedLivekitProps,
+      micLevel,
+      toggleCamera,
+      toggleMic,
+      toggleRemoteAudio,
+      videoRef,
+      viewerCount,
+    ],
+  );
+
+  const memoizedChatProps = useMemo<LiveLayoutProps['chat']>(
+    () => ({
       isChatOpen,
       handleToggleChat,
-    },
-    modal: {
+    }),
+    [handleToggleChat, isChatOpen],
+  );
+
+  const chatProps = useMemo<LiveLayoutProps['chat']>(
+    () =>
+      isStructureOptimizationEnabled
+        ? memoizedChatProps
+        : {
+            isChatOpen,
+            handleToggleChat,
+          },
+    [handleToggleChat, isChatOpen, isStructureOptimizationEnabled, memoizedChatProps],
+  );
+
+  const memoizedModalProps = useMemo<LiveLayoutProps['modal']>(
+    () => ({
       showSellerStartModal,
       hasStartedThisStream,
       postStartStreamIsPending: postStartStream.isPending,
-      handleSellerStartModalConfirm: () => void handleSellerStartModalConfirm(),
+      handleSellerStartModalConfirm,
       showStreamEndModal,
       postEndStreamIsPending: postEndStream.isPending,
       setShowStreamEndModal,
-      handleStreamEndConfirm: () => void handleStreamEndConfirm(),
+      handleStreamEndConfirm,
       handleOpenStreamEndModal,
       winnerInfo,
       uniqueAuctionResult,
-      handleWinConfirm: () => handleWinConfirm(),
+      handleWinConfirm,
       clearWinnerInfo,
       handleUniqueAuctionResultClose,
       markStreamEnded,
-    },
-    navigate,
-  };
+    }),
+    [
+      clearWinnerInfo,
+      handleOpenStreamEndModal,
+      handleSellerStartModalConfirm,
+      handleStreamEndConfirm,
+      handleUniqueAuctionResultClose,
+      handleWinConfirm,
+      hasStartedThisStream,
+      markStreamEnded,
+      postEndStream.isPending,
+      postStartStream.isPending,
+      showSellerStartModal,
+      showStreamEndModal,
+      uniqueAuctionResult,
+      winnerInfo,
+    ],
+  );
 
+  const modalProps = useMemo<LiveLayoutProps['modal']>(
+    () =>
+      isStructureOptimizationEnabled
+        ? memoizedModalProps
+        : {
+            showSellerStartModal,
+            hasStartedThisStream,
+            postStartStreamIsPending: postStartStream.isPending,
+            handleSellerStartModalConfirm,
+            showStreamEndModal,
+            postEndStreamIsPending: postEndStream.isPending,
+            setShowStreamEndModal,
+            handleStreamEndConfirm,
+            handleOpenStreamEndModal,
+            winnerInfo,
+            uniqueAuctionResult,
+            handleWinConfirm,
+            clearWinnerInfo,
+            handleUniqueAuctionResultClose,
+            markStreamEnded,
+          },
+    [
+      clearWinnerInfo,
+      handleOpenStreamEndModal,
+      handleSellerStartModalConfirm,
+      handleStreamEndConfirm,
+      handleUniqueAuctionResultClose,
+      handleWinConfirm,
+      hasStartedThisStream,
+      isStructureOptimizationEnabled,
+      markStreamEnded,
+      memoizedModalProps,
+      postEndStream.isPending,
+      postStartStream.isPending,
+      showSellerStartModal,
+      showStreamEndModal,
+      uniqueAuctionResult,
+      winnerInfo,
+    ],
+  );
+
+  const memoizedLayoutProps = useMemo<LiveLayoutProps>(
+    () => ({
+      stream: streamProps,
+      auction: auctionProps,
+      livekit: livekitProps,
+      chat: chatProps,
+      modal: modalProps,
+      navigate,
+    }),
+    [auctionProps, chatProps, livekitProps, modalProps, navigate, streamProps],
+  );
+
+  const layoutProps = useMemo<LiveLayoutProps>(
+    () =>
+      isStructureOptimizationEnabled
+        ? memoizedLayoutProps
+        : {
+            stream: streamProps,
+            auction: auctionProps,
+            livekit: livekitProps,
+            chat: chatProps,
+            modal: modalProps,
+            navigate,
+          },
+    [
+      auctionProps,
+      chatProps,
+      isStructureOptimizationEnabled,
+      livekitProps,
+      memoizedLayoutProps,
+      modalProps,
+      navigate,
+      streamProps,
+    ],
+  );
+
+  if (isNotFoundLive) {
+    return (
+      <LiveFallback
+        title="존재하지 않는 라이브입니다"
+        description={`삭제되었거나 잘못된 주소로 접근했습니다.\n메인 화면에서 현재 진행 중인 라이브를 다시 확인해 주세요.`}
+        actionLabel="홈으로"
+        onAction={() => navigate('/main')}
+      />
+    );
+  }
+
+  if (!isStreamEnterPending && isStreamEnterUnavailable) {
+    return (
+      <LiveFallback
+        title="라이브 정보를 불러오지 못했습니다"
+        description={`잠시 후 다시 시도해 주세요\n문제가 계속되면 홈에서 다시 접근하는 편이 안전합니다.`}
+        actionLabel="홈으로"
+        onAction={() => navigate('/main')}
+      />
+    );
+  }
   const Layout = breakpoint === 'mobile' ? MobileLayout : breakpoint === 'tablet' ? TabletLayout : DesktopLayout;
 
   return (

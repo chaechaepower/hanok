@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import { IoChatbubbleOutline } from 'react-icons/io5';
 import { LuVolume2, LuVolumeOff } from 'react-icons/lu';
 
@@ -14,6 +14,8 @@ import type { BidSyncPayload, LiveAuctionType, UniqueBidSyncPayload } from '@/ty
 import { useBidState, CUSTOM_UNIT_OPTIONS } from '@/hooks/useBidState';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useRenderStats } from '@/hooks/useRenderStats';
+import { isBidSyncEqual, isUniqueBidSyncEqual } from '@/utils/liveEquality';
+import { isLiveStructureOptimizationEnabled } from '@/utils/liveOptimization';
 
 export type ControlBarVariant = 'overlay' | 'inline';
 
@@ -34,7 +36,7 @@ interface Props {
   showChatToggle?: boolean;
 }
 
-export default function BuyerControlBar({
+function BuyerControlBar({
   auctionType,
   bidSync,
   uniqueBidSync,
@@ -228,3 +230,21 @@ export default function BuyerControlBar({
     </>
   );
 }
+
+export default memo(BuyerControlBar, (prev, next) => {
+  if (!isLiveStructureOptimizationEnabled()) {
+    return false;
+  }
+
+  return (
+    prev.auctionType === next.auctionType &&
+    prev.activeAuctionId === next.activeAuctionId &&
+    prev.isRemoteAudioMuted === next.isRemoteAudioMuted &&
+    prev.onToggleMute === next.onToggleMute &&
+    prev.onToggleChat === next.onToggleChat &&
+    prev.variant === next.variant &&
+    prev.showChatToggle === next.showChatToggle &&
+    isBidSyncEqual(prev.bidSync, next.bidSync) &&
+    isUniqueBidSyncEqual(prev.uniqueBidSync, next.uniqueBidSync)
+  );
+});

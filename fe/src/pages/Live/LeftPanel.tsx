@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 
 import type { AuctionItem, ItemStatus, ItemSyncItem } from '@/types';
 import { useRenderStats } from '@/hooks/useRenderStats';
+import { isLiveStructureOptimizationEnabled } from '@/utils/liveOptimization';
 
 import AuctionReportModal from './AuctionReportModal';
 import ActiveItemCard from '@/components/Live/Auction/shared/ActiveItemCard';
@@ -39,7 +40,7 @@ function toAuctionItems(items: ItemSyncItem[]): AuctionItem[] {
   }));
 }
 
-export default function LeftPanel({
+function LeftPanel({
   isSeller,
   syncedItems = null,
   selectedAuctionId = null,
@@ -133,3 +134,16 @@ export default function LeftPanel({
     </>
   );
 }
+
+export default memo(LeftPanel, (prev, next) => {
+  if (!isLiveStructureOptimizationEnabled()) {
+    return false;
+  }
+
+  return (
+    prev.isSeller === next.isSeller &&
+    prev.selectedAuctionId === next.selectedAuctionId &&
+    prev.syncedItems === next.syncedItems &&
+    prev.onSelectAuctionItem === next.onSelectAuctionItem
+  );
+});

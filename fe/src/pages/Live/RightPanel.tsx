@@ -1,26 +1,49 @@
-import { useMemo, useState } from 'react';
+import { memo, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { usePostFollow } from '@/api/hooks/usePostFollow';
-import { useStompChat } from '@/hooks/useStompChat';
 import AuctionPanel from '@/components/Live/Auction/shared/AuctionPanel';
 import ChatPanel from '@/components/Live/Chat/ChatPanel';
-import type { AuctionStatisticsPayload, LiveAuctionType, StreamEnterResponse, UniqueBidSyncPayload } from '@/types';
+import { useRenderStats } from '@/hooks/useRenderStats';
+import { useStompChat } from '@/hooks/useStompChat';
+import type { AuctionStatisticsPayload, LiveAuctionType, UniqueBidSyncPayload } from '@/types';
+import { isAuctionStatisticsEqual, isUniqueBidSyncEqual } from '@/utils/liveEquality';
+import { isLiveStructureOptimizationEnabled } from '@/utils/liveOptimization';
 
 interface Props {
   isSeller: boolean;
   auctionType: LiveAuctionType | null;
   auctionStatistics: AuctionStatisticsPayload | null;
   uniqueBidSync: UniqueBidSyncPayload | null;
-  streamEnter: StreamEnterResponse | null;
+  streamId: number;
+  category: string;
+  notice: string | null;
+  sellerId: number;
+  sellerNickname: string;
+  sellerProfileImage: string | null;
+  isFollowing: boolean;
 }
 
 const getSellerInitial = (nickname?: string) => nickname?.trim().charAt(0).toUpperCase() || 'Y';
 
-export default function RightPanel({ isSeller, auctionType, auctionStatistics, uniqueBidSync, streamEnter }: Props) {
+function RightPanel({
+  isSeller,
+  auctionType,
+  auctionStatistics,
+  uniqueBidSync,
+  streamId,
+  category,
+  notice,
+  sellerId,
+  sellerNickname,
+  sellerProfileImage,
+  isFollowing,
+}: Props) {
+  useRenderStats('RightPanel');
+
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'chat' | 'auction'>('chat');
-  const { messages, sendMessage, sendMacro, connectionState } = useStompChat(streamEnter?.category ?? '');
+  const { messages, sendMessage, sendMacro, connectionState } = useStompChat(category);
   const [followStateOverride, setFollowStateOverride] = useState<{ sellerId: number; value: boolean } | null>(null);
   const { mutate: postFollow, isPending: isFollowPending } = usePostFollow();
   const currentUserId = useMemo(() => {
@@ -28,11 +51,8 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
     const parsed = stored ? Number(stored) : NaN;
     return Number.isNaN(parsed) ? null : parsed;
   }, []);
-  const sellerId = streamEnter?.seller.sellerId ?? 0;
-  const sellerNickname = streamEnter?.seller.nickname ?? 'seller';
-  const sellerProfileImage = streamEnter?.seller.profileImage ?? null;
-  const isFollowing =
-    followStateOverride?.sellerId === sellerId ? followStateOverride.value : (streamEnter?.isFollowing ?? false);
+  const effectiveFollowing =
+    followStateOverride?.sellerId === sellerId ? followStateOverride.value : isFollowing;
 
   const handleFollowToggle = () => {
     if (sellerId <= 0 || isFollowPending) {
@@ -81,7 +101,9 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
               disabled={sellerId <= 0 || isSeller}
               className="min-w-0 text-left disabled:cursor-default"
             >
-              <span className="block truncate text-base font-bold text-neutral-100 transition hover:text-gold-light">{sellerNickname}</span>
+              <span className="block truncate text-base font-bold text-neutral-100 transition hover:text-gold-light">
+                {sellerNickname}
+              </span>
             </button>
             {sellerId > 0 && !isSeller && (
               <button
@@ -89,12 +111,12 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
                 onClick={handleFollowToggle}
                 disabled={isFollowPending}
                 className={`shrink-0 rounded-full px-3 py-1 text-label font-bold transition ${
-                  isFollowing
+                  effectiveFollowing
                     ? 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700 hover:text-neutral-200'
                     : 'bg-gold/15 text-gold hover:bg-gold/25'
                 } disabled:cursor-not-allowed disabled:opacity-50`}
               >
-                {isFollowing ? '✓ 팔로잉' : '+ 팔로우'}
+                {effectiveFollowing ? '팔로잉' : '팔로우'}
               </button>
             )}
           </div>
@@ -135,9 +157,9 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
           />
         ) : (
           <ChatPanel
-            streamId={streamEnter?.streamId ?? 0}
-            category={streamEnter?.category ?? ''}
-            notice={streamEnter?.notice ?? null}
+            streamId={streamId}
+            category={category}
+            notice={notice}
             messages={messages}
             connectionState={connectionState}
             onSendMessage={sendMessage}
@@ -148,3 +170,23 @@ export default function RightPanel({ isSeller, auctionType, auctionStatistics, u
     </div>
   );
 }
+
+export default memo(RightPanel, (prev, next) => {
+  if (!isLiveStructureOptimizationEnabled()) {
+    return false;
+  }
+
+  return (
+    prev.isSeller === next.isSeller &&
+    prev.auctionType === next.auctionType &&
+    prev.streamId === next.streamId &&
+    prev.category === next.category &&
+    prev.notice === next.notice &&
+    prev.sellerId === next.sellerId &&
+    prev.sellerNickname === next.sellerNickname &&
+    prev.sellerProfileImage === next.sellerProfileImage &&
+    prev.isFollowing === next.isFollowing &&
+    isAuctionStatisticsEqual(prev.auctionStatistics, next.auctionStatistics) &&
+    isUniqueBidSyncEqual(prev.uniqueBidSync, next.uniqueBidSync)
+  );
+});
