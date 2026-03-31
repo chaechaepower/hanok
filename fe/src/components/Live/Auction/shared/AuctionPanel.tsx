@@ -1,6 +1,7 @@
 import SellerStats from '../Seller/SellerStats';
 import SellerPriceInfo from '../Seller/SellerPriceInfo';
 import BidFeed from '../Seller/BidFeed';
+import { useRenderStats } from '@/hooks/useRenderStats';
 import type { AuctionStatisticsPayload, LiveAuctionType, UniqueBidSyncPayload } from '@/types';
 import { formatPrice } from '@/utils/formatPrice';
 
@@ -19,6 +20,8 @@ export default function AuctionPanel({
   uniqueBidSync,
   currentUserId,
 }: Props) {
+  useRenderStats('AuctionPanel');
+
   if (auctionType === 'UNIQUE_TOP') {
     const bidRange = uniqueBidSync?.bidRange;
 

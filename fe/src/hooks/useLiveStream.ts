@@ -132,22 +132,15 @@ const isUniqueAlreadyBidError = (payload?: StompErrorPayload) => payload?.code =
 
 const TIMER_SNAPSHOT_TOLERANCE_MS = 1000;
 const UNIQUE_WINNER_RESOLVE_DELAY_MS = 250;
-const STREAM_METRICS_QUERY_PARAM = 'streamMetrics';
-const STREAM_METRICS_STORAGE_KEY = 'streamMetrics';
-const STREAM_METRICS_WINDOW_MS = 10_000;
-const STREAM_METRICS_RETENTION_MS = 60_000;
-const STREAM_METRICS_MAX_LATENCY_SAMPLES = 200;
-const STREAM_METRICS_LOG_INTERVAL_MS = 10_000;
+const DEFAULT_STREAM_NOOP_GUARD_ENABLED = false;
+const STREAM_NOOP_GUARD_STORAGE_KEY = 'streamNoopGuard';
 
-type SyncRequestKind = 'ITEM_SYNC' | 'BID_SYNC' | 'AUCTION_STATISTICS_SYNC' | 'UNIQUE_BID_SYNC';
 type SyncRequestSource =
   | 'INITIAL_SUBSCRIBE'
   | 'STREAM_LIVE_EFFECT'
   | 'ACTIVE_AUCTION_EFFECT'
-  | 'ITEM_SYNC_RECEIVED'
   | 'AUCTION_START'
   | 'UNIQUE_AUCTION_START'
-  | 'BID_PLACED'
   | 'STREAM_RESUMED'
   | 'ITEM_INTRODUCE'
   | 'BID_END'
@@ -155,355 +148,78 @@ type SyncRequestSource =
   | 'SYSTEM_STREAM_START'
   | 'CONFIRM_STREAM_START'
   | 'UNKNOWN';
-type MetricsEventChannel = 'broadcast' | 'private' | 'error';
 type SyncRequestInvoker = (source?: SyncRequestSource) => Promise<void>;
 
-type RequestMetrics = {
-  sentCount: number;
-  inFlightCurrent: number;
-  inFlightMax: number;
-  responseCount: number;
-  lastSentAt: number | null;
-  lastResponseAt: number | null;
-  sources: Partial<Record<SyncRequestSource, number>>;
-  sentTimestamps: number[];
-  responseTimestamps: number[];
-  latencyMs: number[];
-  pendingSentAt: number[];
-};
+const isStreamTimerEqual = (left?: StreamTimerPayload | null, right?: StreamTimerPayload | null) =>
+  left?.serverNow === right?.serverNow &&
+  left?.serverStartedAt === right?.serverStartedAt &&
+  left?.durationSeconds === right?.durationSeconds;
 
-type StreamMetrics = {
-  streamId: string;
-  startedAt: number;
-  lastUpdatedAt: number;
-  broadcastCounts: Record<string, number>;
-  privateCounts: Record<string, number>;
-  errorCounts: Record<string, number>;
-  eventTimestamps: Record<MetricsEventChannel, number[]>;
-  requests: Record<SyncRequestKind, RequestMetrics>;
-};
+const isBidSyncEqual = (left: BidSyncPayload | null, right: BidSyncPayload | null) =>
+  left === right ||
+  (!!left &&
+    !!right &&
+    left.item.bidUnit === right.item.bidUnit &&
+    left.item.currentPrice === right.item.currentPrice &&
+    left.isHighestBidder === right.isHighestBidder &&
+    isStreamTimerEqual(left.timer, right.timer));
 
-type StreamMetricsSnapshot = {
-  streamId: string;
-  startedAt: string;
-  durationMs: number;
-  lastUpdatedAt: string;
-  events: Record<
-    MetricsEventChannel,
-    {
-      total: number;
-      per10Sec: number;
-      byType: Record<string, number>;
-    }
-  >;
-  requests: Record<
-    SyncRequestKind,
-    {
-      sentCount: number;
-      sentPer10Sec: number;
-      responseCount: number;
-      responsePer10Sec: number;
-      inFlightCurrent: number;
-      inFlightMax: number;
-      avgLatencyMs: number | null;
-      p95LatencyMs: number | null;
-      maxLatencyMs: number | null;
-      lastSentAt: string | null;
-      lastResponseAt: string | null;
-      sources: Partial<Record<SyncRequestSource, number>>;
-    }
-  >;
-};
+const isRecentBidEqual = (
+  left: AuctionStatisticsPayload['recentBids'][number],
+  right: AuctionStatisticsPayload['recentBids'][number],
+) =>
+  left.userId === right.userId &&
+  left.nickname === right.nickname &&
+  left.amount === right.amount &&
+  left.placedAt === right.placedAt;
 
-type StreamMetricsController = {
-  enabled: () => boolean;
-  list: () => string[];
-  snapshot: (streamId?: string) => StreamMetricsSnapshot | StreamMetricsSnapshot[] | null;
-  dump: (streamId?: string) => StreamMetricsSnapshot | StreamMetricsSnapshot[] | null;
-  reset: (streamId?: string) => void;
-};
+const isAuctionStatisticsEqual = (left: AuctionStatisticsPayload | null, right: AuctionStatisticsPayload | null) =>
+  left === right ||
+  (!!left &&
+    !!right &&
+    left.itemName === right.itemName &&
+    left.bidCount === right.bidCount &&
+    left.startPrice === right.startPrice &&
+    left.currentPrice === right.currentPrice &&
+    left.recentBids.length === right.recentBids.length &&
+    left.recentBids.every((bid, index) => isRecentBidEqual(bid, right.recentBids[index])));
 
-const createRequestMetrics = (): RequestMetrics => ({
-  sentCount: 0,
-  inFlightCurrent: 0,
-  inFlightMax: 0,
-  responseCount: 0,
-  lastSentAt: null,
-  lastResponseAt: null,
-  sources: {},
-  sentTimestamps: [],
-  responseTimestamps: [],
-  latencyMs: [],
-  pendingSentAt: [],
-});
+const isUniqueBidSyncEqual = (left: UniqueBidSyncPayload | null, right: UniqueBidSyncPayload | null) =>
+  left === right ||
+  (!!left &&
+    !!right &&
+    left.bidRange.minPrice === right.bidRange.minPrice &&
+    left.bidRange.maxPrice === right.bidRange.maxPrice &&
+    left.participantCount === right.participantCount &&
+    left.hasBid === right.hasBid &&
+    isStreamTimerEqual(left.timer, right.timer));
 
-const createStreamMetrics = (streamId: string): StreamMetrics => ({
-  streamId,
-  startedAt: Date.now(),
-  lastUpdatedAt: Date.now(),
-  broadcastCounts: {},
-  privateCounts: {},
-  errorCounts: {},
-  eventTimestamps: {
-    broadcast: [],
-    private: [],
-    error: [],
-  },
-  requests: {
-    ITEM_SYNC: createRequestMetrics(),
-    BID_SYNC: createRequestMetrics(),
-    AUCTION_STATISTICS_SYNC: createRequestMetrics(),
-    UNIQUE_BID_SYNC: createRequestMetrics(),
-  },
-});
+const shouldRecoverActiveAuctionSync = (source: SyncRequestSource) =>
+  source === 'INITIAL_SUBSCRIBE' ||
+  source === 'STREAM_LIVE_EFFECT' ||
+  source === 'STREAM_RESUMED' ||
+  source === 'CONFIRM_STREAM_START' ||
+  source === 'SYSTEM_STREAM_START';
 
-const pruneTimestamps = (timestamps: number[], now: number, retentionMs = STREAM_METRICS_RETENTION_MS) =>
-  timestamps.filter((timestamp) => now - timestamp <= retentionMs);
+const shouldRecoverAuctionStatisticsSync = (source: SyncRequestSource) => shouldRecoverActiveAuctionSync(source);
 
-const average = (values: number[]) =>
-  values.length > 0 ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
-
-const percentile = (values: number[], target: number) => {
-  if (values.length === 0) {
-    return null;
+const isStreamNoopGuardEnabled = () => {
+  if (typeof window === 'undefined') {
+    return DEFAULT_STREAM_NOOP_GUARD_ENABLED;
   }
 
-  const sorted = [...values].sort((left, right) => left - right);
-  const index = Math.min(sorted.length - 1, Math.ceil(sorted.length * target) - 1);
-  return sorted[index];
-};
+  const override = window.localStorage.getItem(STREAM_NOOP_GUARD_STORAGE_KEY);
 
-const countWithinWindow = (timestamps: number[], now: number) =>
-  timestamps.reduce((count, timestamp) => count + (now - timestamp <= STREAM_METRICS_WINDOW_MS ? 1 : 0), 0);
-
-const resolveStreamMetricKey = (streamId: string | undefined) => streamId ?? '__unknown__';
-
-const isStreamMetricsEnabled = () => {
-  if (typeof window === 'undefined') {
+  if (override === '0') {
     return false;
   }
 
-  const queryValue = new URLSearchParams(window.location.search).get(STREAM_METRICS_QUERY_PARAM);
-  const storageValue = window.localStorage.getItem(STREAM_METRICS_STORAGE_KEY);
+  if (override === '1') {
+    return true;
+  }
 
-  return queryValue === '1' || storageValue === '1';
+  return DEFAULT_STREAM_NOOP_GUARD_ENABLED;
 };
-
-const getStreamMetricsRegistry = () => {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  const metricsWindow = window as Window & {
-    __streamMetricsRegistry?: Map<string, StreamMetrics>;
-    __streamMetrics?: StreamMetricsController;
-  };
-
-  if (!metricsWindow.__streamMetricsRegistry) {
-    metricsWindow.__streamMetricsRegistry = new Map<string, StreamMetrics>();
-  }
-
-  if (!metricsWindow.__streamMetrics) {
-    metricsWindow.__streamMetrics = {
-      enabled: () => isStreamMetricsEnabled(),
-      list: () => [...metricsWindow.__streamMetricsRegistry!.keys()],
-      snapshot: (streamId) => buildStreamMetricsSnapshot(metricsWindow.__streamMetricsRegistry!, streamId),
-      dump: (streamId) => {
-        const snapshot = buildStreamMetricsSnapshot(metricsWindow.__streamMetricsRegistry!, streamId);
-        console.info('[stream-metrics] snapshot', snapshot);
-        return snapshot;
-      },
-      reset: (streamId) => {
-        if (streamId) {
-          const targetMetrics = metricsWindow.__streamMetricsRegistry!.get(streamId);
-
-          if (targetMetrics) {
-            resetStreamMetrics(targetMetrics);
-          } else {
-            metricsWindow.__streamMetricsRegistry!.set(streamId, createStreamMetrics(streamId));
-          }
-          return;
-        }
-
-        metricsWindow.__streamMetricsRegistry!.forEach((metrics) => {
-          resetStreamMetrics(metrics);
-        });
-      },
-    };
-  }
-
-  return metricsWindow.__streamMetricsRegistry;
-};
-
-const getOrCreateStreamMetrics = (registry: Map<string, StreamMetrics>, streamId: string) => {
-  const existing = registry.get(streamId);
-
-  if (existing) {
-    return existing;
-  }
-
-  const created = createStreamMetrics(streamId);
-  registry.set(streamId, created);
-  return created;
-};
-
-const resetStreamMetrics = (metrics: StreamMetrics) => {
-  const next = createStreamMetrics(metrics.streamId);
-
-  metrics.startedAt = next.startedAt;
-  metrics.lastUpdatedAt = next.lastUpdatedAt;
-  metrics.broadcastCounts = next.broadcastCounts;
-  metrics.privateCounts = next.privateCounts;
-  metrics.errorCounts = next.errorCounts;
-  metrics.eventTimestamps = next.eventTimestamps;
-  metrics.requests = next.requests;
-};
-
-const buildRequestSnapshot = (requestMetrics: RequestMetrics, now: number) => ({
-  sentCount: requestMetrics.sentCount,
-  sentPer10Sec: countWithinWindow(requestMetrics.sentTimestamps, now),
-  responseCount: requestMetrics.responseCount,
-  responsePer10Sec: countWithinWindow(requestMetrics.responseTimestamps, now),
-  inFlightCurrent: requestMetrics.inFlightCurrent,
-  inFlightMax: requestMetrics.inFlightMax,
-  avgLatencyMs: average(requestMetrics.latencyMs),
-  p95LatencyMs: percentile(requestMetrics.latencyMs, 0.95),
-  maxLatencyMs: requestMetrics.latencyMs.length > 0 ? Math.max(...requestMetrics.latencyMs) : null,
-  lastSentAt: requestMetrics.lastSentAt ? new Date(requestMetrics.lastSentAt).toISOString() : null,
-  lastResponseAt: requestMetrics.lastResponseAt ? new Date(requestMetrics.lastResponseAt).toISOString() : null,
-  sources: requestMetrics.sources,
-});
-
-const buildSingleStreamMetricsSnapshot = (metrics: StreamMetrics): StreamMetricsSnapshot => {
-  const now = Date.now();
-
-  return {
-    streamId: metrics.streamId,
-    startedAt: new Date(metrics.startedAt).toISOString(),
-    durationMs: now - metrics.startedAt,
-    lastUpdatedAt: new Date(metrics.lastUpdatedAt).toISOString(),
-    events: {
-      broadcast: {
-        total: Object.values(metrics.broadcastCounts).reduce((sum, count) => sum + count, 0),
-        per10Sec: countWithinWindow(metrics.eventTimestamps.broadcast, now),
-        byType: metrics.broadcastCounts,
-      },
-      private: {
-        total: Object.values(metrics.privateCounts).reduce((sum, count) => sum + count, 0),
-        per10Sec: countWithinWindow(metrics.eventTimestamps.private, now),
-        byType: metrics.privateCounts,
-      },
-      error: {
-        total: Object.values(metrics.errorCounts).reduce((sum, count) => sum + count, 0),
-        per10Sec: countWithinWindow(metrics.eventTimestamps.error, now),
-        byType: metrics.errorCounts,
-      },
-    },
-    requests: {
-      ITEM_SYNC: buildRequestSnapshot(metrics.requests.ITEM_SYNC, now),
-      BID_SYNC: buildRequestSnapshot(metrics.requests.BID_SYNC, now),
-      AUCTION_STATISTICS_SYNC: buildRequestSnapshot(metrics.requests.AUCTION_STATISTICS_SYNC, now),
-      UNIQUE_BID_SYNC: buildRequestSnapshot(metrics.requests.UNIQUE_BID_SYNC, now),
-    },
-  };
-};
-
-const buildStreamMetricsSnapshot = (
-  registry: Map<string, StreamMetrics>,
-  streamId?: string,
-): StreamMetricsSnapshot | StreamMetricsSnapshot[] | null => {
-  if (streamId) {
-    const metrics = registry.get(streamId);
-    return metrics ? buildSingleStreamMetricsSnapshot(metrics) : null;
-  }
-
-  return [...registry.values()].map((metrics) => buildSingleStreamMetricsSnapshot(metrics));
-};
-
-const trackStreamEvent = (
-  metricsRef: React.MutableRefObject<StreamMetrics | null>,
-  channel: MetricsEventChannel,
-  eventType: string,
-) => {
-  const metrics = metricsRef.current;
-
-  if (!metrics) {
-    return;
-  }
-
-  const now = Date.now();
-  metrics.lastUpdatedAt = now;
-
-  const counts =
-    channel === 'broadcast'
-      ? metrics.broadcastCounts
-      : channel === 'private'
-        ? metrics.privateCounts
-        : metrics.errorCounts;
-
-  counts[eventType] = (counts[eventType] ?? 0) + 1;
-  metrics.eventTimestamps[channel].push(now);
-  metrics.eventTimestamps[channel] = pruneTimestamps(metrics.eventTimestamps[channel], now);
-};
-
-const trackSyncRequest = (
-  metricsRef: React.MutableRefObject<StreamMetrics | null>,
-  kind: SyncRequestKind,
-  source: SyncRequestSource,
-) => {
-  const metrics = metricsRef.current;
-
-  if (!metrics) {
-    return;
-  }
-
-  const now = Date.now();
-  const requestMetrics = metrics.requests[kind];
-
-  metrics.lastUpdatedAt = now;
-  requestMetrics.sentCount += 1;
-  requestMetrics.inFlightCurrent += 1;
-  requestMetrics.inFlightMax = Math.max(requestMetrics.inFlightMax, requestMetrics.inFlightCurrent);
-  requestMetrics.lastSentAt = now;
-  requestMetrics.sources[source] = (requestMetrics.sources[source] ?? 0) + 1;
-  requestMetrics.sentTimestamps.push(now);
-  requestMetrics.sentTimestamps = pruneTimestamps(requestMetrics.sentTimestamps, now);
-  requestMetrics.pendingSentAt.push(now);
-};
-
-const trackSyncResponse = (metricsRef: React.MutableRefObject<StreamMetrics | null>, kind: SyncRequestKind) => {
-  const metrics = metricsRef.current;
-
-  if (!metrics) {
-    return;
-  }
-
-  const now = Date.now();
-  const requestMetrics = metrics.requests[kind];
-  const sentAt = requestMetrics.pendingSentAt.shift();
-
-  metrics.lastUpdatedAt = now;
-  requestMetrics.responseCount += 1;
-  requestMetrics.inFlightCurrent = Math.max(0, requestMetrics.inFlightCurrent - 1);
-  requestMetrics.lastResponseAt = now;
-  requestMetrics.responseTimestamps.push(now);
-  requestMetrics.responseTimestamps = pruneTimestamps(requestMetrics.responseTimestamps, now);
-
-  if (typeof sentAt === 'number') {
-    requestMetrics.latencyMs.push(now - sentAt);
-
-    if (requestMetrics.latencyMs.length > STREAM_METRICS_MAX_LATENCY_SAMPLES) {
-      requestMetrics.latencyMs.splice(0, requestMetrics.latencyMs.length - STREAM_METRICS_MAX_LATENCY_SAMPLES);
-    }
-  }
-};
-
-declare global {
-  interface Window {
-    __streamMetricsRegistry?: Map<string, StreamMetrics>;
-    __streamMetrics?: StreamMetricsController;
-  }
-}
 
 type SyncedTimerMode = 'auto' | 'remainingSnapshot';
 
@@ -599,13 +315,13 @@ export function useLiveStream(
   const pendingAmbiguousUniqueEndRef = useRef<UniqueAuctionEndPayload | null>(null);
   const uniqueWinnerResolveTimeoutRef = useRef<number | null>(null);
   const ignoreWonUniqueEndRef = useRef(false);
+  const pendingItemSyncSourceRef = useRef<SyncRequestSource>('UNKNOWN');
   // Ref that is set once the STOMP subscription is established.
   // Used to gate ITEM_SYNC calls on subscription readiness (race condition fix).
   const requestItemSyncRef = useRef<SyncRequestInvoker | null>(null);
   const requestBidSyncRef = useRef<SyncRequestInvoker | null>(null);
   const requestAuctionStatisticsSyncRef = useRef<SyncRequestInvoker | null>(null);
   const requestUniqueBidSyncRef = useRef<SyncRequestInvoker | null>(null);
-  const streamMetricsRef = useRef<StreamMetrics | null>(null);
 
   const isStreamLive = liveStateOverride ?? isLiveFromServer;
   const serverStreamState: StreamState = initialStreamStatus === 'PAUSED' ? 'disconnected' : 'live';
@@ -619,6 +335,11 @@ export function useLiveStream(
       setRuntimeStreamState((prev) => {
         const prevValue = prev.streamId === streamId && prev.value !== null ? prev.value : serverStreamState;
         const nextValue = typeof value === 'function' ? value(prevValue) : value;
+        const isNoopGuardEnabled = isStreamNoopGuardEnabled();
+
+        if (isNoopGuardEnabled && prev.streamId === streamId && prev.value === nextValue) {
+          return prev;
+        }
 
         return {
           streamId,
@@ -632,43 +353,6 @@ export function useLiveStream(
   // Derived values
   const introducingAuctionItem = itemSync?.items.find((item) => item.auctionStatus === 'INTRODUCING') ?? null;
   const liveAuctionItem = itemSync?.items.find((item) => item.auctionStatus === 'LIVE') ?? null;
-
-  useEffect(() => {
-    if (!streamId || !isStreamMetricsEnabled()) {
-      streamMetricsRef.current = null;
-      return;
-    }
-
-    const registry = getStreamMetricsRegistry();
-
-    if (!registry) {
-      streamMetricsRef.current = null;
-      return;
-    }
-
-    const metricKey = resolveStreamMetricKey(streamId);
-    streamMetricsRef.current = getOrCreateStreamMetrics(registry, metricKey);
-    console.info('[stream-metrics] enabled', {
-      streamId: metricKey,
-      queryParam: STREAM_METRICS_QUERY_PARAM,
-      storageKey: STREAM_METRICS_STORAGE_KEY,
-    });
-  }, [streamId]);
-
-  useEffect(() => {
-    if (!streamMetricsRef.current) {
-      return;
-    }
-
-    const metricKey = streamMetricsRef.current.streamId;
-    const intervalId = window.setInterval(() => {
-      window.__streamMetrics?.dump(metricKey);
-    }, STREAM_METRICS_LOG_INTERVAL_MS);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [streamId]);
 
   // ---------------------------------------------------------------------------
   // auctionComment auto-clear
@@ -715,15 +399,12 @@ export function useLiveStream(
     const syncPromise =
       activeAuctionType === 'UNIQUE_TOP'
         ? requestUniqueBidSyncRef.current?.('ACTIVE_AUCTION_EFFECT')
-        : Promise.all([
-            requestBidSyncRef.current?.('ACTIVE_AUCTION_EFFECT'),
-            requestAuctionStatisticsSyncRef.current?.('ACTIVE_AUCTION_EFFECT'),
-          ]);
+        : requestBidSyncRef.current?.('ACTIVE_AUCTION_EFFECT');
 
     void Promise.resolve(syncPromise).catch((error) => {
       console.error('[stream] failed to sync active auction state', error);
     });
-  }, [liveAuctionItem, streamId]);
+  }, [streamId, liveAuctionItem?.auctionId, liveAuctionItem?.auctionType]);
 
   // ---------------------------------------------------------------------------
   // Main STOMP subscription effect
@@ -736,7 +417,7 @@ export function useLiveStream(
 
     const requestItemSync: SyncRequestInvoker = async (source = 'UNKNOWN') => {
       console.log('[stream] requesting ITEM_SYNC for streamId:', streamId);
-      trackSyncRequest(streamMetricsRef, 'ITEM_SYNC', source);
+      pendingItemSyncSourceRef.current = source;
       await sendStreamMessage(streamId, {
         eventType: 'ITEM_SYNC',
         payload: null,
@@ -744,7 +425,7 @@ export function useLiveStream(
     };
 
     const requestBidSync: SyncRequestInvoker = async (source = 'UNKNOWN') => {
-      trackSyncRequest(streamMetricsRef, 'BID_SYNC', source);
+      void source;
       await sendStreamMessage(streamId, {
         eventType: 'BID_SYNC',
         payload: null,
@@ -752,7 +433,7 @@ export function useLiveStream(
     };
 
     const requestAuctionStatisticsSync: SyncRequestInvoker = async (source = 'UNKNOWN') => {
-      trackSyncRequest(streamMetricsRef, 'AUCTION_STATISTICS_SYNC', source);
+      void source;
       await sendStreamMessage(streamId, {
         eventType: 'AUCTION_STATISTICS_SYNC',
         payload: null,
@@ -760,7 +441,7 @@ export function useLiveStream(
     };
 
     const requestUniqueBidSync: SyncRequestInvoker = async (source = 'UNKNOWN') => {
-      trackSyncRequest(streamMetricsRef, 'UNIQUE_BID_SYNC', source);
+      void source;
       await sendStreamMessage(streamId, {
         eventType: 'UNIQUE_BID_SYNC',
         payload: null,
@@ -777,29 +458,68 @@ export function useLiveStream(
         return;
       }
 
+      if (!shouldRecoverActiveAuctionSync(source)) {
+        return;
+      }
+
       if (item.auctionType === 'UNIQUE_TOP') {
         await requestUniqueBidSync(source);
         return;
       }
 
-      await Promise.all([requestBidSync(source), requestAuctionStatisticsSync(source)]);
+      if (shouldRecoverAuctionStatisticsSync(source)) {
+        await Promise.all([requestBidSync(source), requestAuctionStatisticsSync(source)]);
+        return;
+      }
+
+      await requestBidSync(source);
+    };
+
+    const setBidSyncState = (value: SetStateAction<BidSyncPayload | null>) => {
+      setBidSync((prev) => {
+        const next = typeof value === 'function' ? value(prev) : value;
+        if (isStreamNoopGuardEnabled() && isBidSyncEqual(prev, next)) {
+          return prev;
+        }
+        return next;
+      });
+    };
+
+    const setAuctionStatisticsState = (value: SetStateAction<AuctionStatisticsPayload | null>) => {
+      setAuctionStatistics((prev) => {
+        const next = typeof value === 'function' ? value(prev) : value;
+        if (isStreamNoopGuardEnabled() && isAuctionStatisticsEqual(prev, next)) {
+          return prev;
+        }
+        return next;
+      });
+    };
+
+    const setUniqueBidSyncState = (value: SetStateAction<UniqueBidSyncPayload | null>) => {
+      setUniqueBidSync((prev) => {
+        const next = typeof value === 'function' ? value(prev) : value;
+        if (isStreamNoopGuardEnabled() && isUniqueBidSyncEqual(prev, next)) {
+          return prev;
+        }
+        return next;
+      });
     };
 
     const applyBidSync = (payload?: BidSyncPayload | null) => {
-      setBidSync(payload ?? null);
+      setBidSyncState(payload ?? null);
       const snipingAge = Date.now() - snipingTimerSetAtRef.current;
       if (payload?.timer && snipingAge > 2000) {
         setTimer(createSyncedTimer(payload.timer, 'remainingSnapshot'));
       }
     };
 
-    const applyItemSync = (payload?: ItemSyncPayload | null) => {
+    const applyItemSync = (payload?: ItemSyncPayload | null, source: SyncRequestSource = 'UNKNOWN') => {
       setItemSync(payload ?? null);
       const nextActiveItem = payload?.items.find((item) => item.auctionStatus === 'LIVE') ?? null;
       if (nextActiveItem?.auctionType === 'UNIQUE_TOP') {
         uniqueAuctionResultDismissedRef.current = false;
       }
-      void requestActiveAuctionSync(nextActiveItem, 'ITEM_SYNC_RECEIVED');
+      void requestActiveAuctionSync(nextActiveItem, source);
     };
 
     const clearPendingUniqueWinnerResolution = () => {
@@ -825,7 +545,7 @@ export function useLiveStream(
 
     const handleUniqueAuctionEndPayload = (payload: UniqueAuctionEndPayload) => {
       setTimer(null);
-      setUniqueBidSync(null);
+      setUniqueBidSyncState(null);
       void requestItemSync('UNIQUE_AUCTION_END');
 
       if (payload.isWon && ignoreWonUniqueEndRef.current) {
@@ -858,7 +578,6 @@ export function useLiveStream(
     };
 
     const handleBroadcastEvent = (event: BroadcastStreamEvent) => {
-      trackStreamEvent(streamMetricsRef, 'broadcast', event.eventType ?? event.event ?? 'UNKNOWN');
       console.log('[stream] broadcast event:', event);
       if (isAuctionStartEvent(event) && event.payload?.timer) {
         clearPendingUniqueWinnerResolution();
@@ -866,10 +585,10 @@ export function useLiveStream(
         uniqueAuctionResultDismissedRef.current = true;
         setStreamState('live');
         setTimer(createSyncedTimer(event.payload.timer));
-        setUniqueBidSync(null);
+        setUniqueBidSyncState(null);
         setUniqueAuctionResult(null);
         if (typeof event.payload.item?.startPrice === 'number' && typeof event.payload.item?.bidUnit === 'number') {
-          setBidSync({
+          setBidSyncState({
             item: {
               bidUnit: event.payload.item.bidUnit,
               currentPrice: event.payload.item.startPrice,
@@ -888,12 +607,12 @@ export function useLiveStream(
         ignoreWonUniqueEndRef.current = false;
         uniqueAuctionResultDismissedRef.current = false;
         setStreamState('live');
-        setBidSync(null);
-        setAuctionStatistics(null);
+        setBidSyncState(null);
+        setAuctionStatisticsState(null);
         setUniqueAuctionResult(null);
         setWinnerInfo(null);
         setTimer(createSyncedTimer(event.payload.timer));
-        setUniqueBidSync({
+        setUniqueBidSyncState({
           bidRange: event.payload.bidRange,
           timer: event.payload.timer,
           participantCount: 0,
@@ -904,7 +623,9 @@ export function useLiveStream(
       }
 
       if (isBidPlacedEvent(event)) {
-        if (streamId && consumePendingWalletInvalidationForBid(streamId)) {
+        const isOwnAcceptedBid = streamId ? consumePendingWalletInvalidationForBid(streamId) : false;
+
+        if (isOwnAcceptedBid) {
           void queryClient.invalidateQueries({ queryKey: ['wallet'] });
         }
 
@@ -914,7 +635,7 @@ export function useLiveStream(
         }
 
         if (typeof event.payload?.bidInfo?.amount === 'number') {
-          setBidSync((prev) =>
+          setBidSyncState((prev) =>
             prev
               ? {
                   ...prev,
@@ -922,6 +643,7 @@ export function useLiveStream(
                     ...prev.item,
                     currentPrice: event.payload?.bidInfo?.amount ?? prev.item.currentPrice,
                   },
+                  isHighestBidder: isOwnAcceptedBid,
                 }
               : prev,
           );
@@ -956,8 +678,8 @@ export function useLiveStream(
         setStreamState('ended');
         setLiveStateOverride(false);
         setTimer(null);
-        setBidSync(null);
-        setUniqueBidSync(null);
+        setBidSyncState(null);
+        setUniqueBidSyncState(null);
         return;
       }
 
@@ -975,7 +697,7 @@ export function useLiveStream(
       }
 
       if (isUniqueAuctionCalculatingEvent(event)) {
-        setUniqueBidSync((prev) =>
+        setUniqueBidSyncState((prev) =>
           prev
             ? {
                 ...prev,
@@ -992,24 +714,24 @@ export function useLiveStream(
         }
 
         setTimer(null);
-        setUniqueBidSync(null);
+        setUniqueBidSyncState(null);
         void requestItemSync();
         return;
       }
 
       if (isBidEndEvent(event)) {
-        setBidSync(null);
+        setBidSyncState(null);
         void requestItemSync('BID_END');
         return;
       }
 
       if (isAuctionStatisticsEvent(event) && event.payload) {
-        setAuctionStatistics(event.payload);
+        setAuctionStatisticsState(event.payload);
         return;
       }
 
       if (isUniqueAuctionStatsEvent(event) && event.payload) {
-        setUniqueBidSync((prev) =>
+        setUniqueBidSyncState((prev) =>
           prev
             ? {
                 ...prev,
@@ -1029,29 +751,26 @@ export function useLiveStream(
     };
 
     const handlePrivateEvent = (event: PrivateStreamEvent) => {
-      trackStreamEvent(streamMetricsRef, 'private', event.eventType ?? 'UNKNOWN');
       if (isPrivateBidSyncEvent(event)) {
-        trackSyncResponse(streamMetricsRef, 'BID_SYNC');
         applyBidSync(event.payload);
         return;
       }
 
       if (isPrivateAuctionStatisticsSyncEvent(event)) {
-        trackSyncResponse(streamMetricsRef, 'AUCTION_STATISTICS_SYNC');
-        setAuctionStatistics(event.payload ?? null);
+        setAuctionStatisticsState(event.payload ?? null);
         return;
       }
 
       if (isPrivateItemSyncEvent(event)) {
-        trackSyncResponse(streamMetricsRef, 'ITEM_SYNC');
-        applyItemSync(event.payload);
+        const itemSyncSource = pendingItemSyncSourceRef.current;
+        pendingItemSyncSourceRef.current = 'UNKNOWN';
+        applyItemSync(event.payload, itemSyncSource);
         return;
       }
 
       if (isUniqueBidSyncEvent(event)) {
-        trackSyncResponse(streamMetricsRef, 'UNIQUE_BID_SYNC');
         uniqueAuctionResultDismissedRef.current = false;
-        setUniqueBidSync(event.payload ?? null);
+        setUniqueBidSyncState(event.payload ?? null);
         if (event.payload?.timer) {
           setTimer(createSyncedTimer(event.payload.timer));
         }
@@ -1088,18 +807,13 @@ export function useLiveStream(
         if (streamId && consumePendingWalletInvalidationForBid(streamId)) {
           void queryClient.invalidateQueries({ queryKey: ['wallet'] });
         }
-        setUniqueBidSync((prev) => (prev ? { ...prev, hasBid: true } : prev));
+        setUniqueBidSyncState((prev) => (prev ? { ...prev, hasBid: true } : prev));
         showToast({ type: 'success', message: `${event.payload.amount.toLocaleString()}원 입찰이 접수되었습니다.` });
         return;
       }
     };
 
     const handleErrorEvent = (event: ErrorStreamEvent) => {
-      trackStreamEvent(
-        streamMetricsRef,
-        'error',
-        isStompErrorEvent(event) ? (event.payload?.code ?? event.eventType) : event.eventType,
-      );
       if (!isStompErrorEvent(event) || !event.payload) {
         return;
       }
@@ -1109,7 +823,7 @@ export function useLiveStream(
       }
 
       if (isUniqueAlreadyBidError(event.payload)) {
-        setUniqueBidSync((prev) => (prev ? { ...prev, hasBid: true } : prev));
+        setUniqueBidSyncState((prev) => (prev ? { ...prev, hasBid: true } : prev));
       }
 
       showToast({ message: event.payload.message });
