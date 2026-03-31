@@ -132,6 +132,389 @@ const isUniqueAlreadyBidError = (payload?: StompErrorPayload) => payload?.code =
 
 const TIMER_SNAPSHOT_TOLERANCE_MS = 1000;
 const UNIQUE_WINNER_RESOLVE_DELAY_MS = 250;
+const STREAM_METRICS_QUERY_PARAM = 'streamMetrics';
+const STREAM_METRICS_STORAGE_KEY = 'streamMetrics';
+const STREAM_METRICS_WINDOW_MS = 10_000;
+const STREAM_METRICS_RETENTION_MS = 60_000;
+const STREAM_METRICS_MAX_LATENCY_SAMPLES = 200;
+const STREAM_METRICS_LOG_INTERVAL_MS = 10_000;
+
+type SyncRequestKind = 'ITEM_SYNC' | 'BID_SYNC' | 'AUCTION_STATISTICS_SYNC' | 'UNIQUE_BID_SYNC';
+type SyncRequestSource =
+  | 'INITIAL_SUBSCRIBE'
+  | 'STREAM_LIVE_EFFECT'
+  | 'ACTIVE_AUCTION_EFFECT'
+  | 'ITEM_SYNC_RECEIVED'
+  | 'AUCTION_START'
+  | 'UNIQUE_AUCTION_START'
+  | 'BID_PLACED'
+  | 'STREAM_RESUMED'
+  | 'ITEM_INTRODUCE'
+  | 'BID_END'
+  | 'UNIQUE_AUCTION_END'
+  | 'SYSTEM_STREAM_START'
+  | 'CONFIRM_STREAM_START'
+  | 'UNKNOWN';
+type MetricsSuppressionReason = 'deduped' | 'throttled' | 'trailing_flush';
+type MetricsEventChannel = 'broadcast' | 'private' | 'error';
+
+type RequestMetrics = {
+  sentCount: number;
+  dedupedCount: number;
+  throttledCount: number;
+  trailingFlushCount: number;
+  inFlightCurrent: number;
+  inFlightMax: number;
+  responseCount: number;
+  lastSentAt: number | null;
+  lastResponseAt: number | null;
+  sources: Partial<Record<SyncRequestSource, number>>;
+  sentTimestamps: number[];
+  responseTimestamps: number[];
+  latencyMs: number[];
+  pendingSentAt: number[];
+};
+
+type StreamMetrics = {
+  streamId: string;
+  startedAt: number;
+  lastUpdatedAt: number;
+  broadcastCounts: Record<string, number>;
+  privateCounts: Record<string, number>;
+  errorCounts: Record<string, number>;
+  eventTimestamps: Record<MetricsEventChannel, number[]>;
+  requests: Record<SyncRequestKind, RequestMetrics>;
+};
+
+type StreamMetricsSnapshot = {
+  streamId: string;
+  startedAt: string;
+  durationMs: number;
+  lastUpdatedAt: string;
+  events: Record<
+    MetricsEventChannel,
+    {
+      total: number;
+      per10Sec: number;
+      byType: Record<string, number>;
+    }
+  >;
+  requests: Record<
+    SyncRequestKind,
+    {
+      sentCount: number;
+      sentPer10Sec: number;
+      responseCount: number;
+      responsePer10Sec: number;
+      dedupedCount: number;
+      throttledCount: number;
+      trailingFlushCount: number;
+      inFlightCurrent: number;
+      inFlightMax: number;
+      avgLatencyMs: number | null;
+      p95LatencyMs: number | null;
+      maxLatencyMs: number | null;
+      lastSentAt: string | null;
+      lastResponseAt: string | null;
+      sources: Partial<Record<SyncRequestSource, number>>;
+    }
+  >;
+};
+
+type StreamMetricsController = {
+  enabled: () => boolean;
+  list: () => string[];
+  snapshot: (streamId?: string) => StreamMetricsSnapshot | StreamMetricsSnapshot[] | null;
+  dump: (streamId?: string) => StreamMetricsSnapshot | StreamMetricsSnapshot[] | null;
+  reset: (streamId?: string) => void;
+  markSyncSuppressed: (streamId: string, kind: SyncRequestKind, reason: MetricsSuppressionReason) => void;
+};
+
+const createRequestMetrics = (): RequestMetrics => ({
+  sentCount: 0,
+  dedupedCount: 0,
+  throttledCount: 0,
+  trailingFlushCount: 0,
+  inFlightCurrent: 0,
+  inFlightMax: 0,
+  responseCount: 0,
+  lastSentAt: null,
+  lastResponseAt: null,
+  sources: {},
+  sentTimestamps: [],
+  responseTimestamps: [],
+  latencyMs: [],
+  pendingSentAt: [],
+});
+
+const createStreamMetrics = (streamId: string): StreamMetrics => ({
+  streamId,
+  startedAt: Date.now(),
+  lastUpdatedAt: Date.now(),
+  broadcastCounts: {},
+  privateCounts: {},
+  errorCounts: {},
+  eventTimestamps: {
+    broadcast: [],
+    private: [],
+    error: [],
+  },
+  requests: {
+    ITEM_SYNC: createRequestMetrics(),
+    BID_SYNC: createRequestMetrics(),
+    AUCTION_STATISTICS_SYNC: createRequestMetrics(),
+    UNIQUE_BID_SYNC: createRequestMetrics(),
+  },
+});
+
+const pruneTimestamps = (timestamps: number[], now: number, retentionMs = STREAM_METRICS_RETENTION_MS) =>
+  timestamps.filter((timestamp) => now - timestamp <= retentionMs);
+
+const average = (values: number[]) =>
+  values.length > 0 ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+
+const percentile = (values: number[], target: number) => {
+  if (values.length === 0) {
+    return null;
+  }
+
+  const sorted = [...values].sort((left, right) => left - right);
+  const index = Math.min(sorted.length - 1, Math.ceil(sorted.length * target) - 1);
+  return sorted[index];
+};
+
+const countWithinWindow = (timestamps: number[], now: number) =>
+  timestamps.reduce((count, timestamp) => count + (now - timestamp <= STREAM_METRICS_WINDOW_MS ? 1 : 0), 0);
+
+const resolveStreamMetricKey = (streamId: string | undefined) => streamId ?? '__unknown__';
+
+const isStreamMetricsEnabled = () => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const queryValue = new URLSearchParams(window.location.search).get(STREAM_METRICS_QUERY_PARAM);
+  const storageValue = window.localStorage.getItem(STREAM_METRICS_STORAGE_KEY);
+
+  return queryValue === '1' || storageValue === '1';
+};
+
+const getStreamMetricsRegistry = () => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const metricsWindow = window as Window & {
+    __streamMetricsRegistry?: Map<string, StreamMetrics>;
+    __streamMetrics?: StreamMetricsController;
+  };
+
+  if (!metricsWindow.__streamMetricsRegistry) {
+    metricsWindow.__streamMetricsRegistry = new Map<string, StreamMetrics>();
+  }
+
+  if (!metricsWindow.__streamMetrics) {
+    metricsWindow.__streamMetrics = {
+      enabled: () => isStreamMetricsEnabled(),
+      list: () => [...metricsWindow.__streamMetricsRegistry!.keys()],
+      snapshot: (streamId) => buildStreamMetricsSnapshot(metricsWindow.__streamMetricsRegistry!, streamId),
+      dump: (streamId) => {
+        const snapshot = buildStreamMetricsSnapshot(metricsWindow.__streamMetricsRegistry!, streamId);
+        console.info('[stream-metrics] snapshot', snapshot);
+        return snapshot;
+      },
+      reset: (streamId) => {
+        if (streamId) {
+          metricsWindow.__streamMetricsRegistry!.delete(streamId);
+          return;
+        }
+
+        metricsWindow.__streamMetricsRegistry!.clear();
+      },
+      markSyncSuppressed: (streamId, kind, reason) => {
+        const metrics = getOrCreateStreamMetrics(metricsWindow.__streamMetricsRegistry!, streamId);
+        const requestMetrics = metrics.requests[kind];
+
+        metrics.lastUpdatedAt = Date.now();
+
+        if (reason === 'deduped') {
+          requestMetrics.dedupedCount += 1;
+          return;
+        }
+
+        if (reason === 'throttled') {
+          requestMetrics.throttledCount += 1;
+          return;
+        }
+
+        requestMetrics.trailingFlushCount += 1;
+      },
+    };
+  }
+
+  return metricsWindow.__streamMetricsRegistry;
+};
+
+const getOrCreateStreamMetrics = (registry: Map<string, StreamMetrics>, streamId: string) => {
+  const existing = registry.get(streamId);
+
+  if (existing) {
+    return existing;
+  }
+
+  const created = createStreamMetrics(streamId);
+  registry.set(streamId, created);
+  return created;
+};
+
+const buildRequestSnapshot = (requestMetrics: RequestMetrics, now: number) => ({
+  sentCount: requestMetrics.sentCount,
+  sentPer10Sec: countWithinWindow(requestMetrics.sentTimestamps, now),
+  responseCount: requestMetrics.responseCount,
+  responsePer10Sec: countWithinWindow(requestMetrics.responseTimestamps, now),
+  dedupedCount: requestMetrics.dedupedCount,
+  throttledCount: requestMetrics.throttledCount,
+  trailingFlushCount: requestMetrics.trailingFlushCount,
+  inFlightCurrent: requestMetrics.inFlightCurrent,
+  inFlightMax: requestMetrics.inFlightMax,
+  avgLatencyMs: average(requestMetrics.latencyMs),
+  p95LatencyMs: percentile(requestMetrics.latencyMs, 0.95),
+  maxLatencyMs: requestMetrics.latencyMs.length > 0 ? Math.max(...requestMetrics.latencyMs) : null,
+  lastSentAt: requestMetrics.lastSentAt ? new Date(requestMetrics.lastSentAt).toISOString() : null,
+  lastResponseAt: requestMetrics.lastResponseAt ? new Date(requestMetrics.lastResponseAt).toISOString() : null,
+  sources: requestMetrics.sources,
+});
+
+const buildSingleStreamMetricsSnapshot = (metrics: StreamMetrics): StreamMetricsSnapshot => {
+  const now = Date.now();
+
+  return {
+    streamId: metrics.streamId,
+    startedAt: new Date(metrics.startedAt).toISOString(),
+    durationMs: now - metrics.startedAt,
+    lastUpdatedAt: new Date(metrics.lastUpdatedAt).toISOString(),
+    events: {
+      broadcast: {
+        total: Object.values(metrics.broadcastCounts).reduce((sum, count) => sum + count, 0),
+        per10Sec: countWithinWindow(metrics.eventTimestamps.broadcast, now),
+        byType: metrics.broadcastCounts,
+      },
+      private: {
+        total: Object.values(metrics.privateCounts).reduce((sum, count) => sum + count, 0),
+        per10Sec: countWithinWindow(metrics.eventTimestamps.private, now),
+        byType: metrics.privateCounts,
+      },
+      error: {
+        total: Object.values(metrics.errorCounts).reduce((sum, count) => sum + count, 0),
+        per10Sec: countWithinWindow(metrics.eventTimestamps.error, now),
+        byType: metrics.errorCounts,
+      },
+    },
+    requests: {
+      ITEM_SYNC: buildRequestSnapshot(metrics.requests.ITEM_SYNC, now),
+      BID_SYNC: buildRequestSnapshot(metrics.requests.BID_SYNC, now),
+      AUCTION_STATISTICS_SYNC: buildRequestSnapshot(metrics.requests.AUCTION_STATISTICS_SYNC, now),
+      UNIQUE_BID_SYNC: buildRequestSnapshot(metrics.requests.UNIQUE_BID_SYNC, now),
+    },
+  };
+};
+
+const buildStreamMetricsSnapshot = (
+  registry: Map<string, StreamMetrics>,
+  streamId?: string,
+): StreamMetricsSnapshot | StreamMetricsSnapshot[] | null => {
+  if (streamId) {
+    const metrics = registry.get(streamId);
+    return metrics ? buildSingleStreamMetricsSnapshot(metrics) : null;
+  }
+
+  return [...registry.values()].map((metrics) => buildSingleStreamMetricsSnapshot(metrics));
+};
+
+const trackStreamEvent = (
+  metricsRef: React.MutableRefObject<StreamMetrics | null>,
+  channel: MetricsEventChannel,
+  eventType: string,
+) => {
+  const metrics = metricsRef.current;
+
+  if (!metrics) {
+    return;
+  }
+
+  const now = Date.now();
+  metrics.lastUpdatedAt = now;
+
+  const counts =
+    channel === 'broadcast'
+      ? metrics.broadcastCounts
+      : channel === 'private'
+        ? metrics.privateCounts
+        : metrics.errorCounts;
+
+  counts[eventType] = (counts[eventType] ?? 0) + 1;
+  metrics.eventTimestamps[channel].push(now);
+  metrics.eventTimestamps[channel] = pruneTimestamps(metrics.eventTimestamps[channel], now);
+};
+
+const trackSyncRequest = (
+  metricsRef: React.MutableRefObject<StreamMetrics | null>,
+  kind: SyncRequestKind,
+  source: SyncRequestSource,
+) => {
+  const metrics = metricsRef.current;
+
+  if (!metrics) {
+    return;
+  }
+
+  const now = Date.now();
+  const requestMetrics = metrics.requests[kind];
+
+  metrics.lastUpdatedAt = now;
+  requestMetrics.sentCount += 1;
+  requestMetrics.inFlightCurrent += 1;
+  requestMetrics.inFlightMax = Math.max(requestMetrics.inFlightMax, requestMetrics.inFlightCurrent);
+  requestMetrics.lastSentAt = now;
+  requestMetrics.sources[source] = (requestMetrics.sources[source] ?? 0) + 1;
+  requestMetrics.sentTimestamps.push(now);
+  requestMetrics.sentTimestamps = pruneTimestamps(requestMetrics.sentTimestamps, now);
+  requestMetrics.pendingSentAt.push(now);
+};
+
+const trackSyncResponse = (metricsRef: React.MutableRefObject<StreamMetrics | null>, kind: SyncRequestKind) => {
+  const metrics = metricsRef.current;
+
+  if (!metrics) {
+    return;
+  }
+
+  const now = Date.now();
+  const requestMetrics = metrics.requests[kind];
+  const sentAt = requestMetrics.pendingSentAt.shift();
+
+  metrics.lastUpdatedAt = now;
+  requestMetrics.responseCount += 1;
+  requestMetrics.inFlightCurrent = Math.max(0, requestMetrics.inFlightCurrent - 1);
+  requestMetrics.lastResponseAt = now;
+  requestMetrics.responseTimestamps.push(now);
+  requestMetrics.responseTimestamps = pruneTimestamps(requestMetrics.responseTimestamps, now);
+
+  if (typeof sentAt === 'number') {
+    requestMetrics.latencyMs.push(now - sentAt);
+
+    if (requestMetrics.latencyMs.length > STREAM_METRICS_MAX_LATENCY_SAMPLES) {
+      requestMetrics.latencyMs.splice(0, requestMetrics.latencyMs.length - STREAM_METRICS_MAX_LATENCY_SAMPLES);
+    }
+  }
+};
+
+declare global {
+  interface Window {
+    __streamMetricsRegistry?: Map<string, StreamMetrics>;
+    __streamMetrics?: StreamMetricsController;
+  }
+}
 
 type SyncedTimerMode = 'auto' | 'remainingSnapshot';
 
@@ -229,7 +612,8 @@ export function useLiveStream(
   const ignoreWonUniqueEndRef = useRef(false);
   // Ref that is set once the STOMP subscription is established.
   // Used to gate ITEM_SYNC calls on subscription readiness (race condition fix).
-  const requestItemSyncRef = useRef<(() => Promise<void>) | null>(null);
+  const requestItemSyncRef = useRef<((source?: SyncRequestSource) => Promise<void>) | null>(null);
+  const streamMetricsRef = useRef<StreamMetrics | null>(null);
 
   const isStreamLive = liveStateOverride ?? isLiveFromServer;
   const serverStreamState: StreamState = initialStreamStatus === 'PAUSED' ? 'disconnected' : 'live';
@@ -256,6 +640,43 @@ export function useLiveStream(
   // Derived values
   const introducingAuctionItem = itemSync?.items.find((item) => item.auctionStatus === 'INTRODUCING') ?? null;
   const liveAuctionItem = itemSync?.items.find((item) => item.auctionStatus === 'LIVE') ?? null;
+
+  useEffect(() => {
+    if (!streamId || !isStreamMetricsEnabled()) {
+      streamMetricsRef.current = null;
+      return;
+    }
+
+    const registry = getStreamMetricsRegistry();
+
+    if (!registry) {
+      streamMetricsRef.current = null;
+      return;
+    }
+
+    const metricKey = resolveStreamMetricKey(streamId);
+    streamMetricsRef.current = getOrCreateStreamMetrics(registry, metricKey);
+    console.info('[stream-metrics] enabled', {
+      streamId: metricKey,
+      queryParam: STREAM_METRICS_QUERY_PARAM,
+      storageKey: STREAM_METRICS_STORAGE_KEY,
+    });
+  }, [streamId]);
+
+  useEffect(() => {
+    if (!streamMetricsRef.current) {
+      return;
+    }
+
+    const metricKey = streamMetricsRef.current.streamId;
+    const intervalId = window.setInterval(() => {
+      window.__streamMetrics?.dump(metricKey);
+    }, STREAM_METRICS_LOG_INTERVAL_MS);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [streamId]);
 
   // ---------------------------------------------------------------------------
   // auctionComment auto-clear
@@ -301,19 +722,28 @@ export function useLiveStream(
 
     const syncPromise =
       activeAuctionType === 'UNIQUE_TOP'
-        ? sendStreamMessage(streamId, {
-            eventType: 'UNIQUE_BID_SYNC',
-            payload: null,
-          })
+        ? (() => {
+            trackSyncRequest(streamMetricsRef, 'UNIQUE_BID_SYNC', 'ACTIVE_AUCTION_EFFECT');
+            return sendStreamMessage(streamId, {
+              eventType: 'UNIQUE_BID_SYNC',
+              payload: null,
+            });
+          })()
         : Promise.all([
-            sendStreamMessage(streamId, {
-              eventType: 'BID_SYNC',
-              payload: null,
-            }),
-            sendStreamMessage(streamId, {
-              eventType: 'AUCTION_STATISTICS_SYNC',
-              payload: null,
-            }),
+            (() => {
+              trackSyncRequest(streamMetricsRef, 'BID_SYNC', 'ACTIVE_AUCTION_EFFECT');
+              return sendStreamMessage(streamId, {
+                eventType: 'BID_SYNC',
+                payload: null,
+              });
+            })(),
+            (() => {
+              trackSyncRequest(streamMetricsRef, 'AUCTION_STATISTICS_SYNC', 'ACTIVE_AUCTION_EFFECT');
+              return sendStreamMessage(streamId, {
+                eventType: 'AUCTION_STATISTICS_SYNC',
+                payload: null,
+              });
+            })(),
           ]);
 
     void syncPromise.catch((error) => {
@@ -330,20 +760,22 @@ export function useLiveStream(
       return;
     }
 
-    const requestItemSync = async () => {
+    const requestItemSync = async (source: SyncRequestSource = 'UNKNOWN') => {
       console.log('[stream] requesting ITEM_SYNC for streamId:', streamId);
+      trackSyncRequest(streamMetricsRef, 'ITEM_SYNC', source);
       await sendStreamMessage(streamId, {
         eventType: 'ITEM_SYNC',
         payload: null,
       });
     };
 
-    const requestActiveAuctionSync = async (item: ItemSyncItem | null) => {
+    const requestActiveAuctionSync = async (item: ItemSyncItem | null, source: SyncRequestSource = 'UNKNOWN') => {
       if (!item || item.auctionStatus !== 'LIVE') {
         return;
       }
 
       if (item.auctionType === 'UNIQUE_TOP') {
+        trackSyncRequest(streamMetricsRef, 'UNIQUE_BID_SYNC', source);
         await sendStreamMessage(streamId, {
           eventType: 'UNIQUE_BID_SYNC',
           payload: null,
@@ -351,17 +783,19 @@ export function useLiveStream(
         return;
       }
 
-      await Promise.all([requestBidSync(), requestAuctionStatisticsSync()]);
+      await Promise.all([requestBidSync(source), requestAuctionStatisticsSync(source)]);
     };
 
-    const requestBidSync = async () => {
+    const requestBidSync = async (source: SyncRequestSource = 'UNKNOWN') => {
+      trackSyncRequest(streamMetricsRef, 'BID_SYNC', source);
       await sendStreamMessage(streamId, {
         eventType: 'BID_SYNC',
         payload: null,
       });
     };
 
-    const requestAuctionStatisticsSync = async () => {
+    const requestAuctionStatisticsSync = async (source: SyncRequestSource = 'UNKNOWN') => {
+      trackSyncRequest(streamMetricsRef, 'AUCTION_STATISTICS_SYNC', source);
       await sendStreamMessage(streamId, {
         eventType: 'AUCTION_STATISTICS_SYNC',
         payload: null,
@@ -382,7 +816,7 @@ export function useLiveStream(
       if (nextActiveItem?.auctionType === 'UNIQUE_TOP') {
         uniqueAuctionResultDismissedRef.current = false;
       }
-      void requestActiveAuctionSync(nextActiveItem);
+      void requestActiveAuctionSync(nextActiveItem, 'ITEM_SYNC_RECEIVED');
     };
 
     const clearPendingUniqueWinnerResolution = () => {
@@ -409,7 +843,7 @@ export function useLiveStream(
     const handleUniqueAuctionEndPayload = (payload: UniqueAuctionEndPayload) => {
       setTimer(null);
       setUniqueBidSync(null);
-      void requestItemSync();
+      void requestItemSync('UNIQUE_AUCTION_END');
 
       if (payload.isWon && ignoreWonUniqueEndRef.current) {
         return;
@@ -441,6 +875,7 @@ export function useLiveStream(
     };
 
     const handleBroadcastEvent = (event: BroadcastStreamEvent) => {
+      trackStreamEvent(streamMetricsRef, 'broadcast', event.eventType ?? event.event ?? 'UNKNOWN');
       console.log('[stream] broadcast event:', event);
       if (isAuctionStartEvent(event) && event.payload?.timer) {
         clearPendingUniqueWinnerResolution();
@@ -461,7 +896,7 @@ export function useLiveStream(
           });
         }
         setWinnerInfo(null);
-        void requestItemSync();
+        void requestItemSync('AUCTION_START');
         return;
       }
 
@@ -481,7 +916,7 @@ export function useLiveStream(
           participantCount: 0,
           hasBid: false,
         });
-        void requestItemSync();
+        void requestItemSync('UNIQUE_AUCTION_START');
         return;
       }
 
@@ -509,7 +944,7 @@ export function useLiveStream(
           );
         }
 
-        void requestBidSync();
+        void requestBidSync('BID_PLACED');
         return;
       }
 
@@ -522,7 +957,7 @@ export function useLiveStream(
 
       if (isStreamResumedEvent(event)) {
         setStreamState('live');
-        void requestItemSync();
+        void requestItemSync('STREAM_RESUMED');
         return;
       }
 
@@ -554,7 +989,7 @@ export function useLiveStream(
       }
 
       if (isAuctionItemIntroduceEvent(event)) {
-        void requestItemSync();
+        void requestItemSync('ITEM_INTRODUCE');
         return;
       }
 
@@ -583,7 +1018,7 @@ export function useLiveStream(
 
       if (isBidEndEvent(event)) {
         setBidSync(null);
-        void requestItemSync();
+        void requestItemSync('BID_END');
         return;
       }
 
@@ -607,28 +1042,33 @@ export function useLiveStream(
       if ((event as { eventType?: string }).eventType === 'SYSTEM_STREAM_START') {
         setLiveStateOverride(true);
         setLiveStartedAt((prev) => prev ?? new Date().toISOString());
-        void requestItemSync();
+        void requestItemSync('SYSTEM_STREAM_START');
         return;
       }
     };
 
     const handlePrivateEvent = (event: PrivateStreamEvent) => {
+      trackStreamEvent(streamMetricsRef, 'private', event.eventType ?? 'UNKNOWN');
       if (isPrivateBidSyncEvent(event)) {
+        trackSyncResponse(streamMetricsRef, 'BID_SYNC');
         applyBidSync(event.payload);
         return;
       }
 
       if (isPrivateAuctionStatisticsSyncEvent(event)) {
+        trackSyncResponse(streamMetricsRef, 'AUCTION_STATISTICS_SYNC');
         setAuctionStatistics(event.payload ?? null);
         return;
       }
 
       if (isPrivateItemSyncEvent(event)) {
+        trackSyncResponse(streamMetricsRef, 'ITEM_SYNC');
         applyItemSync(event.payload);
         return;
       }
 
       if (isUniqueBidSyncEvent(event)) {
+        trackSyncResponse(streamMetricsRef, 'UNIQUE_BID_SYNC');
         uniqueAuctionResultDismissedRef.current = false;
         setUniqueBidSync(event.payload ?? null);
         if (event.payload?.timer) {
@@ -674,6 +1114,11 @@ export function useLiveStream(
     };
 
     const handleErrorEvent = (event: ErrorStreamEvent) => {
+      trackStreamEvent(
+        streamMetricsRef,
+        'error',
+        isStompErrorEvent(event) ? (event.payload?.code ?? event.eventType) : event.eventType,
+      );
       if (!isStompErrorEvent(event) || !event.payload) {
         return;
       }
@@ -708,7 +1153,7 @@ export function useLiveStream(
         console.log('[stream] STOMP subscribed successfully for streamId:', streamId);
         // Mark subscription as ready so the isStreamLive effect can safely call ITEM_SYNC.
         requestItemSyncRef.current = requestItemSync;
-        await requestItemSync();
+        await requestItemSync('INITIAL_SUBSCRIBE');
       })
       .catch((error) => {
         console.error('[stream] failed to subscribe', error);
@@ -734,7 +1179,7 @@ export function useLiveStream(
 
   useEffect(() => {
     if (!isStreamLive) return;
-    void requestItemSyncRef.current?.();
+    void requestItemSyncRef.current?.('STREAM_LIVE_EFFECT');
   }, [isStreamLive]);
 
   // ---------------------------------------------------------------------------
@@ -744,7 +1189,7 @@ export function useLiveStream(
   const confirmStreamStart = useCallback(() => {
     setLiveStateOverride(true);
     setLiveStartedAt((prev) => prev ?? new Date().toISOString());
-    void requestItemSyncRef.current?.();
+    void requestItemSyncRef.current?.('CONFIRM_STREAM_START');
   }, []);
 
   const markStreamEnded = useCallback(() => {
