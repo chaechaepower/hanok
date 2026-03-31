@@ -1,4 +1,3 @@
-import type { RefObject } from 'react';
 import type {
   ItemSyncPayload,
   LiveAuctionType,
@@ -36,20 +35,6 @@ export interface AuctionProps {
   handleAuctionTimerExpire: () => void;
 }
 
-export interface LiveKitProps {
-  livekitState: string;
-  videoRef: RefObject<HTMLVideoElement | null>;
-  bgVideoRef: RefObject<HTMLVideoElement | null>;
-  viewerCount: number;
-  toggleMic: () => void;
-  toggleCamera: () => void;
-  toggleRemoteAudio: () => void;
-  isMicOn: boolean;
-  isCameraOn: boolean;
-  isRemoteAudioMuted: boolean;
-  micLevel: number;
-}
-
 export interface ChatProps {
   isChatOpen: boolean;
   handleToggleChat: () => void;
@@ -76,7 +61,6 @@ export interface ModalProps {
 export interface LiveLayoutProps {
   stream: StreamProps;
   auction: AuctionProps;
-  livekit: LiveKitProps;
   chat: ChatProps;
   modal: ModalProps;
   navigate: (path: string) => void;

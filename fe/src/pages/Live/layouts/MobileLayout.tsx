@@ -17,6 +17,7 @@ import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
 import SellerUniqueAuctionResultModal from '@/components/Live/Auction/Buyer/SellerUniqueAuctionResultModal';
 import WinModal from '@/components/Live/Auction/Buyer/WinModal';
 import UniqueAuctionResultModal from '@/components/Live/Auction/Buyer/UniqueAuctionResultModal';
+import { useLiveKitContext } from '@/hooks/liveKitContext';
 import { useStompChat } from '@/hooks/useStompChat';
 
 import LeftPanel from '../LeftPanel';
@@ -28,11 +29,11 @@ import type { LiveLayoutProps } from './types';
 
 const SWIPE_THRESHOLD = 50;
 
-export default function MobileLayout({ stream, auction, livekit, modal, navigate }: LiveLayoutProps) {
+export default function MobileLayout({ stream, auction, modal, navigate }: LiveLayoutProps) {
   const {
     videoRef,
     bgVideoRef,
-    livekitState,
+    state: livekitState,
     viewerCount,
     toggleMic,
     toggleCamera,
@@ -41,7 +42,7 @@ export default function MobileLayout({ stream, auction, livekit, modal, navigate
     isCameraOn,
     isRemoteAudioMuted,
     micLevel,
-  } = livekit;
+  } = useLiveKitContext();
   const [isPanelVisible, setIsPanelVisible] = useState(false);
   const [activeTab, setActiveTab] = useState<'items' | 'chat' | 'auction'>('chat');
   const { messages, sendMessage, sendMacro, connectionState } = useStompChat(stream.activeStreamEnter?.category ?? '');

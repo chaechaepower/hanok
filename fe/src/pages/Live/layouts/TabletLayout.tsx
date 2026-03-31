@@ -16,6 +16,7 @@ import UniqueAuctionResultModal from '@/components/Live/Auction/Buyer/UniqueAuct
 import AuctionPanel from '@/components/Live/Auction/shared/AuctionPanel';
 import ChatPanel from '@/components/Live/Chat/ChatPanel';
 import { useStompChat } from '@/hooks/useStompChat';
+import { useLiveKitContext } from '@/hooks/liveKitContext';
 
 import LeftPanel from '../LeftPanel';
 import LiveHeader from '../LiveHeader';
@@ -26,11 +27,11 @@ import type { LiveLayoutProps } from './types';
 
 type TabletTab = 'items' | 'chat' | 'auction';
 
-export default function TabletLayout({ stream, auction, livekit, modal, navigate }: LiveLayoutProps) {
+export default function TabletLayout({ stream, auction, modal, navigate }: LiveLayoutProps) {
   const {
     videoRef,
     bgVideoRef,
-    livekitState,
+    state: livekitState,
     viewerCount,
     toggleMic,
     toggleCamera,
@@ -39,7 +40,7 @@ export default function TabletLayout({ stream, auction, livekit, modal, navigate
     isCameraOn,
     isRemoteAudioMuted,
     micLevel,
-  } = livekit;
+  } = useLiveKitContext();
   const [activeTab, setActiveTab] = useState<TabletTab>('chat');
   const { messages, sendMessage, sendMacro, connectionState } = useStompChat(stream.activeStreamEnter?.category ?? '');
   const pausedInitialSeconds = getPausedInitialSeconds(stream.activeStreamEnter);
