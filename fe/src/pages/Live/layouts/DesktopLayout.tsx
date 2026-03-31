@@ -1,11 +1,11 @@
 import { AnimatePresence, motion } from 'framer-motion';
 
-import AuctionTimer from '@/components/Live/Auction/shared/AuctionTimer';
-import AuctionCommentToast from '@/components/Live/Stream/AuctionCommentToast';
 import BuyerControlBar from '@/components/Live/Stream/BuyerControlBar';
+import LiveAuctionTimer from '@/components/Live/Auction/shared/LiveAuctionTimer';
+import LiveAuctionCommentToast from '@/components/Live/Stream/LiveAuctionCommentToast';
+import LiveSellerUniqueBidOverlay from '@/components/Live/Stream/LiveSellerUniqueBidOverlay';
 import SellerControlBar from '@/components/Live/Stream/SellerControlBar';
 import SellerGuideOverlay from '@/components/Live/Stream/SellerGuideOverlay';
-import SellerUniqueBidOverlay from '@/components/Live/Stream/SellerUniqueBidOverlay';
 import StreamOverlay from '@/components/Live/Stream/StreamOverlay';
 import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
 import StreamDisconnected from '@/components/Live/Stream/Streamdisconnected';
@@ -75,9 +75,7 @@ export default function DesktopLayout({ stream, auction, livekit, chat, modal, n
         >
           <StreamOverlay viewerCount={viewerCount} isSeller={stream.isSeller} />
           {stream.isSeller && <SellerGuideOverlay />}
-          {auction.activeAuctionType === 'UNIQUE_TOP' && auction.uniqueBidSync && (
-            <SellerUniqueBidOverlay participantCount={auction.uniqueBidSync.participantCount} />
-          )}
+          <LiveSellerUniqueBidOverlay auctionType={auction.activeAuctionType} />
           <video
             ref={bgVideoRef}
             autoPlay
@@ -112,8 +110,6 @@ export default function DesktopLayout({ stream, auction, livekit, chat, modal, n
           ) : (
             <BuyerControlBar
               auctionType={auction.activeAuctionType}
-              bidSync={auction.bidSync}
-              uniqueBidSync={auction.uniqueBidSync}
               activeAuctionId={auction.activeBidAuctionId}
               isRemoteAudioMuted={isRemoteAudioMuted}
               onToggleMute={toggleRemoteAudio}
@@ -121,18 +117,10 @@ export default function DesktopLayout({ stream, auction, livekit, chat, modal, n
             />
           )}
 
-          {auction.auctionComment && (
-            <AuctionCommentToast key={auction.auctionComment.id} message={auction.auctionComment.message} />
-          )}
+          <LiveAuctionCommentToast />
 
           <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
-            {auction.timer && (
-              <AuctionTimer
-                key={auction.timer.receivedAtMs}
-                timer={auction.timer}
-                onExpire={auction.handleAuctionTimerExpire}
-              />
-            )}
+            <LiveAuctionTimer onExpire={auction.handleAuctionTimerExpire} />
           </div>
 
           <SellerStartModal
@@ -198,8 +186,6 @@ export default function DesktopLayout({ stream, auction, livekit, chat, modal, n
               <RightPanel
                 isSeller={stream.isSeller}
                 auctionType={auction.activeAuctionType}
-                auctionStatistics={auction.auctionStatistics}
-                uniqueBidSync={auction.uniqueBidSync}
                 streamId={stream.activeStreamEnter?.streamId ?? 0}
                 category={stream.activeStreamEnter?.category ?? ''}
                 notice={stream.activeStreamEnter?.notice ?? null}

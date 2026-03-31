@@ -10,6 +10,7 @@ import { useGetStreamEnter } from '@/api/hooks/useGetStreamEnter';
 import { useLiveKit } from '@/hooks/useLiveKit';
 import { useLiveStream } from '@/hooks/useLiveStream';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { LiveHotStateProvider } from '@/provider/LiveHotStateProvider';
 import type { StreamRequest } from '@/types';
 import { sendStreamMessage } from '@/websocket/stompClient';
 
@@ -103,13 +104,9 @@ export default function LivePage() {
   const {
     isStreamLive,
     liveStartedAt,
-    timer,
-    bidSync,
-    uniqueBidSync,
+    hotStateStore,
     itemSync,
     streamState,
-    auctionStatistics,
-    auctionComment,
     winnerInfo,
     uniqueAuctionResult,
     liveAuctionItem,
@@ -365,11 +362,6 @@ export default function LivePage() {
       isAuctionInProgress,
       hasPendingAuctionItems,
       itemSync,
-      bidSync,
-      uniqueBidSync,
-      auctionStatistics,
-      auctionComment,
-      timer,
       readyItems,
       introduceAuctionId,
       startAuctionId,
@@ -381,9 +373,6 @@ export default function LivePage() {
     [
       activeAuctionType,
       activeBidAuctionId,
-      auctionComment,
-      auctionStatistics,
-      bidSync,
       canIntroduceAuction,
       canStartAuction,
       handleAuctionTimerExpire,
@@ -397,8 +386,6 @@ export default function LivePage() {
       selectedAuctionId,
       startAuctionId,
       startAuctionType,
-      timer,
-      uniqueBidSync,
       visibleSelectedAuctionId,
     ],
   );
@@ -531,7 +518,9 @@ export default function LivePage() {
         transition={{ duration: 0.2 }}
         className="h-screen w-full"
       >
-        <Layout {...layoutProps} />
+        <LiveHotStateProvider store={hotStateStore}>
+          <Layout {...layoutProps} />
+        </LiveHotStateProvider>
       </motion.div>
     </AnimatePresence>
   );

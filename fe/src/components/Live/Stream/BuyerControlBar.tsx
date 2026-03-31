@@ -10,10 +10,10 @@ import KeyboardGuide from '@/components/Live/Auction/shared/KeyboardGuide';
 import InfoPanelTooltip from '@/components/common/InfoPanelTooltip';
 import AddressFormModal from '@/components/common/modal/AddressFormModal';
 import { AUCTION_TYPE_DESCRIPTIONS } from '@/constants/auction';
-import type { BidSyncPayload, LiveAuctionType, UniqueBidSyncPayload } from '@/types';
 import { useBidState, CUSTOM_UNIT_OPTIONS } from '@/hooks/useBidState';
+import { useLiveBidSync, useLiveUniqueBidSync } from '@/hooks/useLiveHotState';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { isBidSyncEqual, isUniqueBidSyncEqual } from '@/utils/liveEquality';
+import type { LiveAuctionType } from '@/types';
 
 export type ControlBarVariant = 'overlay' | 'inline';
 
@@ -24,8 +24,6 @@ const BUYER_AUCTION_TYPE_LABELS: Record<Exclude<LiveAuctionType, null>, string> 
 
 interface Props {
   auctionType: LiveAuctionType | null;
-  bidSync: BidSyncPayload | null;
-  uniqueBidSync: UniqueBidSyncPayload | null;
   activeAuctionId: number | null;
   isRemoteAudioMuted?: boolean;
   onToggleMute?: () => void;
@@ -36,8 +34,6 @@ interface Props {
 
 function BuyerControlBar({
   auctionType,
-  bidSync,
-  uniqueBidSync,
   activeAuctionId,
   isRemoteAudioMuted,
   onToggleMute,
@@ -45,6 +41,8 @@ function BuyerControlBar({
   variant = 'overlay',
   showChatToggle = true,
 }: Props) {
+  const bidSync = useLiveBidSync();
+  const uniqueBidSync = useLiveUniqueBidSync();
   const bid = useBidState({ auctionType, bidSync, uniqueBidSync, activeAuctionId });
   const auctionTypeDescription = auctionType ? AUCTION_TYPE_DESCRIPTIONS[auctionType] : null;
 
@@ -235,8 +233,6 @@ export default memo(BuyerControlBar, (prev, next) => {
     prev.onToggleMute === next.onToggleMute &&
     prev.onToggleChat === next.onToggleChat &&
     prev.variant === next.variant &&
-    prev.showChatToggle === next.showChatToggle &&
-    isBidSyncEqual(prev.bidSync, next.bidSync) &&
-    isUniqueBidSyncEqual(prev.uniqueBidSync, next.uniqueBidSync)
+    prev.showChatToggle === next.showChatToggle
   );
 });
