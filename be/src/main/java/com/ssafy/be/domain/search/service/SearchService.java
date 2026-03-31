@@ -5,8 +5,6 @@ import com.ssafy.be.domain.follow.repository.FollowRepository;
 import com.ssafy.be.domain.search.dto.SellerSearchRow;
 import com.ssafy.be.domain.search.dto.StreamSearchRow;
 import com.ssafy.be.domain.search.dto.response.AutocompleteSuggestion;
-import com.ssafy.be.domain.search.dto.response.MatchReason;
-import com.ssafy.be.domain.search.dto.response.MatchType;
 import com.ssafy.be.domain.search.dto.response.SellerInfo;
 import com.ssafy.be.domain.search.dto.response.SellerSearchResult;
 import com.ssafy.be.domain.search.dto.response.StreamSearchPage;
@@ -21,8 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,64 +40,30 @@ public class SearchService {
 
     @Transactional(readOnly = true)
     public StreamSearchPage search(String keyword, int page, int size) {
-        String safeKeyword = keyword.trim()
-                .replaceAll("[+\\-><()~*\"@]", " ").trim();
-
+        String safeKeyword = keyword.trim();
         if (safeKeyword.isEmpty()) return StreamSearchPage.builder()
                 .data(new ArrayList<>()).page(page).size(size).totalCount(0).build();
 
-        String cacheKey = "search:" + safeKeyword + ":" + page + ":" + size;
-        String cached = redisService.get(cacheKey);
-        if (cached != null) {
-            try {
-                return objectMapper.readValue(cached, StreamSearchPage.class);
-            } catch (Exception e) {
-                log.warn("search cache deserialize 실패, DB 조회로 fallback. key={}", cacheKey);
-            }
-        }
+        int limit = (page + 1) * size;
 
-        int perQueryLimit = (page + 1) * size;
-
-        List<StreamSearchRow> rows = searchRepository.searchUnion(safeKeyword, perQueryLimit);
+        List<StreamSearchRow> byTitle = searchRepository.searchByStreamTitle(safeKeyword, limit);
+        List<StreamSearchRow> byItem  = searchRepository.searchByItemName(safeKeyword, limit);
+        List<StreamSearchRow> byTag   = searchRepository.searchByTagName(safeKeyword, limit);
 
         Map<Long, StreamSearchResult> resultMap = new LinkedHashMap<>();
-        Map<Long, Double> scoreMap = new HashMap<>();
-        for (StreamSearchRow row : rows) {
-            StreamSearchResult result = resultMap.computeIfAbsent(row.streamId(), id -> toResult(row));
-            scoreMap.merge(row.streamId(), row.score(), Math::max);
-            MatchReason reason = switch (row.matchType()) {
-                case "ITEM_NAME" -> MatchReason.builder()
-                        .type(MatchType.ITEM_NAME).matchedValue(safeKeyword).build();
-                case "TAG" -> MatchReason.builder()
-                        .type(MatchType.TAG).matchedValue("#" + safeKeyword).build();
-                default -> MatchReason.builder()
-                        .type(MatchType.STREAM_TITLE).matchedValue(row.title()).build();
-            };
-            if (result.matchReasons().stream().noneMatch(r -> r.type() == reason.type())) {
-                result.addReason(reason);
-            }
-        }
+        for (StreamSearchRow row : byTitle) resultMap.computeIfAbsent(row.streamId(), id -> toResult(row));
+        for (StreamSearchRow row : byItem)  resultMap.computeIfAbsent(row.streamId(), id -> toResult(row));
+        for (StreamSearchRow row : byTag)   resultMap.computeIfAbsent(row.streamId(), id -> toResult(row));
 
         List<StreamSearchResult> merged = new ArrayList<>(resultMap.values());
-        merged.sort(Comparator.comparingDouble(
-                (StreamSearchResult r) -> scoreMap.getOrDefault(r.streamId(), 0.0)).reversed());
         int totalCount = merged.size();
         int from = page * size;
         List<StreamSearchResult> paged = from >= totalCount
                 ? new ArrayList<>()
                 : merged.subList(from, Math.min(from + size, totalCount));
 
-        StreamSearchPage result = StreamSearchPage.builder()
+        return StreamSearchPage.builder()
                 .data(paged).page(page).size(size).totalCount(totalCount).build();
-
-        try {
-            redisService.save(cacheKey, objectMapper.writeValueAsString(result),
-                    SEARCH_CACHE_TTL_SECONDS, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            log.warn("search cache 저장 실패. key={}", cacheKey);
-        }
-
-        return result;
     }
 
     @Transactional(readOnly = true)
