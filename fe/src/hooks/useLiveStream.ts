@@ -904,7 +904,9 @@ export function useLiveStream(
       }
 
       if (isBidPlacedEvent(event)) {
-        if (streamId && consumePendingWalletInvalidationForBid(streamId)) {
+        const isOwnAcceptedBid = streamId ? consumePendingWalletInvalidationForBid(streamId) : false;
+
+        if (isOwnAcceptedBid) {
           void queryClient.invalidateQueries({ queryKey: ['wallet'] });
         }
 
@@ -922,6 +924,7 @@ export function useLiveStream(
                     ...prev.item,
                     currentPrice: event.payload?.bidInfo?.amount ?? prev.item.currentPrice,
                   },
+                  isHighestBidder: isOwnAcceptedBid,
                 }
               : prev,
           );
