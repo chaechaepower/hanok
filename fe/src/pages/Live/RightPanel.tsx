@@ -5,7 +5,6 @@ import { usePostFollow } from '@/api/hooks/usePostFollow';
 import AuctionPanel from '@/components/Live/Auction/shared/AuctionPanel';
 import ChatPanel from '@/components/Live/Chat/ChatPanel';
 import { useStompChat } from '@/hooks/useStompChat';
-import { useRenderStats } from '@/hooks/useRenderStats';
 import type { LiveAuctionType } from '@/types';
 
 interface Props {
@@ -33,8 +32,6 @@ function RightPanel({
   sellerProfileImage,
   isFollowing,
 }: Props) {
-  useRenderStats('RightPanel');
-
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'chat' | 'auction'>('chat');
   const { messages, sendMessage, sendMacro, connectionState } = useStompChat(category);

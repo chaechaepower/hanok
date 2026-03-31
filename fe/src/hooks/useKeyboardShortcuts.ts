@@ -1,18 +1,15 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 
 type KeyHandler = (event: KeyboardEvent) => void;
 
 export function useKeyboardShortcuts(onKeyAction: KeyHandler) {
   const [activeKeys, setActiveKeys] = useState<Set<string>>(() => new Set());
+  const handleKeyAction = useEffectEvent(onKeyAction);
 
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       const target = event.target as HTMLElement;
-      if (
-        target instanceof HTMLInputElement ||
-        target instanceof HTMLTextAreaElement ||
-        target.isContentEditable
-      ) {
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target.isContentEditable) {
         return;
       }
 
@@ -21,28 +18,25 @@ export function useKeyboardShortcuts(onKeyAction: KeyHandler) {
         return new Set(prev).add(event.key);
       });
 
-      onKeyAction(event);
-    },
-    [onKeyAction],
-  );
+      handleKeyAction(event);
+    };
 
-  const handleKeyUp = useCallback((event: KeyboardEvent) => {
-    setActiveKeys((prev) => {
-      if (!prev.has(event.key)) return prev;
-      const next = new Set(prev);
-      next.delete(event.key);
-      return next;
-    });
-  }, []);
+    const handleKeyUp = (event: KeyboardEvent) => {
+      setActiveKeys((prev) => {
+        if (!prev.has(event.key)) return prev;
+        const next = new Set(prev);
+        next.delete(event.key);
+        return next;
+      });
+    };
 
-  useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
     };
-  }, [handleKeyDown, handleKeyUp]);
+  }, []);
 
   return activeKeys;
 }

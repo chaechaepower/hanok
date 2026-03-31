@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { IoChevronDown } from 'react-icons/io5';
 
 import { AUCTION_STATUS_BADGES } from '@/constants/auction';
@@ -7,8 +7,9 @@ import ItemDetailAccordion from './ItemDetailAccordion';
 import type { AuctionItem } from '@/types';
 import { formatAuctionLabel } from '@/utils/formatAuctionLabel';
 import { formatPrice } from '@/utils/formatPrice';
+import { isAuctionItemEqual } from '@/utils/liveEquality';
 
-export default function DoneItemCard({ item }: { item: AuctionItem }) {
+function DoneItemCard({ item }: { item: AuctionItem }) {
   const [expanded, setExpanded] = useState(false);
   const statusBadge = AUCTION_STATUS_BADGES[item.status];
 
@@ -48,3 +49,5 @@ export default function DoneItemCard({ item }: { item: AuctionItem }) {
     </div>
   );
 }
+
+export default memo(DoneItemCard, (prev, next) => isAuctionItemEqual(prev.item, next.item));

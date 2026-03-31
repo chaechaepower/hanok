@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { IoChevronDown } from 'react-icons/io5';
 
 import { AUCTION_STATUS_BADGES, AUCTION_TYPE_LABELS } from '@/constants/auction';
@@ -7,6 +7,7 @@ import { CARD_BORDER_CLASS, PRICE_CLASS } from '@/constants/live';
 import type { AuctionItem } from '@/types';
 import { formatAuctionLabel } from '@/utils/formatAuctionLabel';
 import { formatPrice } from '@/utils/formatPrice';
+import { isAuctionItemEqual } from '@/utils/liveEquality';
 import ItemDetailAccordion from './ItemDetailAccordion';
 
 interface ActiveCardProps {
@@ -16,7 +17,7 @@ interface ActiveCardProps {
   onSelect?: () => void;
 }
 
-export default function ActiveItemCard({ item, isSelected, isSeller, onSelect }: ActiveCardProps) {
+function ActiveItemCard({ item, isSelected, isSeller, onSelect }: ActiveCardProps) {
   const [expanded, setExpanded] = useState(false);
   const statusBadge = AUCTION_STATUS_BADGES[item.status];
   const isExpanded = isSeller ? isSelected : expanded;
@@ -79,3 +80,12 @@ export default function ActiveItemCard({ item, isSelected, isSeller, onSelect }:
     </div>
   );
 }
+
+export default memo(ActiveItemCard, (prev, next) => {
+  return (
+    isAuctionItemEqual(prev.item, next.item) &&
+    prev.isSelected === next.isSelected &&
+    prev.isSeller === next.isSeller &&
+    prev.onSelect === next.onSelect
+  );
+});

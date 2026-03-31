@@ -14,7 +14,7 @@ export type StompMessageHandler<T = unknown> = (payload: T, message: IMessage) =
 type ManagedSubscription = {
   id: string;
   destination: string;
-  callback: (message: IMessage) => void;
+  listeners: Map<string, (message: IMessage) => void>;
   headers?: StompHeaders;
   active?: StompSubscription;
 };
@@ -39,6 +39,19 @@ let subscriptionSequence = 0;
 const connectionStateListeners = new Set<(state: StompConnectionState) => void>();
 const managedSubscriptions = new Map<string, ManagedSubscription>();
 
+const getSubscriptionKey = (destination: string, headers?: StompHeaders) => {
+  if (!headers || Object.keys(headers).length === 0) {
+    return destination;
+  }
+
+  const normalizedHeaders = Object.entries(headers)
+    .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))
+    .map(([key, value]) => `${key}:${String(value)}`)
+    .join('|');
+
+  return `${destination}::${normalizedHeaders}`;
+};
+
 const setConnectionState = (nextState: StompConnectionState) => {
   connectionState = nextState;
   connectionStateListeners.forEach((listener) => listener(nextState));
@@ -62,7 +75,15 @@ const rejectPendingConnection = (error: Error) => {
 
 const subscribeEntry = (entry: ManagedSubscription, activeClient: Client) => {
   entry.active?.unsubscribe();
-  entry.active = activeClient.subscribe(entry.destination, entry.callback, entry.headers);
+  entry.active = activeClient.subscribe(
+    entry.destination,
+    (message) => {
+      entry.listeners.forEach((listener) => {
+        listener(message);
+      });
+    },
+    entry.headers,
+  );
 };
 
 const resubscribeAll = (activeClient: Client) => {
@@ -78,7 +99,7 @@ const createClient = () => {
     reconnectDelay: 5_000,
     heartbeatIncoming: 10_000,
     heartbeatOutgoing: 10_000,
-    debug: import.meta.env.DEV ? (message) => console.debug(`[stomp] ${message}`) : () => {},
+    debug: () => {},
   });
 
   nextClient.onConnect = () => {
@@ -135,23 +156,40 @@ const registerSubscription = (
   callback: (message: IMessage) => void,
   headers?: StompHeaders,
 ) => {
-  const id = `subscription-${subscriptionSequence++}`;
-  const entry: ManagedSubscription = {
-    id,
-    destination,
-    callback,
-    headers,
-  };
+  const subscriptionKey = getSubscriptionKey(destination, headers);
+  const listenerId = `listener-${subscriptionSequence++}`;
+  const existingEntry = managedSubscriptions.get(subscriptionKey);
 
-  managedSubscriptions.set(id, entry);
+  if (existingEntry) {
+    existingEntry.listeners.set(listenerId, callback);
+  } else {
+    const entry: ManagedSubscription = {
+      id: subscriptionKey,
+      destination,
+      listeners: new Map([[listenerId, callback]]),
+      headers,
+    };
 
-  if (client?.connected) {
-    subscribeEntry(entry, client);
+    managedSubscriptions.set(subscriptionKey, entry);
+
+    if (client?.connected) {
+      subscribeEntry(entry, client);
+    }
   }
 
   return () => {
-    entry.active?.unsubscribe();
-    managedSubscriptions.delete(entry.id);
+    const entry = managedSubscriptions.get(subscriptionKey);
+
+    if (!entry) {
+      return;
+    }
+
+    entry.listeners.delete(listenerId);
+
+    if (entry.listeners.size === 0) {
+      entry.active?.unsubscribe();
+      managedSubscriptions.delete(subscriptionKey);
+    }
 
     if (managedSubscriptions.size === 0) {
       void disconnectStompClient();
