@@ -1,7 +1,6 @@
 import { memo, useMemo, useState } from 'react';
 
 import type { AuctionItem, ItemStatus, ItemSyncItem } from '@/types';
-import { useRenderStats } from '@/hooks/useRenderStats';
 
 import AuctionReportModal from './AuctionReportModal';
 import ActiveItemCard from '@/components/Live/Auction/shared/ActiveItemCard';
@@ -45,8 +44,6 @@ function LeftPanel({
   selectedAuctionId = null,
   onSelectAuctionItem,
 }: Props) {
-  useRenderStats('LeftPanel');
-
   const [modalOpen, setModalOpen] = useState(false);
   const items = useMemo<AuctionItem[]>(
     () => (syncedItems ? syncedItems.map((syncedItem) => toAuctionItem(syncedItem)) : []),

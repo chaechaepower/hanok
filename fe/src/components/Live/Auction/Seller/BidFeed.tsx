@@ -1,7 +1,6 @@
 import { memo, useEffect, useMemo, useState } from 'react';
 import { FaCrown } from 'react-icons/fa6';
 
-import { useRenderStats } from '@/hooks/useRenderStats';
 import type { AuctionStatisticsPayload } from '@/types';
 import { formatPrice } from '@/utils/formatPrice';
 import { areRecentBidsEqual, isRecentBidEqual } from '@/utils/liveEquality';
@@ -76,8 +75,6 @@ const BidFeedRow = memo(
 );
 
 function BidFeed({ recentBids, currentUserId }: Props) {
-  useRenderStats('BidFeed');
-
   const memoizedRecentBids = useMemo(() => recentBids, [recentBids]);
   const [displayBids, setDisplayBids] = useState<AuctionStatisticsPayload['recentBids']>(memoizedRecentBids);
 

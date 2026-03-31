@@ -7,7 +7,6 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { usePostEndStream } from '@/api/hooks/usePostEndStream';
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { useGetStreamEnter } from '@/api/hooks/useGetStreamEnter';
-import { useRenderStats } from '@/hooks/useRenderStats';
 import { useLiveStream } from '@/hooks/useLiveStream';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { LiveHotStateProvider } from '@/provider/LiveHotStateProvider';
@@ -71,8 +70,6 @@ const unmarkStartedLiveStream = (streamId: number) => {
 const isActiveStreamStatus = (status?: string | null) => status === 'LIVE' || status === 'PAUSED';
 
 export default function LivePage() {
-  useRenderStats('LivePage');
-
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const location = useLocation();
