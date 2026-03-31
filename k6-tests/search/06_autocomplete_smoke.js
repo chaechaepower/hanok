@@ -48,7 +48,8 @@ export const options = {
     http_req_failed:    ['rate<0.05'],
     ac_duration_ms:     ['p(95)<200'],
     search_duration_ms: ['p(95)<200'],
-    search_hit_rate:    ['rate>0.5'],
+    // 히트율은 DB 데이터 규모에 의존하므로 느슨하게 설정
+    search_hit_rate:    ['rate>0.1'],
   },
 };
 

@@ -16,57 +16,53 @@ public class StreamSearchRepositoryCustom {
 
     private final EntityManager em;
 
-    private static final String BASE_FROM = """
-            FROM stream s
-            JOIN seller sel ON s.seller_id = sel.id
-            JOIN user u     ON sel.user_id  = u.id
-            """;
-
-    private static final String ACTIVE_STATUS_FILTER =
-            "AND s.status IN ('LIVE', 'SCHEDULED') ";
-
-    private static final String SELECT_COLUMNS = """
-            SELECT
-                s.id            AS stream_id,
-                s.title,
-                s.thumbnail,
-                s.status,
-                s.scheduled_at,
-                s.category,
-                sel.id          AS seller_id,
-                sel.shop_name,
-                u.profile_image
-            """;
-
     public List<StreamSearchRow> searchByStreamTitle(String keyword, int limit) {
-        String sql = SELECT_COLUMNS + BASE_FROM +
-                "WHERE MATCH(s.title) AGAINST(:keyword IN BOOLEAN MODE) "
-                + ACTIVE_STATUS_FILTER;
+        String sql = """
+                SELECT s.id AS stream_id, s.title, s.thumbnail, s.status,
+                       s.scheduled_at, s.category,
+                       sel.id AS seller_id, sel.shop_name, u.profile_image
+                FROM stream s
+                JOIN seller sel ON s.seller_id = sel.id
+                JOIN user u     ON sel.user_id  = u.id
+                WHERE s.title LIKE :keyword
+                AND s.status IN ('LIVE','SCHEDULED')
+                LIMIT :lim
+                """;
         return executeSearch(sql, keyword, limit);
     }
 
     public List<StreamSearchRow> searchByItemName(String keyword, int limit) {
-        String sql = SELECT_COLUMNS + """
+        String sql = """
+                SELECT s.id AS stream_id, s.title, s.thumbnail, s.status,
+                       s.scheduled_at, s.category,
+                       sel.id AS seller_id, sel.shop_name, u.profile_image
                 FROM stream s
                 JOIN seller sel ON s.seller_id = sel.id
                 JOIN user u     ON sel.user_id  = u.id
                 JOIN auction a  ON a.stream_id  = s.id
                 JOIN item i     ON a.item_id    = i.id
-                WHERE MATCH(i.name) AGAINST(:keyword IN BOOLEAN MODE)
-                """ + ACTIVE_STATUS_FILTER;
+                WHERE i.name LIKE :keyword
+                AND s.status IN ('LIVE','SCHEDULED')
+                LIMIT :lim
+                """;
         return executeSearch(sql, keyword, limit);
     }
 
     public List<StreamSearchRow> searchByTagName(String keyword, int limit) {
-        String sql = SELECT_COLUMNS + """
+        String sql = """
+                SELECT s.id AS stream_id, s.title, s.thumbnail, s.status,
+                       s.scheduled_at, s.category,
+                       sel.id AS seller_id, sel.shop_name, u.profile_image
                 FROM stream s
                 JOIN seller sel ON s.seller_id = sel.id
                 JOIN user u     ON sel.user_id  = u.id
                 JOIN auction a  ON a.stream_id  = s.id
                 JOIN item i     ON a.item_id    = i.id
                 JOIN tag t      ON t.item_id    = i.id
-                WHERE MATCH(t.name) AGAINST(:keyword IN BOOLEAN MODE)
-                """ + ACTIVE_STATUS_FILTER;
+                WHERE t.name LIKE :keyword
+                AND s.status IN ('LIVE','SCHEDULED')
+                LIMIT :lim
+                """;
         return executeSearch(sql, keyword, limit);
     }
 
@@ -212,9 +208,9 @@ public class StreamSearchRepositoryCustom {
 
     @SuppressWarnings("unchecked")
     private List<StreamSearchRow> executeSearch(String sql, String keyword, int limit) {
-        List<Object[]> rows = em.createNativeQuery(
-                        "SELECT DISTINCT sub.* FROM (" + sql + ") sub LIMIT " + limit)
-                .setParameter("keyword", keyword)
+        List<Object[]> rows = em.createNativeQuery(sql)
+                .setParameter("keyword", "%" + keyword + "%")
+                .setParameter("lim", limit)
                 .getResultList();
 
         return rows.stream()
