@@ -1,11 +1,9 @@
 import { memo } from 'react';
 import { FaCrown } from 'react-icons/fa6';
 
-import { useRenderStats } from '@/hooks/useRenderStats';
 import type { AuctionStatisticsPayload } from '@/types';
 import { formatPrice } from '@/utils/formatPrice';
 import { areRecentBidsEqual } from '@/utils/liveEquality';
-import { isLiveStructureOptimizationEnabled } from '@/utils/liveOptimization';
 
 interface Props {
   recentBids: AuctionStatisticsPayload['recentBids'];
@@ -26,8 +24,6 @@ function formatPlacedAt(placedAt: string) {
 }
 
 function BidFeed({ recentBids, currentUserId }: Props) {
-  useRenderStats('BidFeed');
-
   return (
     <div className="mt-2 flex flex-col gap-2 border-t border-white/6 pt-5">
       <div className="flex items-center gap-2 text-label font-extrabold uppercase tracking-[.06em] text-neutral-400">
@@ -91,9 +87,5 @@ function BidFeed({ recentBids, currentUserId }: Props) {
 }
 
 export default memo(BidFeed, (prev, next) => {
-  if (!isLiveStructureOptimizationEnabled()) {
-    return false;
-  }
-
   return prev.currentUserId === next.currentUserId && areRecentBidsEqual(prev.recentBids, next.recentBids);
 });

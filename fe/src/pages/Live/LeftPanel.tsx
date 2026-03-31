@@ -1,8 +1,6 @@
 import { memo, useMemo, useState } from 'react';
 
 import type { AuctionItem, ItemStatus, ItemSyncItem } from '@/types';
-import { useRenderStats } from '@/hooks/useRenderStats';
-import { isLiveStructureOptimizationEnabled } from '@/utils/liveOptimization';
 
 import AuctionReportModal from './AuctionReportModal';
 import ActiveItemCard from '@/components/Live/Auction/shared/ActiveItemCard';
@@ -46,8 +44,6 @@ function LeftPanel({
   selectedAuctionId = null,
   onSelectAuctionItem,
 }: Props) {
-  useRenderStats('LeftPanel');
-
   const [modalOpen, setModalOpen] = useState(false);
   const items = useMemo<AuctionItem[]>(
     () => (syncedItems ? toAuctionItems(syncedItems) : []),
@@ -136,10 +132,6 @@ function LeftPanel({
 }
 
 export default memo(LeftPanel, (prev, next) => {
-  if (!isLiveStructureOptimizationEnabled()) {
-    return false;
-  }
-
   return (
     prev.isSeller === next.isSeller &&
     prev.selectedAuctionId === next.selectedAuctionId &&

@@ -1,11 +1,11 @@
 import { useState } from 'react';
 
-import AuctionTimer from '@/components/Live/Auction/shared/AuctionTimer';
-import AuctionCommentToast from '@/components/Live/Stream/AuctionCommentToast';
 import BuyerControlBar from '@/components/Live/Stream/BuyerControlBar';
+import LiveAuctionTimer from '@/components/Live/Auction/shared/LiveAuctionTimer';
+import LiveAuctionCommentToast from '@/components/Live/Stream/LiveAuctionCommentToast';
+import LiveSellerUniqueBidOverlay from '@/components/Live/Stream/LiveSellerUniqueBidOverlay';
 import SellerControlBar from '@/components/Live/Stream/SellerControlBar';
 import SellerGuideOverlay from '@/components/Live/Stream/SellerGuideOverlay';
-import SellerUniqueBidOverlay from '@/components/Live/Stream/SellerUniqueBidOverlay';
 import StreamOverlay from '@/components/Live/Stream/StreamOverlay';
 import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
 import StreamDisconnected from '@/components/Live/Stream/Streamdisconnected';
@@ -44,12 +44,6 @@ export default function TabletLayout({ stream, auction, livekit, modal, navigate
   const { messages, sendMessage, sendMacro, connectionState } = useStompChat(stream.activeStreamEnter?.category ?? '');
   const pausedInitialSeconds = getPausedInitialSeconds(stream.activeStreamEnter);
 
-  const currentUserId = (() => {
-    const stored = localStorage.getItem('userId');
-    const parsed = stored ? Number(stored) : NaN;
-    return Number.isNaN(parsed) ? null : parsed;
-  })();
-
   const tabs: Array<{ key: TabletTab; label: string }> = [
     { key: 'items', label: '물품' },
     { key: 'chat', label: '채팅' },
@@ -83,9 +77,7 @@ export default function TabletLayout({ stream, auction, livekit, modal, navigate
           >
             <StreamOverlay viewerCount={viewerCount} isSeller={stream.isSeller} />
             {stream.isSeller && <SellerGuideOverlay />}
-            {auction.activeAuctionType === 'UNIQUE_TOP' && auction.uniqueBidSync && (
-              <SellerUniqueBidOverlay participantCount={auction.uniqueBidSync.participantCount} />
-            )}
+            <LiveSellerUniqueBidOverlay auctionType={auction.activeAuctionType} />
             <video
               ref={bgVideoRef}
               autoPlay
@@ -102,18 +94,10 @@ export default function TabletLayout({ stream, auction, livekit, modal, navigate
             />
             {livekitState !== 'connected' && <StreamPlaceholder />}
 
-            {auction.auctionComment && (
-              <AuctionCommentToast key={auction.auctionComment.id} message={auction.auctionComment.message} />
-            )}
+            <LiveAuctionCommentToast />
 
             <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
-              {stream.isSeller && auction.timer && (
-                <AuctionTimer
-                  key={auction.timer.receivedAtMs}
-                  timer={auction.timer}
-                  onExpire={auction.handleAuctionTimerExpire}
-                />
-              )}
+              {stream.isSeller && <LiveAuctionTimer onExpire={auction.handleAuctionTimerExpire} />}
             </div>
 
             <SellerStartModal
@@ -192,8 +176,6 @@ export default function TabletLayout({ stream, auction, livekit, modal, navigate
                 variant="inline"
                 showChatToggle={false}
                 auctionType={auction.activeAuctionType}
-                bidSync={auction.bidSync}
-                uniqueBidSync={auction.uniqueBidSync}
                 activeAuctionId={auction.activeBidAuctionId}
                 isRemoteAudioMuted={isRemoteAudioMuted}
                 onToggleMute={toggleRemoteAudio}
@@ -243,9 +225,6 @@ export default function TabletLayout({ stream, auction, livekit, modal, navigate
               <AuctionPanel
                 isSeller={stream.isSeller}
                 auctionType={auction.activeAuctionType}
-                auctionStatistics={auction.auctionStatistics}
-                uniqueBidSync={auction.uniqueBidSync}
-                currentUserId={currentUserId}
               />
             )}
           </div>

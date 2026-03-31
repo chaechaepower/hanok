@@ -1,20 +1,15 @@
-import { memo, useMemo, useState } from 'react';
+import { memo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { usePostFollow } from '@/api/hooks/usePostFollow';
 import AuctionPanel from '@/components/Live/Auction/shared/AuctionPanel';
 import ChatPanel from '@/components/Live/Chat/ChatPanel';
-import { useRenderStats } from '@/hooks/useRenderStats';
 import { useStompChat } from '@/hooks/useStompChat';
-import type { AuctionStatisticsPayload, LiveAuctionType, UniqueBidSyncPayload } from '@/types';
-import { isAuctionStatisticsEqual, isUniqueBidSyncEqual } from '@/utils/liveEquality';
-import { isLiveStructureOptimizationEnabled } from '@/utils/liveOptimization';
+import type { LiveAuctionType } from '@/types';
 
 interface Props {
   isSeller: boolean;
   auctionType: LiveAuctionType | null;
-  auctionStatistics: AuctionStatisticsPayload | null;
-  uniqueBidSync: UniqueBidSyncPayload | null;
   streamId: number;
   category: string;
   notice: string | null;
@@ -29,8 +24,6 @@ const getSellerInitial = (nickname?: string) => nickname?.trim().charAt(0).toUpp
 function RightPanel({
   isSeller,
   auctionType,
-  auctionStatistics,
-  uniqueBidSync,
   streamId,
   category,
   notice,
@@ -39,18 +32,11 @@ function RightPanel({
   sellerProfileImage,
   isFollowing,
 }: Props) {
-  useRenderStats('RightPanel');
-
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'chat' | 'auction'>('chat');
   const { messages, sendMessage, sendMacro, connectionState } = useStompChat(category);
   const [followStateOverride, setFollowStateOverride] = useState<{ sellerId: number; value: boolean } | null>(null);
   const { mutate: postFollow, isPending: isFollowPending } = usePostFollow();
-  const currentUserId = useMemo(() => {
-    const stored = localStorage.getItem('userId');
-    const parsed = stored ? Number(stored) : NaN;
-    return Number.isNaN(parsed) ? null : parsed;
-  }, []);
   const effectiveFollowing =
     followStateOverride?.sellerId === sellerId ? followStateOverride.value : isFollowing;
 
@@ -148,13 +134,7 @@ function RightPanel({
 
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'auction' ? (
-          <AuctionPanel
-            isSeller={isSeller}
-            auctionType={auctionType}
-            auctionStatistics={auctionStatistics}
-            uniqueBidSync={uniqueBidSync}
-            currentUserId={currentUserId}
-          />
+          <AuctionPanel isSeller={isSeller} auctionType={auctionType} />
         ) : (
           <ChatPanel
             streamId={streamId}
@@ -172,10 +152,6 @@ function RightPanel({
 }
 
 export default memo(RightPanel, (prev, next) => {
-  if (!isLiveStructureOptimizationEnabled()) {
-    return false;
-  }
-
   return (
     prev.isSeller === next.isSeller &&
     prev.auctionType === next.auctionType &&
@@ -185,8 +161,6 @@ export default memo(RightPanel, (prev, next) => {
     prev.sellerId === next.sellerId &&
     prev.sellerNickname === next.sellerNickname &&
     prev.sellerProfileImage === next.sellerProfileImage &&
-    prev.isFollowing === next.isFollowing &&
-    isAuctionStatisticsEqual(prev.auctionStatistics, next.auctionStatistics) &&
-    isUniqueBidSyncEqual(prev.uniqueBidSync, next.uniqueBidSync)
+    prev.isFollowing === next.isFollowing
   );
 });

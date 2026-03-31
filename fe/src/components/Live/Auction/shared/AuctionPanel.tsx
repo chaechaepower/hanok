@@ -1,24 +1,25 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 
 import SellerStats from '../Seller/SellerStats';
 import SellerPriceInfo from '../Seller/SellerPriceInfo';
 import BidFeed from '../Seller/BidFeed';
-import { useRenderStats } from '@/hooks/useRenderStats';
-import type { AuctionStatisticsPayload, LiveAuctionType, UniqueBidSyncPayload } from '@/types';
+import { useLiveAuctionStatistics, useLiveUniqueBidSync } from '@/hooks/useLiveHotState';
+import type { LiveAuctionType } from '@/types';
 import { formatPrice } from '@/utils/formatPrice';
-import { isAuctionStatisticsEqual, isUniqueBidSyncEqual } from '@/utils/liveEquality';
-import { isLiveStructureOptimizationEnabled } from '@/utils/liveOptimization';
 
 interface Props {
   isSeller: boolean;
   auctionType: LiveAuctionType | null;
-  auctionStatistics: AuctionStatisticsPayload | null;
-  uniqueBidSync: UniqueBidSyncPayload | null;
-  currentUserId: number | null;
 }
 
-function AuctionPanel({ isSeller, auctionType, auctionStatistics, uniqueBidSync, currentUserId }: Props) {
-  useRenderStats('AuctionPanel');
+function AuctionPanel({ isSeller, auctionType }: Props) {
+  const auctionStatistics = useLiveAuctionStatistics();
+  const uniqueBidSync = useLiveUniqueBidSync();
+  const currentUserId = useMemo(() => {
+    const stored = localStorage.getItem('userId');
+    const parsed = stored ? Number(stored) : NaN;
+    return Number.isNaN(parsed) ? null : parsed;
+  }, []);
 
   if (auctionType === 'UNIQUE_TOP') {
     const bidRange = uniqueBidSync?.bidRange;
@@ -89,15 +90,5 @@ function AuctionPanel({ isSeller, auctionType, auctionStatistics, uniqueBidSync,
 }
 
 export default memo(AuctionPanel, (prev, next) => {
-  if (!isLiveStructureOptimizationEnabled()) {
-    return false;
-  }
-
-  return (
-    prev.isSeller === next.isSeller &&
-    prev.auctionType === next.auctionType &&
-    prev.currentUserId === next.currentUserId &&
-    isAuctionStatisticsEqual(prev.auctionStatistics, next.auctionStatistics) &&
-    isUniqueBidSyncEqual(prev.uniqueBidSync, next.uniqueBidSync)
-  );
+  return prev.isSeller === next.isSeller && prev.auctionType === next.auctionType;
 });

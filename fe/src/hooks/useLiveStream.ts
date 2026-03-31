@@ -19,6 +19,8 @@ import type {
   UniqueBidSyncPayload,
 } from '@/types';
 import { sendStreamMessage, subscribeStream } from '@/websocket/stompClient';
+import { createLiveHotStateStore } from '../store/liveHotStateStore';
+import type { LiveHotStateStore } from '../store/liveHotStateStore';
 import { clearPendingWalletInvalidationForBid, consumePendingWalletInvalidationForBid } from './useBidState';
 import { useToast } from './useToast';
 
@@ -148,50 +150,6 @@ type SyncRequestSource =
   | 'UNKNOWN';
 type SyncRequestInvoker = (source?: SyncRequestSource) => Promise<void>;
 
-const isStreamTimerEqual = (left?: StreamTimerPayload | null, right?: StreamTimerPayload | null) =>
-  left?.serverNow === right?.serverNow &&
-  left?.serverStartedAt === right?.serverStartedAt &&
-  left?.durationSeconds === right?.durationSeconds;
-
-const isBidSyncEqual = (left: BidSyncPayload | null, right: BidSyncPayload | null) =>
-  left === right ||
-  (!!left &&
-    !!right &&
-    left.item.bidUnit === right.item.bidUnit &&
-    left.item.currentPrice === right.item.currentPrice &&
-    left.isHighestBidder === right.isHighestBidder &&
-    isStreamTimerEqual(left.timer, right.timer));
-
-const isRecentBidEqual = (
-  left: AuctionStatisticsPayload['recentBids'][number],
-  right: AuctionStatisticsPayload['recentBids'][number],
-) =>
-  left.userId === right.userId &&
-  left.nickname === right.nickname &&
-  left.amount === right.amount &&
-  left.placedAt === right.placedAt;
-
-const isAuctionStatisticsEqual = (left: AuctionStatisticsPayload | null, right: AuctionStatisticsPayload | null) =>
-  left === right ||
-  (!!left &&
-    !!right &&
-    left.itemName === right.itemName &&
-    left.bidCount === right.bidCount &&
-    left.startPrice === right.startPrice &&
-    left.currentPrice === right.currentPrice &&
-    left.recentBids.length === right.recentBids.length &&
-    left.recentBids.every((bid, index) => isRecentBidEqual(bid, right.recentBids[index])));
-
-const isUniqueBidSyncEqual = (left: UniqueBidSyncPayload | null, right: UniqueBidSyncPayload | null) =>
-  left === right ||
-  (!!left &&
-    !!right &&
-    left.bidRange.minPrice === right.bidRange.minPrice &&
-    left.bidRange.maxPrice === right.bidRange.maxPrice &&
-    left.participantCount === right.participantCount &&
-    left.hasBid === right.hasBid &&
-    isStreamTimerEqual(left.timer, right.timer));
-
 const shouldRecoverActiveAuctionSync = (source: SyncRequestSource) =>
   source === 'INITIAL_SUBSCRIBE' ||
   source === 'STREAM_LIVE_EFFECT' ||
@@ -240,13 +198,9 @@ export type UseLiveStreamReturn = {
   // state
   isStreamLive: boolean;
   liveStartedAt: string | null;
-  timer: SyncedAuctionTimer | null;
-  bidSync: BidSyncPayload | null;
-  uniqueBidSync: UniqueBidSyncPayload | null;
+  hotStateStore: LiveHotStateStore;
   itemSync: ItemSyncPayload | null;
   streamState: StreamState;
-  auctionStatistics: AuctionStatisticsPayload | null;
-  auctionComment: { id: number; message: string } | null;
   winnerInfo: WinnerInfoState | null;
   uniqueAuctionResult: UniqueAuctionResultState | null;
   liveAuctionItem: ItemSyncItem | null;
@@ -273,9 +227,6 @@ export function useLiveStream(
 
   const [liveStateOverride, setLiveStateOverride] = useState<boolean | null>(null);
   const [liveStartedAt, setLiveStartedAt] = useState<string | null>(null);
-  const [timer, setTimer] = useState<SyncedAuctionTimer | null>(null);
-  const [bidSync, setBidSync] = useState<BidSyncPayload | null>(null);
-  const [uniqueBidSync, setUniqueBidSync] = useState<UniqueBidSyncPayload | null>(null);
   const [itemSync, setItemSync] = useState<ItemSyncPayload | null>(null);
   const [runtimeStreamState, setRuntimeStreamState] = useState<{
     streamId: string | undefined;
@@ -284,10 +235,10 @@ export function useLiveStream(
     streamId,
     value: null,
   });
-  const [auctionStatistics, setAuctionStatistics] = useState<AuctionStatisticsPayload | null>(null);
-  const [auctionComment, setAuctionComment] = useState<{ id: number; message: string } | null>(null);
   const [winnerInfo, setWinnerInfo] = useState<WinnerInfoState | null>(null);
   const [uniqueAuctionResult, setUniqueAuctionResult] = useState<UniqueAuctionResultState | null>(null);
+  const [hotStateStore] = useState<LiveHotStateStore>(() => createLiveHotStateStore());
+  const auctionCommentTimeoutRef = useRef<number | null>(null);
 
   const lastActiveItemRef = useRef<ItemSyncItem | null>(null);
   const uniqueAuctionResultDismissedRef = useRef(true);
@@ -334,24 +285,6 @@ export function useLiveStream(
   const liveAuctionItem = itemSync?.items.find((item) => item.auctionStatus === 'LIVE') ?? null;
 
   // ---------------------------------------------------------------------------
-  // auctionComment auto-clear
-  // ---------------------------------------------------------------------------
-
-  useEffect(() => {
-    if (!auctionComment) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setAuctionComment(null);
-    }, 2400);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-    };
-  }, [auctionComment]);
-
-  // ---------------------------------------------------------------------------
   // Track last active item (used for winner / unique auction result labels)
   // ---------------------------------------------------------------------------
 
@@ -388,6 +321,15 @@ export function useLiveStream(
   // ---------------------------------------------------------------------------
   // Main STOMP subscription effect
   // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    hotStateStore.reset();
+
+    if (auctionCommentTimeoutRef.current !== null) {
+      window.clearTimeout(auctionCommentTimeoutRef.current);
+      auctionCommentTimeoutRef.current = null;
+    }
+  }, [hotStateStore, streamId]);
 
   useEffect(() => {
     if (!streamId) {
@@ -454,41 +396,35 @@ export function useLiveStream(
       await requestBidSync(source);
     };
 
-    const setBidSyncState = (value: SetStateAction<BidSyncPayload | null>) => {
-      setBidSync((prev) => {
-        const next = typeof value === 'function' ? value(prev) : value;
-        if (isBidSyncEqual(prev, next)) {
-          return prev;
-        }
-        return next;
-      });
-    };
+    const setTimerState = (value: SetStateAction<SyncedAuctionTimer | null>) => hotStateStore.setTimer(value);
+    const setBidSyncState = (value: SetStateAction<BidSyncPayload | null>) => hotStateStore.setBidSync(value);
+    const setAuctionStatisticsState = (value: SetStateAction<AuctionStatisticsPayload | null>) =>
+      hotStateStore.setAuctionStatistics(value);
+    const setUniqueBidSyncState = (value: SetStateAction<UniqueBidSyncPayload | null>) =>
+      hotStateStore.setUniqueBidSync(value);
+    const setAuctionCommentState = (value: SetStateAction<{ id: number; message: string } | null>) => {
+      const next = hotStateStore.setAuctionComment(value);
 
-    const setAuctionStatisticsState = (value: SetStateAction<AuctionStatisticsPayload | null>) => {
-      setAuctionStatistics((prev) => {
-        const next = typeof value === 'function' ? value(prev) : value;
-        if (isAuctionStatisticsEqual(prev, next)) {
-          return prev;
-        }
-        return next;
-      });
-    };
+      if (auctionCommentTimeoutRef.current !== null) {
+        window.clearTimeout(auctionCommentTimeoutRef.current);
+        auctionCommentTimeoutRef.current = null;
+      }
 
-    const setUniqueBidSyncState = (value: SetStateAction<UniqueBidSyncPayload | null>) => {
-      setUniqueBidSync((prev) => {
-        const next = typeof value === 'function' ? value(prev) : value;
-        if (isUniqueBidSyncEqual(prev, next)) {
-          return prev;
-        }
-        return next;
-      });
+      if (next) {
+        auctionCommentTimeoutRef.current = window.setTimeout(() => {
+          hotStateStore.setAuctionComment(null);
+          auctionCommentTimeoutRef.current = null;
+        }, 2400);
+      }
+
+      return next;
     };
 
     const applyBidSync = (payload?: BidSyncPayload | null) => {
       setBidSyncState(payload ?? null);
       const snipingAge = Date.now() - snipingTimerSetAtRef.current;
       if (payload?.timer && snipingAge > 2000) {
-        setTimer(createSyncedTimer(payload.timer, 'remainingSnapshot'));
+        setTimerState(createSyncedTimer(payload.timer, 'remainingSnapshot'));
       }
     };
 
@@ -523,7 +459,7 @@ export function useLiveStream(
     };
 
     const handleUniqueAuctionEndPayload = (payload: UniqueAuctionEndPayload) => {
-      setTimer(null);
+      setTimerState(null);
       setUniqueBidSyncState(null);
       void requestItemSync('UNIQUE_AUCTION_END');
 
@@ -563,7 +499,7 @@ export function useLiveStream(
         ignoreWonUniqueEndRef.current = false;
         uniqueAuctionResultDismissedRef.current = true;
         setStreamState('live');
-        setTimer(createSyncedTimer(event.payload.timer));
+        setTimerState(createSyncedTimer(event.payload.timer));
         setUniqueBidSyncState(null);
         setUniqueAuctionResult(null);
         if (typeof event.payload.item?.startPrice === 'number' && typeof event.payload.item?.bidUnit === 'number') {
@@ -590,7 +526,7 @@ export function useLiveStream(
         setAuctionStatisticsState(null);
         setUniqueAuctionResult(null);
         setWinnerInfo(null);
-        setTimer(createSyncedTimer(event.payload.timer));
+        setTimerState(createSyncedTimer(event.payload.timer));
         setUniqueBidSyncState({
           bidRange: event.payload.bidRange,
           timer: event.payload.timer,
@@ -610,7 +546,7 @@ export function useLiveStream(
 
         if (event.payload?.snipingTimer) {
           snipingTimerSetAtRef.current = Date.now();
-          setTimer(createSyncedTimer(event.payload.snipingTimer));
+          setTimerState(createSyncedTimer(event.payload.snipingTimer));
         }
 
         if (typeof event.payload?.bidInfo?.amount === 'number') {
@@ -632,7 +568,7 @@ export function useLiveStream(
 
       if (isStreamPausedEvent(event)) {
         setStreamState('disconnected');
-        setTimer(null);
+        setTimerState(null);
         snipingTimerSetAtRef.current = 0;
         return;
       }
@@ -646,7 +582,7 @@ export function useLiveStream(
       if (isStreamFailedEvent(event)) {
         setStreamState('ended');
         setLiveStateOverride(false);
-        setTimer(null);
+        setTimerState(null);
         return;
       }
 
@@ -656,14 +592,14 @@ export function useLiveStream(
         uniqueAuctionResultDismissedRef.current = true;
         setStreamState('ended');
         setLiveStateOverride(false);
-        setTimer(null);
+        setTimerState(null);
         setBidSyncState(null);
         setUniqueBidSyncState(null);
         return;
       }
 
       if (isAuctionCommentEvent(event) && event.payload?.message) {
-        setAuctionComment({
+        setAuctionCommentState({
           id: Date.now(),
           message: event.payload.message,
         });
@@ -692,7 +628,7 @@ export function useLiveStream(
           return;
         }
 
-        setTimer(null);
+        setTimerState(null);
         setUniqueBidSyncState(null);
         void requestItemSync();
         return;
@@ -751,7 +687,7 @@ export function useLiveStream(
         uniqueAuctionResultDismissedRef.current = false;
         setUniqueBidSyncState(event.payload ?? null);
         if (event.payload?.timer) {
-          setTimer(createSyncedTimer(event.payload.timer));
+          setTimerState(createSyncedTimer(event.payload.timer));
         }
         return;
       }
@@ -843,9 +779,14 @@ export function useLiveStream(
         uniqueWinnerResolveTimeoutRef.current = null;
       }
 
+      if (auctionCommentTimeoutRef.current !== null) {
+        window.clearTimeout(auctionCommentTimeoutRef.current);
+        auctionCommentTimeoutRef.current = null;
+      }
+
       unsubscribeStream();
     };
-  }, [isLoggedIn, queryClient, setStreamState, showToast, streamId]);
+  }, [hotStateStore, isLoggedIn, queryClient, setStreamState, showToast, streamId]);
 
   // ---------------------------------------------------------------------------
   // Race-condition-safe ITEM_SYNC on stream live transition.
@@ -891,13 +832,9 @@ export function useLiveStream(
   return {
     isStreamLive,
     liveStartedAt,
-    timer,
-    bidSync,
-    uniqueBidSync,
+    hotStateStore,
     itemSync,
     streamState,
-    auctionStatistics,
-    auctionComment,
     winnerInfo,
     uniqueAuctionResult,
     liveAuctionItem,

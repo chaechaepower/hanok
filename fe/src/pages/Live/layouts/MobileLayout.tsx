@@ -2,19 +2,21 @@ import { useCallback, useRef, useState } from 'react';
 import { IoChatbubbleOutline, IoClose } from 'react-icons/io5';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import AuctionTimer from '@/components/Live/Auction/shared/AuctionTimer';
+import AuctionPanel from '@/components/Live/Auction/shared/AuctionPanel';
+import LiveAuctionTimer from '@/components/Live/Auction/shared/LiveAuctionTimer';
+import ChatPanel from '@/components/Live/Chat/ChatPanel';
 import BuyerControlBar from '@/components/Live/Stream/BuyerControlBar';
+import LiveBidPriceBadge from '@/components/Live/Stream/LiveBidPriceBadge';
+import LiveMobileAuctionCommentToast from '@/components/Live/Stream/LiveMobileAuctionCommentToast';
+import LiveSellerUniqueBidOverlay from '@/components/Live/Stream/LiveSellerUniqueBidOverlay';
 import SellerControlBar from '@/components/Live/Stream/SellerControlBar';
-import SellerUniqueBidOverlay from '@/components/Live/Stream/SellerUniqueBidOverlay';
-import StreamOverlay from '@/components/Live/Stream/StreamOverlay';
-import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
 import StreamDisconnected from '@/components/Live/Stream/Streamdisconnected';
 import StreamEnded from '@/components/Live/Stream/StreamEnded';
+import StreamOverlay from '@/components/Live/Stream/StreamOverlay';
+import StreamPlaceholder from '@/components/Live/Stream/StreamPlaceholder';
 import SellerUniqueAuctionResultModal from '@/components/Live/Auction/Buyer/SellerUniqueAuctionResultModal';
 import WinModal from '@/components/Live/Auction/Buyer/WinModal';
 import UniqueAuctionResultModal from '@/components/Live/Auction/Buyer/UniqueAuctionResultModal';
-import AuctionPanel from '@/components/Live/Auction/shared/AuctionPanel';
-import ChatPanel from '@/components/Live/Chat/ChatPanel';
 import { useStompChat } from '@/hooks/useStompChat';
 
 import LeftPanel from '../LeftPanel';
@@ -45,16 +47,10 @@ export default function MobileLayout({ stream, auction, livekit, modal, navigate
   const { messages, sendMessage, sendMacro, connectionState } = useStompChat(stream.activeStreamEnter?.category ?? '');
   const pausedInitialSeconds = getPausedInitialSeconds(stream.activeStreamEnter);
 
-  const currentUserId = (() => {
-    const stored = localStorage.getItem('userId');
-    const parsed = stored ? Number(stored) : NaN;
-    return Number.isNaN(parsed) ? null : parsed;
-  })();
-
   const tabs: Array<{ key: typeof activeTab; label: string }> = [
-    { key: 'items', label: '물품' },
-    { key: 'chat', label: '채팅' },
-    { key: 'auction', label: '경매 현황' },
+    { key: 'items', label: 'è‡¾ì‡³ë­¹' },
+    { key: 'chat', label: 'ï§¢ê¾ªë˜¿' },
+    { key: 'auction', label: 'å¯ƒìŽˆâ„“ ?ê¾ªì†´' },
   ];
 
   const touchStartX = useRef(0);
@@ -104,9 +100,7 @@ export default function MobileLayout({ stream, auction, livekit, modal, navigate
           }`}
         >
           <StreamOverlay viewerCount={viewerCount} isSeller={stream.isSeller} />
-          {auction.activeAuctionType === 'UNIQUE_TOP' && auction.uniqueBidSync && (
-            <SellerUniqueBidOverlay participantCount={auction.uniqueBidSync.participantCount} />
-          )}
+          <LiveSellerUniqueBidOverlay auctionType={auction.activeAuctionType} />
           <video
             ref={bgVideoRef}
             autoPlay
@@ -123,51 +117,11 @@ export default function MobileLayout({ stream, auction, livekit, modal, navigate
           />
           {livekitState !== 'connected' && <StreamPlaceholder />}
 
-          {auction.auctionComment && (
-            <div className="pointer-events-none absolute bottom-4 left-1/2 z-40 w-[min(85%,20rem)] -translate-x-1/2">
-              <div className="animate-toast-in relative overflow-hidden rounded-(--radius-panel) border border-accent/30 bg-background/92 shadow-[0_24px_80px_rgba(0,0,0,0.32)] backdrop-blur-xl">
-                <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-accent via-gold to-accent-light" />
-                <div className="relative flex items-center gap-2 px-3 py-2.5">
-                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-gold/30 bg-accent">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-white">
-                      <path
-                        d="M3 11.5V12.5C3 13.0523 3.44772 13.5 4 13.5H6L11.2 17.4C11.8598 17.8948 12.8 17.4241 12.8 16.6V7.4C12.8 6.57589 11.8598 6.10521 11.2 6.6L6 10.5H4C3.44772 10.5 3 10.9477 3 11.5Z"
-                        fill="currentColor"
-                      />
-                      <path
-                        d="M16.5 9C17.8807 10.3807 17.8807 13.6193 16.5 15"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </div>
-                  <p className="min-w-0 flex-1 text-xs font-semibold leading-snug text-warm">
-                    {auction.auctionComment.message}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {auction.liveAuctionItem && auction.bidSync && (
-            <div className="absolute bottom-4 left-3 z-10 rounded-xl border border-gold/30 bg-background/85 px-3 py-2 backdrop-blur-md">
-              <p className="text-[10px] font-medium text-neutral-400">현재 입찰가</p>
-              <p className="text-base font-black tabular-nums text-gold">
-                {auction.bidSync.item.currentPrice.toLocaleString()}
-                <span className="text-xs font-bold text-gold/70">원</span>
-              </p>
-            </div>
-          )}
+          <LiveMobileAuctionCommentToast />
+          <LiveBidPriceBadge visible={auction.liveAuctionItem !== null} />
 
           <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
-            {stream.isSeller && auction.timer && (
-              <AuctionTimer
-                key={auction.timer.receivedAtMs}
-                timer={auction.timer}
-                onExpire={auction.handleAuctionTimerExpire}
-              />
-            )}
+            {stream.isSeller && <LiveAuctionTimer onExpire={auction.handleAuctionTimerExpire} />}
           </div>
 
           <SellerStartModal
@@ -222,7 +176,7 @@ export default function MobileLayout({ stream, auction, livekit, modal, navigate
         </div>
       </div>
 
-      <div className="relative shrink-0 rounded-2xl bg-background mt-2 px-2 py-2">
+      <div className="relative mt-2 shrink-0 rounded-2xl bg-background px-2 py-2">
         {!isPanelVisible && (
           <button
             type="button"
@@ -254,8 +208,6 @@ export default function MobileLayout({ stream, auction, livekit, modal, navigate
             variant="inline"
             showChatToggle={false}
             auctionType={auction.activeAuctionType}
-            bidSync={auction.bidSync}
-            uniqueBidSync={auction.uniqueBidSync}
             activeAuctionId={auction.activeBidAuctionId}
             isRemoteAudioMuted={isRemoteAudioMuted}
             onToggleMute={toggleRemoteAudio}
@@ -318,15 +270,7 @@ export default function MobileLayout({ stream, auction, livekit, modal, navigate
                   onSendMacro={sendMacro}
                 />
               )}
-              {activeTab === 'auction' && (
-                <AuctionPanel
-                  isSeller={stream.isSeller}
-                  auctionType={auction.activeAuctionType}
-                  auctionStatistics={auction.auctionStatistics}
-                  uniqueBidSync={auction.uniqueBidSync}
-                  currentUserId={currentUserId}
-                />
-              )}
+              {activeTab === 'auction' && <AuctionPanel isSeller={stream.isSeller} auctionType={auction.activeAuctionType} />}
             </div>
           </motion.div>
         )}

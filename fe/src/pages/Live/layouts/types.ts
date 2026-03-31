@@ -1,12 +1,8 @@
 import type { RefObject } from 'react';
 import type {
-  AuctionStatisticsPayload,
-  BidSyncPayload,
   ItemSyncPayload,
   LiveAuctionType,
-  SyncedAuctionTimer,
   StreamEnterResponse,
-  UniqueBidSyncPayload,
   ItemSyncItem,
 } from '@/types';
 import type { WinnerInfoState, UniqueAuctionResultState } from '@/hooks/useLiveStream';
@@ -31,11 +27,6 @@ export interface AuctionProps {
   isAuctionInProgress: boolean;
   hasPendingAuctionItems: boolean;
   itemSync: ItemSyncPayload | null;
-  bidSync: BidSyncPayload | null;
-  uniqueBidSync: UniqueBidSyncPayload | null;
-  auctionStatistics: AuctionStatisticsPayload | null;
-  auctionComment: { id: number; message: string } | null;
-  timer: SyncedAuctionTimer | null;
   readyItems: ItemSyncItem[];
   introduceAuctionId: number | null;
   startAuctionId: number | null;

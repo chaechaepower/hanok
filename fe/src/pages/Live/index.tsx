@@ -8,10 +8,9 @@ import { usePostEndStream } from '@/api/hooks/usePostEndStream';
 import { usePostStartStream } from '@/api/hooks/usePostStartStream';
 import { useGetStreamEnter } from '@/api/hooks/useGetStreamEnter';
 import { useLiveKit } from '@/hooks/useLiveKit';
-import { useRenderStats } from '@/hooks/useRenderStats';
 import { useLiveStream } from '@/hooks/useLiveStream';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
-import { isLiveStructureOptimizationEnabled } from '@/utils/liveOptimization';
+import { LiveHotStateProvider } from '@/provider/LiveHotStateProvider';
 import type { StreamRequest } from '@/types';
 import { sendStreamMessage } from '@/websocket/stompClient';
 
@@ -71,8 +70,6 @@ const unmarkStartedLiveStream = (streamId: number) => {
 const isActiveStreamStatus = (status?: string | null) => status === 'LIVE' || status === 'PAUSED';
 
 export default function LivePage() {
-  useRenderStats('LivePage');
-
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -107,13 +104,9 @@ export default function LivePage() {
   const {
     isStreamLive,
     liveStartedAt,
-    timer,
-    bidSync,
-    uniqueBidSync,
+    hotStateStore,
     itemSync,
     streamState,
-    auctionStatistics,
-    auctionComment,
     winnerInfo,
     uniqueAuctionResult,
     liveAuctionItem,
@@ -318,8 +311,6 @@ export default function LivePage() {
     clearUniqueAuctionResult();
   }, [clearUniqueAuctionResult, clearWinnerInfo, queryClient]);
 
-  const isStructureOptimizationEnabled = isLiveStructureOptimizationEnabled();
-
   const handleAuctionTimerExpire = useCallback(() => {
     if (!isLoggedIn || !streamId || activeAuctionType !== 'UNIQUE_TOP' || activeBidAuctionId === null) {
       return;
@@ -357,29 +348,7 @@ export default function LivePage() {
     [activeStreamEnter, isSeller, isStreamLive, liveStartedAt, streamState, streamTitle],
   );
 
-  const streamProps = useMemo<LiveLayoutProps['stream']>(
-    () =>
-      isStructureOptimizationEnabled
-        ? memoizedStreamProps
-        : {
-            streamTitle,
-            isSeller,
-            isStreamLive,
-            streamState,
-            liveStartedAt,
-            activeStreamEnter,
-          },
-    [
-      activeStreamEnter,
-      isSeller,
-      isStreamLive,
-      isStructureOptimizationEnabled,
-      liveStartedAt,
-      memoizedStreamProps,
-      streamState,
-      streamTitle,
-    ],
-  );
+  const streamProps = memoizedStreamProps;
 
   const memoizedAuctionProps = useMemo<LiveLayoutProps['auction']>(
     () => ({
@@ -393,11 +362,6 @@ export default function LivePage() {
       isAuctionInProgress,
       hasPendingAuctionItems,
       itemSync,
-      bidSync,
-      uniqueBidSync,
-      auctionStatistics,
-      auctionComment,
-      timer,
       readyItems,
       introduceAuctionId,
       startAuctionId,
@@ -409,9 +373,6 @@ export default function LivePage() {
     [
       activeAuctionType,
       activeBidAuctionId,
-      auctionComment,
-      auctionStatistics,
-      bidSync,
       canIntroduceAuction,
       canStartAuction,
       handleAuctionTimerExpire,
@@ -425,66 +386,11 @@ export default function LivePage() {
       selectedAuctionId,
       startAuctionId,
       startAuctionType,
-      timer,
-      uniqueBidSync,
       visibleSelectedAuctionId,
     ],
   );
 
-  const auctionProps = useMemo<LiveLayoutProps['auction']>(
-    () =>
-      isStructureOptimizationEnabled
-        ? memoizedAuctionProps
-        : {
-            selectedAuctionId,
-            visibleSelectedAuctionId,
-            setSelectedAuctionId,
-            liveAuctionItem,
-            introducingAuctionItem,
-            activeBidAuctionId,
-            activeAuctionType,
-            isAuctionInProgress,
-            hasPendingAuctionItems,
-            itemSync,
-            bidSync,
-            uniqueBidSync,
-            auctionStatistics,
-            auctionComment,
-            timer,
-            readyItems,
-            introduceAuctionId,
-            startAuctionId,
-            startAuctionType,
-            canIntroduceAuction,
-            canStartAuction,
-            handleAuctionTimerExpire,
-          },
-    [
-      activeAuctionType,
-      activeBidAuctionId,
-      auctionComment,
-      auctionStatistics,
-      bidSync,
-      canIntroduceAuction,
-      canStartAuction,
-      handleAuctionTimerExpire,
-      hasPendingAuctionItems,
-      introducingAuctionItem,
-      introduceAuctionId,
-      isAuctionInProgress,
-      isStructureOptimizationEnabled,
-      itemSync,
-      liveAuctionItem,
-      memoizedAuctionProps,
-      readyItems,
-      selectedAuctionId,
-      startAuctionId,
-      startAuctionType,
-      timer,
-      uniqueBidSync,
-      visibleSelectedAuctionId,
-    ],
-  );
+  const auctionProps = memoizedAuctionProps;
 
   const memoizedLivekitProps = useMemo<LiveLayoutProps['livekit']>(
     () => ({
@@ -515,39 +421,7 @@ export default function LivePage() {
     ],
   );
 
-  const livekitProps = useMemo<LiveLayoutProps['livekit']>(
-    () =>
-      isStructureOptimizationEnabled
-        ? memoizedLivekitProps
-        : {
-            livekitState,
-            videoRef,
-            bgVideoRef,
-            viewerCount,
-            toggleMic,
-            toggleCamera,
-            toggleRemoteAudio,
-            isMicOn,
-            isCameraOn,
-            isRemoteAudioMuted,
-            micLevel,
-          },
-    [
-      bgVideoRef,
-      isCameraOn,
-      isMicOn,
-      isRemoteAudioMuted,
-      isStructureOptimizationEnabled,
-      livekitState,
-      memoizedLivekitProps,
-      micLevel,
-      toggleCamera,
-      toggleMic,
-      toggleRemoteAudio,
-      videoRef,
-      viewerCount,
-    ],
-  );
+  const livekitProps = memoizedLivekitProps;
 
   const memoizedChatProps = useMemo<LiveLayoutProps['chat']>(
     () => ({
@@ -557,16 +431,7 @@ export default function LivePage() {
     [handleToggleChat, isChatOpen],
   );
 
-  const chatProps = useMemo<LiveLayoutProps['chat']>(
-    () =>
-      isStructureOptimizationEnabled
-        ? memoizedChatProps
-        : {
-            isChatOpen,
-            handleToggleChat,
-          },
-    [handleToggleChat, isChatOpen, isStructureOptimizationEnabled, memoizedChatProps],
-  );
+  const chatProps = memoizedChatProps;
 
   const memoizedModalProps = useMemo<LiveLayoutProps['modal']>(
     () => ({
@@ -604,46 +469,7 @@ export default function LivePage() {
     ],
   );
 
-  const modalProps = useMemo<LiveLayoutProps['modal']>(
-    () =>
-      isStructureOptimizationEnabled
-        ? memoizedModalProps
-        : {
-            showSellerStartModal,
-            hasStartedThisStream,
-            postStartStreamIsPending: postStartStream.isPending,
-            handleSellerStartModalConfirm,
-            showStreamEndModal,
-            postEndStreamIsPending: postEndStream.isPending,
-            setShowStreamEndModal,
-            handleStreamEndConfirm,
-            handleOpenStreamEndModal,
-            winnerInfo,
-            uniqueAuctionResult,
-            handleWinConfirm,
-            clearWinnerInfo,
-            handleUniqueAuctionResultClose,
-            markStreamEnded,
-          },
-    [
-      clearWinnerInfo,
-      handleOpenStreamEndModal,
-      handleSellerStartModalConfirm,
-      handleStreamEndConfirm,
-      handleUniqueAuctionResultClose,
-      handleWinConfirm,
-      hasStartedThisStream,
-      isStructureOptimizationEnabled,
-      markStreamEnded,
-      memoizedModalProps,
-      postEndStream.isPending,
-      postStartStream.isPending,
-      showSellerStartModal,
-      showStreamEndModal,
-      uniqueAuctionResult,
-      winnerInfo,
-    ],
-  );
+  const modalProps = memoizedModalProps;
 
   const memoizedLayoutProps = useMemo<LiveLayoutProps>(
     () => ({
@@ -657,29 +483,7 @@ export default function LivePage() {
     [auctionProps, chatProps, livekitProps, modalProps, navigate, streamProps],
   );
 
-  const layoutProps = useMemo<LiveLayoutProps>(
-    () =>
-      isStructureOptimizationEnabled
-        ? memoizedLayoutProps
-        : {
-            stream: streamProps,
-            auction: auctionProps,
-            livekit: livekitProps,
-            chat: chatProps,
-            modal: modalProps,
-            navigate,
-          },
-    [
-      auctionProps,
-      chatProps,
-      isStructureOptimizationEnabled,
-      livekitProps,
-      memoizedLayoutProps,
-      modalProps,
-      navigate,
-      streamProps,
-    ],
-  );
+  const layoutProps = memoizedLayoutProps;
 
   if (isNotFoundLive) {
     return (
@@ -714,7 +518,9 @@ export default function LivePage() {
         transition={{ duration: 0.2 }}
         className="h-screen w-full"
       >
-        <Layout {...layoutProps} />
+        <LiveHotStateProvider store={hotStateStore}>
+          <Layout {...layoutProps} />
+        </LiveHotStateProvider>
       </motion.div>
     </AnimatePresence>
   );
