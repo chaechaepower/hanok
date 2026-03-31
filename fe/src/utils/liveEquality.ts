@@ -1,6 +1,8 @@
 import type {
+  AuctionItem,
   AuctionStatisticsPayload,
   BidSyncPayload,
+  ItemSyncItem,
   StreamTimerPayload,
   UniqueBidSyncPayload,
 } from '@/types';
@@ -52,3 +54,37 @@ export const isUniqueBidSyncEqual = (left: UniqueBidSyncPayload | null, right: U
     left.participantCount === right.participantCount &&
     left.hasBid === right.hasBid &&
     isStreamTimerEqual(left.timer, right.timer));
+
+export const areStringArraysEqual = (left: string[], right: string[]) =>
+  left.length === right.length && left.every((value, index) => value === right[index]);
+
+export const isItemSyncItemEqual = (left: ItemSyncItem, right: ItemSyncItem) =>
+  left.auctionId === right.auctionId &&
+  left.auctionType === right.auctionType &&
+  left.itemName === right.itemName &&
+  left.description === right.description &&
+  areStringArraysEqual(left.images, right.images) &&
+  left.auctionStatus === right.auctionStatus &&
+  left.auctionTime === right.auctionTime &&
+  left.finalPrice === right.finalPrice &&
+  left.itemCondition === right.itemCondition &&
+  left.bidUnit === right.bidUnit &&
+  left.startPrice === right.startPrice &&
+  left.minPrice === right.minPrice &&
+  left.maxPrice === right.maxPrice;
+
+export const isAuctionItemEqual = (left: AuctionItem, right: AuctionItem) =>
+  left.id === right.id &&
+  left.name === right.name &&
+  left.startPrice === right.startPrice &&
+  left.bidUnit === right.bidUnit &&
+  left.minPrice === right.minPrice &&
+  left.maxPrice === right.maxPrice &&
+  left.finalPrice === right.finalPrice &&
+  left.status === right.status &&
+  left.auctionType === right.auctionType &&
+  left.condition === right.condition &&
+  left.thumbnailUrl === right.thumbnailUrl &&
+  left.description === right.description &&
+  left.auctionTime === right.auctionTime &&
+  areStringArraysEqual(left.images ?? [], right.images ?? []);

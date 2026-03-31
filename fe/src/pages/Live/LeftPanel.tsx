@@ -20,8 +20,8 @@ const ACTIVE_STATUS_PRIORITY: Record<Exclude<ItemStatus, 'SOLD' | 'UNSOLD'>, num
   READY: 1,
 };
 
-function toAuctionItems(items: ItemSyncItem[]): AuctionItem[] {
-  return items.map((item) => ({
+function toAuctionItem(item: ItemSyncItem): AuctionItem {
+  return {
     id: item.auctionId,
     name: item.itemName,
     startPrice: item.startPrice,
@@ -36,7 +36,7 @@ function toAuctionItems(items: ItemSyncItem[]): AuctionItem[] {
     description: item.description,
     auctionTime: item.auctionTime,
     images: item.images,
-  }));
+  };
 }
 
 function LeftPanel({
@@ -49,7 +49,7 @@ function LeftPanel({
 
   const [modalOpen, setModalOpen] = useState(false);
   const items = useMemo<AuctionItem[]>(
-    () => (syncedItems ? toAuctionItems(syncedItems) : []),
+    () => (syncedItems ? syncedItems.map((syncedItem) => toAuctionItem(syncedItem)) : []),
     [syncedItems],
   );
 
