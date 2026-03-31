@@ -11,22 +11,15 @@ export const authHandlers = [
   http.get(`${BASE_URL}/v1/auth/check-email`, ({ request }) => {
     const url = new URL(request.url);
     const email = url.searchParams.get('email') ?? '';
-    console.log('[Mock] 이메일 중복 확인:', email);
 
     const isDuplicated = registeredEmails.includes(email);
     if (isDuplicated) {
-      return HttpResponse.json(
-        { status: 'FAIL', message: '이미 사용 중인 이메일입니다.', data: {} },
-        { status: 400 },
-      );
+      return HttpResponse.json({ status: 'FAIL', message: '이미 사용 중인 이메일입니다.', data: {} }, { status: 400 });
     }
     return HttpResponse.json({ status: 'SUCCESS', message: '사용 가능한 이메일입니다.', data: {} });
   }),
 
-  http.post(`${BASE_URL}/v1/auth/identity-verification`, async ({ request }) => {
-    const { identityVerificationId } = (await request.json()) as { identityVerificationId: string };
-    console.log('[Mock] 본인인증 요청:', identityVerificationId);
-
+  http.post(`${BASE_URL}/v1/auth/identity-verification`, async () => {
     return HttpResponse.json({
       status: 'SUCCESS',
       message: '본인인증이 완료되었습니다.',
@@ -65,19 +58,21 @@ export const authHandlers = [
 
   http.post(`${BASE_URL}/v1/auth/signup`, async ({ request }) => {
     const body = (await request.json()) as SignUpPayload;
-    console.log('[Mock] 회원가입 요청:', body.email, body.nickname);
 
     registeredEmails.push(body.email);
 
-    return HttpResponse.json({
-      status: 'SUCCESS',
-      message: '회원가입이 완료되었습니다.',
-      data: {
-        userId: Date.now(),
-        email: body.email,
-        nickname: body.nickname,
+    return HttpResponse.json(
+      {
+        status: 'SUCCESS',
+        message: '회원가입이 완료되었습니다.',
+        data: {
+          userId: Date.now(),
+          email: body.email,
+          nickname: body.nickname,
+        },
       },
-    }, { status: 201 });
+      { status: 201 },
+    );
   }),
 
   http.post(`${BASE_URL}/v1/auth/logout`, async () => {

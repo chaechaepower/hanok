@@ -337,7 +337,6 @@ export function useLiveStream(
     }
 
     const requestItemSync: SyncRequestInvoker = async (source = 'UNKNOWN') => {
-      console.log('[stream] requesting ITEM_SYNC for streamId:', streamId);
       pendingItemSyncSourceRef.current = source;
       await sendStreamMessage(streamId, {
         eventType: 'ITEM_SYNC',
@@ -493,7 +492,6 @@ export function useLiveStream(
     };
 
     const handleBroadcastEvent = (event: BroadcastStreamEvent) => {
-      console.log('[stream] broadcast event:', event);
       if (isAuctionStartEvent(event) && event.payload?.timer) {
         clearPendingUniqueWinnerResolution();
         ignoreWonUniqueEndRef.current = false;
@@ -760,7 +758,6 @@ export function useLiveStream(
         }
 
         unsubscribeStream = cleanup;
-        console.log('[stream] STOMP subscribed successfully for streamId:', streamId);
         await requestItemSync('INITIAL_SUBSCRIBE');
       })
       .catch((error) => {

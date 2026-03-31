@@ -625,11 +625,10 @@ export default function LiveRegisterPage() {
       const newStreamId = res.streamId;
 
       if (startType === 'INSTANT') {
-        const startRes = await postStartStream.mutateAsync({
+        await postStartStream.mutateAsync({
           streamId: newStreamId,
           ...payload,
         });
-        console.log('[Stream Start] openviduToken:', startRes.data?.openviduToken);
         showToast({ type: 'success', message: '방송이 시작되었습니다!' });
       } else {
         showToast({ type: 'success', message: '방송이 예약되었습니다!' });

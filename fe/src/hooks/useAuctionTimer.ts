@@ -27,7 +27,7 @@ const formatTime = (seconds: number): string => {
   return `${mm}:${ss}`;
 };
 
-const getSecondsLeft = (timer: SyncedAuctionTimer, clientNowMs: number) => {
+const getRemainingMs = (timer: SyncedAuctionTimer, clientNowMs: number) => {
   const serverNowMs = Date.parse(timer.serverNow);
   const serverStartedAtMs = Date.parse(timer.serverStartedAt);
 
@@ -38,10 +38,10 @@ const getSecondsLeft = (timer: SyncedAuctionTimer, clientNowMs: number) => {
   const offsetMs = serverNowMs - timer.receivedAtMs;
   const estimatedServerNowMs = clientNowMs + offsetMs;
   const elapsedMs = estimatedServerNowMs - serverStartedAtMs;
-  const remainingMs = timer.durationSeconds * 1000 - elapsedMs;
-
-  return Math.max(0, Math.ceil(remainingMs / 1000));
+  return Math.max(0, timer.durationSeconds * 1000 - elapsedMs);
 };
+
+const getSecondsLeft = (timer: SyncedAuctionTimer, clientNowMs: number) => Math.max(0, Math.ceil(getRemainingMs(timer, clientNowMs) / 1000));
 
 export default function useAuctionTimer({ timer, onExpire }: UseAuctionTimerOptions): UseAuctionTimerReturn {
   const [clientNowMs, setClientNowMs] = useState(() => Date.now());
@@ -53,12 +53,15 @@ export default function useAuctionTimer({ timer, onExpire }: UseAuctionTimerOpti
       return;
     }
 
-    const intervalId = window.setInterval(() => {
-      setClientNowMs(Date.now());
-    }, 250);
+    const remainingMs = getRemainingMs(timer, Date.now());
+    const nextDelay = Math.max(1, remainingMs - (secondsLeft - 1) * 1000);
 
-    return () => window.clearInterval(intervalId);
-  }, [secondsLeft, timer.receivedAtMs]);
+    const timeoutId = window.setTimeout(() => {
+      setClientNowMs(Date.now());
+    }, nextDelay);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [secondsLeft, timer]);
 
   useEffect(() => {
     if (secondsLeft > 0) {
