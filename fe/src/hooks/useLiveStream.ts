@@ -138,6 +138,12 @@ const STREAM_METRICS_WINDOW_MS = 10_000;
 const STREAM_METRICS_RETENTION_MS = 60_000;
 const STREAM_METRICS_MAX_LATENCY_SAMPLES = 200;
 const STREAM_METRICS_LOG_INTERVAL_MS = 10_000;
+const SYNC_REQUEST_THROTTLE_MS: Record<SyncRequestKind, number> = {
+  ITEM_SYNC: 180,
+  BID_SYNC: 120,
+  AUCTION_STATISTICS_SYNC: 180,
+  UNIQUE_BID_SYNC: 180,
+};
 
 type SyncRequestKind = 'ITEM_SYNC' | 'BID_SYNC' | 'AUCTION_STATISTICS_SYNC' | 'UNIQUE_BID_SYNC';
 type SyncRequestSource =
@@ -157,6 +163,7 @@ type SyncRequestSource =
   | 'UNKNOWN';
 type MetricsSuppressionReason = 'deduped' | 'throttled' | 'trailing_flush';
 type MetricsEventChannel = 'broadcast' | 'private' | 'error';
+type SyncRequestInvoker = (source?: SyncRequestSource) => Promise<void>;
 
 type RequestMetrics = {
   sentCount: number;
@@ -529,6 +536,32 @@ const trackSyncResponse = (metricsRef: React.MutableRefObject<StreamMetrics | nu
   }
 };
 
+const trackSyncSuppressed = (
+  metricsRef: React.MutableRefObject<StreamMetrics | null>,
+  kind: SyncRequestKind,
+  reason: MetricsSuppressionReason,
+) => {
+  const metrics = metricsRef.current;
+
+  if (!metrics) {
+    return;
+  }
+
+  metrics.lastUpdatedAt = Date.now();
+
+  if (reason === 'deduped') {
+    metrics.requests[kind].dedupedCount += 1;
+    return;
+  }
+
+  if (reason === 'throttled') {
+    metrics.requests[kind].throttledCount += 1;
+    return;
+  }
+
+  metrics.requests[kind].trailingFlushCount += 1;
+};
+
 declare global {
   interface Window {
     __streamMetricsRegistry?: Map<string, StreamMetrics>;
@@ -632,7 +665,10 @@ export function useLiveStream(
   const ignoreWonUniqueEndRef = useRef(false);
   // Ref that is set once the STOMP subscription is established.
   // Used to gate ITEM_SYNC calls on subscription readiness (race condition fix).
-  const requestItemSyncRef = useRef<((source?: SyncRequestSource) => Promise<void>) | null>(null);
+  const requestItemSyncRef = useRef<SyncRequestInvoker | null>(null);
+  const requestBidSyncRef = useRef<SyncRequestInvoker | null>(null);
+  const requestAuctionStatisticsSyncRef = useRef<SyncRequestInvoker | null>(null);
+  const requestUniqueBidSyncRef = useRef<SyncRequestInvoker | null>(null);
   const streamMetricsRef = useRef<StreamMetrics | null>(null);
 
   const isStreamLive = liveStateOverride ?? isLiveFromServer;
@@ -742,31 +778,13 @@ export function useLiveStream(
 
     const syncPromise =
       activeAuctionType === 'UNIQUE_TOP'
-        ? (() => {
-            trackSyncRequest(streamMetricsRef, 'UNIQUE_BID_SYNC', 'ACTIVE_AUCTION_EFFECT');
-            return sendStreamMessage(streamId, {
-              eventType: 'UNIQUE_BID_SYNC',
-              payload: null,
-            });
-          })()
+        ? requestUniqueBidSyncRef.current?.('ACTIVE_AUCTION_EFFECT')
         : Promise.all([
-            (() => {
-              trackSyncRequest(streamMetricsRef, 'BID_SYNC', 'ACTIVE_AUCTION_EFFECT');
-              return sendStreamMessage(streamId, {
-                eventType: 'BID_SYNC',
-                payload: null,
-              });
-            })(),
-            (() => {
-              trackSyncRequest(streamMetricsRef, 'AUCTION_STATISTICS_SYNC', 'ACTIVE_AUCTION_EFFECT');
-              return sendStreamMessage(streamId, {
-                eventType: 'AUCTION_STATISTICS_SYNC',
-                payload: null,
-              });
-            })(),
+            requestBidSyncRef.current?.('ACTIVE_AUCTION_EFFECT'),
+            requestAuctionStatisticsSyncRef.current?.('ACTIVE_AUCTION_EFFECT'),
           ]);
 
-    void syncPromise.catch((error) => {
+    void Promise.resolve(syncPromise).catch((error) => {
       console.error('[stream] failed to sync active auction state', error);
     });
   }, [liveAuctionItem, streamId]);
@@ -780,14 +798,174 @@ export function useLiveStream(
       return;
     }
 
-    const requestItemSync = async (source: SyncRequestSource = 'UNKNOWN') => {
+    const createManagedSyncRequest = (
+      kind: SyncRequestKind,
+      throttleMs: number,
+      send: () => Promise<void>,
+    ): SyncRequestInvoker => {
+      let disposed = false;
+      let lastSentAt = 0;
+      let inFlightPromise: Promise<void> | null = null;
+      let pendingSource: SyncRequestSource | null = null;
+      let pendingPromise: Promise<void> | null = null;
+      let resolvePendingPromise: (() => void) | null = null;
+      let rejectPendingPromise: ((error: unknown) => void) | null = null;
+      let trailingTimeoutId: number | null = null;
+
+      const clearPendingTimeout = () => {
+        if (trailingTimeoutId !== null) {
+          window.clearTimeout(trailingTimeoutId);
+          trailingTimeoutId = null;
+        }
+      };
+
+      const clearPendingPromise = () => {
+        pendingPromise = null;
+        resolvePendingPromise = null;
+        rejectPendingPromise = null;
+      };
+
+      const ensurePendingPromise = () => {
+        if (pendingPromise) {
+          return pendingPromise;
+        }
+
+        pendingPromise = new Promise<void>((resolve, reject) => {
+          resolvePendingPromise = resolve;
+          rejectPendingPromise = reject;
+        });
+
+        return pendingPromise;
+      };
+
+      const runRequest = (source: SyncRequestSource, isTrailingFlush: boolean) => {
+        lastSentAt = Date.now();
+        clearPendingTimeout();
+
+        if (isTrailingFlush) {
+          trackSyncSuppressed(streamMetricsRef, kind, 'trailing_flush');
+        }
+
+        trackSyncRequest(streamMetricsRef, kind, source);
+
+        const requestPromise = send()
+          .catch((error) => {
+            throw error;
+          })
+          .finally(() => {
+            inFlightPromise = null;
+            flushQueuedRequest();
+          });
+
+        inFlightPromise = requestPromise;
+        return requestPromise;
+      };
+
+      const flushQueuedRequest = () => {
+        if (disposed || !pendingSource || inFlightPromise) {
+          return;
+        }
+
+        const remainingThrottleMs = Math.max(0, lastSentAt + throttleMs - Date.now());
+
+        if (remainingThrottleMs > 0) {
+          clearPendingTimeout();
+          trailingTimeoutId = window.setTimeout(() => {
+            trailingTimeoutId = null;
+            flushQueuedRequest();
+          }, remainingThrottleMs);
+          return;
+        }
+
+        const source = pendingSource;
+        const resolve = resolvePendingPromise;
+        const reject = rejectPendingPromise;
+        pendingSource = null;
+        clearPendingPromise();
+
+        void runRequest(source, true).then(
+          () => resolve?.(),
+          (error) => reject?.(error),
+        );
+      };
+
+      const queueRequest = (source: SyncRequestSource, reason: Exclude<MetricsSuppressionReason, 'trailing_flush'>) => {
+        pendingSource = source;
+        trackSyncSuppressed(streamMetricsRef, kind, reason);
+        const queuedPromise = ensurePendingPromise();
+        flushQueuedRequest();
+        return queuedPromise;
+      };
+
+      const request: SyncRequestInvoker = (source = 'UNKNOWN') => {
+        if (disposed) {
+          return Promise.resolve();
+        }
+
+        if (inFlightPromise) {
+          return queueRequest(source, 'deduped');
+        }
+
+        const remainingThrottleMs = Math.max(0, lastSentAt + throttleMs - Date.now());
+
+        if (remainingThrottleMs > 0) {
+          return queueRequest(source, 'throttled');
+        }
+
+        return runRequest(source, false);
+      };
+
+      (request as SyncRequestInvoker & { dispose?: () => void }).dispose = () => {
+        disposed = true;
+        clearPendingTimeout();
+        pendingSource = null;
+        clearPendingPromise();
+      };
+
+      return request;
+    };
+
+    const requestItemSync = createManagedSyncRequest('ITEM_SYNC', SYNC_REQUEST_THROTTLE_MS.ITEM_SYNC, async () => {
       console.log('[stream] requesting ITEM_SYNC for streamId:', streamId);
-      trackSyncRequest(streamMetricsRef, 'ITEM_SYNC', source);
       await sendStreamMessage(streamId, {
         eventType: 'ITEM_SYNC',
         payload: null,
       });
-    };
+    });
+
+    const requestBidSync = createManagedSyncRequest('BID_SYNC', SYNC_REQUEST_THROTTLE_MS.BID_SYNC, async () => {
+      await sendStreamMessage(streamId, {
+        eventType: 'BID_SYNC',
+        payload: null,
+      });
+    });
+
+    const requestAuctionStatisticsSync = createManagedSyncRequest(
+      'AUCTION_STATISTICS_SYNC',
+      SYNC_REQUEST_THROTTLE_MS.AUCTION_STATISTICS_SYNC,
+      async () => {
+        await sendStreamMessage(streamId, {
+          eventType: 'AUCTION_STATISTICS_SYNC',
+          payload: null,
+        });
+      },
+    );
+
+    const requestUniqueBidSync = createManagedSyncRequest(
+      'UNIQUE_BID_SYNC',
+      SYNC_REQUEST_THROTTLE_MS.UNIQUE_BID_SYNC,
+      async () => {
+        await sendStreamMessage(streamId, {
+          eventType: 'UNIQUE_BID_SYNC',
+          payload: null,
+        });
+      },
+    );
+
+    requestItemSyncRef.current = requestItemSync;
+    requestBidSyncRef.current = requestBidSync;
+    requestAuctionStatisticsSyncRef.current = requestAuctionStatisticsSync;
+    requestUniqueBidSyncRef.current = requestUniqueBidSync;
 
     const requestActiveAuctionSync = async (item: ItemSyncItem | null, source: SyncRequestSource = 'UNKNOWN') => {
       if (!item || item.auctionStatus !== 'LIVE') {
@@ -795,31 +973,11 @@ export function useLiveStream(
       }
 
       if (item.auctionType === 'UNIQUE_TOP') {
-        trackSyncRequest(streamMetricsRef, 'UNIQUE_BID_SYNC', source);
-        await sendStreamMessage(streamId, {
-          eventType: 'UNIQUE_BID_SYNC',
-          payload: null,
-        });
+        await requestUniqueBidSync(source);
         return;
       }
 
       await Promise.all([requestBidSync(source), requestAuctionStatisticsSync(source)]);
-    };
-
-    const requestBidSync = async (source: SyncRequestSource = 'UNKNOWN') => {
-      trackSyncRequest(streamMetricsRef, 'BID_SYNC', source);
-      await sendStreamMessage(streamId, {
-        eventType: 'BID_SYNC',
-        payload: null,
-      });
-    };
-
-    const requestAuctionStatisticsSync = async (source: SyncRequestSource = 'UNKNOWN') => {
-      trackSyncRequest(streamMetricsRef, 'AUCTION_STATISTICS_SYNC', source);
-      await sendStreamMessage(streamId, {
-        eventType: 'AUCTION_STATISTICS_SYNC',
-        payload: null,
-      });
     };
 
     const applyBidSync = (payload?: BidSyncPayload | null) => {
@@ -1171,8 +1329,6 @@ export function useLiveStream(
 
         unsubscribeStream = cleanup;
         console.log('[stream] STOMP subscribed successfully for streamId:', streamId);
-        // Mark subscription as ready so the isStreamLive effect can safely call ITEM_SYNC.
-        requestItemSyncRef.current = requestItemSync;
         await requestItemSync('INITIAL_SUBSCRIBE');
       })
       .catch((error) => {
@@ -1182,11 +1338,19 @@ export function useLiveStream(
     return () => {
       isDisposed = true;
       requestItemSyncRef.current = null;
+      requestBidSyncRef.current = null;
+      requestAuctionStatisticsSyncRef.current = null;
+      requestUniqueBidSyncRef.current = null;
 
       if (uniqueWinnerResolveTimeoutRef.current !== null) {
         window.clearTimeout(uniqueWinnerResolveTimeoutRef.current);
         uniqueWinnerResolveTimeoutRef.current = null;
       }
+
+      (requestItemSync as SyncRequestInvoker & { dispose?: () => void }).dispose?.();
+      (requestBidSync as SyncRequestInvoker & { dispose?: () => void }).dispose?.();
+      (requestAuctionStatisticsSync as SyncRequestInvoker & { dispose?: () => void }).dispose?.();
+      (requestUniqueBidSync as SyncRequestInvoker & { dispose?: () => void }).dispose?.();
 
       unsubscribeStream();
     };
