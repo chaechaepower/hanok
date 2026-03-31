@@ -13,6 +13,7 @@ import { AUCTION_TYPE_DESCRIPTIONS } from '@/constants/auction';
 import { useBidState, CUSTOM_UNIT_OPTIONS } from '@/hooks/useBidState';
 import { useLiveBidSync, useLiveUniqueBidSync } from '@/hooks/useLiveHotState';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { useRenderStats } from '@/hooks/useRenderStats';
 import type { LiveAuctionType } from '@/types';
 
 export type ControlBarVariant = 'overlay' | 'inline';
@@ -41,6 +42,8 @@ function BuyerControlBar({
   variant = 'overlay',
   showChatToggle = true,
 }: Props) {
+  useRenderStats('BuyerControlBar');
+
   const bidSync = useLiveBidSync();
   const uniqueBidSync = useLiveUniqueBidSync();
   const bid = useBidState({ auctionType, bidSync, uniqueBidSync, activeAuctionId });

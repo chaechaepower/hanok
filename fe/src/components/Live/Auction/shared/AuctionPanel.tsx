@@ -4,6 +4,7 @@ import SellerStats from '../Seller/SellerStats';
 import SellerPriceInfo from '../Seller/SellerPriceInfo';
 import BidFeed from '../Seller/BidFeed';
 import { useLiveAuctionStatistics, useLiveUniqueBidSync } from '@/hooks/useLiveHotState';
+import { useRenderStats } from '@/hooks/useRenderStats';
 import type { LiveAuctionType } from '@/types';
 import { formatPrice } from '@/utils/formatPrice';
 
@@ -13,6 +14,8 @@ interface Props {
 }
 
 function AuctionPanel({ isSeller, auctionType }: Props) {
+  useRenderStats('AuctionPanel');
+
   const auctionStatistics = useLiveAuctionStatistics();
   const uniqueBidSync = useLiveUniqueBidSync();
   const currentUserId = useMemo(() => {
