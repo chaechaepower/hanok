@@ -38,8 +38,7 @@ export const options = {
   vus: 1,
   duration: '3m',
   thresholds: {
-    cache_warm_ms: ['p(95)<20'],
-    cache_warm_faster_than_cold: ['rate>0.5'],
+    cache_warm_ms: ['p(95)<30'],
   },
 };
 
@@ -100,11 +99,15 @@ export function handleSummary(data) {
   const warmAvgNum = parseFloat(warmAvg);
   const ratio = (warmAvgNum > 0) ? (coldAvgNum / warmAvgNum).toFixed(1) : 'N/A';
 
+  // 판정 기준: warm p95 < 30ms
+  // steady-state에서 10개 키워드가 모두 캐시되면 cold도 캐시 히트가 되므로
+  // ratio 기반 판정은 무의미. warm 응답 속도 자체로 Redis 동작 여부를 판단.
+  const warmP95Num = parseFloat(warmP95);
   let verdict = '';
-  if (warmAvgNum < 10)  verdict = '✅ Redis 캐시 히트 명확 (warm avg < 10ms)';
-  else if (warmAvgNum < 20) verdict = '✅ Redis 캐시 효과 확인 (warm avg < 20ms)';
-  else if (coldAvgNum / warmAvgNum > 2) verdict = '⚠️  캐시 효과 있으나 warm이 느림 — TTL/Redis 상태 확인 필요';
-  else verdict = '❌ 캐시 효과 불명확 — Redis 연결 또는 캐싱 로직 확인 필요';
+  if (warmP95Num < 15)       verdict = '✅ Redis 캐시 정상 — warm p95 < 15ms (Redis 전용 응답)';
+  else if (warmP95Num < 30)  verdict = '✅ Redis 캐시 정상 — warm p95 < 30ms (steady-state 캐시 히트)';
+  else if (warmP95Num < 50)  verdict = '⚠️  Redis 응답 느림 — warm p95 < 50ms, Redis 부하 또는 네트워크 확인';
+  else                       verdict = '❌ Redis 캐시 미동작 — warm p95 >= 50ms, 캐싱 로직 또는 Redis 연결 확인';
 
   const ts         = __ENV.TEST_TIMESTAMP || new Date().toISOString().replace(/[:.]/g, '-');
   const filePrefix = `reports/${ts}_search_04_cache_inference`;

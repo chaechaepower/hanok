@@ -104,7 +104,28 @@ public class SearchService {
 
         if (safeKeyword.isEmpty()) return new ArrayList<>();
 
-        List<SellerSearchRow> rows = searchRepository.searchByShopName(safeKeyword);
+        String cacheKey = "search:seller:" + safeKeyword;
+        List<SellerSearchRow> rows = null;
+
+        String cached = redisService.get(cacheKey);
+        if (cached != null) {
+            try {
+                rows = objectMapper.readValue(cached,
+                        objectMapper.getTypeFactory().constructCollectionType(List.class, SellerSearchRow.class));
+            } catch (Exception e) {
+                log.warn("seller search cache deserialize 실패, DB 조회로 fallback. key={}", cacheKey);
+            }
+        }
+
+        if (rows == null) {
+            rows = searchRepository.searchByShopName(safeKeyword);
+            try {
+                redisService.save(cacheKey, objectMapper.writeValueAsString(rows),
+                        SEARCH_CACHE_TTL_SECONDS, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                log.warn("seller search cache 저장 실패. key={}", cacheKey);
+            }
+        }
 
         Set<Long> followedSellerIds = userId != null
                 ? followRepository.findFollowedSellerIdsByUserId(userId)
