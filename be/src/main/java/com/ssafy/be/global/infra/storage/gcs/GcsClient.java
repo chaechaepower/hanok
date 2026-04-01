@@ -65,8 +65,16 @@ public class GcsClient {
         storage.delete(BlobId.of(bucketName, fileName));
     }
 
-     String upload(MultipartFile file, String fileName) throws IOException {
-        return uploadBytes(file.getBytes(), file.getContentType(), fileName);
+    public String upload(MultipartFile file, String fileName) {
+        byte[] bytes = null;
+
+        try {
+            bytes = file.getBytes();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("파일을 읽는 중 오류가 발생했습니다.", e);
+        }
+
+        return uploadBytes(bytes, file.getContentType(), fileName);
     }
 
     public String upload(byte[] data, String fileName) {

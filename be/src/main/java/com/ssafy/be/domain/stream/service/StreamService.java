@@ -29,7 +29,6 @@ import com.ssafy.be.domain.stream.entity.StreamSortType;
 import com.ssafy.be.domain.stream.entity.StreamStatus;
 import com.ssafy.be.domain.stream.entity.StreamViewType;
 import com.ssafy.be.domain.stream.exception.StreamErrorCode;
-import com.ssafy.be.global.infra.ai.prompt.StreamThumbnailPromptRenderer;
 import com.ssafy.be.domain.stream.repository.MacroRedisRepository;
 import com.ssafy.be.domain.stream.repository.StreamReconnectRedisRepository;
 import com.ssafy.be.domain.stream.repository.StreamRepository;
@@ -38,7 +37,6 @@ import com.ssafy.be.domain.uniqueaction.repository.UniqueBidAuctionDetailReposit
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
-import com.ssafy.be.global.infra.ai.imagegen.ImageGenClient;
 import com.ssafy.be.global.infra.storage.gcs.GcsClient;
 import com.ssafy.be.global.infra.livekit.LiveKitProperties;
 import com.ssafy.be.global.websocket.enums.StreamEventType;
@@ -74,6 +72,7 @@ import static com.ssafy.be.domain.notification.model.NotificationType.STREAM_STA
 @RequiredArgsConstructor
 public class StreamService {
 
+    private static final String DEFAULT_THUMBNAIL_URL = "https://storage.googleapis.com/hanok-storage/profiles/3/dd673ea5-029a-4221-9c11-8eb0f38c1f3f.png";
     private final NotificationService notificationService;
     private final StreamRepository streamRepository;
     private final SellerRepository sellerRepository;
@@ -90,8 +89,7 @@ public class StreamService {
     private final MacroRedisRepository macroRedisRepository;
     private final StreamReconnectRedisRepository streamReconnectRedisRepository;
     private final StreamPublisher streamPublisher; // 추가
-    private final ImageGenClient imageGenClient;
-    private final StreamThumbnailPromptRenderer thumbnailPromptRenderer;
+    private final ThumbnailAsyncService thumbnailAsyncService;
 
     @Transactional
     public StreamRegisterResponse register(Long userId, StreamRegisterRequest request, MultipartFile thumbnail) {
@@ -102,7 +100,7 @@ public class StreamService {
         Stream stream = streamRepository.save(buildStream(request, seller));
 
         // 2. request에 썸네일이 있을 경우 바로 업데이트, 없으면 AI 생성 후 저장
-        stream.updateThumbnail(uploadThumbnail(stream, thumbnail, request, seller));
+        processThumbnail(request, thumbnail, stream, seller);
 
         // 3. 방송에 판매할 물품에 대해 auction 엔티티 생성
         if (!request.auctionItems().isEmpty()) {
@@ -112,21 +110,20 @@ public class StreamService {
         return new StreamRegisterResponse(stream.getId());
     }
 
-    private String uploadThumbnail(Stream stream, MultipartFile thumbnail, StreamRegisterRequest request, Seller seller) {
-        byte[] bytes = resolveThumbnailBytes(thumbnail, request, seller);
-        return gcsClient.upload(bytes, "streams/" + stream.getId() + "/thumbnail");
+    private void processThumbnail(StreamRegisterRequest request, MultipartFile thumbnail, Stream stream, Seller seller) {
+        // 썸네일 처리 분기
+        if (thumbnail == null || thumbnail.isEmpty()) {
+            stream.updateThumbnail(DEFAULT_THUMBNAIL_URL); // 기본 이미지 미리 설정
+            thumbnailAsyncService.generateAndApplyThumbnail(stream.getId(), request, seller); // 비동기 위임
+        } else {
+            applyThumbnail(thumbnail, stream);
+        }
     }
 
-    private byte[] resolveThumbnailBytes(MultipartFile thumbnail, StreamRegisterRequest request, Seller seller) {
-        if (thumbnail == null || thumbnail.isEmpty()) {
-            String prompt = thumbnailPromptRenderer.render(request, seller);
-            return imageGenClient.generateImage(prompt).bytes();
-        }
-        try {
-            return thumbnail.getBytes();
-        } catch (IOException e) {
-            throw new IllegalArgumentException("파일을 읽는 중 오류가 발생했습니다.", e);
-        }
+    private void applyThumbnail(MultipartFile thumbnail, Stream stream) {
+        String fileName = "streams/" + stream.getId() + "/thumbnail";
+        String url = gcsClient.upload(thumbnail, fileName);
+        stream.updateThumbnail(url);
     }
 
     private void scheduleAuctionItems(Stream stream, Seller seller, List<StreamRegisterRequest.AuctionItemRequest> auctionItems) {
