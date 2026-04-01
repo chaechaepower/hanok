@@ -67,6 +67,8 @@ export default function SellerStoreCard({
             <img
               src={seller.profileImage}
               alt={seller.shopName}
+              loading="lazy"
+              decoding="async"
               className="h-16 w-16 rounded-full bg-surface object-cover"
             />
           ) : (

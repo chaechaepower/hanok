@@ -270,6 +270,8 @@ export default function SellerReportPage() {
                   <img
                     src={item.imageUrl || Logo}
                     alt={item.itemName}
+                    loading="lazy"
+                    decoding="async"
                     className={`w-14 h-14 rounded-lg bg-neutral-700 ${item.imageUrl ? 'object-cover' : 'object-contain p-2'}`}
                   />
                   <div className="flex-1 min-w-0">

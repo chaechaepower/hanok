@@ -57,6 +57,9 @@ export default function FollowingBanner({ streams, hasNextPage, isFetchingNextPa
       <FallbackImg
         src={featuredStream.thumbnailUri}
         alt={featuredStream.title}
+        loading="eager"
+        fetchPriority="high"
+        decoding="async"
         className="absolute inset-x-0 inset-y-[10px] m-auto z-0 h-full w-full object-cover"
       />
       <div className="absolute inset-0 z-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.5)_0%,rgba(0,0,0,0.1)_30%,rgba(0,0,0,0)_100%)]" />

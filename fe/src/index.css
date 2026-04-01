@@ -117,7 +117,10 @@
 
 @font-face {
   font-family: 'MapoAemin';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/MapoAgapeA.woff') format('woff');
+  src:
+    local('MapoAgapeA'),
+    local('MapoAemin'),
+    url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/MapoAgapeA.woff') format('woff');
   font-weight: normal;
   font-display: swap;
 }
@@ -595,7 +598,9 @@ table {
   border-radius: 6px;
   padding: 4px 8px;
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .btn-ghost:hover {

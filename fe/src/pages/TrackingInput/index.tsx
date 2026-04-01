@@ -51,6 +51,8 @@ function CompletedItemRow({
             <FallbackImg
               src={item.image}
               alt={item.itemName}
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover"
               fallbackClassName="w-full h-full object-contain p-2"
             />
@@ -253,6 +255,8 @@ export default function TrackingInput() {
                         <FallbackImg
                           src={item.image}
                           alt={item.itemName}
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover"
                           fallbackClassName="w-full h-full object-contain p-2"
                         />
@@ -312,6 +316,8 @@ export default function TrackingInput() {
                         <FallbackImg
                           src={item.image}
                           alt={item.itemName}
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover grayscale"
                           fallbackClassName="w-full h-full object-contain p-2 grayscale"
                         />

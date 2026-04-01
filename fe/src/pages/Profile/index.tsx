@@ -563,7 +563,13 @@ export default function ProfilePage() {
                     <div className="flex items-center gap-6 flex-1">
                       <div className="w-16 h-16 rounded-full bg-surface border-[1.5px] border-gold-light flex items-center justify-center overflow-hidden">
                         {sale.image ? (
-                          <img src={sale.image} alt={sale.itemName} className="w-full h-full object-cover" />
+                          <img
+                            src={sale.image}
+                            alt={sale.itemName}
+                            loading="lazy"
+                            decoding="async"
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
                           <GiftIcon />
                         )}

@@ -67,6 +67,8 @@ export default function ProductCard({ product, onEdit, onDelete }: ProductCardPr
             <FallbackImg
               src={images[currentIndex]}
               alt={product.name}
+              loading="lazy"
+              decoding="async"
               className="h-full w-full object-cover"
               fallbackClassName="h-full w-full object-contain p-5"
             />

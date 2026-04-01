@@ -51,6 +51,8 @@ export default function EscrowDetailCard({
           <FallbackImg
             src={detail.winningInfo.image}
             alt={detail.winningInfo.itemName}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
             fallbackClassName="h-full w-full object-contain p-3"
           />

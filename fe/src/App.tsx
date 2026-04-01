@@ -7,15 +7,15 @@ import AdminOnlyRoute from '@/routes/AdminOnlyRoute';
 import SellerOnlyRoute from '@/routes/SellerOnlyRoute';
 
 import MainPage from './pages/Main';
-import ProfilePage from './pages/Profile';
 import SellerOnboardingPage from './pages/SellerOnboarding';
-import LivePage from './pages/Live';
 import ProductListPage from './pages/ProductList';
 import SignUpPage from './pages/SignUp';
 import LoginPage from './pages/Login';
-import WalletPage from './pages/Wallet';
-import SearchPage from './pages/Search';
 
+const LivePage = lazy(() => import('./pages/Live'));
+const ProfilePage = lazy(() => import('./pages/Profile'));
+const SearchPage = lazy(() => import('./pages/Search'));
+const WalletPage = lazy(() => import('./pages/Wallet'));
 const TrakingInputPage = lazy(() => import('./pages/TrackingInput'));
 const LiveCreatePage = lazy(() => import('./pages/LiveCreate'));
 const SettingsPage = lazy(() => import('./pages/Settings'));
