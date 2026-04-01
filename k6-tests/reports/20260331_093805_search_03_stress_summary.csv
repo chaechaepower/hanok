@@ -1,2 +1,0 @@
-test_name,fulltext,vus_max,p95_ms,avg_ms,tps,error_rate,search_p95,search_avg,search_min,search_max,hit_rate,err_rate,total,hits,empties,errs,breaking_point
-search_03_stress,true,1500,1077.55,255.44,422.45,0.01,1078.63,255.72,0.00,7461.68,29.91,0.00,322651,96506,226145,0,

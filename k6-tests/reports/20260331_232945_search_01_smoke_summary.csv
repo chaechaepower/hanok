@@ -1,2 +1,2 @@
 test_name,fulltext,vus_max,p95_ms,avg_ms,tps,error_rate,search_p95,search_avg,search_min,search_max,hit_rate,err_rate,total,hits,empties,errs,breaking_point
-search_03_stress_search_sellers,true,1500,1492.88,365.65,412.31,0.01,1494.34,366.48,0.00,19263.36,0.00,0.00,296487,0,296487,0,
+search_01_smoke,unknown,5,514.05,137.36,5.82,0.00,538.11,154.13,22.99,706.40,100.00,0.00,781,781,0,0,

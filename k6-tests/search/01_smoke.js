@@ -21,7 +21,7 @@ export const options = {
   tags: { domain: 'search', scenario: 'smoke', fulltext: String(FULLTEXT_ON) },
   setupTimeout: '300s',
   vus: 5,
-  duration: '1m',
+  duration: '3m',   // 1m → 3m: p95 샘플 안정화
   thresholds: {
     http_req_failed:    ['rate<0.05'],
     search_duration_ms: ['p(95)<500'],

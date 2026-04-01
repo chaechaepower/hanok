@@ -26,10 +26,11 @@ export const options = {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: '3m', target: BASELINE_VUS },
-        { duration: '3m', target: Math.floor(BASELINE_VUS * 1.5) },
-        { duration: '2m',  target: 0  },
-        { duration: '2m',  target: 10 },
+        { duration: '3m', target: BASELINE_VUS },                  // 램프업
+        { duration: '5m', target: BASELINE_VUS },                  // 피크 유지 (3m → 5m)
+        { duration: '3m', target: Math.floor(BASELINE_VUS * 1.5) }, // 과부하 (3m 유지)
+        { duration: '2m', target: 0  },                            // 쿨다운
+        { duration: '2m', target: 10 },                            // 회복 확인
       ],
     },
   },

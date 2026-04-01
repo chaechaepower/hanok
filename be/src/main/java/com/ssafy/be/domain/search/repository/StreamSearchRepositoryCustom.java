@@ -24,11 +24,11 @@ public class StreamSearchRepositoryCustom {
                 FROM stream s
                 JOIN seller sel ON s.seller_id = sel.id
                 JOIN user u     ON sel.user_id  = u.id
-                WHERE s.title LIKE :keyword
+                WHERE MATCH(s.title) AGAINST(:keyword IN BOOLEAN MODE)
                 AND s.status IN ('LIVE','SCHEDULED')
                 LIMIT :lim
                 """;
-        return executeSearch(sql, keyword, limit);
+        return executeSearchFT(sql, keyword, limit);
     }
 
     public List<StreamSearchRow> searchByItemName(String keyword, int limit) {
@@ -41,11 +41,11 @@ public class StreamSearchRepositoryCustom {
                 JOIN user u     ON sel.user_id  = u.id
                 JOIN auction a  ON a.stream_id  = s.id
                 JOIN item i     ON a.item_id    = i.id
-                WHERE i.name LIKE :keyword
+                WHERE MATCH(i.name) AGAINST(:keyword IN BOOLEAN MODE)
                 AND s.status IN ('LIVE','SCHEDULED')
                 LIMIT :lim
                 """;
-        return executeSearch(sql, keyword, limit);
+        return executeSearchFT(sql, keyword, limit);
     }
 
     public List<StreamSearchRow> searchByTagName(String keyword, int limit) {
@@ -59,11 +59,11 @@ public class StreamSearchRepositoryCustom {
                 JOIN auction a  ON a.stream_id  = s.id
                 JOIN item i     ON a.item_id    = i.id
                 JOIN tag t      ON t.item_id    = i.id
-                WHERE t.name LIKE :keyword
+                WHERE MATCH(t.name) AGAINST(:keyword IN BOOLEAN MODE)
                 AND s.status IN ('LIVE','SCHEDULED')
                 LIMIT :lim
                 """;
-        return executeSearch(sql, keyword, limit);
+        return executeSearchFT(sql, keyword, limit);
     }
 
     @SuppressWarnings("unchecked")
@@ -207,9 +207,9 @@ public class StreamSearchRepositoryCustom {
     }
 
     @SuppressWarnings("unchecked")
-    private List<StreamSearchRow> executeSearch(String sql, String keyword, int limit) {
+    private List<StreamSearchRow> executeSearchFT(String sql, String keyword, int limit) {
         List<Object[]> rows = em.createNativeQuery(sql)
-                .setParameter("keyword", "%" + keyword + "%")
+                .setParameter("keyword", keyword)   // % 없음 — FULLTEXT에는 불필요
                 .setParameter("lim", limit)
                 .getResultList();
 
