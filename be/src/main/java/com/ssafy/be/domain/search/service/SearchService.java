@@ -5,6 +5,8 @@ import com.ssafy.be.domain.follow.repository.FollowRepository;
 import com.ssafy.be.domain.search.dto.SellerSearchRow;
 import com.ssafy.be.domain.search.dto.StreamSearchRow;
 import com.ssafy.be.domain.search.dto.response.AutocompleteSuggestion;
+import com.ssafy.be.domain.search.dto.response.MatchReason;
+import com.ssafy.be.domain.search.dto.response.MatchType;
 import com.ssafy.be.domain.search.dto.response.SellerInfo;
 import com.ssafy.be.domain.search.dto.response.SellerSearchResult;
 import com.ssafy.be.domain.search.dto.response.StreamSearchPage;
@@ -62,6 +64,18 @@ public class SearchService {
         Map<Long, StreamSearchResult> resultMap = new LinkedHashMap<>();
         for (StreamSearchRow row : unionRows) {
             resultMap.computeIfAbsent(row.streamId(), id -> toResult(row));
+        }
+        for (StreamSearchRow row : unionRows) {
+            if (row.matchType() == null) continue;
+            StreamSearchResult result = resultMap.get(row.streamId());
+            MatchType type = MatchType.valueOf(row.matchType());
+            boolean alreadyAdded = result.matchReasons().stream().anyMatch(r -> r.type() == type);
+            if (!alreadyAdded) {
+                result.addReason(MatchReason.builder()
+                        .type(type)
+                        .matchedValue(safeKeyword)
+                        .build());
+            }
         }
 
         List<StreamSearchResult> merged = new ArrayList<>(resultMap.values());
