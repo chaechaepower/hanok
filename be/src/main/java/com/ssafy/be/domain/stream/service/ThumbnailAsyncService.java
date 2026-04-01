@@ -7,9 +7,12 @@ import com.ssafy.be.global.infra.ai.imagegen.ImageGenerationResult;
 import com.ssafy.be.global.infra.ai.prompt.StreamThumbnailPromptRenderer;
 import com.ssafy.be.global.infra.storage.gcs.GcsClient;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ThumbnailAsyncService {
@@ -18,8 +21,16 @@ public class ThumbnailAsyncService {
     private final GcsClient gcsClient;
     private final ThumbnailUpdateService thumbnailUpdateService;
 
+    public void applyThumbnail(Long streamId, StreamRegisterRequest request, Seller seller) {
+        try {
+            generateAndUpdateThumbnail(streamId, request, seller);
+        } catch (TaskRejectedException e) {
+            log.warn("썸네일 비동기 생성 거절 (큐 포화) streamId={}", streamId);
+        }
+    }
+
     @Async("thumbnailExecutor")
-    public void generateAndApplyThumbnail(Long streamId, StreamRegisterRequest request, Seller seller) {
+    public void generateAndUpdateThumbnail(Long streamId, StreamRegisterRequest request, Seller seller) {
         String prompt = thumbnailPromptRenderer.render(request, seller);
         ImageGenerationResult result = imageGenClient.generateImage(prompt);
 

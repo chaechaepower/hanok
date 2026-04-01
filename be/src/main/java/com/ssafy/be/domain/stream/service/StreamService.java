@@ -59,6 +59,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.task.TaskRejectedException;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,6 +70,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import static com.ssafy.be.domain.notification.model.NotificationType.STREAM_START;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StreamService {
@@ -114,7 +117,11 @@ public class StreamService {
         // 썸네일 처리 분기
         if (thumbnail == null || thumbnail.isEmpty()) {
             stream.updateThumbnail(DEFAULT_THUMBNAIL_URL); // 기본 이미지 미리 설정
-            thumbnailAsyncService.generateAndApplyThumbnail(stream.getId(), request, seller); // 비동기 위임
+            try {
+                thumbnailAsyncService.applyThumbnail(stream.getId(), request, seller);
+            } catch (TaskRejectedException e) {
+                log.warn("썸네일 비동기 생성 거절 (큐 포화) streamId={}", stream.getId()); // 큐 포화로 거절된 경우 → 기본 이미지 유지, 정상 응답
+            }
         } else {
             applyThumbnail(thumbnail, stream);
         }
