@@ -36,7 +36,7 @@ export const options = {
   tags: { domain: 'search', scenario: 'cache_inference' },
   setupTimeout: '300s',
   vus: 1,
-  duration: '3m',
+  duration: '5m',   // 3m → 5m: cold/warm 쌍 샘플 확보
   thresholds: {
     cache_warm_ms: ['p(95)<30'],
   },

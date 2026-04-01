@@ -1,2 +1,0 @@
-test_name,fulltext,vus_max,p95_ms,avg_ms,tps,error_rate,search_p95,search_avg,search_min,search_max,hit_rate,err_rate,total,hits,empties,errs,breaking_point
-search_01_smoke_search_sellers,true,5,120.79,94.64,7.34,0.00,30.53,23.48,17.75,35.52,0.00,0.00,295,0,295,0,

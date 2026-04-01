@@ -27,12 +27,12 @@ export const options = {
       executor: 'ramping-arrival-rate',
       startRate: 10,
       timeUnit: '1s',
-      preAllocatedVUs: 100,
-      maxVUs: 1200,
+      preAllocatedVUs: 200,
+      maxVUs: 2000,             // 1200 → 2000: stage target 1500을 수용
       stages: [
         { duration: '1m', target: 50   },
-        { duration: '3m', target: 1000  },
-        { duration: '3m', target: 1500 },
+        { duration: '3m', target: 1000 },
+        { duration: '4m', target: 1500 }, // 3m → 4m: 피크 구간 연장
         { duration: '2m', target: 0    },
       ],
     },
