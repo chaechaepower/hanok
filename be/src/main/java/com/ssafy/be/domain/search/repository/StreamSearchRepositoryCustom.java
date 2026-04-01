@@ -72,7 +72,7 @@ public class StreamSearchRepositoryCustom {
                 (SELECT s.id AS stream_id, s.title, s.thumbnail, s.status,
                         s.scheduled_at, s.category,
                         sel.id AS seller_id, sel.shop_name, u.profile_image,
-                        MATCH(s.title) AGAINST(:keyword IN BOOLEAN MODE) AS score,
+                        MATCH(s.title) AGAINST(:keyword IN BOOLEAN MODE) * 3.0 AS score,
                         'STREAM_TITLE' AS match_type
                  FROM stream s
                  JOIN seller sel ON s.seller_id = sel.id
@@ -84,7 +84,7 @@ public class StreamSearchRepositoryCustom {
                 (SELECT s.id AS stream_id, s.title, s.thumbnail, s.status,
                         s.scheduled_at, s.category,
                         sel.id AS seller_id, sel.shop_name, u.profile_image,
-                        MATCH(i.name) AGAINST(:keyword IN BOOLEAN MODE) AS score,
+                        MATCH(i.name) AGAINST(:keyword IN BOOLEAN MODE) * 2.0 AS score,
                         'ITEM_NAME' AS match_type
                  FROM stream s
                  JOIN seller sel ON s.seller_id = sel.id
@@ -98,7 +98,7 @@ public class StreamSearchRepositoryCustom {
                 (SELECT s.id AS stream_id, s.title, s.thumbnail, s.status,
                         s.scheduled_at, s.category,
                         sel.id AS seller_id, sel.shop_name, u.profile_image,
-                        MATCH(t.name) AGAINST(:keyword IN BOOLEAN MODE) AS score,
+                        MATCH(t.name) AGAINST(:keyword IN BOOLEAN MODE) * 1.0 AS score,
                         'TAG' AS match_type
                  FROM stream s
                  JOIN seller sel ON s.seller_id = sel.id
