@@ -23,6 +23,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -31,6 +34,9 @@ import java.util.concurrent.TimeUnit;
 public class SearchService {
 
     private static final long SEARCH_CACHE_TTL_SECONDS = 60L;
+
+    private final ExecutorService searchExecutor =
+            Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
 
     private final StreamSearchRepositoryCustom searchRepository;
     private final StreamViewerService streamViewerService;
@@ -46,9 +52,24 @@ public class SearchService {
 
         int limit = (page + 1) * size;
 
-        List<StreamSearchRow> byTitle = searchRepository.searchByStreamTitle(safeKeyword, limit);
-        List<StreamSearchRow> byItem  = searchRepository.searchByItemName(safeKeyword, limit);
-        List<StreamSearchRow> byTag   = searchRepository.searchByTagName(safeKeyword, limit);
+        CompletableFuture<List<StreamSearchRow>> titleFuture =
+                CompletableFuture.supplyAsync(
+                        () -> searchRepository.searchByStreamTitle(safeKeyword, limit), searchExecutor);
+        CompletableFuture<List<StreamSearchRow>> itemFuture =
+                CompletableFuture.supplyAsync(
+                        () -> searchRepository.searchByItemName(safeKeyword, limit), searchExecutor);
+        CompletableFuture<List<StreamSearchRow>> tagFuture =
+                CompletableFuture.supplyAsync(
+                        () -> searchRepository.searchByTagName(safeKeyword, limit), searchExecutor);
+
+        List<StreamSearchRow> byTitle, byItem, byTag;
+        try {
+            byTitle = titleFuture.get();
+            byItem  = itemFuture.get();
+            byTag   = tagFuture.get();
+        } catch (Exception e) {
+            throw new RuntimeException("병렬 검색 실패", e);
+        }
 
         Map<Long, StreamSearchResult> resultMap = new LinkedHashMap<>();
         for (StreamSearchRow row : byTitle) resultMap.computeIfAbsent(row.streamId(), id -> toResult(row));
