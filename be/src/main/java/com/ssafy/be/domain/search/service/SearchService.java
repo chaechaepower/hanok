@@ -44,6 +44,16 @@ public class SearchService {
         if (safeKeyword.isEmpty()) return StreamSearchPage.builder()
                 .data(new ArrayList<>()).page(page).size(size).totalCount(0).build();
 
+        String cacheKey = "search:stream:" + safeKeyword + ":" + page + ":" + size;
+        String cached = redisService.get(cacheKey);
+        if (cached != null) {
+            try {
+                return objectMapper.readValue(cached, StreamSearchPage.class);
+            } catch (Exception e) {
+                log.warn("stream search cache deserialize 실패, DB 조회로 fallback. key={}", cacheKey);
+            }
+        }
+
         int limit = (page + 1) * size;
 
         List<StreamSearchRow> unionRows = new ArrayList<>(searchRepository.searchUnion(safeKeyword, limit));
@@ -61,8 +71,17 @@ public class SearchService {
                 ? new ArrayList<>()
                 : merged.subList(from, Math.min(from + size, totalCount));
 
-        return StreamSearchPage.builder()
+        StreamSearchPage result = StreamSearchPage.builder()
                 .data(paged).page(page).size(size).totalCount(totalCount).build();
+
+        try {
+            redisService.save(cacheKey, objectMapper.writeValueAsString(result),
+                    SEARCH_CACHE_TTL_SECONDS, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            log.warn("stream search cache 저장 실패. key={}", cacheKey);
+        }
+
+        return result;
     }
 
     @Transactional(readOnly = true)
