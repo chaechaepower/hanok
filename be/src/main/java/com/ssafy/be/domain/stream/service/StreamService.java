@@ -39,7 +39,6 @@ import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
 import com.ssafy.be.global.infra.ai.imagegen.ImageGenClient;
-import com.ssafy.be.global.infra.ai.imagegen.ImageGenerationResult;
 import com.ssafy.be.global.infra.storage.gcs.GcsClient;
 import com.ssafy.be.global.infra.livekit.LiveKitProperties;
 import com.ssafy.be.global.websocket.enums.StreamEventType;
@@ -96,62 +95,47 @@ public class StreamService {
 
     @Transactional
     public StreamRegisterResponse register(Long userId, StreamRegisterRequest request, MultipartFile thumbnail) {
-        // 1. 판매자 조회
+        // 1. stream 저장
         Seller seller = sellerRepository.findByUserId(userId)
                 .orElseThrow(() -> new GlobalException(SellerErrorCode.SELLER_NOT_FOUND));
 
-        // 2. 방송 저장
-        Stream stream = Stream.builder()
-                .title(request.title())
-                .category(request.category())
-                .startType(request.startType())
-                .scheduledAt(request.scheduledAt())
-                .notice(request.notice())
-                .status(StreamStatus.SCHEDULED)
-                .seller(seller)
-                .build();
+        Stream stream = streamRepository.save(buildStream(request, seller));
 
-        streamRepository.save(stream);
+        // 2. request에 썸네일이 있을 경우 바로 업데이트, 없으면 AI 생성 후 저장
+        stream.updateThumbnail(uploadThumbnail(stream, thumbnail, request, seller));
 
-        // 3. 썸네일 등록
-        byte[] thumbnailByte = null;
-
-        if (thumbnail == null || thumbnail.isEmpty()) {
-            // 썸네일 없으면 AI 생성
-            String imageGenPrompt = thumbnailPromptRenderer.render(request, seller);
-            ImageGenerationResult result = imageGenClient.generateImage(imageGenPrompt);
-            thumbnailByte = result.bytes();
-        } else {
-            // 썸네일 있으면 byte[] 추출
-            try {
-                thumbnailByte = thumbnail.getBytes();
-            } catch (IOException e) {
-                throw new IllegalArgumentException("파일을 읽는 중 오류가 발생했습니다.", e);
-            }
-        }
-
-        String thumbnailUrl = gcsClient.upload(thumbnailByte, "streams/" + stream.getId() + "/thumbnail");
-        stream.updateThumbnail(thumbnailUrl);
-
-
-        // 4. 물품 상태 변경 및 경매 생성
+        // 3. 방송에 판매할 물품에 대해 auction 엔티티 생성
         if (!request.auctionItems().isEmpty()) {
-            request.auctionItems().forEach(auctionItemReq -> {
-
-                // 물품 상태를 라이브 예약 상태로 변경
-                Item item = itemRepository.findByIdAndSellerId(auctionItemReq.itemId(), seller.getId())
-                        .orElseThrow(() -> new GlobalException(ItemErrorCode.ITEM_NOT_FOUND));
-
-                item.schedule();
-
-                // 경매 엔티티 저장
-                createAuctionWithDetail(stream, item, auctionItemReq);
-            });
+            scheduleAuctionItems(stream, seller, request.auctionItems());
         }
 
-        return StreamRegisterResponse.builder()
-                .streamId(stream.getId())
-                .build();
+        return new StreamRegisterResponse(stream.getId());
+    }
+
+    private String uploadThumbnail(Stream stream, MultipartFile thumbnail, StreamRegisterRequest request, Seller seller) {
+        byte[] bytes = resolveThumbnailBytes(thumbnail, request, seller);
+        return gcsClient.upload(bytes, "streams/" + stream.getId() + "/thumbnail");
+    }
+
+    private byte[] resolveThumbnailBytes(MultipartFile thumbnail, StreamRegisterRequest request, Seller seller) {
+        if (thumbnail == null || thumbnail.isEmpty()) {
+            String prompt = thumbnailPromptRenderer.render(request, seller);
+            return imageGenClient.generateImage(prompt).bytes();
+        }
+        try {
+            return thumbnail.getBytes();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("파일을 읽는 중 오류가 발생했습니다.", e);
+        }
+    }
+
+    private void scheduleAuctionItems(Stream stream, Seller seller, List<StreamRegisterRequest.AuctionItemRequest> auctionItems) {
+        auctionItems.forEach(req -> {
+            Item item = itemRepository.findByIdAndSellerId(req.itemId(), seller.getId())
+                    .orElseThrow(() -> new GlobalException(ItemErrorCode.ITEM_NOT_FOUND));
+            item.schedule();
+            createAuctionWithDetail(stream, item, req);
+        });
     }
 
     private void createAuctionWithDetail(Stream stream, Item item, StreamRegisterRequest.AuctionItemRequest request) {
@@ -191,14 +175,23 @@ public class StreamService {
                         .maxPrice(request.uniqueTop().maxPrice())
                         .build();
 
-//                detail.validateSetting();
-
                 uniqueBidAuctionDetailRepository.save(detail);
             }
 
             default -> throw new IllegalArgumentException("지원하지 않는 경매 방식입니다.");
         }
+    }
 
+    private static Stream buildStream(StreamRegisterRequest request, Seller seller) {
+        return Stream.builder()
+                .title(request.title())
+                .category(request.category())
+                .startType(request.startType())
+                .scheduledAt(request.scheduledAt())
+                .notice(request.notice())
+                .status(StreamStatus.SCHEDULED)
+                .seller(seller)
+                .build();
     }
 
     private void updateAuctionDetail(Auction auction, StreamRegisterRequest.AuctionItemRequest request) {
