@@ -118,7 +118,7 @@ public class StreamService {
         if (thumbnail == null || thumbnail.isEmpty()) {
             stream.updateThumbnail(DEFAULT_THUMBNAIL_URL); // 기본 이미지 미리 설정
             try {
-                thumbnailAsyncService.applyThumbnail(stream.getId(), request, seller);
+                thumbnailAsyncService.generateAndUpdateThumbnail(stream.getId(), request, seller);
             } catch (TaskRejectedException e) {
                 log.warn("썸네일 비동기 생성 거절 (큐 포화) streamId={}", stream.getId()); // 큐 포화로 거절된 경우 → 기본 이미지 유지, 정상 응답
             }

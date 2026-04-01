@@ -21,14 +21,6 @@ public class ThumbnailAsyncService {
     private final GcsClient gcsClient;
     private final ThumbnailUpdateService thumbnailUpdateService;
 
-    public void applyThumbnail(Long streamId, StreamRegisterRequest request, Seller seller) {
-        try {
-            generateAndUpdateThumbnail(streamId, request, seller);
-        } catch (TaskRejectedException e) {
-            log.warn("썸네일 비동기 생성 거절 (큐 포화) streamId={}", streamId);
-        }
-    }
-
     @Async("thumbnailExecutor")
     public void generateAndUpdateThumbnail(Long streamId, StreamRegisterRequest request, Seller seller) {
         String prompt = thumbnailPromptRenderer.render(request, seller);
