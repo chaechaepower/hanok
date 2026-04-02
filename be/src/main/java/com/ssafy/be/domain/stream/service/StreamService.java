@@ -37,6 +37,9 @@ import com.ssafy.be.domain.uniqueaction.repository.UniqueBidAuctionDetailReposit
 import com.ssafy.be.domain.user.entity.User;
 import com.ssafy.be.domain.user.repository.UserRepository;
 import com.ssafy.be.global.exception.GlobalException;
+import com.ssafy.be.global.infra.ai.imagegen.ImageGenClient;
+import com.ssafy.be.global.infra.ai.imagegen.ImageGenerationResult;
+import com.ssafy.be.global.infra.ai.prompt.StreamThumbnailPromptRenderer;
 import com.ssafy.be.global.infra.storage.gcs.GcsClient;
 import com.ssafy.be.global.infra.livekit.LiveKitProperties;
 import com.ssafy.be.global.websocket.enums.StreamEventType;
@@ -93,6 +96,8 @@ public class StreamService {
     private final StreamReconnectRedisRepository streamReconnectRedisRepository;
     private final StreamPublisher streamPublisher; // 추가
     private final ThumbnailAsyncService thumbnailAsyncService;
+    private final StreamThumbnailPromptRenderer thumbnailPromptRenderer;
+    private final ImageGenClient imageGenClient;
 
     @Transactional
     public StreamRegisterResponse register(Long userId, StreamRegisterRequest request, MultipartFile thumbnail) {
@@ -103,7 +108,7 @@ public class StreamService {
         Stream stream = streamRepository.save(buildStream(request, seller));
 
         // 2. request에 썸네일이 있을 경우 바로 업데이트, 없으면 AI 생성 후 저장
-        processThumbnail(request, thumbnail, stream, seller);
+        processThumbnailSync(request, thumbnail, stream, seller);
 
         // 3. 방송에 판매할 물품에 대해 auction 엔티티 생성
         if (!request.auctionItems().isEmpty()) {
@@ -113,7 +118,31 @@ public class StreamService {
         return new StreamRegisterResponse(stream.getId());
     }
 
-    private void processThumbnail(StreamRegisterRequest request, MultipartFile thumbnail, Stream stream, Seller seller) {
+    private void processThumbnailSync(StreamRegisterRequest request, MultipartFile thumbnail, Stream stream, Seller seller) {
+        // 썸네일 처리 분기
+        String fileName = "streams/" + stream.getId() + "/thumbnail";
+        String thumbnailUrl = null;
+
+        if (thumbnail == null || thumbnail.isEmpty()) {
+            String imageGenPrompt = thumbnailPromptRenderer.render(request, seller);
+            ImageGenerationResult result = imageGenClient.generateImage(imageGenPrompt);
+            thumbnailUrl = gcsClient.upload(result.bytes(), fileName);
+        } else {
+            thumbnailUrl = gcsClient.upload(getBytes(thumbnail), fileName);
+        }
+
+        stream.updateThumbnail(thumbnailUrl);
+    }
+
+    private byte[] getBytes(MultipartFile thumbnail) {
+        try {
+            return thumbnail.getBytes();
+        } catch (IOException e) {
+            log.warn("파일을 읽지 못했습니다.", e);
+        }
+    }
+
+    private void processThumbnailAsync(StreamRegisterRequest request, MultipartFile thumbnail, Stream stream, Seller seller) {
         // 썸네일 처리 분기
         if (thumbnail == null || thumbnail.isEmpty()) {
             stream.updateThumbnail(DEFAULT_THUMBNAIL_URL); // 기본 이미지 미리 설정
