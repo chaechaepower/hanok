@@ -135,11 +135,14 @@ public class StreamService {
     }
 
     private byte[] getBytes(MultipartFile thumbnail) {
+        byte[] bytes = null;
+
         try {
-            return thumbnail.getBytes();
+            bytes = thumbnail.getBytes();
         } catch (IOException e) {
             log.warn("파일을 읽지 못했습니다.", e);
         }
+        return bytes;
     }
 
     private void processThumbnailAsync(StreamRegisterRequest request, MultipartFile thumbnail, Stream stream, Seller seller) {
