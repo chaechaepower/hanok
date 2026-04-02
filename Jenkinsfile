@@ -37,7 +37,6 @@ pipeline {
                                     sh 'cp /var/jenkins_home/env/.env.fe .env'
                                     sh 'npm install --legacy-peer-deps'
                                     sh 'npm run build'
-                                    sh 'gzip -k dist/landging_model.glb || true'
                                 }
                             }
                         }
